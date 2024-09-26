@@ -1,0 +1,22 @@
+---
+title: "base_lasso"
+author: "Ryan Peterson"
+date: "2024-09-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+
+```
+
+Work for the base (basic) lasso for our mode
+
+```{r data_import}
+
+```
+
