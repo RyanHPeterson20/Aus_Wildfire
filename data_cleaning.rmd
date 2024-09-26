@@ -1,0 +1,328 @@
+---
+title: "data_cleaning"
+author: "Ryan Peterson"
+date: "2024-07-14"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Library
+
+```{r library}
+#for data/date manipulating
+suppressMessages(library(lubridate))
+suppressMessages(library(reshape2)) #matrix long format
+```
+
+
+Baseline data cleaning markdown files, modify into an R script and adapt for all data cleaning uses.
+
+
+# Data Upload
+
+```{r import}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#anomaly only response with week data
+response_anoms <- read.csv("Data/response_anoms.csv", header = TRUE, stringsAsFactors = FALSE)
+
+#predictors with week data
+predictor_anoms <- read.csv("Data/predictor_anoms.csv", header = TRUE, stringsAsFactors = FALSE)
+
+#weekly correlation data
+week_corr <- read.csv("Data/week_correlation.csv", header = TRUE, 
+                      stringsAsFactors = FALSE)
+
+```
+
+# Cleaning Functions
+
+```{r}
+
+```
+
+# Basic Cleaning
+
+```{r data_cleaning}
+week <- 1
+
+response <- response_anoms
+predictor <- predictor_anoms
+
+resp_dates <- as_date(response[response$week == week, ]$time)
+pred_dates <- as_date(predictor[predictor$week == week, ]$time)
+
+#get minimum prediction date from response data
+low_bound <- pred_dates[which(pred_dates == min(resp_dates)) - 1]
+#get maximum response date from predictor data
+upper_bound <- max(as_date(predictor$time)) + days(7)
+
+#this requires week being set correctly above, that req should be fixed
+bounded_pred_df <- predictor[predictor$time >= low_bound & predictor$time <= upper_bound, ]
+
+bounded_resp_df <- response[response$time <= upper_bound, ]#temporarily changed so that each week has the same number of years
+
+#2019 boundary (week 14 2019: end of 2018/2019 season)
+max_date <- as_date(response_anoms[response_anoms$week == 14 & 
+                                     response_anoms$year == 2020, ]$time)
+
+bounded_pred_df <- bounded_pred_df[bounded_pred_df$time <= max_date, ]
+bounded_resp_df <- bounded_resp_df[bounded_resp_df$time <= max_date, ]
+
+rm(response, predictor, low_bound, upper_bound, 
+   week, resp_dates, pred_dates, max_date, min_date)
+
+### Correct for week 53
+
+week_53 <- which(bounded_resp_df$week == 53, )
+for (k in week_53) {
+  bounded_resp_df[k-1, 3] <- mean(c(bounded_resp_df[k-1, 3], 
+                                    bounded_resp_df[k, 3]))
+  bounded_resp_df[k-1, 4] <- mean(c(bounded_resp_df[k-1, 4], 
+                                    bounded_resp_df[k, 4]))
+}
+rm(k)
+bounded_resp_df <- bounded_resp_df[-week_53, ]
+
+#fix for the correct columns
+week_53pred <- which(bounded_pred_df$week == 53, )
+for (j in week_53pred) {
+  bounded_pred_df[j-1, 3] <- mean(c(bounded_pred_df[j-1, 3], 
+                                    bounded_pred_df[j, 3]))
+  bounded_pred_df[j-1, 4] <- mean(c(bounded_pred_df[j-1, 4],
+                                    bounded_pred_df[j, 4]))
+  bounded_pred_df[j-1, 5] <- mean(c(bounded_pred_df[j-1, 5],
+                                    bounded_pred_df[j, 5]))
+  bounded_pred_df[j-1, 6] <- mean(c(bounded_pred_df[j-1, 6], 
+                                    bounded_pred_df[j, 6]))
+}
+
+bounded_pred_df <- bounded_pred_df[-week_53pred, ]
+rm(j, week_53, week_53pred)
+
+bounded_pred_df <- bounded_pred_df[ ,-1]
+row.names(bounded_pred_df) <- NULL
+
+bounded_resp_df <- bounded_resp_df[, -1]
+row.names(bounded_resp_df) <- NULL
+```
+
+
+# Set-up
+
+```{r setup}
+season_weeks <- c(35:52, 1:14)
+
+#get years from bounded_resp
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+
+
+rm(i, season_years, temp_season)
+```
+
+# Modeling Data Frames
+
+```{r}
+NE_list <- list()
+SE_list <- list()
+
+for (k in season_weeks) {
+  temp_resp <- bounded_resp_df[bounded_resp_df$week == k, ]
+  
+  if (k <= 14) {
+    temp_resp <- temp_resp[-which(temp_resp$year == 2001), ]
+  }
+  
+  test_year <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+  test_year <- cbind(test_year, temp_resp$year)
+  colnames(test_year) <- c("Seasons", "RespYear")
+  
+  
+  tempNE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+  tempNE_df <- cbind(tempNE_df, temp_resp$NE_Aus_anomaly_co)
+  colnames(tempNE_df) <- c("Seasons", "NE_Aus")
+  
+  tempSE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+  tempSE_df <- cbind(tempSE_df, temp_resp$SE_Aus_anomaly_co)
+  colnames(tempSE_df) <- c("Seasons", "SE_Aus")
+  
+  #create temp df for each index
+  tempNino_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+  tempDMI_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+  tempTSA_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+  tempAAO_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+  
+  for (j in 1:52) {
+   temp_pred <- bounded_pred_df[bounded_pred_df$week == j, ]
+  
+    if(k > 14){ #for resp weeks in 35-52
+      
+      if (j <= 14) {
+        temp_pred <- temp_pred[-which(temp_pred$year == 2020), ]
+      }
+      
+      if (j < k) { # for pred weeks < resp week (remove previous year)
+        temp_pred <- temp_pred[-which(temp_pred$year == 2000), ]
+      } else { #for pred weeks >= resp weeks (remove latter year)
+        temp_pred <- temp_pred[-which(temp_pred$year == 2019), ]
+      }
+      
+    } else { # for resp weeks in 1-14 (first year 2002)
+      temp_pred <- temp_pred[-which(temp_pred$year == 2000), ]
+      
+      if (j < k) { #pred weeks in 1-14 and < resp week
+        
+        temp_pred <- temp_pred[-which(temp_pred$year == 2001), ]
+      } else { # for pred week  >= resp week (previous year)
+        
+        if (j <= 14) {
+          temp_pred <- temp_pred[-which(temp_pred$year == 2020), ]
+        }
+      }
+    }
+    
+    #temp nino assignment
+    tempNino_df <- cbind(tempNino_df, temp_pred$nino.anomaly)
+    colnames(tempNino_df)[ncol(tempNino_df)] <- paste0("nino", j)
+  
+    #temp dmi assignment
+    tempDMI_df <- cbind(tempDMI_df, temp_pred$dmi.anomaly)
+    colnames(tempDMI_df)[ncol(tempDMI_df)] <- paste0("dmi", j) 
+    
+    #temp tsa assignment
+    tempTSA_df <- cbind(tempTSA_df, temp_pred$tsa.anomaly)
+    colnames(tempTSA_df)[ncol(tempTSA_df)] <- paste0("tsa", j) 
+    
+    #temp aao assignment
+    tempAAO_df <- cbind(tempAAO_df, temp_pred$aao.anomaly)
+    colnames(tempAAO_df)[ncol(tempAAO_df)] <- paste0("aao", j) 
+    
+    test_year <- cbind(test_year, temp_pred$year)
+    colnames(test_year)[ncol(test_year)] <- paste0("Week ", j)
+  }
+    
+  tempNino_df <- tempNino_df[ ,-1]
+  tempDMI_df <- tempDMI_df[ ,-1]
+  tempTSA_df <- tempTSA_df[ ,-1]
+  tempAAO_df <- tempAAO_df[ ,-1]
+  
+  tempNE_df <- cbind(tempNE_df, tempNino_df, tempDMI_df, tempTSA_df, tempAAO_df)
+  tempSE_df <- cbind(tempSE_df, tempNino_df, tempDMI_df, tempTSA_df, tempAAO_df)
+  
+  NE_list[[paste("Week ", k)]] <- tempNE_df
+  SE_list[[paste("Week ", k)]] <- tempSE_df
+}
+```
+
+
+```{r saves}
+save(NE_list, file = "ne_data.rda")
+save(SE_list, file = "se_data.rda")
+
+save(bounded_pred_df, file = "bounded_pred.rda")
+save(bounded_resp_df, file = "bounded_resp.rda")
+```
+
+
+## Test Blocks
+
+```{r}
+
+NE_list <- list()
+SE_list <- list()
+
+#week test
+k <- season_weeks[20]
+temp_resp <- bounded_resp_df[bounded_resp_df$week == k, ]
+
+if (k <= 14) {
+  temp_resp <- temp_resp[-which(temp_resp$year == 2001), ]
+}
+
+test_year <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+test_year <- cbind(test_year, temp_resp$year)
+colnames(test_year) <- c("Seasons", "RespYear")
+
+
+tempNE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+tempNE_df <- cbind(tempNE_df, temp_resp$NE_Aus_anomaly_co)
+colnames(tempNE_df) <- c("Seasons", "NE_Aus")
+
+tempSE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+tempSE_df <- cbind(tempSE_df, temp_resp$SE_Aus_anomaly_co)
+colnames(tempSE_df) <- c("Seasons", "SE_Aus")
+
+#create temp df for each index
+tempNino_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+tempDMI_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+tempTSA_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+tempAAO_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+
+for (j in 1:52) {
+ temp_pred <- bounded_pred_df[bounded_pred_df$week == j, ]
+
+  if(k > 14){ #for resp weeks in 35-52
+    
+    if (j <= 14) {
+      temp_pred <- temp_pred[-which(temp_pred$year == 2020), ]
+    }
+    
+    if (j < k) { # for pred weeks < resp week (remove previous year)
+      temp_pred <- temp_pred[-which(temp_pred$year == 2000), ]
+    } else { #for pred weeks >= resp weeks (remove latter year)
+      temp_pred <- temp_pred[-which(temp_pred$year == 2019), ]
+    }
+    
+  } else { # for resp weeks in 1-14 (first year 2002)
+    temp_pred <- temp_pred[-which(temp_pred$year == 2000), ]
+    
+    if (j < k) { #pred weeks in 1-14 and < resp week
+      
+      temp_pred <- temp_pred[-which(temp_pred$year == 2001), ]
+    } else { # for pred week  >= resp week (previous year)
+      
+      if (j <= 14) {
+        temp_pred <- temp_pred[-which(temp_pred$year == 2020), ]
+      }
+    }
+  }
+  
+  #temp nino assignment
+  tempNino_df <- cbind(tempNino_df, temp_pred$nino.anomaly)
+  colnames(tempNino_df)[ncol(tempNino_df)] <- paste0("nino", j)
+
+  #temp dmi assignment
+  tempDMI_df <- cbind(tempDMI_df, temp_pred$dmi.anomaly)
+  colnames(tempDMI_df)[ncol(tempDMI_df)] <- paste0("dmi", j) 
+  
+  #temp tsa assignment
+  tempTSA_df <- cbind(tempTSA_df, temp_pred$tsa.anomaly)
+  colnames(tempTSA_df)[ncol(tempTSA_df)] <- paste0("tsa", j) 
+  
+  #temp aao assignment
+  tempAAO_df <- cbind(tempAAO_df, temp_pred$aao.anomaly)
+  colnames(tempAAO_df)[ncol(tempAAO_df)] <- paste0("aao", j) 
+  
+  test_year <- cbind(test_year, temp_pred$year)
+  colnames(test_year)[ncol(test_year)] <- paste0("Week ", j)
+}
+  
+tempNino_df <- tempNino_df[ ,-1]
+tempDMI_df <- tempDMI_df[ ,-1]
+tempTSA_df <- tempTSA_df[ ,-1]
+tempAAO_df <- tempAAO_df[ ,-1]
+
+#rm(k, j, temp_resp, temp_pred, temp_nino)
+```
+

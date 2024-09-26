@@ -1,0 +1,16 @@
+---
+title: "pca_work"
+author: "Ryan Peterson"
+date: "2024-09-24"
+output: pdf_document
+---
+
+```{r library}
+#find pca library
+```
+
+
+```{r data_import}
+
+```
+
