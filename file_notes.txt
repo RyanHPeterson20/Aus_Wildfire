@@ -2,7 +2,7 @@ Brief file notes and summaries:
 
 1. data_cleaning.rmd:
   - base data cleaning methods inside a markdown file.
-  - needs conversion to R script
+  - needs conversion to R script.
 
 2. pca_work.rmd:
   - file for initial work using PCA on our data sets.
@@ -11,3 +11,7 @@ Brief file notes and summaries:
 3. predictionTest_function.R
   - R script that includes simplified versions of CRPS, interval scores and coverage
   - Needs added flexibility for distributions other than normal. 
+
+4. new_simple_model.R
+  - R script for the simplified linear models
+  - Includes validation and predictive analysis methods. 
