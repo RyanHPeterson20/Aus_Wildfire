@@ -22,6 +22,10 @@ suppressMessages(library(reshape2)) #matrix long format
 Baseline data cleaning markdown files, modify into an R script and adapt for all data cleaning uses.
 
 
+TODO: 
+1. add in lag.
+2. combine with initial data cleaning into a single R script. 
+
 # Data Upload
 
 ```{r import}
@@ -233,6 +237,33 @@ save(SE_list, file = "se_data.rda")
 save(bounded_pred_df, file = "bounded_pred.rda")
 save(bounded_resp_df, file = "bounded_resp.rda")
 ```
+
+
+# Lag Data
+
+## Build data matrix/df for each week within range of study
+
+```{r}
+rev_weeks <- 52:1
+
+i <- 1
+temp_resp <-bounded_resp_df[i, ]
+lag_index <- 1
+
+
+if(temp_resp$week - lag_index < 1 ){
+  #print("TRUE") #save as test
+  lag_year <- temp_resp$year-1
+  lag_week <- rev_weeks[]
+}
+
+for (i in 1:length(bounded_resp_df$time)) {
+  
+}
+```
+
+
+
 
 
 ## Test Blocks
