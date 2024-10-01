@@ -11,12 +11,42 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r library}
-
+suppressMessages(library(leaps))
+suppressMessages(library(glmnet))
+suppressMessages(library(pls))
 ```
 
-Work for the base (basic) lasso for our mode
+Work for the base (basic) lasso for our model
 
 ```{r data_import}
+setwd("~/CO_AUS/Aus_CO-main")
 
+# Data
+load( "bounded_pred.rda")
+load( "bounded_resp.rda")
+load( "ne_data.rda")
+load( "se_data.rda")
 ```
+
+Begin with test case to see if this will actually work.
+(Using ISLR examples)
+
+```{r}
+#test with nino data only
+ne_35 <- NE_list[[1]]
+
+cov_matrix <- as.matrix(ne_35[,3:210])
+resp_vec <- ne_35$NE_Aus
+
+test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 5)
+
+plot(test_lasso)
+
+best_lambda <- test_lasso$lambda.min
+best_lambda
+
+test_model <- glmnet(cov_matrix, resp_vec, alpha = 1)
+test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
+```
+
 
