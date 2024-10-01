@@ -19,7 +19,11 @@ load( "bounded_resp.rda")
 load( "ne_data.rda")
 load( "se_data.rda")
 
+load( "data_matrix.rda")
 ```
+
+
+Note: we don't want to use PCA for variable reduction because then we no longer have interpretability. 
 
 
 ```{r standardize_Te}
@@ -83,7 +87,10 @@ rownames(nino_df) <- years
 ```
 
 ```{r pca_check}
-pca_nino <- prcomp(nino_df, center = TRUE, scale. = TRUE, retx = TRUE)
+#TODO: rename a lot of the below variables and add in SE Aus PCA
+resp_df <- as.data.frame(resp_matrix)
+
+pca_nino <- prcomp(resp_matrix[,1:32], center = TRUE, scale. = TRUE, retx = TRUE)
 
 summary(pca_nino)
 
@@ -94,7 +101,7 @@ pca_nino$rotation
 pca_nino$x
 
 plot(pca_nino$x[,1], pca_nino$x[,2], xlim = c(-10, 20),
-     xlab = "PC1", ylab = "PC2", main = "PCA Nino", pch=16)
-text(pca_nino$x[,1], pca_nino$x[,2], labels = colnames(nino_df), pos = 4)
+     xlab = "PC1", ylab = "PC2", main = "PCA Response", pch=16)
+text(pca_nino$x[,1], pca_nino$x[,2], labels = colnames(resp_df[,1:32]), pos = 4)
 ```
 

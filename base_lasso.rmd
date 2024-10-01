@@ -16,7 +16,11 @@ suppressMessages(library(glmnet))
 suppressMessages(library(pls))
 ```
 
-Work for the base (basic) lasso for our model
+Work for the base (basic) lasso for our model:
+
+Things to add in:
+1. Finding optimal number of folds for cv.glmnet()
+2. Use "Robustness" metric from variable selection report. 
 
 ```{r data_import}
 setwd("~/CO_AUS/Aus_CO-main")
@@ -32,21 +36,53 @@ Begin with test case to see if this will actually work.
 (Using ISLR examples)
 
 ```{r}
+
 #test with nino data only
-ne_35 <- NE_list[[1]]
+ne_35 <- NE_list[[11]]
 
 cov_matrix <- as.matrix(ne_35[,3:210])
+cov_matrix <- scale(cov_matrix)
 resp_vec <- ne_35$NE_Aus
 
-test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 5)
+set.seed(300)
+test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 4)
 
+#TODO: get more information on the elements of the plot
 plot(test_lasso)
 
 best_lambda <- test_lasso$lambda.min
 best_lambda
+log(best_lambda)
 
 test_model <- glmnet(cov_matrix, resp_vec, alpha = 1)
 test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
+test_pred@i 
+par_vec <- test_pred@i + 1
+test_pred[par_vec, ]
 ```
 
 
+
+Break down issues we have seen with weekly models:
+index 6-14 for season_weeks (weeks 40 - 48)
+
+```{r}
+
+pred_lasso <- predict(test_lasso, s = best_lambda, newx = cov_matrix)
+pred_lasso <- cbind(pred_lasso, ne_35[,2], (pred_lasso - ne_35[,2]))
+```
+
+
+```{r}
+ex_preds <- NE_list[[11]][ ,3:210]
+var_names <- colnames(ex_preds)
+var_names[test_pred@i]
+
+week_preds <- ne_35[var_names[test_pred@i]]
+scale(week_preds)
+par_vec <- test_pred@i + 1
+test <- test_pred[par_vec, ]
+test
+#manual regression
+2.75 + (-2.3423948 * -1.13889496) + (0.2928641 * 1.29676325 )
+```

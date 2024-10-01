@@ -24,7 +24,10 @@ Baseline data cleaning markdown files, modify into an R script and adapt for all
 
 TODO: 
 1. add in lag.
-2. combine with initial data cleaning into a single R script. 
+2. add in other needed data matrices:
+  a. response matrix
+  b. predictor matrix
+3. combine with initial data cleaning into a single R script. 
 
 # Data Upload
 
@@ -239,9 +242,87 @@ save(bounded_resp_df, file = "bounded_resp.rda")
 ```
 
 
+# Data Matrices
+
+(From bounded data frames)
+
+```{r}
+#pred df to matrix
+
+#predictors
+
+ex_preds <- NE_list[[1]][ ,3:210]
+pred_matrix <- matrix(NA, ncol = 208)
+colnames(pred_matrix) <- colnames(ex_preds)
+
+for(i in season_years){
+  temp_pred <- bounded_pred_df[which(bounded_pred_df$year == i), ]
+  pred_matrix <- rbind(pred_matrix, c(temp_pred$nino.anomaly, temp_pred$dmi.anomaly, 
+                                      temp_pred$tsa.anomaly, temp_pred$aao.anomaly))
+}
+
+pred_matrix <- pred_matrix[-1, ]
+
+
+#response (wildfire season only)
+
+resp_matrix <- matrix(NA, ncol = 64)
+colnames(resp_matrix) <- c(paste0("NEAus", season_weeks), paste0("SEAus", season_weeks))
+
+for(j in 2001:2019){
+#  temp_resp <- bounded_resp_df[which(bounded_resp_df$year == j), ]
+  temp_resp1 <- bounded_resp_df[which(bounded_resp_df$year == j), ]
+  season1 <- temp_resp1[which(temp_resp1$week %in% 35:52), ]
+  
+  temp_resp2 <- bounded_resp_df[which(bounded_resp_df$year == j+1), ]
+  season2 <- temp_resp2[which(temp_resp2$week %in% 1:14), ]
+  
+  c(season1$NE_Aus_anomaly_co, season2$NE_Aus_anomaly_co)
+  resp_matrix <- rbind(resp_matrix, c(season1$NE_Aus_anomaly_co, season2$NE_Aus_anomaly_co,
+                                      season1$SE_Aus_anomaly_co, season2$SE_Aus_anomaly_co))
+}
+
+
+resp_matrix <- resp_matrix[-1, ]
+
+```
+
+
+```{r}
+std_pred <- scale(pred_matrix)
+std_resp <- scale(resp_matrix)
+
+hist(resp_matrix)
+hist(resp_matrix[ ,1:32], main = "NE Aus")
+hist(std_resp[ ,1:32], main = "NE Aus - Std")
+hist(resp_matrix[ ,33:64], main = "SE Aus")
+hist(std_resp[ ,33:64], main = "SE Aus - Std")
+
+
+hist(pred_matrix[ ,1:52], main = "Nino")
+hist(std_pred[ ,1:52], main = "Nino - Std")
+hist(pred_matrix[ ,53:104], main = "DMI")
+hist(std_pred[ ,53:104], main = "DMI - Std")
+hist(pred_matrix[ ,105:156], main = "TSA")
+hist(std_pred[ ,105:156], main = "TSA - Std")
+hist(pred_matrix[ ,157:208], main = "AAO")
+hist(std_pred[ ,157:208], main = "AAO - Std")
+```
+
+
+
+```{r matrix_out}
+setwd("~/CO_AUS/Aus_CO-main")
+
+save(pred_matrix, resp_matrix, file = "data_matrix.rda")
+#save(resp_matrix, file = "resp_matrix.rda")
+```
+
+
 # Lag Data
 
 ## Build data matrix/df for each week within range of study
+(repeat the NE_list/SE_list that was done for weekly data)
 
 ```{r}
 rev_weeks <- 52:1
