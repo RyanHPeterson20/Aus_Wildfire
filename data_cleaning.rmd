@@ -44,15 +44,31 @@ predictor_anoms <- read.csv("Data/predictor_anoms.csv", header = TRUE, stringsAs
 week_corr <- read.csv("Data/week_correlation.csv", header = TRUE, 
                       stringsAsFactors = FALSE)
 
+#add in OLR data
+load( "olr_anom.rda")
 ```
 
 # Cleaning Functions
-
+(if needed)
 ```{r}
 
 ```
 
 # Basic Cleaning
+
+## OLR inclusions
+
+(set-up OLR df to share similar information with current resp/pred data)
+
+- Need to go back to the OLR files to add in weeks 1-14 of 2020.
+
+```{r olr_cleaning}
+#additional cleaning for OLR data
+olr_anom_df$Year <- year(olr_anom_df$Date)
+```
+
+
+## (Other...)
 
 ```{r data_cleaning}
 week <- 1
