@@ -5,19 +5,24 @@ Brief file notes and summaries:
   - if chosen as our model convert to R script
     - Potentially change to R script anyway.
 
-2. data_cleaning.rmd:
+2. co_olr.R
+  -olr anomaly and visualization file. 
+  -use the olr_full.rda (R data file)
+    -TODO: convert .rda to .csv for general use.
+
+3. data_cleaning.rmd:
   - base data cleaning methods inside a markdown file.
   - needs conversion to R script.
 
-3. new_simple_model.R
+4. new_simple_model.R
   - R script for the simplified linear models
   - Includes validation and predictive analysis methods. 
 
-4. pca_work.rmd:
+5. pca_work.rmd:
   - file for initial work using PCA on our data sets.
   - If this works we will clean up the work here and create an R script.
 
-5. predictionTest_function.R
+6. predictionTest_function.R
   - R script that includes simplified versions of CRPS, interval scores and coverage
   - Needs added flexibility for distributions other than normal. 
 
