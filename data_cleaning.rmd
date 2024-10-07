@@ -60,11 +60,11 @@ load( "olr_anom.rda")
 
 (set-up OLR df to share similar information with current resp/pred data)
 
-- Need to go back to the OLR files to add in weeks 1-14 of 2020.
-
 ```{r olr_cleaning}
 #additional cleaning for OLR data
+
 olr_anom_df$Year <- year(olr_anom_df$Date)
+bounded_olr_df <- olr_anom_df
 ```
 
 
@@ -97,7 +97,7 @@ bounded_pred_df <- bounded_pred_df[bounded_pred_df$time <= max_date, ]
 bounded_resp_df <- bounded_resp_df[bounded_resp_df$time <= max_date, ]
 
 rm(response, predictor, low_bound, upper_bound, 
-   week, resp_dates, pred_dates, max_date, min_date)
+   week, resp_dates, pred_dates, max_date)
 
 ### Correct for week 53
 
@@ -186,31 +186,42 @@ for (k in season_weeks) {
   tempTSA_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
   tempAAO_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
   
+  #temp df for OLRs
+  tempNE_OLR_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+  tempSE_OLR_df <- as.data.frame(matrix(NA, nrow = nrow(tempNE_df), ncol = 1))
+  
   for (j in 1:52) {
    temp_pred <- bounded_pred_df[bounded_pred_df$week == j, ]
+   temp_olr <- olr_anom_df[olr_anom_df$Week == j, ]
   
     if(k > 14){ #for resp weeks in 35-52
       
       if (j <= 14) {
         temp_pred <- temp_pred[-which(temp_pred$year == 2020), ]
+        temp_olr <- temp_olr[-which(temp_olr$Year == 2020), ]
       }
       
       if (j < k) { # for pred weeks < resp week (remove previous year)
         temp_pred <- temp_pred[-which(temp_pred$year == 2000), ]
+        temp_olr <- temp_olr[-which(temp_olr$Year == 2000), ]
       } else { #for pred weeks >= resp weeks (remove latter year)
         temp_pred <- temp_pred[-which(temp_pred$year == 2019), ]
+        temp_olr <- temp_olr[-which(temp_olr$Year == 2019), ]
       }
       
     } else { # for resp weeks in 1-14 (first year 2002)
       temp_pred <- temp_pred[-which(temp_pred$year == 2000), ]
+      temp_olr <- temp_olr[-which(temp_olr$Year == 2000), ]
       
       if (j < k) { #pred weeks in 1-14 and < resp week
         
         temp_pred <- temp_pred[-which(temp_pred$year == 2001), ]
+        temp_olr <- temp_olr[-which(temp_olr$Year == 2001), ]
       } else { # for pred week  >= resp week (previous year)
         
         if (j <= 14) {
           temp_pred <- temp_pred[-which(temp_pred$year == 2020), ]
+          temp_olr <- temp_olr[-which(temp_olr$Year == 2020), ]
         }
       }
     }
@@ -233,6 +244,15 @@ for (k in season_weeks) {
     
     test_year <- cbind(test_year, temp_pred$year)
     colnames(test_year)[ncol(test_year)] <- paste0("Week ", j)
+    
+    #olr:
+    ##olr ne
+    tempNE_OLR_df <- cbind(tempNE_OLR_df, temp_olr$NE_anom)
+    colnames(tempNE_OLR_df)[ncol(tempNE_OLR_df)] <- paste0("NEolr", j)
+    
+    ##olr se
+    tempSE_OLR_df <- cbind(tempSE_OLR_df, temp_olr$SE_anom)
+    colnames(tempSE_OLR_df)[ncol(tempSE_OLR_df)] <- paste0("SEolr", j)    
   }
     
   tempNino_df <- tempNino_df[ ,-1]
@@ -240,21 +260,28 @@ for (k in season_weeks) {
   tempTSA_df <- tempTSA_df[ ,-1]
   tempAAO_df <- tempAAO_df[ ,-1]
   
-  tempNE_df <- cbind(tempNE_df, tempNino_df, tempDMI_df, tempTSA_df, tempAAO_df)
-  tempSE_df <- cbind(tempSE_df, tempNino_df, tempDMI_df, tempTSA_df, tempAAO_df)
+  tempNE_OLR_df <- tempNE_OLR_df[ ,-1]
+  tempSE_OLR_df <- tempSE_OLR_df[ ,-1]
+  
+  tempNE_df <- cbind(tempNE_df, tempNino_df, tempDMI_df, tempTSA_df, tempAAO_df, tempNE_OLR_df)
+  tempSE_df <- cbind(tempSE_df, tempNino_df, tempDMI_df, tempTSA_df, tempAAO_df, tempSE_OLR_df)
   
   NE_list[[paste("Week ", k)]] <- tempNE_df
   SE_list[[paste("Week ", k)]] <- tempSE_df
 }
 ```
 
+Update: change this to single .rda for multiple data frames.
 
 ```{r saves}
+setwd("~/CO_AUS/Aus_CO-main")
+
 save(NE_list, file = "ne_data.rda")
 save(SE_list, file = "se_data.rda")
 
-save(bounded_pred_df, file = "bounded_pred.rda")
-save(bounded_resp_df, file = "bounded_resp.rda")
+#save(bounded_pred_df, file = "bounded_pred.rda")
+#save(bounded_resp_df, file = "bounded_resp.rda")
+save(bounded_resp_df, bounded_pred_df, bounded_olr_df, file = "bounded_data.rda")
 ```
 
 
@@ -265,9 +292,10 @@ save(bounded_resp_df, file = "bounded_resp.rda")
 ```{r}
 #pred df to matrix
 
-#predictors
+#predictors:
 
-ex_preds <- NE_list[[1]][ ,3:210]
+##indices
+ex_preds <- NE_list[[1]][ ,3:210] #example df (for col names)
 pred_matrix <- matrix(NA, ncol = 208)
 colnames(pred_matrix) <- colnames(ex_preds)
 
@@ -279,6 +307,19 @@ for(i in 2000:2019){
 
 pred_matrix <- pred_matrix[-1, ]
 rownames(pred_matrix) <-  2000:2019
+
+##olr
+ex_olr <- cbind(NE_list[[1]][ ,211:262], SE_list[[1]][ ,211:262]) #example df (for col names)
+olr_matrix <- matrix(NA, ncol = 104)
+colnames(olr_matrix) <- colnames(ex_olr)
+
+for(k in 2000:2019){
+  temp_olr <- bounded_olr_df[which(bounded_olr_df$Year == k), ]
+  olr_matrix <- rbind(olr_matrix, c(temp_olr$NE_anom, temp_olr$SE_anom))
+}
+
+olr_matrix <- olr_matrix[-1, ]
+rownames(olr_matrix) <- 2000:2019
 
 #response (wildfire season only)
 
@@ -305,33 +346,11 @@ rownames(resp_matrix) <- seasons
 ```
 
 
-```{r}
-std_pred <- scale(pred_matrix)
-std_resp <- scale(resp_matrix)
-
-hist(resp_matrix)
-hist(resp_matrix[ ,1:32], main = "NE Aus")
-hist(std_resp[ ,1:32], main = "NE Aus - Std")
-hist(resp_matrix[ ,33:64], main = "SE Aus")
-hist(std_resp[ ,33:64], main = "SE Aus - Std")
-
-
-hist(pred_matrix[ ,1:52], main = "Nino")
-hist(std_pred[ ,1:52], main = "Nino - Std")
-hist(pred_matrix[ ,53:104], main = "DMI")
-hist(std_pred[ ,53:104], main = "DMI - Std")
-hist(pred_matrix[ ,105:156], main = "TSA")
-hist(std_pred[ ,105:156], main = "TSA - Std")
-hist(pred_matrix[ ,157:208], main = "AAO")
-hist(std_pred[ ,157:208], main = "AAO - Std")
-```
-
-
 
 ```{r matrix_out}
 setwd("~/CO_AUS/Aus_CO-main")
 
-save(pred_matrix, resp_matrix, file = "data_matrix.rda")
+save(pred_matrix, resp_matrix, olr_matrix, file = "data_matrix.rda")
 #save(resp_matrix, file = "resp_matrix.rda")
 ```
 
@@ -362,11 +381,24 @@ for (i in 1:length(bounded_resp_df$time)) {
 }
 ```
 
-```{r test_block}
-#create list of dfs
+TODO: 
 
+```{r test_block}
+#TODO: create list of dfs (add in for loop)
+
+#for i in season_weeks
 i <- season_weeks[1]
 
+#TODO: use this to add the start of the weekly df's
+tempNE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+tempNE_df <- cbind(tempNE_df, temp_resp$NE_Aus_anomaly_co)
+colnames(tempNE_df) <- c("Seasons", "NE_Aus")
+  
+tempSE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+tempSE_df <- cbind(tempSE_df, temp_resp$SE_Aus_anomaly_co)
+colnames(tempSE_df) <- c("Seasons", "SE_Aus")
+
+#current
 lag_resp <- bounded_resp_df[which(bounded_resp_df$week == i), ]
 min_year <- min(lag_resp$year)
 max_year <- max(lag_resp$year)
@@ -377,6 +409,9 @@ nino_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
 dmi_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
 tsa_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
 aao_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+
+NEolr_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+SEolr_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
 
 week_vec <- c()
 lag_vec <- c()
@@ -393,10 +428,16 @@ for (j in 1:52) {
   lag_pred <- bounded_pred_df[which(bounded_pred_df$week == lag_week), ]
   lag_pred <- lag_pred[which(lag_pred$year >= lag_year[1] & lag_pred$year <= lag_year[2]), ]
   
+  lag_olr <- bounded_olr_df[which(bounded_olr_df$Week == lag_week), ]
+  lag_olr <- lag_olr[which(lag_olr$Year >= lag_year[1] & lag_olr$Year <= lag_year[2]), ]
+  
   nino_lag <- cbind(nino_lag, lag_pred$nino.anomaly)
   dmi_lag <- cbind(dmi_lag, lag_pred$dmi.anomaly)
   tsa_lag <- cbind(tsa_lag, lag_pred$tsa.anomaly)
   aao_lag <- cbind(aao_lag, lag_pred$aao.anomaly)
+  
+  NEolr_lag <- cbind(NEolr_lag, lag_olr$NE_anom)
+  SEolr_lag <- cbind(SEolr_lag, lag_olr$SE_anom) 
   
   week_vec <- c(week_vec, lag_week)
   lag_vec <- c(lag_vec, lag)
@@ -414,14 +455,35 @@ colnames(tsa_lag) <- paste0("tsa_lag", lag_vec[1:52])
 aao_lag <- aao_lag[,-1]
 colnames(aao_lag) <- paste0("aao_lag", lag_vec[1:52])
 
-NEweek_lag <- data.frame(NE_Aus_anomaly_co = lag_resp$NE_Aus_anomaly_co, nino_lag, dmi_lag, tsa_lag, aao_lag)
-SEweek_lag <- data.frame(SE_Aus_anomaly_co = lag_resp$SE_Aus_anomaly_co, nino_lag, dmi_lag, tsa_lag, aao_lag)
+NEolr_lag <- NEolr_lag[ ,-1]
+colnames(NEolr_lag) <- paste0("NEolr_lag", lag_vec[1:52])
+
+SEolr_lag <- SEolr_lag[ ,-1]
+colnames(SEolr_lag) <- paste0("SEolr_lag", lag_vec[1:52])
+
+
+NEweek_lag <- data.frame(NE_Aus_anomaly_co = lag_resp$NE_Aus_anomaly_co, nino_lag, dmi_lag, tsa_lag, aao_lag, NEolr_lag)
+SEweek_lag <- data.frame(SE_Aus_anomaly_co = lag_resp$SE_Aus_anomaly_co, nino_lag, dmi_lag, tsa_lag, aao_lag, SEolr_lag)
 ```
 
 
 
 
 ## Test Blocks
+
+```{r lag_test}
+
+i <- 35
+
+j <- 1
+lag <- j
+lag_week <- i - lag
+
+lag_week
+
+```
+
+
 
 ```{r}
 
@@ -510,5 +572,27 @@ tempTSA_df <- tempTSA_df[ ,-1]
 tempAAO_df <- tempAAO_df[ ,-1]
 
 #rm(k, j, temp_resp, temp_pred, temp_nino)
+```
+
+
+```{r histograms}
+std_pred <- scale(pred_matrix)
+std_resp <- scale(resp_matrix)
+
+hist(resp_matrix)
+hist(resp_matrix[ ,1:32], main = "NE Aus")
+hist(std_resp[ ,1:32], main = "NE Aus - Std")
+hist(resp_matrix[ ,33:64], main = "SE Aus")
+hist(std_resp[ ,33:64], main = "SE Aus - Std")
+
+
+hist(pred_matrix[ ,1:52], main = "Nino")
+hist(std_pred[ ,1:52], main = "Nino - Std")
+hist(pred_matrix[ ,53:104], main = "DMI")
+hist(std_pred[ ,53:104], main = "DMI - Std")
+hist(pred_matrix[ ,105:156], main = "TSA")
+hist(std_pred[ ,105:156], main = "TSA - Std")
+hist(pred_matrix[ ,157:208], main = "AAO")
+hist(std_pred[ ,157:208], main = "AAO - Std")
 ```
 
