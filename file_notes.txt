@@ -1,6 +1,7 @@
 Brief file notes and summaries:
 
 1. base_lasso.rmd
+  - Replace with lasso_work.rmd
   - intitial work for LASSO models inside a markdown file
   - if chosen as our model convert to R script
     - Potentially change to R script anyway.
