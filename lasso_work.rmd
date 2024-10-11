@@ -1,0 +1,229 @@
+---
+title: "lasso_work.rmd"
+author: "Ryan Peterson"
+date: "2024-10-08"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libraries}
+suppressMessages(library(glmnet))
+suppressMessages(library(pls))
+
+suppressMessages(library(genlasso)) #used for fused lasso (not a fan)
+```
+
+Notes:
+
+For LASSO:
+-Pred data must be standardized
+-Resp data must be centered
+
+
+```{r data_import}
+setwd("~/CO_AUS/Aus_CO-main")
+
+load( "ne_data.rda")
+load( "se_data.rda")
+
+load( "bounded_data.rda")
+load( "data_matrix.rda")
+
+load( "lag_list.rda")
+```
+
+
+# Fused Lasso
+
+```{r data}
+#testing with week 36 of NE Aus
+week_36 <- NE_laglist[[2]]
+
+cov_matrix <- as.matrix(week_36[,3:54]) #nino only
+#cov_matrix <- scale(cov_matrix)
+resp_vec <- week_36$NE_Aus
+#resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
+
+#remove 2019/2020
+cov_matrix <- cov_matrix[-19, ]
+resp_vec <- resp_vec[-19]
+```
+
+
+```{r}
+
+#c(1:52, 54:105)
+#D <- getD1d(52)
+#test_fuse <- fusedlasso(resp_vec, cov_matrix, D)
+
+test_fuse <- fusedlasso1d(resp_vec, pos = c(1:52), cov_matrix)
+
+test_lambda <- median(test_fuse$lambda)
+plot(test_fuse, lambda = test_lambda)
+plot(test_fuse, style = "path")
+
+
+
+#plot(test_fuse, style = "trend")
+```
+
+instead of clustering can I used change point through trend fitting?
+
+```{r}
+resp_year <- scale(resp_matrix, center = TRUE, scale = FALSE)
+resp_season <- resp_year[3, 1:32]
+
+resp_sig <- fusedlasso1d(resp_season)
+plot(resp_sig)
+plot(resp_sig, style = "path")
+
+cv = cv.trendfilter(resp_sig)
+
+plot(resp_sig, lambda=cv$lambda.1se, main="Minimal CV error")
+```
+
+# Elastic Net
+
+
+
+
+# Clustering
+
+```{r kmean}
+NE_resp <- resp_matrix[,1:32]
+SE_resp <- resp_matrix[,33:64]
+
+#centered data:
+NE_resp <- scale(NE_resp, center = TRUE, scale = FALSE)
+SE_resp <- scale(SE_resp, center = TRUE, scale = FALSE)
+
+set.seed(300)
+kmean_ne <- kmeans(t(NE_resp), centers = 7)
+kmean_ne$cluster
+kmean_se <- kmeans(t(SE_resp), centers = 7)
+kmean_se$cluster
+
+plot(t(NE_resp), col = kmean_ne$cluster, pch = 16, main = "k-Means Clustering")
+```
+
+
+TODO: create plots for each week in response with respect to season/years (year in x, value in y)
+
+and create cluster dendogram. 
+
+```{r elastic_net}
+week_35 <- NE_laglist[[1]]
+week_36 <- NE_laglist[[2]]
+week_37 <- NE_laglist[[3]]
+
+cov_matrix <- as.matrix(week_36[,3:210]) #index only
+cov_matrix <- scale(cov_matrix, center = TRUE, scale = FALSE) #center preds
+resp_vec <- week_36$NE_Aus
+#resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
+
+set.seed(300)
+test_net <- cv.glmnet(cov_matrix, resp_vec, alpha = 0.3, nfolds = 5)
+
+plot(test_net)
+
+best_lambda <- test_net$lambda.min
+best_lambda
+log(best_lambda)
+
+net_obj <- glmnet(cov_matrix, resp_vec, alpha = 0.3, nfolds = 5)
+plot(net_obj)
+
+test_pred <- predict(test_net, s = best_lambda, type = "coefficients")
+test_pred@i 
+par_vec <- test_pred@i + 1
+test_pred[par_vec, ]
+
+```
+
+
+# Check clustering in lag-lasso
+
+with k = 8, Ne Aus groups 35-37, 38 - 39, 40-42, ...
+
+```{r}
+#baseline lasso for each week in cluster "1"
+week_35 <- NE_laglist[[1]]
+week_36 <- NE_laglist[[2]]
+week_37 <- NE_laglist[[3]]
+
+#TODO: cluster for each then for all 3 (from k = 8 mean cluster above)
+cov_matrix <- as.matrix(week_37[,3:210]) #index only
+#cov_matrix <- scale(cov_matrix)
+resp_vec <- week_37$NE_Aus
+#resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
+
+#remove 2019/2020
+cov_matrix <- cov_matrix[-19, ]
+resp_vec <- resp_vec[-19]
+
+set.seed(300)
+test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 6)
+
+plot(test_lasso)
+
+best_lambda <- test_lasso$lambda.min
+best_lambda
+log(best_lambda)
+
+test_pred <- predict(test_lasso, s = best_lambda, type = "coefficients")
+test_pred@i 
+par_vec <- test_pred@i + 1
+test_pred[par_vec, ]
+```
+
+
+```{r}
+coeff_list <- list()
+for (i in 1:3) {
+  ne_week <- NE_laglist[[i]]
+  
+  cov_matrix <- as.matrix(ne_week[,3:262]) #index only
+  cov_matrix <- scale(cov_matrix)
+  resp_vec <- ne_week$NE_Aus
+  resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
+
+  set.seed(300)
+  temp_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 5)
+  best_lambda <- temp_lasso$lambda.min
+  
+  temp_pred <- predict(temp_lasso, s = best_lambda, type = "coefficients")
+
+  par_vec <- temp_pred@i + 1
+  
+  coeff_list[[i]] <- temp_pred[par_vec, ]
+}
+```
+
+
+```{r}
+cluster_df <- rbind(NE_laglist[[1]], NE_laglist[[2]])
+
+cov_matrix <- as.matrix(cluster_df[,3:262]) #index only
+cov_matrix <- scale(cov_matrix)
+resp_vec <- cluster_df$NE_Aus
+resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
+
+set.seed(350)
+test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 10)
+
+plot(test_lasso)
+
+best_lambda <- test_lasso$lambda.min
+best_lambda
+log(best_lambda)
+
+test_pred <- predict(test_lasso, s = best_lambda, type = "coefficients")
+test_pred@i 
+par_vec <- test_pred@i + 1
+test_pred[par_vec, ]
+```
+
