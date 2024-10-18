@@ -1,0 +1,15 @@
+---
+title: "cluster_work"
+author: "Ryan Peterson"
+date: "2024-10-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+
+```
+
