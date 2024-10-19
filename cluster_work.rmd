@@ -13,3 +13,93 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
+
+```{r data_import}
+setwd("~/CO_AUS/Aus_CO-main")
+
+load( "ne_data.rda")
+load( "se_data.rda")
+
+load( "bounded_data.rda")
+load( "data_matrix.rda")
+
+load( "lag_list.rda")
+```
+
+
+
+```{r test_block}
+
+
+neresp_test <- resp_matrix[, 1:32]
+subset_test <- neresp_test[, 31:32]
+
+centered_subset <- scale(subset_test, center = TRUE, scale = FALSE)
+
+d <- dist(t(neresp_test))
+#dist(t(neresp_test), diag = TRUE)
+dist(t(centered_subset))
+dist(t(subset_test))
+
+d[which.min(d)]
+```
+
+
+```{r baseline_hclust}
+#using hclust function without considering time-constraints
+
+#using single-linked
+NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
+NEtest_clust <- hclust(dist(t(NEbase_matrix)), method = "average")
+plot(NEtest_clust)
+
+SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+SEtest_clust <- hclust(dist(t(SEbase_matrix)), method = "average")
+plot(SEtest_clust)
+
+```
+
+
+Test a naive single-linked agglomeration clustering:
+-create implementations for:
+--single-linkage
+--complete-linkage
+--pair group with arithmetic mean (unweighted and weighted)
+
+```{r naive_single}
+
+#using L2 distance
+
+#disjoint of L(0) = 0
+#set-up for week 35:52 and 1.
+base_matrix <- scale(resp_matrix[, 1:19], center = TRUE, scale = FALSE)
+
+d <- dist(t(base_matrix))
+
+minval <- min(d)
+
+mindex <- which(as.matrix(d) == minval, arr.ind = TRUE)
+
+temp_matrix <- as.matrix(d)
+#diag(temp_matrix, 1)
+
+#TODO: plot this (add weeks in the half points (0.5, 1.5, ...))
+subdiag <- temp_matrix[row(temp_matrix) == col(temp_matrix) + 1]
+plot(subdiag, pch = 16) 
+
+min_n <- min(subdiag) #min neighboring
+
+index_n <- which(as.matrix(d) == min_n, arr.ind = TRUE)
+
+base_matrix[ ,index_n[1,]]
+
+#height 
+height_1 <- dist(t(base_matrix[ ,index_n[1,]]))/2
+
+
+
+```
+
+Compare below with a mean of $(a,b)$,
+$$\min(D_1(a,c), D_1(b,c))$$
+
