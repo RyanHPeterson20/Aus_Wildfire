@@ -60,19 +60,40 @@ plot(SEtest_clust)
 ```
 
 
-Test a naive single-linked agglomeration clustering:
+Test a naive single-linked agglomeration clustering
+
+Then:
 -create implementations for:
 --single-linkage
 --complete-linkage
---pair group with arithmetic mean (unweighted and weighted)
+--pair group with arithmetic mean (un-weighted and weighted)
+
+
+```{r test_function}
+
+#function to implement the single link agglomeration clustering algorithm
+sl_agglcluster <- function() {
+  
+  
+}
+
+
+```
+
 
 ```{r naive_single}
-
 #using L2 distance
 
 #disjoint of L(0) = 0
 #set-up for week 35:52 and 1.
 base_matrix <- scale(resp_matrix[, 1:19], center = TRUE, scale = FALSE)
+
+#TODO: create df and/or create a new col names for the matrix
+## change colnames to only number so we can track updates better
+
+#test for this change:
+upd_matrix <- base_matrix
+colnames(upd_matrix) <- substring(colnames(base_matrix), 6)
 
 d <- dist(t(base_matrix))
 
@@ -96,7 +117,9 @@ base_matrix[ ,index_n[1,]]
 #height 
 height_1 <- dist(t(base_matrix[ ,index_n[1,]]))/2
 
+which(col(temp_matrix) == index_n[1, ],  arr.ind = TRUE)
 
+temp_matrix[ ,temp_matrix]
 
 ```
 
