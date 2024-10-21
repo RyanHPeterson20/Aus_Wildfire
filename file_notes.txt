@@ -6,6 +6,10 @@ Brief file notes and summaries:
   - if chosen as our model convert to R script
     - Potentially change to R script anyway.
 
+ . cluster_work.rmd
+  - create manual time-constrained agglomerative clustering of response data.
+  - this is all done manually since I don't necessarily like any of the existing R packages.
+
 2. co_olr.R
   -olr anomaly and visualization file. 
   -use the olr_full.rda (R data file)
