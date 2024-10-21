@@ -72,12 +72,175 @@ Then:
 ```{r test_function}
 
 #function to implement the single link agglomeration clustering algorithm
-sl_agglcluster <- function() {
+agglcluster_sl <- function() {
   
   
 }
 
+#internal function for subdiag (distance vector) update
+vector_update <- function(dist_matrix, index_n, subdiag, min_ind) {
+  #get updates from distance matrix
+  min_loc <- index_n[1, ] 
 
+  d_1 <- dist_matrix[min_loc[1], min_loc[2] - 1] #(49,51)
+  d_2 <- dist_matrix[min_loc[1] + 1, min_loc[2]] #(50,52)
+
+  d1_name <- colnames(dist_matrix)[ min_loc[2] - 1]
+  d2_name <- rownames(dist_matrix)[min_loc[1] + 1]
+
+  #update distance vector (originally the subdiagonal)
+  sub_names <- names(subdiag)
+  min_name <- sub_names[min_ind]
+  
+  t1 <- min(d_1, subdiag[min_ind-1])
+  t1_name <- paste0("(",d1_name,",",min_name,")")
+  t2 <- min(d_2, subdiag[min_ind+1])
+  t2_name <- paste0("(",min_name,",",d2_name,")")
+
+  temp_subdiag <- subdiag
+  temp_subdiag[min_ind-1] <- t1
+  sub_names[min_ind-1] <- t1_name
+
+  temp_subdiag[min_ind+1] <- t2
+  sub_names[min_ind+1] <- t2_name
+
+  temp_subdiag <- temp_subdiag[-min_ind]
+  sub_names <- sub_names[-min_ind]
+  names(temp_subdiag) <- sub_names
+
+  return(temp_subdiag)
+}
+
+
+```
+
+
+```{r test_block}
+
+
+#setup section:
+base_matrix <- scale(resp_matrix[, 1:19], center = TRUE, scale = FALSE)
+colnames(base_matrix) <- substring(colnames(base_matrix), 6)
+
+#distance matrix
+d <- dist(t(base_matrix))
+temp_matrix <- as.matrix(d)
+#TODO: update the name change as
+dist_matrix <- as.matrix(d)
+
+#loop 1 starts here
+##sub-diagonal 
+subdiag <- temp_matrix[col(temp_matrix) == row(temp_matrix) + 1]
+
+#subdiag colnames as pair (,)
+base_names <- colnames(base_matrix)
+sub_names <- c()
+
+n <- length(base_names)
+for (i in 1:n-1) {
+  first <- base_names[i]
+  second <- base_names[i+1]
+  sub_names <- c(sub_names, paste0("(",first,",",second,")"))
+}
+
+sub_names <- sub_names[-1]
+names(subdiag) <- sub_names
+
+subdiag
+
+dend_df <- as.data.frame(matrix(NA, ncol = 2))
+for (i in 1:3) {
+  min_n <- min(subdiag)
+  min_ind <- which.min(subdiag)
+  min_name <- sub_names[min_ind]
+  index_n <- which(temp_matrix == min_n, arr.ind = TRUE)
+
+  height_new <- min_n/2
+  
+  dend_df <- rbind(dend_df, c(height_new, min_name))
+
+  subdiag <- vector_update(dist_matrix, index_n, subdiag, min_ind)
+  print(subdiag)
+}
+
+
+#TODO: pick up after the next step since we are now connecting data that will have a lower height than an already connected section. 
+
+#either address the above issue or change this some average linkage methods.
+#perform some comparisons with the first distance matrix update using averages
+#we also need elifs around the boundaries to avoid out of bounds issues.
+
+
+```
+
+```{r }
+#minimum check (variation)
+
+#min of subdiag, location, and name
+min_n <- min(subdiag)
+min_ind <- which.min(subdiag)
+min_name <- sub_names[min_ind]
+index_n <- which(temp_matrix == min_n, arr.ind = TRUE)
+
+#base_matrix[ ,index_n[1,]] #not needed (delete later)
+
+#height
+height_new <- min_n/2
+
+#update
+#TODO: update height/dendogram df (output)
+subdiag <- vector_update(dist_matrix, index_n, subdiag, min_ind)
+subdiag
+
+min_n <- min(subdiag)
+min_ind <- which.min(subdiag)
+min_name <- sub_names[min_ind]
+index_n <- which(temp_matrix == min_n, arr.ind = TRUE)
+
+height_new <- min_n/2
+
+subdiag <- vector_update(dist_matrix, index_n, subdiag, min_ind)
+subdiag
+```
+
+
+```{r test_updates}
+#loop 2 (loop n+1)
+min_loc <- index_n[1, ] 
+
+min_loc[1]
+min_loc[2]
+
+d_1 <- dist_matrix[min_loc[1], min_loc[2] - 1] #(49,51)
+d_2 <- dist_matrix[min_loc[1] + 1, min_loc[2]] #(50,52)
+
+d1_name <- colnames(dist_matrix)[ min_loc[2] - 1]
+d2_name <- rownames(dist_matrix)[min_loc[1] + 1]
+
+subdiag[min_ind-1]
+subdiag[min_ind+1]
+
+min_name <- sub_names[min_ind]
+
+t1 <- min(d_1, subdiag[min_ind-1])
+t1_name <- paste0("(",d1_name,",",min_name,")")
+t2 <- min(d_2, subdiag[min_ind+1])
+t2_name <- paste0("(",min_name,",",d2_name,")")
+
+#TODO; remove and rename temp_subdiag
+temp_subdiag <- subdiag
+temp_subdiag[min_ind-1] <- t1
+sub_names[min_ind-1] <- t1_name
+
+temp_subdiag[min_ind+1] <- t2
+sub_names[min_ind+1] <- t2_name
+
+temp_subdiag <- temp_subdiag[-min_ind]
+sub_names <- sub_names[-min_ind]
+names(temp_subdiag) <- sub_names
+
+subdiag
+temp_subdiag
 ```
 
 
@@ -119,7 +282,7 @@ height_1 <- dist(t(base_matrix[ ,index_n[1,]]))/2
 
 which(col(temp_matrix) == index_n[1, ],  arr.ind = TRUE)
 
-temp_matrix[ ,temp_matrix]
+
 
 ```
 
