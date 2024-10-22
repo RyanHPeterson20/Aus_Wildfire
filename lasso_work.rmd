@@ -37,7 +37,33 @@ load( "lag_list.rda")
 ```
 
 
+
+# Group Lasso
+
+Using the clusters (groups) determined in other work we build group lasso models
+
+```{r group_setup}
+
+```
+
+
+
+## Package Testing
+
+Goal is to check several packages to perform multivariate group lasso.
+
+Packages to try: gglasso, glmnet, spams
+
+## Group Variations
+
+Test out variations on group lasso, such as sparse group lasso.
+
+
+
+
 # Fused Lasso
+
+Come back to this if everything else is not working
 
 ```{r data}
 #testing with week 36 of NE Aus

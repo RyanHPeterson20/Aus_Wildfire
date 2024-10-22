@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r library}
-
+suppressMessages(library(adespatial)) #for constr.hclust
 ```
 
 
@@ -26,11 +26,13 @@ load( "data_matrix.rda")
 load( "lag_list.rda")
 ```
 
+```{r setup}
+season_weeks <- c(35:52, 1:14)
+```
+
 
 
 ```{r test_block}
-
-
 neresp_test <- resp_matrix[, 1:32]
 subset_test <- neresp_test[, 31:32]
 
@@ -60,6 +62,54 @@ plot(SEtest_clust)
 ```
 
 
+constr.hclust
+
+```{r constr.hclust_test}
+NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
+NEconst_clust <- constr.hclust(dist(t(NEbase_matrix)), chron = TRUE) #default with ward.d2 method
+plot(NEconst_clust, k = 5) #either, k = 5 or 6
+stats:::plot.hclust(NEconst_clust, hang = -1)
+
+SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+SEconst_clust <- constr.hclust(dist(t(SEbase_matrix)), chron = TRUE) #default with ward.d2 method
+plot(SEconst_clust, k = 5) #either, k = 4 or 5
+stats:::plot.hclust(SEconst_clust, hang = -1)
+```
+
+```{r clustered_data}
+#new matrices (eventually convert to list of df's or matrices)
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:3]
+NEAus_2 <- NEbase_matrix[ ,4:8]
+NEAus_3 <- NEbase_matrix[ ,9:12]
+NEAus_4 <- NEbase_matrix[ ,13:17]
+NEAus_5 <- NEbase_matrix[ ,18:32]
+
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:3]
+SEAus_2 <- SEbase_matrix[ ,4:7]
+SEAus_3 <- SEbase_matrix[ ,8:16]
+SEAus_4 <- SEbase_matrix[ ,17:20]
+SEAus_5 <- SEbase_matrix[ ,21:32]
+```
+
+
+```{r response_plots}
+line_col <- rainbow(10)
+y_range <- range(NEAus_2)
+plot(1:5, NEAus_2[1,], type = "l", lwd = 2, xaxt = "n", ylim = y_range,
+     ylab = "Anomaly (Total Column CO)", xlab = "Weeks")
+axis(1, at=1:5, labels = season_weeks[4:8])
+for (i in 2:7) {
+  lines(1:5, NEAus_2[i,], lwd = 2, col = line_col[i])
+}
+
+```
+
+
+Additional work, not currently needed.
+
 Test a naive single-linked agglomeration clustering
 
 Then:
@@ -82,6 +132,12 @@ vector_update <- function(dist_matrix, index_n, subdiag, min_ind) {
   #get updates from distance matrix
   min_loc <- index_n[1, ] 
 
+  #neighborhood checks (add in elif boundary checks)
+  #TODO: assign min_ind and min_loc
+  low <- min_ind-1
+  upr <- min_ind+1
+  
+  
   d_1 <- dist_matrix[min_loc[1], min_loc[2] - 1] #(49,51)
   d_2 <- dist_matrix[min_loc[1] + 1, min_loc[2]] #(50,52)
 
@@ -91,6 +147,7 @@ vector_update <- function(dist_matrix, index_n, subdiag, min_ind) {
   #update distance vector (originally the subdiagonal)
   sub_names <- names(subdiag)
   min_name <- sub_names[min_ind]
+
   
   t1 <- min(d_1, subdiag[min_ind-1])
   t1_name <- paste0("(",d1_name,",",min_name,")")
@@ -173,6 +230,71 @@ for (i in 1:3) {
 
 ```
 
+
+```{r minimizing_test}
+min_n <- min(subdiag)
+min_ind <- which.min(subdiag)
+min_name <- sub_names[min_ind]
+index_n <- which(temp_matrix == min_n, arr.ind = TRUE)
+```
+
+
+```{r function_tests}
+#loop 2 (loop n+1)
+min_loc <- index_n[1, ] 
+
+min_loc[1]
+min_loc[2]
+names(subdiag)
+subdiag[min_ind-1]
+subdiag[min_ind+1]
+
+#neighborhood checks (add in elif boundary checks)
+
+#get lengths from matrix/vector
+n_1 <- length(subdiag)
+n_row <- nrow(dist_matrix)
+n_col <- ncol(dist_matrix)
+
+
+#TODO: assign min_ind and min_loc
+low <- min_ind-1
+upr <- min_ind+1
+
+
+if (low < 1) {
+  
+}
+
+d_1 <- dist_matrix[min_loc[1], min_loc[2] - 1] #(49,51)
+d_2 <- dist_matrix[min_loc[1] + 1, min_loc[2]] #(50,52)
+
+d1_name <- colnames(dist_matrix)[ min_loc[2] - 1]
+d2_name <- rownames(dist_matrix)[min_loc[1] + 1]
+
+#update distance vector (originally the subdiagonal)
+sub_names <- names(subdiag)
+min_name <- sub_names[min_ind]
+
+
+t1 <- min(d_1, subdiag[min_ind-1])
+t1_name <- paste0("(",d1_name,",",min_name,")")
+t2 <- min(d_2, subdiag[min_ind+1])
+t2_name <- paste0("(",min_name,",",d2_name,")")
+
+temp_subdiag <- subdiag
+temp_subdiag[min_ind-1] <- t1
+sub_names[min_ind-1] <- t1_name
+
+temp_subdiag[min_ind+1] <- t2
+sub_names[min_ind+1] <- t2_name
+
+temp_subdiag <- temp_subdiag[-min_ind]
+sub_names <- sub_names[-min_ind]
+names(temp_subdiag) <- sub_names
+```
+
+
 ```{r }
 #minimum check (variation)
 
@@ -201,46 +323,6 @@ height_new <- min_n/2
 
 subdiag <- vector_update(dist_matrix, index_n, subdiag, min_ind)
 subdiag
-```
-
-
-```{r test_updates}
-#loop 2 (loop n+1)
-min_loc <- index_n[1, ] 
-
-min_loc[1]
-min_loc[2]
-
-d_1 <- dist_matrix[min_loc[1], min_loc[2] - 1] #(49,51)
-d_2 <- dist_matrix[min_loc[1] + 1, min_loc[2]] #(50,52)
-
-d1_name <- colnames(dist_matrix)[ min_loc[2] - 1]
-d2_name <- rownames(dist_matrix)[min_loc[1] + 1]
-
-subdiag[min_ind-1]
-subdiag[min_ind+1]
-
-min_name <- sub_names[min_ind]
-
-t1 <- min(d_1, subdiag[min_ind-1])
-t1_name <- paste0("(",d1_name,",",min_name,")")
-t2 <- min(d_2, subdiag[min_ind+1])
-t2_name <- paste0("(",min_name,",",d2_name,")")
-
-#TODO; remove and rename temp_subdiag
-temp_subdiag <- subdiag
-temp_subdiag[min_ind-1] <- t1
-sub_names[min_ind-1] <- t1_name
-
-temp_subdiag[min_ind+1] <- t2
-sub_names[min_ind+1] <- t2_name
-
-temp_subdiag <- temp_subdiag[-min_ind]
-sub_names <- sub_names[-min_ind]
-names(temp_subdiag) <- sub_names
-
-subdiag
-temp_subdiag
 ```
 
 
