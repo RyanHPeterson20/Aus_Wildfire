@@ -11,8 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r libraries}
-suppressMessages(library(glmnet))
-suppressMessages(library(pls))
+suppressMessages(library(pls)) #penalized least squares
+
+#lasso
+suppressMessages(library(glmnet)) #base lasso (elastic net, etc.)
+suppressMessages(library(penalized)) #other lasso lib
+suppressMessages(library(gglasso)) #group lasso
+#suppressMessages(library(grplasso))
 
 suppressMessages(library(genlasso)) #used for fused lasso (not a fan)
 ```
@@ -38,25 +43,149 @@ load( "lag_list.rda")
 
 
 
-# Group Lasso
+# Group Lasso (Lasso)
 
 Using the clusters (groups) determined in other work we build group lasso models
 
 ```{r group_setup}
+NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
 
+SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:3]
+NEAus_2 <- NEbase_matrix[ ,4:8]
+NEAus_3 <- NEbase_matrix[ ,9:12]
+NEAus_4 <- NEbase_matrix[ ,13:17]
+NEAus_5 <- NEbase_matrix[ ,18:32]
+
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:3]
+SEAus_2 <- SEbase_matrix[ ,4:7]
+SEAus_3 <- SEbase_matrix[ ,8:16]
+SEAus_4 <- SEbase_matrix[ ,17:20]
+SEAus_5 <- SEbase_matrix[ ,21:32]
+
+#TODO: create lists of the above matrices
+
+
+#lag predictor set-up 
+NE1_lag <- NE_laglist$`Week  35`[,-(1:2)]
+NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  36`[,-(1:2)], NE_laglist$`Week  37`[,-(1:2)])
+
+#NE_laglist$`Week  35`
+
+
+#weekly predictor set-up
+NE1_preds <- NE_list$`Week  35`[,-(1:2)]
+NE2_preds <- NE_list$`Week  38`[,-(1:2)]
 ```
-
 
 
 ## Package Testing
 
 Goal is to check several packages to perform multivariate group lasso.
 
-Packages to try: gglasso, glmnet, spams
+Packages to try: gglasso, glmnet, penalized
+
+Notes:
+gglasso: 
+-Does not take a matrix of response, only a vector since the manipulation of the data in the function is "fucky"
+
+```{r gglasso_test}
+#example from glmnet
+#cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 4)
+
+#test using a subset of preds
+#nino_only <- as.matrix(NE1_lag[,1:52])
+nino_only <- as.matrix(NE1_preds[,1:52])
+nino_only <- scale(nino_only, center = TRUE, scale = TRUE)
+row.names(NEAus_1) <- 1:19
+
+test_group <- rep(1:52, each = 1) #not sure if this is how I want it?
+
+#TODO: currently not working as is.
+cv_fit <- cv.gglasso(x = nino_only, y = NEAus_1, group = test_group, nfolds = 5, loss = "ls")
+plot(cv_fit)
+```
+
+glmnet:
+-alpha = 1 for 
+
+```{r glmnet_test}
+#example function
+#fit <- glmnet(X, Y, family="mgaussian", group=groups)
+
+reduced_preds <- as.matrix(NE1_preds[,1:208])
+reduced_preds <- scale(reduced_preds, center = TRUE, scale = TRUE)
+row.names(NEAus_1) <- 1:19
+
+set.seed(300)
+cv_fit <- cv.glmnet(reduced_preds, NEAus_1, alpha = 0.815, nfolds = 5, family = "mgaussian")
+plot(cv_fit)
+
+best_lambda <- cv_fit$lambda.min
+
+test_model <- glmnet(reduced_preds, NEAus_1, alpha = 0.815, family = "mgaussian")
+test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
+preds <- test_pred$NEAus35@i+1
+
+test_pred$NEAus35@i+1
+test_pred$NEAus36@i+1
+test_pred$NEAus35[preds,]
+test_pred$NEAus36[preds,]
+```
+
+
+
+```{r error_checks}
+#checks for error: "x and y have different number of rows"
+nrow(NEAus_1)
+nrow(nino_only)
+
+is.numeric(NEAus_1)
+is.numeric(nino_only)
+
+dim(nino_only)
+length(NEAus_1)
+
+drop(NEAus_1)
+```
+
+
+## Lasso Variations
+
+```{r lag_test}
+#testing using "stacked" vectors and matrices for pre-clustered response
+NE1_resp <- c(NEAus_1[,1], NEAus_1[,2], NEAus_1[,3])
+
+#set new matrices for  
+NE35_lag <- scale(as.matrix(NE_laglist$`Week  35`[,-(1:2)]), center = TRUE, scale = TRUE)
+NE36_lag <- scale(as.matrix(NE_laglist$`Week  36`[,-(1:2)]), center = TRUE, scale = TRUE)
+NE37_lag <- scale(as.matrix(NE_laglist$`Week  37`[,-(1:2)]), center = TRUE, scale = TRUE)
+    
+#lag predictor set-up 
+NE1_lag <- rbind(NE35_lag, NE36_lag, NE37_lag)
+#removing OLR
+NE1_lag <- NE1_lag[,1:208]
+
+set.seed(300)
+cv_lagfit <- cv.glmnet(NE1_lag, NE1_resp, alpha = 0.5, nfolds = 5)
+plot(cv_lagfit)
+
+best_lambda <- cv_lagfit$lambda.min
+
+test_model <- glmnet(NE1_lag, NE1_resp, alpha = 0.5)
+test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
+
+preds <- test_pred@i+1
+test_pred[preds, ]
+```
+
 
 ## Group Variations
 
-Test out variations on group lasso, such as sparse group lasso.
+Test out variations on group lasso, such as sparse group lasso or fused group lasso. 
 
 
 
@@ -110,146 +239,5 @@ plot(resp_sig, style = "path")
 cv = cv.trendfilter(resp_sig)
 
 plot(resp_sig, lambda=cv$lambda.1se, main="Minimal CV error")
-```
-
-# Elastic Net
-
-
-
-
-# Clustering
-
-```{r kmean}
-NE_resp <- resp_matrix[,1:32]
-SE_resp <- resp_matrix[,33:64]
-
-#centered data:
-NE_resp <- scale(NE_resp, center = TRUE, scale = FALSE)
-SE_resp <- scale(SE_resp, center = TRUE, scale = FALSE)
-
-set.seed(300)
-kmean_ne <- kmeans(t(NE_resp), centers = 7)
-kmean_ne$cluster
-kmean_se <- kmeans(t(SE_resp), centers = 7)
-kmean_se$cluster
-
-plot(t(NE_resp), col = kmean_ne$cluster, pch = 16, main = "k-Means Clustering")
-```
-
-
-TODO: create plots for each week in response with respect to season/years (year in x, value in y)
-
-and create cluster dendogram. 
-
-```{r elastic_net}
-week_35 <- NE_laglist[[1]]
-week_36 <- NE_laglist[[2]]
-week_37 <- NE_laglist[[3]]
-
-cov_matrix <- as.matrix(week_36[,3:210]) #index only
-cov_matrix <- scale(cov_matrix, center = TRUE, scale = FALSE) #center preds
-resp_vec <- week_36$NE_Aus
-#resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
-
-set.seed(300)
-test_net <- cv.glmnet(cov_matrix, resp_vec, alpha = 0.3, nfolds = 5)
-
-plot(test_net)
-
-best_lambda <- test_net$lambda.min
-best_lambda
-log(best_lambda)
-
-net_obj <- glmnet(cov_matrix, resp_vec, alpha = 0.3, nfolds = 5)
-plot(net_obj)
-
-test_pred <- predict(test_net, s = best_lambda, type = "coefficients")
-test_pred@i 
-par_vec <- test_pred@i + 1
-test_pred[par_vec, ]
-
-```
-
-
-# Check clustering in lag-lasso
-
-with k = 8, Ne Aus groups 35-37, 38 - 39, 40-42, ...
-
-```{r}
-#baseline lasso for each week in cluster "1"
-week_35 <- NE_laglist[[1]]
-week_36 <- NE_laglist[[2]]
-week_37 <- NE_laglist[[3]]
-
-#TODO: cluster for each then for all 3 (from k = 8 mean cluster above)
-cov_matrix <- as.matrix(week_37[,3:210]) #index only
-#cov_matrix <- scale(cov_matrix)
-resp_vec <- week_37$NE_Aus
-#resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
-
-#remove 2019/2020
-cov_matrix <- cov_matrix[-19, ]
-resp_vec <- resp_vec[-19]
-
-set.seed(300)
-test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 6)
-
-plot(test_lasso)
-
-best_lambda <- test_lasso$lambda.min
-best_lambda
-log(best_lambda)
-
-test_pred <- predict(test_lasso, s = best_lambda, type = "coefficients")
-test_pred@i 
-par_vec <- test_pred@i + 1
-test_pred[par_vec, ]
-```
-
-
-```{r}
-coeff_list <- list()
-for (i in 1:3) {
-  ne_week <- NE_laglist[[i]]
-  
-  cov_matrix <- as.matrix(ne_week[,3:262]) #index only
-  cov_matrix <- scale(cov_matrix)
-  resp_vec <- ne_week$NE_Aus
-  resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
-
-  set.seed(300)
-  temp_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 5)
-  best_lambda <- temp_lasso$lambda.min
-  
-  temp_pred <- predict(temp_lasso, s = best_lambda, type = "coefficients")
-
-  par_vec <- temp_pred@i + 1
-  
-  coeff_list[[i]] <- temp_pred[par_vec, ]
-}
-```
-
-
-```{r}
-cluster_df <- rbind(NE_laglist[[1]], NE_laglist[[2]])
-
-cov_matrix <- as.matrix(cluster_df[,3:262]) #index only
-cov_matrix <- scale(cov_matrix)
-resp_vec <- cluster_df$NE_Aus
-resp_vec <- scale(resp_vec, center = TRUE, scale = FALSE)
-
-set.seed(350)
-test_lasso <- cv.glmnet(cov_matrix, resp_vec, alpha = 1, nfolds = 10)
-
-plot(test_lasso)
-
-best_lambda <- test_lasso$lambda.min
-best_lambda
-log(best_lambda)
-
-test_pred <- predict(test_lasso, s = best_lambda, type = "coefficients")
-test_pred@i 
-par_vec <- test_pred@i + 1
-test_pred[par_vec, ]
 ```
 
