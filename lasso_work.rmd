@@ -182,6 +182,53 @@ preds <- test_pred@i+1
 test_pred[preds, ]
 ```
 
+```{r fused_lasso}
+#fused lasso with above data matrix and response vector.
+
+#separate data for each predictor
+nino_lag <- NE1_lag[,1:52]
+dmi_lag <- NE1_lag[,53:104]
+tsa_lag <- NE1_lag[,105:156]
+aao_lag <- NE1_lag[,157:208]
+
+D <- getD1d(52)
+#TODO: create a new D value that 
+
+nino_fuse <- fusedlasso(y = NE1_resp, X = nino_lag, D, gamma = 0.75)
+dmi_fuse <- fusedlasso(y = NE1_resp, X = dmi_lag, D, gamma = 0.75)
+tsa_fuse <- fusedlasso(y = NE1_resp, X = tsa_lag, D, gamma = 0.75)
+aao_fuse <- fusedlasso(y = NE1_resp, X = aao_lag, D, gamma = 0.75)
+```
+
+
+```{r}
+#nino_fuse$lambda
+n <- length(NE1_resp)
+#p <- ncol(nino_fuse)
+ltest <- sqrt(n * log(52))
+
+nino_coef <- coef(nino_fuse, lambda = ltest)
+dmi_coef <- coef(dmi_fuse, lambda = ltest)
+tsa_coef <- coef(tsa_fuse, lambda = ltest)
+aao_coef <- coef(aao_fuse, lambda = ltest)
+
+#ols <- nino_fuse$bls
+#plot(1:52, ols, type = "l")
+#lines(1:52, coef_test$beta, lwd=1.5, col = "red")
+
+plot(1:52, nino_coef$beta, type = "l", xlab = "Lag", ylab = "Coeficients", main = "Nino")
+abline(h = 0, lty = 2)
+
+plot(1:52, dmi_coef$beta, type = "l", xlab = "Lag", ylab = "Coeficients", main = "DMI")
+abline(h = 0, lty = 2)
+
+plot(1:52, tsa_coef$beta, type = "l", xlab = "Lag", ylab = "Coeficients", main = "TSA")
+abline(h = 0, lty = 2)
+
+plot(1:52, aao_coef$beta, type = "l", xlab = "Lag", ylab = "Coeficients", main = "AAO")
+abline(h = 0, lty = 2)
+```
+
 
 ## Group Variations
 
