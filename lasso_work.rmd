@@ -110,7 +110,7 @@ plot(cv_fit)
 ```
 
 glmnet:
--alpha = 1 for 
+-alpha = 1 for lasso
 
 ```{r glmnet_test}
 #example function
