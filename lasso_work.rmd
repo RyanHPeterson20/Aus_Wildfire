@@ -105,8 +105,8 @@ row.names(NEAus_1) <- 1:19
 test_group <- rep(1:52, each = 1) #not sure if this is how I want it?
 
 #TODO: currently not working as is.
-cv_fit <- cv.gglasso(x = nino_only, y = NEAus_1, group = test_group, nfolds = 5, loss = "ls")
-plot(cv_fit)
+#cv_fit <- cv.gglasso(x = nino_only, y = NEAus_1, group = test_group, nfolds = 5, loss = "ls")
+#plot(cv_fit)
 ```
 
 glmnet:
@@ -182,6 +182,8 @@ preds <- test_pred@i+1
 test_pred[preds, ]
 ```
 
+
+
 ```{r fused_lasso}
 #fused lasso with above data matrix and response vector.
 
@@ -190,9 +192,11 @@ nino_lag <- NE1_lag[,1:52]
 dmi_lag <- NE1_lag[,53:104]
 tsa_lag <- NE1_lag[,105:156]
 aao_lag <- NE1_lag[,157:208]
+olr_lag <- NE1_lag[,209:260]
 
-D <- getD1d(52)
-#TODO: create a new D value that 
+#D <- getD1d(52)
+
+#TODO: create a new D value that accounts for the jumps between climate modes (predictor groups).
 
 nino_fuse <- fusedlasso(y = NE1_resp, X = nino_lag, D, gamma = 0.75)
 dmi_fuse <- fusedlasso(y = NE1_resp, X = dmi_lag, D, gamma = 0.75)
@@ -227,6 +231,76 @@ abline(h = 0, lty = 2)
 
 plot(1:52, aao_coef$beta, type = "l", xlab = "Lag", ylab = "Coeficients", main = "AAO")
 abline(h = 0, lty = 2)
+```
+
+
+```{r matrix_adj}
+
+D <- getD1d(52)
+empty_D <- matrix(rep(0, (52*51)) , ncol = 52, nrow = 51)
+D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
+D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
+
+D_new <- rbind(D1, D2, D3, D4, D5)
+
+```
+
+
+```{r combined}
+#column bind data
+#nino/dmi
+new_preds <- cbind(nino_lag, dmi_lag, tsa_lag, aao_lag, olr_lag)
+
+new_fuse <- fusedlasso(y = NE1_resp, X = new_preds, D_new, gamma = 1)
+```
+
+```{r}
+n <- length(NE1_resp)
+#p <- ncol(nino_fuse)
+ltest <- sqrt(n * log(260))
+
+new_coef <- coef(new_fuse, lambda = ltest)
+nino_coef2 <- new_coef$beta[1:52,]
+dmi_coef2 <- new_coef$beta[53:104,]
+tsa_coef2 <- new_coef$beta[105:156,]
+aao_coef2 <- new_coef$beta[157:208,]
+olr_coef2 <- new_coef$beta[209:260,]
+
+#ols <- nino_fuse$bls
+#plot(1:52, ols, type = "l")
+#lines(1:52, coef_test$beta, lwd=1.5, col = "red")
+
+plot(1:52, nino_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "Nino + DMI", ylim = range(new_coef$beta))
+lines(1:52, dmi_coef2, col = "blue")
+lines(1:52, tsa_coef2, col = "red")
+lines(1:52, aao_coef2, col = "darkgreen")
+lines(1:52, olr_coef2, col = "purple")
+abline(h = 0, lty = 2)
+
+
+plot(1:52, nino_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "Nino")
+abline(h = 0, lty = 2)
+
+plot(1:52, dmi_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "DMI", col = "blue")
+abline(h = 0, lty = 2)
+
+plot(1:52, tsa_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "TSA", col = "red")
+abline(h = 0, lty = 2)
+
+plot(1:52, aao_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "AAO", col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, olr_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "OLR", col = "purple")
+abline(h = 0, lty = 2)
+```
+
+
+
+```{r predictions}
+NE_laglist$`Week  35`
 ```
 
 
