@@ -45,12 +45,17 @@ load( "lag_list.rda")
 
 # Group Lasso (Lasso)
 
+## Clusters
+
 Using the clusters (groups) determined in other work we build group lasso models
 
 ```{r group_setup}
+#centered response matrices
 NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
 
 SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+
+#TODO: create lists of the above matrices
 
 #NEAus
 NEAus_1 <- NEbase_matrix[ ,1:3]
@@ -66,20 +71,35 @@ SEAus_3 <- SEbase_matrix[ ,8:16]
 SEAus_4 <- SEbase_matrix[ ,17:20]
 SEAus_5 <- SEbase_matrix[ ,21:32]
 
-#TODO: create lists of the above matrices
+```
 
-
+```{r }
 #lag predictor set-up 
+#NE group 1: 35-37
 NE1_lag <- NE_laglist$`Week  35`[,-(1:2)]
 NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  36`[,-(1:2)], NE_laglist$`Week  37`[,-(1:2)])
 
-#NE_laglist$`Week  35`
+#NE group 2: 38-42
+NE2_lag <- NE_laglist$`Week  38`[,-(1:2)]
+NE2_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[,-(1:2)], NE_laglist$`Week  40`[,-(1:2)])
 
+#NE group 3: 43-46
+
+
+#NE group 4: 47-51
+
+
+#NE group 5: 51, 1-3
+
+
+#NE group 6: 
 
 #weekly predictor set-up
 NE1_preds <- NE_list$`Week  35`[,-(1:2)]
 NE2_preds <- NE_list$`Week  38`[,-(1:2)]
 ```
+
+
 
 
 ## Package Testing
@@ -239,20 +259,28 @@ abline(h = 0, lty = 2)
 D <- getD1d(52)
 empty_D <- matrix(rep(0, (52*51)) , ncol = 52, nrow = 51)
 D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+
+
 D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+
+
 D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
 D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
 D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
 
-D_new <- rbind(D1, D2, D3, D4, D5)
-
+#D_new <- rbind(D1, D2, D3, D4, D5)
+D_new <- rbind(D1, D2, D3, D4)
+D_new <- D_new[,-(209:260)]
 ```
 
 
 ```{r combined}
 #column bind data
 #nino/dmi
-new_preds <- cbind(nino_lag, dmi_lag, tsa_lag, aao_lag, olr_lag)
+#new_preds <- cbind(nino_lag, dmi_lag, tsa_lag, aao_lag, olr_lag)
+
+new_preds <- cbind(nino_lag, dmi_lag, tsa_lag, aao_lag)
+
 
 new_fuse <- fusedlasso(y = NE1_resp, X = new_preds, D_new, gamma = 1)
 ```
@@ -260,14 +288,14 @@ new_fuse <- fusedlasso(y = NE1_resp, X = new_preds, D_new, gamma = 1)
 ```{r}
 n <- length(NE1_resp)
 #p <- ncol(nino_fuse)
-ltest <- sqrt(n * log(260))
+ltest <- sqrt(n * log(208))
 
 new_coef <- coef(new_fuse, lambda = ltest)
 nino_coef2 <- new_coef$beta[1:52,]
 dmi_coef2 <- new_coef$beta[53:104,]
 tsa_coef2 <- new_coef$beta[105:156,]
 aao_coef2 <- new_coef$beta[157:208,]
-olr_coef2 <- new_coef$beta[209:260,]
+#olr_coef2 <- new_coef$beta[209:260,]
 
 #ols <- nino_fuse$bls
 #plot(1:52, ols, type = "l")
@@ -277,7 +305,6 @@ plot(1:52, nino_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "N
 lines(1:52, dmi_coef2, col = "blue")
 lines(1:52, tsa_coef2, col = "red")
 lines(1:52, aao_coef2, col = "darkgreen")
-lines(1:52, olr_coef2, col = "purple")
 abline(h = 0, lty = 2)
 
 
@@ -293,14 +320,39 @@ abline(h = 0, lty = 2)
 plot(1:52, aao_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "AAO", col = "darkgreen")
 abline(h = 0, lty = 2)
 
-plot(1:52, olr_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "OLR", col = "purple")
-abline(h = 0, lty = 2)
+#plot(1:52, olr_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "OLR", col = "purple")
+#abline(h = 0, lty = 2)
+```
+
+```{r}
+
 ```
 
 
-
 ```{r predictions}
-NE_laglist$`Week  35`
+group1_coef <- as.vector(new_coef$beta)
+
+ne_week35 <- NE_laglist$`Week  35`
+ne_week36 <- NE_laglist$`Week  36`
+ne_week37 <- NE_laglist$`Week  37`
+
+i <- 15
+week35_preds <- as.matrix(ne_week35[i,3:210])
+week36_preds <- as.matrix(ne_week36[i,3:210])
+week37_preds <- as.matrix(ne_week37[i,3:210])
+
+ne_week35[i,2]
+week35_preds %*% group1_coef
+
+ne_week36[i,2]
+week36_preds %*% group1_coef
+
+ne_week37[i,2]
+week37_preds %*% group1_coef
+
+
+
+
 ```
 
 

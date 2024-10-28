@@ -1,0 +1,21 @@
+---
+title: "prediction_work"
+author: "Ryan Peterson"
+date: "2024-10-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+
+```
+
+
+```{r data}
+
+```
+
