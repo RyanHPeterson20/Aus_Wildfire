@@ -62,7 +62,8 @@ NEAus_1 <- NEbase_matrix[ ,1:3]
 NEAus_2 <- NEbase_matrix[ ,4:8]
 NEAus_3 <- NEbase_matrix[ ,9:12]
 NEAus_4 <- NEbase_matrix[ ,13:17]
-NEAus_5 <- NEbase_matrix[ ,18:32]
+NEAus_5 <- NEbase_matrix[ ,18:21]
+NEAus_6 <- NEbase_matrix[ ,22:32]
 
 #SEAus
 SEAus_1 <- SEbase_matrix[ ,1:3]
@@ -73,32 +74,118 @@ SEAus_5 <- SEbase_matrix[ ,21:32]
 
 ```
 
-```{r }
-#lag predictor set-up 
+```{r lag_preds}
+#lag predictor set-up
+#TODO: turn this into a function
+
+## NE lag predictors
 #NE group 1: 35-37
 NE1_lag <- NE_laglist$`Week  35`[,-(1:2)]
 NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  36`[,-(1:2)], NE_laglist$`Week  37`[,-(1:2)])
 
 #NE group 2: 38-42
 NE2_lag <- NE_laglist$`Week  38`[,-(1:2)]
-NE2_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[,-(1:2)], NE_laglist$`Week  40`[,-(1:2)])
+NE2_lag <- rbind(NE2_lag, NE_laglist$`Week  39`[,-(1:2)], NE_laglist$`Week  40`[,-(1:2)],
+                 NE_laglist$`Week  41`[,-(1:2)], NE_laglist$`Week  42`[,-(1:2)])
 
 #NE group 3: 43-46
-
+NE3_lag <- NE_laglist$`Week  43`[,-(1:2)]
+NE3_lag <- rbind(NE3_lag, NE_laglist$`Week  44`[,-(1:2)], NE_laglist$`Week  45`[,-(1:2)],
+                 NE_laglist$`Week  46`[,-(1:2)])
 
 #NE group 4: 47-51
+NE4_lag <- NE_laglist$`Week  47`[,-(1:2)]
+NE4_lag <- rbind(NE4_lag, NE_laglist$`Week  48`[,-(1:2)], NE_laglist$`Week  49`[,-(1:2)],
+                 NE_laglist$`Week  50`[,-(1:2)], NE_laglist$`Week  51`[,-(1:2)])
+
+#NE group 5: 52, 1-3
+NE5_lag <- NE_laglist$`Week  52`[,-(1:2)]
+NE5_lag <- rbind(NE5_lag, NE_laglist$`Week  1`[,-(1:2)], NE_laglist$`Week  2`[,-(1:2)],
+                 NE_laglist$`Week  3`[,-(1:2)])
+
+#NE group 6: 4-14
+NE6_lag <- NE_laglist$`Week  4`[,-(1:2)]
+NE6_lag <- rbind(NE6_lag, NE_laglist$`Week  5`[,-(1:2)], NE_laglist$`Week  6`[,-(1:2)],
+                 NE_laglist$`Week  7`[,-(1:2)], NE_laglist$`Week  8`[,-(1:2)],
+                 NE_laglist$`Week  9`[,-(1:2)], NE_laglist$`Week  10`[,-(1:2)],
+                 NE_laglist$`Week  11`[,-(1:2)], NE_laglist$`Week  12`[,-(1:2)],
+                 NE_laglist$`Week  13`[,-(1:2)], NE_laglist$`Week  14`[,-(1:2)])
 
 
-#NE group 5: 51, 1-3
+## SE lag predictors
+#SE group 1: 35-37
+SE1_lag <- SE_laglist$`Week  35`[,-(1:2)]
+SE1_lag <- rbind(SE1_lag, SE_laglist$`Week  36`[,-(1:2)], SE_laglist$`Week  37`[,-(1:2)])
+
+#SE group 2: 38-41
+SE2_lag <- SE_laglist$`Week  38`[,-(1:2)]
+SE2_lag <- rbind(SE2_lag, SE_laglist$`Week  39`[,-(1:2)], SE_laglist$`Week  40`[,-(1:2)],
+                 SE_laglist$`Week  41`[,-(1:2)])
+
+#SE group 3: 42-50
+SE3_lag <- SE_laglist$`Week  42`[,-(1:2)]
+SE3_lag <- rbind(SE3_lag, SE_laglist$`Week  43`[,-(1:2)], SE_laglist$`Week  44`[,-(1:2)],
+                 SE_laglist$`Week  45`[,-(1:2)], SE_laglist$`Week  46`[,-(1:2)],
+                 SE_laglist$`Week  47`[,-(1:2)], SE_laglist$`Week  48`[,-(1:2)],
+                 SE_laglist$`Week  49`[,-(1:2)], SE_laglist$`Week  50`[,-(1:2)])
+
+#SE group 4: 51-52,1-2
+SE4_lag <- SE_laglist$`Week  51`[,-(1:2)]
+SE4_lag <- rbind(SE4_lag, SE_laglist$`Week  52`[,-(1:2)], SE_laglist$`Week  1`[,-(1:2)],
+                 SE_laglist$`Week  2`[,-(1:2)])
+
+#SE group 5: 3-14
+SE5_lag <- SE_laglist$`Week  3`[,-(1:2)]
+SE5_lag <- rbind(SE5_lag, SE_laglist$`Week  4`[,-(1:2)], SE_laglist$`Week  5`[,-(1:2)],
+                 SE_laglist$`Week  6`[,-(1:2)], SE_laglist$`Week  7`[,-(1:2)],
+                 SE_laglist$`Week  8`[,-(1:2)], SE_laglist$`Week  9`[,-(1:2)],
+                 SE_laglist$`Week  10`[,-(1:2)], SE_laglist$`Week  11`[,-(1:2)],
+                 SE_laglist$`Week  12`[,-(1:2)], SE_laglist$`Week  13`[,-(1:2)],
+                 SE_laglist$`Week  14`[,-(1:2)])
 
 
-#NE group 6: 
+```
 
+
+```{r group_resp}
+##test
+#NE1_resp <- c(NEAus_1[,1], NEAus_1[,2], NEAus_1[,3])
+
+
+#NE resp vectors
+NEAus1_resp <- as.vector(NEAus_1)
+NEAus2_resp <- as.vector(NEAus_2)
+NEAus3_resp <- as.vector(NEAus_3)
+NEAus4_resp <- as.vector(NEAus_4)
+NEAus5_resp <- as.vector(NEAus_5)
+NEAus6_resp <- as.vector(NEAus_6)
+
+#SE resp vectors
+SEAus1_resp <- as.vector(SEAus_1)
+SEAus2_resp <- as.vector(SEAus_2)
+SEAus3_resp <- as.vector(SEAus_3)
+SEAus4_resp <- as.vector(SEAus_4)
+SEAus5_resp <- as.vector(SEAus_5)
+```
+
+
+```{r create_list}
+#TODO: create resp and pred lists for NE and SE Aus data.
+#lists for two different resp (matrix and vector)
+#we need to bring over a lot of support data so we can build CV and non-2019 models.
+
+#TODO: export lists as data for other files.
+```
+
+
+```{r test_block}
 #weekly predictor set-up
 NE1_preds <- NE_list$`Week  35`[,-(1:2)]
 NE2_preds <- NE_list$`Week  38`[,-(1:2)]
-```
 
+
+temp_view <- NE_laglist$`Week  35`[-19,-(1:2)]
+```
 
 
 
