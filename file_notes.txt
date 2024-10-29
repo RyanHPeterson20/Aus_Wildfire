@@ -19,6 +19,10 @@ Brief file notes and summaries:
   - base data cleaning methods inside a markdown file.
   - needs conversion to R script.
 
+ . lasso_work.rmd
+
+ . lasso_prediction.R
+
 4. new_simple_model.R
   - R script for the simplified linear models
   - Includes validation and predictive analysis methods. 
