@@ -29,6 +29,23 @@ load( "lag_list.rda")
 ```
 
 
+```{r setup}
+season_weeks <- c(35:52, 1:14)
+
+#get years from bounded_resp
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+
+
+rm(i, season_years, temp_season)
+```
+
 ## Data Prep
 
 ```{r group_response}
@@ -554,27 +571,499 @@ abline(h = 0, lty = 2)
 since we have centered the data we do not have an intercept term.
 
 ```{r NEpreds}
-ne_week35 <- NE_laglist$`Week  35`
-ne_week35_std <- NE_laglist_std$`Week  35`
+#TODO: define the clusters with respect to the for loops
+
+NEgroup1_list <- list()
 ne_beta1 <- NEgroup1_coef$beta
+for (k in 1:3) {
+  ne_week <- NE_laglist[[k]]
+  ne_week_std <- NE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:210])
+    temp_preds_std <- as.matrix(ne_week_std[i, 3:210])
+    
+    temp_resp <- ne_week[i,2]
+    
+    pred_temp <- temp_preds %*% ne_beta1
+    pred_temp_std <- temp_preds_std %*% ne_beta1
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup1_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+
+NEgroup2_list <- list()
+ne_beta2 <- NEgroup2_coef$beta
+for (k in 4:8) {
+  ne_week <- NE_laglist[[k]]
+  ne_week_std <- NE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:210])
+    temp_preds_std <- as.matrix(ne_week_std[i, 3:210])
+    
+    temp_resp <- ne_week[i,2]
+    
+    pred_temp <- temp_preds %*% ne_beta2
+    pred_temp_std <- temp_preds_std %*% ne_beta2
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup2_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+
+NEgroup3_list <- list()
+ne_beta3 <- NEgroup3_coef$beta
+for (k in 9:12) {
+  ne_week <- NE_laglist[[k]]
+  ne_week_std <- NE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:210])
+    temp_preds_std <- as.matrix(ne_week_std[i, 3:210])
+    
+    temp_resp <- ne_week[i,2]
+    
+    pred_temp <- temp_preds %*% ne_beta3
+    pred_temp_std <- temp_preds_std %*% ne_beta3
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup3_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+
+NEgroup4_list <- list()
+ne_beta4 <- NEgroup4_coef$beta
+for (k in 13:17) {
+  ne_week <- NE_laglist[[k]]
+  ne_week_std <- NE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:210])
+    temp_preds_std <- as.matrix(ne_week_std[i, 3:210])
+    
+    temp_resp <- ne_week[i,2]
+    
+    pred_temp <- temp_preds %*% ne_beta4
+    pred_temp_std <- temp_preds_std %*% ne_beta4
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup4_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+
+NEgroup5_list <- list()
+ne_beta5 <- NEgroup5_coef$beta
+for (k in 18:21) {
+  ne_week <- NE_laglist[[k]]
+  ne_week_std <- NE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:210])
+    temp_preds_std <- as.matrix(ne_week_std[i, 3:210])
+    
+    temp_resp <- ne_week[i,2]
+    
+    pred_temp <- temp_preds %*% ne_beta5
+    pred_temp_std <- temp_preds_std %*% ne_beta5
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup5_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+
+NEgroup6_list <- list()
+ne_beta6 <- NEgroup6_coef$beta
+for (k in 22:32) {
+  ne_week <- NE_laglist[[k]]
+  ne_week_std <- NE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:210])
+    temp_preds_std <- as.matrix(ne_week_std[i, 3:210])
+    
+    temp_resp <- ne_week[i,2]
+    
+    pred_temp <- temp_preds %*% ne_beta6
+    pred_temp_std <- temp_preds_std %*% ne_beta6
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup6_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
 
 #test for single week:
 
-i <- 1
-week35_preds <- as.matrix(ne_week35[i, 3:210])
-week35_preds_std <- as.matrix(ne_week35_std[i, 3:210])
+#ne_week35 <- NE_laglist$`Week  35`
+#test_week <- NE_laglist[[1]]
 
-ne_week35[i,2]
-week35_preds %*% ne_beta1
-week35_preds_std %*% ne_beta1
+#ne_week35_std <- NE_laglist_std$`Week  35`
+#ne_beta1 <- NEgroup1_coef$beta
+
+
+#i <- 1
+#week35_preds <- as.matrix(ne_week35[i, 3:210])
+#week35_preds_std <- as.matrix(ne_week35_std[i, 3:210])
+
+#ne_week35[i,2]
+#week35_preds %*% ne_beta1
+#week35_preds_std %*% ne_beta1
 ```
 
-## Residuals
+```{r SE_preds}
 
+SEgroup1_list <- list()
+se_beta1 <- SEgroup1_coef$beta
+for (k in 1:3) {
+  se_week <- SE_laglist[[k]]
+  se_week_std <- SE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:210])
+    temp_preds_std <- as.matrix(se_week_std[i, 3:210])
+    
+    temp_resp <- se_week[i,2]
+    
+    pred_temp <- temp_preds %*% se_beta1
+    pred_temp_std <- temp_preds_std %*% se_beta1
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup1_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+SEgroup2_list <- list()
+se_beta2 <- SEgroup2_coef$beta
+for (k in 4:7) {
+  se_week <- SE_laglist[[k]]
+  se_week_std <- SE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:210])
+    temp_preds_std <- as.matrix(se_week_std[i, 3:210])
+    
+    temp_resp <- se_week[i,2]
+    
+    pred_temp <- temp_preds %*% se_beta2
+    pred_temp_std <- temp_preds_std %*% se_beta2
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup2_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+SEgroup3_list <- list()
+se_beta3 <- SEgroup3_coef$beta
+for (k in 8:16) {
+  se_week <- SE_laglist[[k]]
+  se_week_std <- SE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:210])
+    temp_preds_std <- as.matrix(se_week_std[i, 3:210])
+    
+    temp_resp <- se_week[i,2]
+    
+    pred_temp <- temp_preds %*% se_beta3
+    pred_temp_std <- temp_preds_std %*% se_beta3
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup3_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+SEgroup4_list <- list()
+se_beta4 <- SEgroup4_coef$beta
+for (k in 17:20) {
+  se_week <- SE_laglist[[k]]
+  se_week_std <- SE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:210])
+    temp_preds_std <- as.matrix(se_week_std[i, 3:210])
+    
+    temp_resp <- se_week[i,2]
+    
+    pred_temp <- temp_preds %*% se_beta4
+    pred_temp_std <- temp_preds_std %*% se_beta4
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup4_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+
+SEgroup5_list <- list()
+se_beta5 <- SEgroup5_coef$beta
+for (k in 21:32) {
+  se_week <- SE_laglist[[k]]
+  se_week_std <- SE_laglist[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 5))
+  colnames(week_preds) <- c("True", "Pred", "Resid", "Pred_sd", "Resid_sd")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:210])
+    temp_preds_std <- as.matrix(se_week_std[i, 3:210])
+    
+    temp_resp <- se_week[i,2]
+    
+    pred_temp <- temp_preds %*% se_beta5
+    pred_temp_std <- temp_preds_std %*% se_beta5
+    
+    temp_resid <- temp_resp - pred_temp
+    temp_resid_std <- temp_resp - pred_temp_std
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid, pred_temp_std, temp_resid_std))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup5_list[[paste("Week ", season_weeks[k])]] <- week_preds
+}
+```
+
+
+
+
+## Residual Plots
+
+```{r resid_old}
+#resid histogram setup
+#residuals for histogram
+
+NEgroup_list <- c(NEgroup1_list, NEgroup2_list, NEgroup3_list, NEgroup4_list, NEgroup5_list, NEgroup6_list)
+SEgroup_list <- c(SEgroup1_list, SEgroup2_list, SEgroup3_list, SEgroup4_list, SEgroup5_list)
+
+NEresid_hist <- as.data.frame(matrix(NA, nrow = 18))
+SEresid_hist <- as.data.frame(matrix(NA, nrow = 18))
+
+for(j in 1:32){
+  NEresid_hist <- cbind(NEresid_hist, NEgroup_list[[k]]$Resid)
+  SEresid_hist <- cbind(SEresid_hist, SEgroup_list[[k]]$Resid)
+}
+
+NEresid_hist <- NEresid_hist[,-1]
+SEresid_hist <- SEresid_hist[,-1]
+```
+
+
+```{r updated_resid}
+#residual set-up for boxplot
+
+
+residNE1_box_df <- data.frame(values = NA, group = NA)
+residSE1_box_df <- data.frame(values = NA, group = NA)
+
+for (i in 1:16) {
+  temp_vals <- NEgroup_list[[i]]$Resid
+  temp_group <- rep(season_weeks[i], length(NEgroup_list[[i]]$Resid))
+  residNE1_box_df <- rbind(residNE1_box_df, list(temp_vals, temp_group))
+  
+  temp_vals1 <- SEgroup_list[[i]]$Resid
+  temp_group1 <- rep(season_weeks[i], length(SEgroup_list[[i]]$Resid))
+  residSE1_box_df <- rbind(residSE1_box_df, list(temp_vals1, temp_group1))
+}
+
+residNE1_box_df <- residNE1_box_df[-1, ]
+residNE1_box_df$group <- as.factor(residNE1_box_df$group)
+residNE1_box_df$values <- as.numeric(residNE1_box_df$values)
+
+residSE1_box_df <- residSE1_box_df[-1, ]
+residSE1_box_df$group <- as.factor(residSE1_box_df$group)
+residSE1_box_df$values <- as.numeric(residSE1_box_df$values)
+
+
+#second half
+residNE2_box_df <- data.frame(values = NA, group = NA)
+residSE2_box_df <- data.frame(values = NA, group = NA)
+for (i in 17:32) {
+  temp_vals <- NEgroup_list[[i]]$Resid
+  temp_group <- rep(season_weeks[i], length(NEgroup_list[[i]]$Resid))
+  residNE2_box_df <- rbind(residNE2_box_df, list(temp_vals, temp_group))
+  
+  temp_vals1 <- SEgroup_list[[i]]$Resid
+  temp_group1 <- rep(season_weeks[i], length(SEgroup_list[[i]]$Resid))
+  residSE2_box_df <- rbind(residSE2_box_df, list(temp_vals1, temp_group1))
+}
+
+residNE2_box_df <- residNE2_box_df[-1, ]
+residNE2_box_df$group <- as.factor(residNE2_box_df$group)
+residNE2_box_df$values <- as.numeric(residNE2_box_df$values)
+
+residSE2_box_df <- residSE2_box_df[-1, ]
+residSE2_box_df$group <- as.factor(residSE2_box_df$group)
+residSE2_box_df$values <- as.numeric(residSE2_box_df$values)
+
+resid_min <- min(residNE1_box_df$values, residNE2_box_df$values, 
+                 residSE1_box_df$values, residSE2_box_df$values)
+
+resid_max <- max(residNE1_box_df$values, residNE2_box_df$values, 
+                 residSE1_box_df$values, residSE2_box_df$values)
+
+resid_lim <- c(resid_min, resid_max)
+```
+
+
+
+```{r resid_boxplots}
+#resid boxplots
+setwd("~/CO_AUS/Aus_CO-main/Figures_Simple")
+
+#TODO:update using resid_lim from the simplified linear model
+resid_lim <- c(-20, 20)
+
+png("NEresid_lasso1.png", width = 800, height = 600, res = 100)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = residNE1_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "NE Aus Model Residuals (Weeks 35 to 50)",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:16, labels = c(paste0("Week ", season_weeks[1:16])),
+     las = 3)
+abline(h = 0, lty = 2)
+dev.off()
+
+
+png("SEresid_lasso1.png", width = 800, height = 600, res = 100)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = residSE1_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "SE Aus Model Residuals (Weeks 35 to 50)",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:16, labels = c(paste0("Week ", season_weeks[1:16])),
+     las = 3)
+abline(h = 0, lty = 2)
+dev.off()
+
+
+png("NEresid_lasso2.png", width = 800, height = 600, res = 100)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = residNE2_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "NE Aus Model Residuals (Weeks 51, 52, 1 to 14)",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:16, labels = c(paste0("Week ", season_weeks[17:32])),
+     las = 3)
+abline(h = 0, lty = 2)
+dev.off()
+
+
+png("SEresid_lasso2.png", width = 800, height = 600, res = 100)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = residSE2_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "SE Aus Model Residuals (Weeks 51, 52, 1 to 14)",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:16, labels = c(paste0("Week ", season_weeks[17:32])),
+     las = 3)
+abline(h = 0, lty = 2)
+dev.off()
+```
 
 
 # Out-of-sample Prediction (2019/2020 Season)
 
+predict 2019/202 wildfire season
+
+```{r}
+
+```
 
 # Test sections
 
