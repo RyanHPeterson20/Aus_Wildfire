@@ -97,9 +97,11 @@ SEresp_grouping <- function(SEAus_mat, j = (1:19)){
 ```
 
 
-```{r lagpred_functions}
+```{r LagPred_functions}
 #lag predictor set-up
 #TODO: fine tune these functions for different groups
+#goal is to enter in the grouping and get the appropriate outputs
+#-currently manually set-up groups
 
 ## NE lag predictors
 NElag_grouping <- function(NE_laglist, j = (1:19)){
@@ -192,7 +194,10 @@ Not including the 2019/2020 Season
 test_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -19)
 test_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -19)
 
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -19)
 ```
+
 
 ```{r d_matrix}
 #TODO: check this to make sure nothing is wrong
@@ -208,6 +213,391 @@ D4 <- cbind(empty_D, empty_D, empty_D, D)
 
 #D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D) #OLR matrix
 D_new <- rbind(D1, D2, D3, D4)
+```
+
+
+```{r NEfusion_preds}
+#group 1
+NE_resp1 <- test_resp[[1]]
+NE_pred1 <- as.matrix(test_preds[[1]][ ,1:208])
+
+NEfuse_group1 <- fusedlasso(y = NE_resp1, X = NE_pred1, D_new, gamma = 1)
+```
+
+```{r}
+#group 2
+NE_resp2 <- test_resp[[2]]
+NE_pred2 <- as.matrix(test_preds[[2]][ ,1:208])
+
+NEfuse_group2 <- fusedlasso(y = NE_resp2, X = NE_pred2, D_new, gamma = 1)
+
+#group 3
+NE_resp3 <- test_resp[[3]]
+NE_pred3 <- as.matrix(test_preds[[3]][ ,1:208])
+
+NEfuse_group3 <- fusedlasso(y = NE_resp3, X = NE_pred3, D_new, gamma = 1)
+
+#group 4
+NE_resp4 <- test_resp[[4]]
+NE_pred4 <- as.matrix(test_preds[[4]][ ,1:208])
+
+NEfuse_group4 <- fusedlasso(y = NE_resp4, X = NE_pred4, D_new, gamma = 1)
+
+#group 5
+NE_resp5 <- test_resp[[5]]
+NE_pred5 <- as.matrix(test_preds[[5]][ ,1:208])
+
+NEfuse_group5 <- fusedlasso(y = NE_resp5, X = NE_pred5, D_new, gamma = 1)
+
+#group 6
+NE_resp6 <- test_resp[[6]]
+NE_pred6 <- as.matrix(test_preds[[6]][ ,1:208])
+
+NEfuse_group6 <- fusedlasso(y = NE_resp6, X = NE_pred6, D_new, gamma = 1)
+
+```
+
+```{r}
+save(NEfuse_group1, NEfuse_group2, NEfuse_group3, 
+     NEfuse_group4, NEfuse_group5, NEfuse_group6, 
+     file = "NE_fuse.rda")
+```
+
+
+
+
+```{r NEcoeff_setup}
+#group 1 coef
+n <- length(NE_resp1)
+p <- ncol(NE_pred1)
+lambda1 <- sqrt(n * log(p))
+
+NEgroup1_coef <- coef(NEfuse_group1, lambda = lambda1)
+
+#group 2 coef
+n <- length(NE_resp2)
+p <- ncol(NE_pred2)
+lambda2 <- sqrt(n * log(p))
+
+NEgroup2_coef <- coef(NEfuse_group2, lambda = lambda2)
+
+#group 3 coef
+n <- length(NE_resp3)
+p <- ncol(NE_pred3)
+lambda3 <- sqrt(n * log(p))
+
+NEgroup3_coef <- coef(NEfuse_group3, lambda = lambda3)
+
+#group 4 coef
+n <- length(NE_resp4)
+p <- ncol(NE_pred4)
+lambda4 <- sqrt(n * log(p))
+
+NEgroup4_coef <- coef(NEfuse_group4, lambda = lambda4)
+
+#group 5 coef
+n <- length(NE_resp5)
+p <- ncol(NE_pred5)
+lambda5 <- sqrt(n * log(p))
+
+NEgroup5_coef <- coef(NEfuse_group5, lambda = lambda5)
+
+#group 6 coef
+n <- length(NE_resp6)
+p <- ncol(NE_pred6)
+lambda6 <- sqrt(n * log(p))
+
+NEgroup6_coef <- coef(NEfuse_group6, lambda = lambda6)
+
+#extract each index
+nino_coef1 <- NEgroup1_coef$beta[1:52,]
+dmi_coef1 <- NEgroup1_coef$beta[53:104,]
+tsa_coef1 <- NEgroup1_coef$beta[105:156,]
+aao_coef1 <- NEgroup1_coef$beta[157:208,]
+
+nino_coef2 <- NEgroup2_coef$beta[1:52,]
+dmi_coef2 <- NEgroup2_coef$beta[53:104,]
+tsa_coef2 <- NEgroup2_coef$beta[105:156,]
+aao_coef2 <- NEgroup2_coef$beta[157:208,]
+
+nino_coef3 <- NEgroup3_coef$beta[1:52,]
+dmi_coef3 <- NEgroup3_coef$beta[53:104,]
+tsa_coef3 <- NEgroup3_coef$beta[105:156,]
+aao_coef3 <- NEgroup3_coef$beta[157:208,]
+
+nino_coef4 <- NEgroup4_coef$beta[1:52,]
+dmi_coef4 <- NEgroup4_coef$beta[53:104,]
+tsa_coef4 <- NEgroup4_coef$beta[105:156,]
+aao_coef4 <- NEgroup4_coef$beta[157:208,]
+
+nino_coef5 <- NEgroup5_coef$beta[1:52,]
+dmi_coef5 <- NEgroup5_coef$beta[53:104,]
+tsa_coef5 <- NEgroup5_coef$beta[105:156,]
+aao_coef5 <- NEgroup5_coef$beta[157:208,]
+
+nino_coef6 <- NEgroup6_coef$beta[1:52,]
+dmi_coef6 <- NEgroup6_coef$beta[53:104,]
+tsa_coef6 <- NEgroup6_coef$beta[105:156,]
+aao_coef6 <- NEgroup6_coef$beta[157:208,]
+
+
+```
+
+
+```{r NEcoef_viz}
+
+#TODO: add in legend for each plot, increase the lwd for visibility. 
+
+plot(1:52, nino_coef1, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 1", ylim = range(NEgroup1_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef1, col = "blue")
+lines(1:52, tsa_coef1, col = "red")
+lines(1:52, aao_coef1, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, nino_coef2, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 2", ylim = range(NEgroup2_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef2, col = "blue")
+lines(1:52, tsa_coef2, col = "red")
+lines(1:52, aao_coef2, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, nino_coef3, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 3", ylim = range(NEgroup3_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef3, col = "blue")
+lines(1:52, tsa_coef3, col = "red")
+lines(1:52, aao_coef3, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, nino_coef4, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 4", ylim = range(NEgroup4_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef4, col = "blue")
+lines(1:52, tsa_coef4, col = "red")
+lines(1:52, aao_coef4, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, nino_coef5, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 5", ylim = range(NEgroup5_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef5, col = "blue")
+lines(1:52, tsa_coef5, col = "red")
+lines(1:52, aao_coef5, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, nino_coef6, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 6", ylim = range(NEgroup6_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef6, col = "blue")
+lines(1:52, tsa_coef6, col = "red")
+lines(1:52, aao_coef6, col = "darkgreen")
+abline(h = 0, lty = 2)
+```
+
+
+```{r SEfusion_preds}
+#group 1
+SE_resp1 <- SE_resp[[1]]
+SE_pred1 <- as.matrix(SE_preds[[1]][ ,1:208])
+
+SEfuse_group1 <- fusedlasso(y = SE_resp1, X = SE_pred1, D_new, gamma = 1)
+
+#group 2
+SE_resp2 <- SE_resp[[2]]
+SE_pred2 <- as.matrix(SE_preds[[2]][ ,1:208])
+
+SEfuse_group2 <- fusedlasso(y = SE_resp2, X = SE_pred2, D_new, gamma = 1)
+
+#group 3
+SE_resp3 <- SE_resp[[3]]
+SE_pred3 <- as.matrix(SE_preds[[3]][ ,1:208])
+
+SEfuse_group3 <- fusedlasso(y = SE_resp3, X = SE_pred3, D_new, gamma = 1)
+
+#group 4
+SE_resp4 <- SE_resp[[4]]
+SE_pred4 <- as.matrix(SE_preds[[4]][ ,1:208])
+
+SEfuse_group4 <- fusedlasso(y = SE_resp4, X = SE_pred4, D_new, gamma = 1)
+
+#group 5
+SE_resp5 <- SE_resp[[5]]
+SE_pred5 <- as.matrix(SE_preds[[5]][ ,1:208])
+
+SEfuse_group5 <- fusedlasso(y = SE_resp5, X = SE_pred5, D_new, gamma = 1)
+```
+
+
+```{r}
+save(SEfuse_group1, SEfuse_group2, SEfuse_group3, 
+     SEfuse_group4, SEfuse_group5, file = "SE_fuse.rda")
+```
+
+
+```{r SEcoeff_setup}
+#group 1 coef
+n <- length(SE_resp1)
+p <- ncol(SE_pred1)
+lambda1 <- sqrt(n * log(p))
+
+SEgroup1_coef <- coef(SEfuse_group1, lambda = lambda1)
+
+#group 2 coef
+n <- length(SE_resp2)
+p <- ncol(SE_pred2)
+lambda2 <- sqrt(n * log(p))
+
+SEgroup2_coef <- coef(SEfuse_group2, lambda = lambda2)
+
+#group 3 coef
+n <- length(SE_resp3)
+p <- ncol(SE_pred3)
+lambda3 <- sqrt(n * log(p))
+
+SEgroup3_coef <- coef(SEfuse_group3, lambda = lambda3)
+
+#group 4 coef
+n <- length(SE_resp4)
+p <- ncol(SE_pred4)
+lambda4 <- sqrt(n * log(p))
+
+SEgroup4_coef <- coef(SEfuse_group4, lambda = lambda4)
+
+#group 5 coef
+n <- length(SE_resp5)
+p <- ncol(SE_pred5)
+lambda5 <- sqrt(n * log(p))
+
+SEgroup5_coef <- coef(SEfuse_group5, lambda = lambda5)
+
+
+#split coefs by index
+SEnino_coef1 <- SEgroup1_coef$beta[1:52,]
+SEdmi_coef1 <- SEgroup1_coef$beta[53:104,]
+SEtsa_coef1 <- SEgroup1_coef$beta[105:156,]
+SEaao_coef1 <- SEgroup1_coef$beta[157:208,]
+
+SEnino_coef2 <- SEgroup2_coef$beta[1:52,]
+SEdmi_coef2 <- SEgroup2_coef$beta[53:104,]
+SEtsa_coef2 <- SEgroup2_coef$beta[105:156,]
+SEaao_coef2 <- SEgroup2_coef$beta[157:208,]
+
+SEnino_coef3 <- SEgroup3_coef$beta[1:52,]
+SEdmi_coef3 <- SEgroup3_coef$beta[53:104,]
+SEtsa_coef3 <- SEgroup3_coef$beta[105:156,]
+SEaao_coef3 <- SEgroup3_coef$beta[157:208,]
+
+SEnino_coef4 <- SEgroup4_coef$beta[1:52,]
+SEdmi_coef4 <- SEgroup4_coef$beta[53:104,]
+SEtsa_coef4 <- SEgroup4_coef$beta[105:156,]
+SEaao_coef4 <- SEgroup4_coef$beta[157:208,]
+
+SEnino_coef5 <- SEgroup5_coef$beta[1:52,]
+SEdmi_coef5 <- SEgroup5_coef$beta[53:104,]
+SEtsa_coef5 <- SEgroup5_coef$beta[105:156,]
+SEaao_coef5 <- SEgroup5_coef$beta[157:208,]
+```
+
+
+```{r SEcoef_viz}
+
+#TODO: add in legend for each plot, increase the lwd for visibility. 
+
+plot(1:52, SEnino_coef1, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "SE Group 1", ylim = range(SEgroup1_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, SEdmi_coef1, col = "blue")
+lines(1:52, SEtsa_coef1, col = "red")
+lines(1:52, SEaao_coef1, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, SEnino_coef2, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "SE Group 2", ylim = range(SEgroup2_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, SEdmi_coef2, col = "blue")
+lines(1:52, SEtsa_coef2, col = "red")
+lines(1:52, SEaao_coef2, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, SEnino_coef3, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "SE Group 3", ylim = range(SEgroup3_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, SEdmi_coef3, col = "blue")
+lines(1:52, SEtsa_coef3, col = "red")
+lines(1:52, SEaao_coef3, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, SEnino_coef4, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "SE Group 4", ylim = range(SEgroup4_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, SEdmi_coef4, col = "blue")
+lines(1:52, SEtsa_coef4, col = "red")
+lines(1:52, SEaao_coef4, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, SEnino_coef5, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "SE Group 5", ylim = range(SEgroup5_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, SEdmi_coef5, col = "blue")
+lines(1:52, SEtsa_coef5, col = "red")
+lines(1:52, SEaao_coef5, col = "darkgreen")
+abline(h = 0, lty = 2)
+```
+
+# In-Sample Predictions
+
+## Predictions for each week and season
+
+since we have centered the data we do not have an intercept term.
+
+```{r NEpreds}
+ne_week35 <- NE_laglist$`Week  35`
+ne_week35_std <- NE_laglist_std$`Week  35`
+ne_beta1 <- NEgroup1_coef$beta
+
+#test for single week:
+
+i <- 1
+week35_preds <- as.matrix(ne_week35[i, 3:210])
+week35_preds_std <- as.matrix(ne_week35_std[i, 3:210])
+
+ne_week35[i,2]
+week35_preds %*% ne_beta1
+week35_preds_std %*% ne_beta1
+```
+
+## Residuals
+
+
+
+# Out-of-sample Prediction (2019/2020 Season)
+
+
+# Test sections
+
+```{r test_plots}
+
+
+plot(1:52, nino_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "Nino", col = "darkmagenta")
+abline(h = 0, lty = 2)
+
+plot(1:52, dmi_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "DMI", col = "blue")
+abline(h = 0, lty = 2)
+
+plot(1:52, tsa_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "TSA", col = "red")
+abline(h = 0, lty = 2)
+
+plot(1:52, aao_coef2, type = "l", xlab = "Lag", ylab = "Coeficients", main = "AAO", col = "darkgreen")
+abline(h = 0, lty = 2)
+```
+
+
+
+```{r prediction}
+
 ```
 
 

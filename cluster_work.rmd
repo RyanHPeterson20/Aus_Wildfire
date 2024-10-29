@@ -74,6 +74,8 @@ SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
 SEconst_clust <- constr.hclust(dist(t(SEbase_matrix)), chron = TRUE) #default with ward.d2 method
 plot(SEconst_clust, k = 5) #either, k = 4 or 5
 stats:::plot.hclust(SEconst_clust, hang = -1)
+
+#TODO: update the dendrograms to have ordered variables and colored groups.
 ```
 
 ```{r clustered_data}
