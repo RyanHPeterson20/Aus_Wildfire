@@ -49,9 +49,9 @@ rm(i, season_years, temp_season)
 ## Data Prep
 
 ```{r group_response}
-NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
+NEbase_matrix <- scale(resp_matrix[-19, 1:32], center = TRUE, scale = FALSE)
 
-SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[-19, 33:64], center = TRUE, scale = FALSE)
 
 #group response matrices
 
@@ -208,11 +208,15 @@ Not including the 2019/2020 Season
 
 ```{r}
 #standardized lag predictors sans 2019/2020 seasons
-test_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -19)
+test_preds <- NElag_grouping(NE_laglist = NE_laglist, j = -19)
 test_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -19)
 
-SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -19)
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist, j = -19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -19)
+```
+
+```{r}
+mean(SE_preds[[1]]$nino_lag1)
 ```
 
 
@@ -1054,6 +1058,19 @@ axis(1, at = 1:16, labels = c(paste0("Week ", season_weeks[17:32])),
      las = 3)
 abline(h = 0, lty = 2)
 dev.off()
+```
+
+```{r}
+
+week35_mean <- mean(NEgroup1_list[[1]]$True)
+diff_mean <- NEgroup1_list[[1]]$True - week35_mean
+sum(diff_mean^2)
+
+week35_resid <- NEgroup1_list[[1]]$Resid
+sum(week35_resid^2)
+
+1 - (sum(week35_resid^2)/sum(diff_mean^2))
+
 ```
 
 

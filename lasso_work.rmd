@@ -39,6 +39,8 @@ load( "bounded_data.rda")
 load( "data_matrix.rda")
 
 load( "lag_list.rda")
+
+source("group_function.R")
 ```
 
 
