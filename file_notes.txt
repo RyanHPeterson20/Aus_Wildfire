@@ -19,6 +19,11 @@ Brief file notes and summaries:
   - base data cleaning methods inside a markdown file.
   - needs conversion to R script.
 
+ . group_function.R
+  - methods for creating groups of response and predictor data structures.
+  - currently wip, needs to be flexible with respect to groups.
+    - potentially combine with upated data functions so we can scale data correctly. 
+
  . lasso_work.rmd
 
  . lasso_prediction.R
