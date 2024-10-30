@@ -49,9 +49,9 @@ rm(i, season_years, temp_season)
 ## Data Prep
 
 ```{r group_response}
-NEbase_matrix <- scale(resp_matrix[-19, 1:32], center = TRUE, scale = FALSE)
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 
-SEbase_matrix <- scale(resp_matrix[-19, 33:64], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 
 #group response matrices
 
@@ -82,12 +82,12 @@ NEresp_grouping <- function(NEAus_mat, j = (1:19)){
   
   NEAus_mat <- lapply(NEAus_mat, function(mat) mat[j, ])
   
-  NEAus1_resp <- as.vector(NEAus_mat[[1]])
-  NEAus2_resp <- as.vector(NEAus_mat[[2]])
-  NEAus3_resp <- as.vector(NEAus_mat[[3]])
-  NEAus4_resp <- as.vector(NEAus_mat[[4]])
-  NEAus5_resp <- as.vector(NEAus_mat[[5]])
-  NEAus6_resp <- as.vector(NEAus_mat[[6]])
+  NEAus1_resp <- scale(as.vector(NEAus_mat[[1]]), center = TRUE, scale = FALSE)
+  NEAus2_resp <- scale(as.vector(NEAus_mat[[2]]), center = TRUE, scale = FALSE)
+  NEAus3_resp <- scale(as.vector(NEAus_mat[[3]]), center = TRUE, scale = FALSE) 
+  NEAus4_resp <- scale(as.vector(NEAus_mat[[4]]), center = TRUE, scale = FALSE)
+  NEAus5_resp <- scale(as.vector(NEAus_mat[[5]]), center = TRUE, scale = FALSE)
+  NEAus6_resp <- scale(as.vector(NEAus_mat[[6]]), center = TRUE, scale = FALSE)
   
   NEAus_vec <- list(NEAus1_resp, NEAus2_resp, NEAus3_resp,
                     NEAus4_resp, NEAus5_resp, NEAus6_resp)
@@ -100,11 +100,11 @@ SEresp_grouping <- function(SEAus_mat, j = (1:19)){
   
   SEAus_mat <- lapply(SEAus_mat, function(mat) mat[j, ])
   
-  SEAus1_resp <- as.vector(SEAus_mat[[1]])
-  SEAus2_resp <- as.vector(SEAus_mat[[2]])
-  SEAus3_resp <- as.vector(SEAus_mat[[3]])
-  SEAus4_resp <- as.vector(SEAus_mat[[4]])
-  SEAus5_resp <- as.vector(SEAus_mat[[5]])
+  SEAus1_resp <- scale(as.vector(SEAus_mat[[1]]), center = TRUE, scale = FALSE)
+  SEAus2_resp <- scale(as.vector(SEAus_mat[[2]]), center = TRUE, scale = FALSE)
+  SEAus3_resp <- scale(as.vector(SEAus_mat[[3]]), center = TRUE, scale = FALSE)
+  SEAus4_resp <- scale(as.vector(SEAus_mat[[4]]), center = TRUE, scale = FALSE)
+  SEAus5_resp <- scale(as.vector(SEAus_mat[[5]]), center = TRUE, scale = FALSE)
   
   SEAus_vec <- list(SEAus1_resp, SEAus2_resp, SEAus3_resp,
                     SEAus4_resp, SEAus5_resp)
@@ -208,10 +208,10 @@ Not including the 2019/2020 Season
 
 ```{r}
 #standardized lag predictors sans 2019/2020 seasons
-test_preds <- NElag_grouping(NE_laglist = NE_laglist, j = -19)
+test_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -19)
 test_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -19)
 
-SE_preds <- SElag_grouping(SE_laglist = SE_laglist, j = -19)
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -19)
 ```
 
@@ -1004,7 +1004,6 @@ resid_lim <- c(resid_min, resid_max)
 ```
 
 
-
 ```{r resid_boxplots}
 #resid boxplots
 setwd("~/CO_AUS/Aus_CO-main/Figures_Simple")
@@ -1060,8 +1059,195 @@ abline(h = 0, lty = 2)
 dev.off()
 ```
 
+
+# Out-of-sample Prediction (2019/2020 Season)
+
+predict 2019/202 wildfire season
+
 ```{r}
 
+ne_resid <-  as.data.frame(matrix(NA, ncol = 4))
+colnames(ne_resid) <- c("Week", "True", "Pred", "Resid")
+
+#ne group1
+ne_beta1 <- NEgroup1_coef$beta
+for (k in 1:3) {
+  ne_week <- NE_laglist[[k]]
+  temp_preds <- as.matrix(ne_week[19, 3:210])
+  temp_resp <- ne_week[19, 2]
+    
+  pred_temp <- temp_preds %*% ne_beta1
+  temp_resid <- temp_resp - pred_temp
+  ne_resid <- rbind(ne_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+#ne group2
+ne_beta2 <- NEgroup2_coef$beta
+for (k in 4:8) {
+  ne_week <- NE_laglist[[k]]
+  temp_preds <- as.matrix(ne_week[19, 3:210])
+  temp_resp <- ne_week[19, 2]
+    
+  pred_temp <- temp_preds %*% ne_beta2
+  temp_resid <- temp_resp - pred_temp
+  ne_resid <- rbind(ne_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+#ne group3
+ne_beta3 <- NEgroup3_coef$beta
+for (k in 9:12) {
+  ne_week <- NE_laglist[[k]]
+  temp_preds <- as.matrix(ne_week[19, 3:210])
+  temp_resp <- ne_week[19, 2]
+    
+  pred_temp <- temp_preds %*% ne_beta3
+  temp_resid <- temp_resp - pred_temp
+  ne_resid <- rbind(ne_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+#ne group4
+ne_beta4 <- NEgroup4_coef$beta
+for (k in 13:17) {
+  ne_week <- NE_laglist[[k]]
+  temp_preds <- as.matrix(ne_week[19, 3:210])
+  temp_resp <- ne_week[19, 2]
+    
+  pred_temp <- temp_preds %*% ne_beta4
+  temp_resid <- temp_resp - pred_temp
+  ne_resid <- rbind(ne_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+#ne group5
+ne_beta5 <- NEgroup5_coef$beta
+for (k in 18:21) {
+  ne_week <- NE_laglist[[k]]
+  temp_preds <- as.matrix(ne_week[19, 3:210])
+  temp_resp <- ne_week[19, 2]
+    
+  pred_temp <- temp_preds %*% ne_beta5
+  temp_resid <- temp_resp - pred_temp
+  ne_resid <- rbind(ne_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+#ne group6
+ne_beta6 <- NEgroup6_coef$beta
+for (k in 22:32) {
+  ne_week <- NE_laglist[[k]]
+  temp_preds <- as.matrix(ne_week[19, 3:210])
+  temp_resp <- ne_week[19, 2]
+    
+  pred_temp <- temp_preds %*% ne_beta6
+  temp_resid <- temp_resp - pred_temp
+  ne_resid <- rbind(ne_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+ne_resid <- ne_resid[-1, ]
+
+```
+
+
+
+
+```{r }
+
+
+se_resid <-  as.data.frame(matrix(NA, ncol = 4))
+colnames(se_resid) <- c("Week", "True", "Pred", "Resid")
+
+se_beta1 <- SEgroup1_coef$beta
+for (k in 1:3) {
+  se_week <- SE_laglist[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% se_beta1
+  temp_resid <- temp_resp - pred_temp
+  se_resid <- rbind(se_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+se_beta2 <- SEgroup2_coef$beta
+for (k in 4:7) {
+  se_week <- SE_laglist[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% se_beta2
+  temp_resid <- temp_resp - pred_temp
+  se_resid <- rbind(se_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+
+se_beta3 <- SEgroup3_coef$beta
+for (k in 8:16) {
+  se_week <- SE_laglist[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% se_beta3
+  temp_resid <- temp_resp - pred_temp
+  se_resid <- rbind(se_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+
+se_beta4 <- SEgroup4_coef$beta
+for (k in 17:20) {
+  se_week <- SE_laglist[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% se_beta4
+  temp_resid <- temp_resp - pred_temp
+  se_resid <- rbind(se_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+
+se_beta5 <- SEgroup5_coef$beta
+for (k in 21:32) {
+  se_week <- SE_laglist[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% se_beta5
+  temp_resid <- temp_resp - pred_temp
+  se_resid <- rbind(se_resid, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+se_resid <- se_resid[-1, ]
+
+```
+
+
+
+```{r plot}
+#TODO: update notation of plot add other features
+plot(1:32, ne_resid$Resid, type = "l", main = "NE Aus Residuals", xaxt = "n", 
+     ylab = "Residual", xlab = "Weeks")
+axis(1, at=1:32, labels = season_weeks)
+
+
+plot(1:32, se_resid$Resid, type = "l", main = "SE Aus Residuals", xaxt = "n", 
+     ylab = "Residual", xlab = "Weeks")
+axis(1, at=1:32, labels = season_weeks)
+```
+
+```{r residual_pred}
+#NE Aus: residual spikes in group 5
+#SE Aus: residual spikes in group 4
+
+#get non-zero coeffs, then associate with list of lag predictors from each group, the see if any are in the top n.
+##Or get a dist of those lag values to see if they are exceding some value.
+NEgroup5_coef$beta
+
+SEgroup4_coef$beta
+```
+
+
+
+# Test sections
+
+
+```{r test}
+#r^2 test work
 week35_mean <- mean(NEgroup1_list[[1]]$True)
 diff_mean <- NEgroup1_list[[1]]$True - week35_mean
 sum(diff_mean^2)
@@ -1074,15 +1260,6 @@ sum(week35_resid^2)
 ```
 
 
-# Out-of-sample Prediction (2019/2020 Season)
-
-predict 2019/202 wildfire season
-
-```{r}
-
-```
-
-# Test sections
 
 ```{r test_plots}
 
