@@ -43,7 +43,7 @@ for (i in 1:(length(season_years)-1)) {
 }
 
 
-rm(i, season_years, temp_season)
+rm(i, temp_season)
 ```
 
 ## Data Prep
@@ -82,12 +82,12 @@ NEresp_grouping <- function(NEAus_mat, j = (1:19)){
   
   NEAus_mat <- lapply(NEAus_mat, function(mat) mat[j, ])
   
-  NEAus1_resp <- scale(as.vector(NEAus_mat[[1]]), center = TRUE, scale = FALSE)
-  NEAus2_resp <- scale(as.vector(NEAus_mat[[2]]), center = TRUE, scale = FALSE)
-  NEAus3_resp <- scale(as.vector(NEAus_mat[[3]]), center = TRUE, scale = FALSE) 
-  NEAus4_resp <- scale(as.vector(NEAus_mat[[4]]), center = TRUE, scale = FALSE)
-  NEAus5_resp <- scale(as.vector(NEAus_mat[[5]]), center = TRUE, scale = FALSE)
-  NEAus6_resp <- scale(as.vector(NEAus_mat[[6]]), center = TRUE, scale = FALSE)
+  NEAus1_resp <- as.vector(NEAus_mat[[1]])
+  NEAus2_resp <- as.vector(NEAus_mat[[2]])
+  NEAus3_resp <- as.vector(NEAus_mat[[3]])
+  NEAus4_resp <- as.vector(NEAus_mat[[4]])
+  NEAus5_resp <- as.vector(NEAus_mat[[5]])
+  NEAus6_resp <- as.vector(NEAus_mat[[6]])
   
   NEAus_vec <- list(NEAus1_resp, NEAus2_resp, NEAus3_resp,
                     NEAus4_resp, NEAus5_resp, NEAus6_resp)
@@ -100,17 +100,17 @@ SEresp_grouping <- function(SEAus_mat, j = (1:19)){
   
   SEAus_mat <- lapply(SEAus_mat, function(mat) mat[j, ])
   
-  SEAus1_resp <- scale(as.vector(SEAus_mat[[1]]), center = TRUE, scale = FALSE)
-  SEAus2_resp <- scale(as.vector(SEAus_mat[[2]]), center = TRUE, scale = FALSE)
-  SEAus3_resp <- scale(as.vector(SEAus_mat[[3]]), center = TRUE, scale = FALSE)
-  SEAus4_resp <- scale(as.vector(SEAus_mat[[4]]), center = TRUE, scale = FALSE)
-  SEAus5_resp <- scale(as.vector(SEAus_mat[[5]]), center = TRUE, scale = FALSE)
+  SEAus1_resp <- as.vector(SEAus_mat[[1]])
+  SEAus2_resp <- as.vector(SEAus_mat[[2]])
+  SEAus3_resp <- as.vector(SEAus_mat[[3]])
+  SEAus4_resp <- as.vector(SEAus_mat[[4]])
+  SEAus5_resp <- as.vector(SEAus_mat[[5]])
   
   SEAus_vec <- list(SEAus1_resp, SEAus2_resp, SEAus3_resp,
                     SEAus4_resp, SEAus5_resp)
   
   return(SEAus_vec) 
-}  
+} 
 ```
 
 
@@ -207,6 +207,11 @@ SElag_grouping <- function(SE_laglist, j = (1:19)){
 Not including the 2019/2020 Season
 
 ```{r}
+#TODO: perform corrections on to somehow standardize our data, especially to make sure
+## that we only standardize the training data.
+
+#TODO: ensure that "new" data (testing sets) are also standardized. 
+
 #standardized lag predictors sans 2019/2020 seasons
 test_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -19)
 test_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -19)
@@ -1222,23 +1227,157 @@ se_resid <- se_resid[-1, ]
 #TODO: update notation of plot add other features
 plot(1:32, ne_resid$Resid, type = "l", main = "NE Aus Residuals", xaxt = "n", 
      ylab = "Residual", xlab = "Weeks")
+lines(1:32, ne_resid$True, lwd = 1.5, col = "blue")
+lines(1:32, ne_resid$Pred, lwd = 1.5, col = "magenta")
 axis(1, at=1:32, labels = season_weeks)
 
 
 plot(1:32, se_resid$Resid, type = "l", main = "SE Aus Residuals", xaxt = "n", 
      ylab = "Residual", xlab = "Weeks")
+lines(1:32, se_resid$True, lwd = 1.5, col = "blue")
+lines(1:32, se_resid$Pred, lwd = 1.5, col = "magenta")
 axis(1, at=1:32, labels = season_weeks)
 ```
 
 ```{r residual_pred}
-#NE Aus: residual spikes in group 5
-#SE Aus: residual spikes in group 4
+#NE Aus: residual spikes in group 5 (52, 1-3) [18-21]
+#SE Aus: residual spikes in group 4 (51-52, 1-2) [17-20]
 
 #get non-zero coeffs, then associate with list of lag predictors from each group, the see if any are in the top n.
 ##Or get a dist of those lag values to see if they are exceding some value.
-NEgroup5_coef$beta
 
-SEgroup4_coef$beta
+#ne group 5
+
+#ne week 52
+season_weeks[18]
+NE_test <- NE_laglist[[18]]
+temp_NE52 <- NE_test[, 3:210]
+
+ne_index <- which(NEgroup5_coef$beta != 0)
+
+ne52_lag <- temp_NE52[,ne_index]
+ne52_names <- colnames(ne52_lag)
+ne52_mean <- sapply(ne52_lag, mean)
+ne52_sd <- sapply(ne52_lag, sd)
+
+#scaling factor:
+c <- 1.75
+ne52_over <- ne52_mean + (c * ne52_sd)
+ne52_under <- ne52_mean - (c * ne52_sd)
+
+n <- length(ne52_lag)
+NEover_list <- list()
+NEunder_list <- list()
+for (i in 1:n) {
+  over <- which(ne52_lag[,i] >= ne52_over[i])
+  
+  NEover_list[[paste0(ne52_names[i])]] <- season_years[over]
+  
+  under <- which(ne52_lag[,i] <= ne52_under[i])
+  
+  NEunder_list[[paste0(ne52_names[i])]] <- season_years[under]
+}
+
+
+#se group 4
+
+#se week 51
+season_weeks[17]
+SE_test <- SE_laglist[[17]]
+temp_SE51 <- SE_test[, 3:210]
+ 
+se_index <- which(SEgroup4_coef$beta != 0 )
+
+se51_lag <- temp_SE51[,se_index]
+se51_names <- colnames(se51_lag)
+se51_mean <- sapply(se51_lag, mean)
+se51_sd <- sapply(se51_lag, sd)
+
+#scaling factor:
+c <- 1.75
+se51_over <- se51_mean + (c * se51_sd)
+se51_under <- se51_mean - (c * se51_sd)
+
+n <- length(se51_lag)
+SEover_list <- list()
+SEunder_list <- list()
+for (i in 1:n) {
+  over <- which(se51_lag[,i] >= se51_over[i])
+  
+  SEover_list[[paste0(se51_names[i])]] <- season_years[over]
+  
+  under <- which(se51_lag[,i] <= se51_under[i])
+  
+  SEunder_list[[paste0(se51_names[i])]] <- season_years[under]
+}
+
+#se51_names
+#SEgroup4_coef$beta[se_index]
+
+```
+
+```{r plot_groups}
+plot(1:52, nino_coef5, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "NE Group 5", ylim = range(NEgroup5_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, dmi_coef5, col = "blue")
+lines(1:52, tsa_coef5, col = "red")
+lines(1:52, aao_coef5, col = "darkgreen")
+abline(h = 0, lty = 2)
+
+plot(1:52, SEnino_coef4, type = "l", xlab = "Lag", ylab = "Coeficients",
+     main = "SE Group 4", ylim = range(SEgroup4_coef$beta), 
+     col = "darkmagenta")
+lines(1:52, SEdmi_coef4, col = "blue")
+lines(1:52, SEtsa_coef4, col = "red")
+lines(1:52, SEaao_coef4, col = "darkgreen")
+abline(h = 0, lty = 2)
+```
+
+# Residual model
+
+add in squared terms for:
+SE Aus: dmi lag 1-12
+NE Aus: dmi lag 18-20
+
+```{r}
+#SE group 4
+SE_resp4 <- SE_resp[[4]]
+SE_pred4 <- as.matrix(SE_preds[[4]][ ,1:208])
+SE_olr4 <- as.matrix(SE_preds[[4]][ ,209:260])  
+
+newSE_pred4 <- (SE_pred4[ ,53:64])^2
+#newSE_pred4
+SE_resid4 <- c(as.vector(SEgroup4_list[[1]]$Resid), as.vector(SEgroup4_list[[2]]$Resid),
+                       as.vector(SEgroup4_list[[3]]$Resid), as.vector(SEgroup4_list[[4]]$Resid))
+
+hist(SE_resid4)
+
+resid_lm <- lm(SE_resid4 ~ newSE_pred4)
+resid_lm$coefficients
+
+D_olr <- getD1d(52)
+D_sqr <- getD1d(12)
+                       
+SEfuse_resid4 <- fusedlasso(y = SE_resid4, X = newSE_pred4, D_sqr, gamma = 0.33)
+
+n <- length(SE_resid4)
+p <- ncol(newSE_pred4)
+lambda1 <- sqrt(n * log(p))
+
+SEresid_4 <- coef(SEfuse_resid4, lambda = lambda1)
+
+plot(1:12, SEresid_4$beta, type = "l", col = "blue")
+abline(h = 0, lty = 2)
+
+
+SE_test <- SE_laglist[[17]]
+temp_SE51 <- (SE_test[, 55:66])^2
+newSEresid_4 <- as.vector(SEresid_4$beta)
+
+as.matrix(temp_SE51) %*% newSEresid_4
+as.vector(SEgroup4_list[[1]]$Resid)
+se_resid[17, 4]
 ```
 
 
@@ -1247,6 +1386,12 @@ SEgroup4_coef$beta
 
 
 ```{r test}
+mat <- matrix(1:9, nrow = 3, ncol = 3)
+mat
+mat^2
+
+
+
 #r^2 test work
 week35_mean <- mean(NEgroup1_list[[1]]$True)
 diff_mean <- NEgroup1_list[[1]]$True - week35_mean
