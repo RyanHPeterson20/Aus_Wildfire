@@ -224,6 +224,7 @@ SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -19)
 mean(SE_preds[[1]]$nino_lag1)
 ```
 
+TODO: add in a 1 column into the data for an intercept and create the appropriate 1 in the D matrix.
 
 ```{r d_matrix}
 #TODO: check this to make sure nothing is wrong
@@ -1380,9 +1381,124 @@ as.vector(SEgroup4_list[[1]]$Resid)
 se_resid[17, 4]
 ```
 
+Notes/Ideas:
+
+From the below work we see that the most comparable dmi to 2019 is 2006, 
+we see that there is a very high residual in SE Aus week 51 from 2006. 
+
+Repeat this residual "analysis" for other high residual groups and years.
+
+But we still need to fit something that works for this, we may need to generate some synthetic conditions. 
+
+Convert OLR into something like: weeks above 0 (with buffer) in a given lag.
+$$\sum_{i=1}^{p(n)} \mathbb{I} \{x_i \geq c\}.$$
+
+```{r distance}
+#get distance from mean for dmi 1-12 in SE Aus 4 (2019) 
+
+test_lag <- SE_laglist[[18]]
+dmi_lag <- test_lag[,55:66]
+dmi_mean <- sapply(dmi_lag, mean)
+
+diff_sub <- dmi_lag[19, ] - dmi_mean
+
+dmi_full <- test_lag[ ,55:106]
+full_mean <- sapply(dmi_full, mean)
+
+diff_full <- dmi_full[19, ] - full_mean
+diff_full18 <- dmi_full[18, ] - full_mean
+diff_full17 <- dmi_full[17, ] - full_mean
+diff_full16 <- dmi_full[16, ] - full_mean
+diff_full15 <- dmi_full[15, ] - full_mean
+diff_full6 <- dmi_full[6, ] - full_mean
+
+result <- sweep(dmi_full, 2, full_mean, FUN = "-")
+range(result)
+
+plot(1:52, diff_full, type = "l", main = "DMI 2019/2020", ylim = range(result))
+lines(1:52, diff_full18, col = "red")
+lines(1:52, diff_full17, col = "blue")
+lines(1:52, diff_full15, col = "darkgreen")
+lines(1:52, diff_full6, col = "darkmagenta")
+abline( v= c(1,12), lty = 2, col = "red")
+
+#TODO: repeat with OLR
+
+olr_lag <- test_lag[ ,211:262]
+olr_mean <- sapply(olr_lag, mean)
+
+diff_olr19 <- olr_lag[19, ]# - olr_mean
+#diff_olr18 <- olr_lag[18, ] - olr_mean
+#diff_olr6 <- olr_lag[6, ] - olr_mean
+diff_olr6 <- olr_lag[6, ]# - olr_mean
+diff_olr4 <- olr_lag[4, ]# - olr_mean #"base" condition for normal amounts
+diff_olr14 <- olr_lag[14, ]# - olr_mean #min/low atm CO year
+
+plot(1:52, diff_olr19, type = "l", main = "OLR values")
+#lines(1:52, diff_olr4, col = "darkgreen")
+lines(1:52, diff_olr14, col = "blue")
+#lines(1:52, diff_olr6, col = "darkmagenta")
+abline(h =0, lty = 2, col = "red")
+
+#TODO: create plots for either the data or residuals
+
+#start with SE residuals (looking for spikes in SE group 4)
+SEgroup4_resid <- cbind(as.vector(SEgroup4_list[[1]]$Resid),
+                        as.vector(SEgroup4_list[[2]]$Resid),
+                        as.vector(SEgroup4_list[[3]]$Resid),
+                        as.vector(SEgroup4_list[[4]]$Resid))
+
+#SEgroup4_resid <- rbind(SEgroup4_resid, )
+
+plot(1:4, SEgroup4_resid[18, ], type = "l", col = "red")
+lines(1:4, SEgroup4_resid[6, ])
+
+#"raw" data:
+segroup4_raw <- bounded_resp_df[which(bounded_resp_df$week == 51), 3]
+segroup4_raw <- cbind(segroup4_raw, 
+                      bounded_resp_df[which(bounded_resp_df$week == 52), 3])
+segroup4_raw <- cbind(segroup4_raw, 
+                      c(bounded_resp_df[which(bounded_resp_df$week == 1), 3][-1]))
+segroup4_raw <- cbind(segroup4_raw, 
+                      c(bounded_resp_df[which(bounded_resp_df$week == 2), 3][-1]))
+
+colnames(segroup4_raw) <- c("51", "52", "1", "2")
+
+segroup4_raw <- cbind(segroup4_raw, rowMeans(segroup4_raw))
+
+
+
+
+#abline( v= c(1,12), lty = 2, col = "red")
+```
+
+```{r olr_excedence}
+#known 
+
+#17-20 (week 51,52,1,2)
+test_lag <- SE_laglist[[17]]
+olr_lag <- test_lag[ ,211:262]
+lag10 <- c()
+lag20 <- c()
+#lag25 <- c()
+for (i in 1:19) {
+  lag10 <- c(lag10, length(which(olr_lag[i,1:10] >= 2)))
+  lag20 <- c(lag20, length(which(olr_lag[i,11:20] >= 2)))
+  #lag25 <- c(lag30, length(which(olr_lag[i,21:25] >= 2)))
+}
+
+lag10
+lag20
+lag10 +lag20
+
+#plot left and right side, with right side as the week's CO values by year
+plot(1:19, lag10, xlab = "year", pch = 16)
+
+```
 
 
 # Test sections
+
 
 
 ```{r test}
