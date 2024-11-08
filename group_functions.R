@@ -1,8 +1,33 @@
 # functions for grouping of response and predictor variables:
 
 
+
 #grouped response set-up functions
 ##TODO: refine these functions to handle any response clusters.
+
+#group response matrices
+#TODO: add below to the response functions, along with the base_matrix as a parameter.
+
+#below code is not used in this script
+#NEAus
+#  NEAus_1 <- NEbase_matrix[ ,1:3]
+#  NEAus_2 <- NEbase_matrix[ ,4:8]
+#  NEAus_3 <- NEbase_matrix[ ,9:12]
+#  NEAus_4 <- NEbase_matrix[ ,13:17]
+#  NEAus_5 <- NEbase_matrix[ ,18:21]
+#  NEAus_6 <- NEbase_matrix[ ,22:32]
+  
+  #SEAus
+#  SEAus_1 <- SEbase_matrix[ ,1:3]
+#  SEAus_2 <- SEbase_matrix[ ,4:7]
+#  SEAus_3 <- SEbase_matrix[ ,8:16]
+#  SEAus_4 <- SEbase_matrix[ ,17:20]
+#  SEAus_5 <- SEbase_matrix[ ,21:32]
+  
+#  NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6)
+#  SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+#begin used code
 
 #NE resp vectors
 NEresp_grouping <- function(NEAus_mat, j = (1:19)){
@@ -32,6 +57,25 @@ SEresp_grouping <- function(SEAus_mat, j = (1:19)){
   SEAus3_resp <- as.vector(SEAus_mat[[3]])
   SEAus4_resp <- as.vector(SEAus_mat[[4]])
   SEAus5_resp <- as.vector(SEAus_mat[[5]])
+  
+  SEAus_vec <- list(SEAus1_resp, SEAus2_resp, SEAus3_resp,
+                    SEAus4_resp, SEAus5_resp)
+  
+  return(SEAus_vec) 
+}  
+
+
+
+#SE resp vectors
+SEresp_centered <- function(SEAus_mat, j = (1:19)){
+  
+  SEAus_mat <- lapply(SEAus_mat, function(mat) mat[j, ])
+  
+  SEAus1_resp <- scale(as.vector(SEAus_mat[[1]]), center = TRUE, scale = FALSE)
+  SEAus2_resp <- scale(as.vector(SEAus_mat[[2]]), center = TRUE, scale = FALSE)
+  SEAus3_resp <- scale(as.vector(SEAus_mat[[3]]), center = TRUE, scale = FALSE)
+  SEAus4_resp <- scale(as.vector(SEAus_mat[[4]]), center = TRUE, scale = FALSE)
+  SEAus5_resp <- scale(as.vector(SEAus_mat[[5]]), center = TRUE, scale = FALSE)
   
   SEAus_vec <- list(SEAus1_resp, SEAus2_resp, SEAus3_resp,
                     SEAus4_resp, SEAus5_resp)
