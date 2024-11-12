@@ -1,0 +1,21 @@
+---
+title: "eda_work.rmd"
+author: "Ryan Peterson"
+date: "2024-11-12"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+
+```
+
+
+TODO:
+
+1. do additional EDA work on the repsonse data (either centered or otherwise)
+  a. check on log and other link functions for the response
+
