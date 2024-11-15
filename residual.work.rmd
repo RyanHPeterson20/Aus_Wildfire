@@ -1,0 +1,385 @@
+---
+title: "residual_work"
+author: "Ryan Peterson"
+date: "2024-11-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages(library(glmnet)) #base lasso (elastic net, etc.)
+```
+
+
+```{r data_load}
+setwd("~/CO_AUS/Aus_CO-main")
+
+load("ne_data.rda")
+load("se_data.rda")
+load("bounded_data.rda")
+load("data_matrix.rda")
+load("lag_list.rda")
+
+load("base_preds.rda")
+```
+
+
+
+
+```{r}
+#set up season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+```
+
+
+```{r}
+#TODO: add in olr data to see if anything there seems to make sense
+
+hist(NEgroup_list$Week_38$Resid, breaks = 10)
+
+NEgroup_list$Week_38$True[11]
+
+#get maximum residual for a given week
+index_resid <- which.max(NEgroup_list$Week_38$Resid)
+
+seasons[index_resid]
+
+NEfull_coefs <- c(NE_coefs$Group_2$nino_coef, NE_coefs$Group_2$dmi_coef ,
+                      NE_coefs$Group_2$tsa_coef , NE_coefs$Group_2$aao_coef)
+NEGroup2_index <- which(NEfull_coefs!= 0)
+
+NEfull_coefs[NEGroup2_index]
+NEweek38_preds <-  NE_laglist_std$`Week  38`[,3:210]
+NEweek38_olrd <- NE_laglist_std$`Week  38`[,211:262]
+
+
+temp_preds <- NEweek38_preds[-19 ,NEGroup2_index]
+temp_olr <- NEweek38_olrd[-19, ]
+
+#TODO: just use a quantile instead
+col_upper <- sapply(temp_preds, quantile, probs = 0.9)
+#col_mean <- sapply(temp_preds, mean, na.rm = TRUE)
+#col_sd <- sapply(temp_preds, sd, na.rm = TRUE)
+
+#c <- 1.5
+#col_upper <- col_mean + c*col_sd
+
+exceed_matrix <- matrix(0, ncol = 98, nrow = 18)
+colnames(exceed_matrix) <- colnames(temp_preds)
+
+#TODO: fix this since it doesn't quite do what I want (create for loop)
+for(k in 1:length(NEGroup2_index)){
+  ind_upper <- which(temp_preds[ ,k] >= col_upper[k])
+  exceed_matrix[ind_upper,k] <- 1
+}
+
+temp_matrix <- matrix(NA, ncol = 98)
+new_term <- NEfull_coefs[NEGroup2_index] * temp_preds[11,]
+temp_matrix <- rbind(NEfull_coefs[NEGroup2_index], temp_preds[11,], new_term, exceed_matrix[11,] )
+colnames(temp_matrix) <- colnames(temp_preds)
+rownames(temp_matrix) <- c("coef", "data", "new", "exceed")
+
+
+
+#NEweek38_preds[index_resid ,NEGroup2_index] 
+
+```
+
+
+```{r resid38}
+#plot NE week 38 resids
+NE38_resids <- NEgroup_list$Week_38$Resid
+NE38_true <- NEgroup_list$Week_38$True
+NE38_pred  <- NEgroup_list$Week_38$Pred
+years_resids <- season_years[1:18]
+
+y_lim <- range(NE38_true,NE38_pred )
+
+plot(years_resids, NE38_resids, ylim = y_lim,  type = "b", xlab = "",
+        main = "NE Aus Week 38", axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = years_resids, labels = c(season_years[1:18]),
+     las = 3)
+lines(years_resids, NE38_true, col = "darkgreen")
+lines(years_resids, NE38_pred, col = "magenta")
+abline(v = c(2007, 2011), lty = 2, col = "red")
+
+
+#plot SE week 38 resids
+SE38_resids <- SEgroup_list$Week_38$Resid
+SE38_true <- SEgroup_list$Week_38$True
+SE38_pred  <- SEgroup_list$Week_38$Pred
+
+y_lim <- range(SE38_true, SE38_pred )
+
+plot(years_resids, SE38_resids, ylim = y_lim,  type = "b", xlab = "",
+        main = "SE Aus Week 38", axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = years_resids, labels = c(season_years[1:18]),
+     las = 3)
+lines(years_resids, SE38_true, col = "darkgreen")
+lines(years_resids, SE38_pred, col = "magenta")
+abline(v = c(2007), lty = 2, col = "red")
+```
+
+
+
+```{r resid42}
+#plot NE week 43 resids
+NE43_resids <- NEgroup_list$Week_43$Resid
+NE43_true <- NEgroup_list$Week_43$True
+NE43_pred  <- NEgroup_list$Week_43$Pred
+years_resids <- season_years[1:18]
+
+y_lim <- range(NE43_true, NE43_pred )
+
+plot(years_resids, NE43_resids, ylim = y_lim,  type = "b", xlab = "",
+        main = "NE Aus Week 43", axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = years_resids, labels = c(season_years[1:18]),
+     las = 3)
+lines(years_resids, NE43_true, col = "darkgreen")
+lines(years_resids, NE43_pred, col = "magenta")
+
+
+#plot SE week 42 resids
+SE42_resids <- SEgroup_list$Week_42$Resid
+SE42_true <- SEgroup_list$Week_42$True
+SE42_pred  <- SEgroup_list$Week_42$Pred
+
+y_lim <- range(SE42_true, SE42_pred )
+
+plot(years_resids, SE42_resids, ylim = y_lim,  type = "b", xlab = "",
+        main = "SE Aus Week 42", axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = years_resids, labels = c(season_years[1:18]),
+     las = 3)
+lines(years_resids, SE42_true, col = "darkgreen")
+lines(years_resids, SE42_pred, col = "magenta")
+abline(v = c(2007), lty = 2, col = "red")
+```
+
+Let's try some dumb shit
+
+```{r fit_2019}
+#fit SE Aus 2019 data
+#(test fit from week 42-52, 1-2)
+
+SEcoefs_3 <- c(SE_coefs$Group_3$nino_coef, SE_coefs$Group_3$dmi_coef,
+                      SE_coefs$Group_3$tsa_coef, SE_coefs$Group_3$aao_coef)
+SEGroup3_index <- which(SEcoefs_3!= 0)
+
+SEcoefs_4 <- c(SE_coefs$Group_4$nino_coef, SE_coefs$Group_4$dmi_coef,
+                      SE_coefs$Group_4$tsa_coef, SE_coefs$Group_4$aao_coef)
+SEGroup4_index <- which(SEcoefs_4!= 0)
+
+
+se_resid3 <-  as.data.frame(matrix(NA, ncol = 4))
+colnames(se_resid3) <- c("Week", "True", "Pred", "Resid")
+
+for (k in 8:16) {
+  se_week <- SE_laglist_std[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% SEcoefs_3
+  temp_resid <- temp_resp - pred_temp
+  se_resid3 <- rbind(se_resid3, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+se_resid3 <- se_resid3[-1, ]
+
+se_resid4 <-  as.data.frame(matrix(NA, ncol = 4))
+colnames(se_resid4) <- c("Week", "True", "Pred", "Resid")
+
+for (k in 17:20) {
+  se_week <- SE_laglist_std[[k]]
+  temp_preds <- as.matrix(se_week[19, 3:210])
+  temp_resp <- se_week[19, 2]
+    
+  pred_temp <- temp_preds %*% SEcoefs_4
+  temp_resid <- temp_resp - pred_temp
+  se_resid4 <- rbind(se_resid4, c(season_weeks[k], temp_resp, pred_temp, temp_resid))
+}
+
+se_resid4 <- se_resid4[-1, ]
+
+
+```
+
+```{r}
+se_resid <- rbind(se_resid3, se_resid4)
+
+y_lim <- range(se_resid$Resid, se_resid$True, se_resid$Pred)
+
+plot(1:13, se_resid$Resid, ylim = y_lim,  type = "b", xlab = "",
+        main = "SE Aus 2019/2020", axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:13, labels = c( paste0("Week ", season_weeks[8:20])),
+     las = 3)
+lines(1:13, se_resid$True, col = "darkgreen")
+lines(1:13, se_resid$Pred, col = "magenta")
+abline(v = 8.5, lty = 2, col = "red")
+
+
+
+```
+
+
+```{r SE group 3}
+#group 3 weeks 8-16
+#SE_laglist_std[[8]]
+
+SEGroup3_index <- which(SEcoefs_3!= 0)
+
+#technically only need a single week in the group to get the matrix (we can compare with others)
+k <- 8
+SEweek_preds <-  SE_laglist_std[[k]][,3:210]
+SEweek_olr <- SE_laglist_std[[k]][,211:262]
+
+
+temp_preds <- SEweek_preds[ ,SEGroup3_index]
+temp_olr <- SEweek_olr
+
+#TODO: just use a quantile instead
+col_upper <- sapply(temp_preds, quantile, probs = 0.9)
+olr_upper <- sapply(temp_olr, quantile, probs = 0.9)
+
+
+SEGroup3_exceed <- matrix(0, ncol = 128, nrow = 19)
+colnames(SEGroup3_exceed) <- colnames(temp_preds)
+
+for(k in 1:length(SEGroup3_index)){
+  ind_upper <- which(temp_preds[ ,k] >= col_upper[k])
+  SEGroup3_exceed[ind_upper,k] <- 1
+}
+```
+
+
+```{r SE group 4}
+#group 4 weeks 17-20
+#SE_laglist_std[[8]]
+
+SEGroup4_index <- which(SEcoefs_4!= 0)
+SEweek_preds <-  SE_laglist_std[[17]][,3:210]
+
+temp_preds <- SEweek_preds[ ,SEGroup4_index]
+#technically only need a single week in the group to get the matrix (we can compare with others)
+SEGroup4_exceed <- matrix(NA, ncol = 84)
+colnames(SEGroup4_exceed) <- colnames(temp_preds)
+
+#build a matrix of 1/0 
+for (k in 17:20) {
+  SEweek_preds <-  SE_laglist_std[[k]][,3:210]
+  SEweek_olr <- SE_laglist_std[[k]][,211:262]
+
+  temp_preds <- SEweek_preds[ -19,SEGroup4_index]
+  #temp_olr <- SEweek_olr
+  
+  #TODO: change the range of the temp preds to be all lags (and all years)? 
+  col_upper <- sapply(temp_preds, quantile, probs = 0.9)
+  #olr_upper <- sapply(temp_olr, quantile, probs = 0.9)
+  
+  temp_exceed <- matrix(0, ncol = 84, nrow = 18)
+  colnames(SEGroup4_exceed) <- colnames(temp_preds)
+  
+  for(k in 1:length(SEGroup4_index)){
+    ind_upper <- which(temp_preds[ ,k] >= col_upper[k])
+    temp_exceed[ind_upper,k] <- 1
+  }
+  SEGroup4_exceed <- rbind(SEGroup4_exceed, temp_exceed)
+}
+
+SEGroup4_exceed <- SEGroup4_exceed[-1, ]
+
+
+
+
+SEGroup4_quad <- matrix(NA, ncol = 84)
+colnames(SEGroup4_quad) <- colnames(temp_preds)
+
+for (k in 17:20) {
+  SEweek_preds <-  SE_laglist_std[[k]][,3:210]
+  temp_preds <- SEweek_preds[ ,SEGroup4_index]
+  SEGroup4_quad <- rbind(SEGroup4_quad, temp_preds)
+}
+
+SEGroup4_quad <- SEGroup4_quad[-1, ]
+SEGroup4_quad <- SEGroup4_quad^2
+SEGroup4_quad <- as.matrix(SEGroup4_quad)
+```
+
+
+```{r resid_vector}
+SEgroup4_resid <- c()
+for (j in 17:20) {
+  SEgroup4_resid <- c(SEgroup4_resid, c(SEgroup_list[[j]]$Resid, se_resid4$Resid[j-16]))
+}
+
+
+#TODO: try this again with SEGroup4_exceed and after shifting where we perform our quantile checks,
+## That is group predictor data then do a quantile check across all of that data, or use a full year (lag 1-52) for quantile. 
+ols_quad <- lm(SEgroup4_resid ~ as.matrix(SEGroup4_quad))
+summary(ols_q)
+#length(c(SEgroup_list[[17]]$Resid, se_resid4$Resid[1]))
+#j -16
+```
+
+```{r test_glm}
+set.seed(300)
+cv_fit <- cv.glmnet(SEGroup4_quad, SEgroup4_resid, alpha = 0.75, nfolds = 5, family = "gaussian")
+plot(cv_fit)
+
+best_lambda <- cv_fit$lambda.min
+
+test_model <- glmnet(SEGroup4_quad, SEgroup4_resid, alpha = 0.75, family = "gaussian")
+test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
+
+#predicted coefficients
+preds <- test_pred@i+1
+test_pred[preds, ]
+```
+
+
+
+```{r}
+#example glmnet
+
+reduced_preds <- as.matrix(NE1_preds[,1:208])
+reduced_preds <- scale(reduced_preds, center = TRUE, scale = TRUE)
+row.names(NEAus_1) <- 1:19
+
+set.seed(300)
+cv_fit <- cv.glmnet(reduced_preds, NEAus_1, alpha = 0.815, nfolds = 5, family = "mgaussian")
+plot(cv_fit)
+
+best_lambda <- cv_fit$lambda.min
+
+test_model <- glmnet(reduced_preds, NEAus_1, alpha = 0.815, family = "mgaussian")
+test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
+```
+
+
+TODO: next try some more EDA on these residuals
+check on the CV-loo properties of model selection
+see we can fit a var/varma on the residuals.
+

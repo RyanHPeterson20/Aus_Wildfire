@@ -53,9 +53,9 @@ Using the clusters (groups) determined in other work we build group lasso models
 
 ```{r group_setup}
 #centered response matrices
-NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 
-SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 
 #TODO: create lists of the above matrices
 
@@ -219,12 +219,11 @@ test_group <- rep(1:52, each = 1) #not sure if this is how I want it?
 ```
 
 glmnet:
--alpha = 1 for lasso
+alpha = 1 for lasso
 
 ```{r glmnet_test}
 #example function
 #fit <- glmnet(X, Y, family="mgaussian", group=groups)
-
 reduced_preds <- as.matrix(NE1_preds[,1:208])
 reduced_preds <- scale(reduced_preds, center = TRUE, scale = TRUE)
 row.names(NEAus_1) <- 1:19
