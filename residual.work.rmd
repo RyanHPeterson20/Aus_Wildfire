@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r library}
 suppressMessages(library(glmnet)) #base lasso (elastic net, etc.)
+
+suppressMessages(library(lubridate))
 ```
 
 
@@ -45,6 +47,11 @@ rm(i, temp_season)
 
 ```
 
+
+
+
+
+# Residual modeling attempts
 
 ```{r}
 #TODO: add in olr data to see if anything there seems to make sense
@@ -137,7 +144,6 @@ lines(years_resids, SE38_true, col = "darkgreen")
 lines(years_resids, SE38_pred, col = "magenta")
 abline(v = c(2007), lty = 2, col = "red")
 ```
-
 
 
 ```{r resid42}
@@ -244,7 +250,6 @@ abline(v = 8.5, lty = 2, col = "red")
 
 ```
 
-
 ```{r SE group 3}
 #group 3 weeks 8-16
 #SE_laglist_std[[8]]
@@ -273,7 +278,6 @@ for(k in 1:length(SEGroup3_index)){
   SEGroup3_exceed[ind_upper,k] <- 1
 }
 ```
-
 
 ```{r SE group 4}
 #group 4 weeks 17-20
@@ -311,6 +315,16 @@ for (k in 17:20) {
 
 SEGroup4_exceed <- SEGroup4_exceed[-1, ]
 
+#olr data
+SEGroup4_olr <- matrix(NA, ncol = 52)
+colnames(SEGroup4_olr) <- colnames(SE_laglist_std[[1]][,211:262])
+
+for (j in 17:20) {
+  SEweek_olr <- SE_laglist_std[[j]][-19, 211:262]
+  SEGroup4_olr <- rbind(SEGroup4_olr, SEweek_olr)
+}
+
+SEGroup4_olr <- SEGroup4_olr[-1, ]
 
 
 
@@ -328,13 +342,15 @@ SEGroup4_quad <- SEGroup4_quad^2
 SEGroup4_quad <- as.matrix(SEGroup4_quad)
 ```
 
-
 ```{r resid_vector}
 SEgroup4_resid <- c()
 for (j in 17:20) {
-  SEgroup4_resid <- c(SEgroup4_resid, c(SEgroup_list[[j]]$Resid, se_resid4$Resid[j-16]))
+  SEgroup4_resid <- c(SEgroup4_resid, c(SEgroup_list[[j]]$Resid)) #, se_resid4$Resid[j-16]))
 }
 
+
+olr_fit <- lm(SEgroup4_resid ~ as.matrix(SEGroup4_olr))
+summary(olr_fit)
 
 #TODO: try this again with SEGroup4_exceed and after shifting where we perform our quantile checks,
 ## That is group predictor data then do a quantile check across all of that data, or use a full year (lag 1-52) for quantile. 
@@ -346,20 +362,18 @@ summary(ols_q)
 
 ```{r test_glm}
 set.seed(300)
-cv_fit <- cv.glmnet(SEGroup4_quad, SEgroup4_resid, alpha = 0.75, nfolds = 5, family = "gaussian")
+cv_fit <- cv.glmnet(as.matrix(SEGroup4_olr), SEgroup4_resid, alpha = 0.75, nfolds = 5, family = "gaussian")
 plot(cv_fit)
 
 best_lambda <- cv_fit$lambda.min
 
-test_model <- glmnet(SEGroup4_quad, SEgroup4_resid, alpha = 0.75, family = "gaussian")
+test_model <- glmnet(SEGroup4_olr, SEgroup4_resid, alpha = 0.5, family = "gaussian")
 test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
 
 #predicted coefficients
 preds <- test_pred@i+1
 test_pred[preds, ]
 ```
-
-
 
 ```{r}
 #example glmnet
@@ -382,4 +396,72 @@ test_pred <- predict(test_model, s = best_lambda, type = "coefficients")
 TODO: next try some more EDA on these residuals
 check on the CV-loo properties of model selection
 see we can fit a var/varma on the residuals.
+
+# Time Series Residuals
+
+Building AR, ARMA, ARIMA models on the model residuals.
+
+```{r ts_setup}
+
+NE_resids <- matrix(NA, nrow = 18)
+for (k in 1:length(season_weeks)) {
+  NE_resids <- cbind(NE_resids, NEgroup_list[[k]]$Resid)
+}
+
+NE_resids <- NE_resids[,-1]
+colnames(NE_resids) <- season_weeks
+
+plot(1:32, NE_resids[1,], type = "l")
+#lines(1:32, NE_resids[2,])
+
+#SEgroup_list
+SE_resids <- matrix(NA, nrow = 18)
+for (k in 1:length(season_weeks)) {
+  SE_resids <- cbind(SE_resids, SEgroup_list[[k]]$Resid)
+}
+
+SE_resids <- SE_resids[,-1]
+colnames(SE_resids) <- season_weeks
+
+plot(1:32, SE_resids[2,], type = "l")
+```
+
+## TS set-up
+
+```{r}
+years <- 2001:2010 #2001:2019
+
+weekly_dates <- c()
+
+
+#TODO: make this
+for (year in years) {
+  start_date <- as.Date(paste(year, "08-29", sep = "-")) #get week 35
+  end_date <- as.Date(paste(year, "12-31", sep = "-")) 
+  
+  weekly <- seq(from = start_date, to = end_date, by = "week")
+  
+  # Combine with the main list of dates
+  weekly_dates <- c(weekly_dates, weekly)
+}
+
+#week(weekly_dates)
+
+#print(weekly_dates)
+as.Date(weekly_dates)
+
+
+week_wednesday <- function(date) {
+  # Shift the date so Wednesday becomes the first day of the week
+  shifted_date <- date - (wday(date) - 4) %% 7  # `4` corresponds to Wednesday
+  
+  # Find the week number
+  week_num <- as.numeric(difftime(shifted_date, floor_date(shifted_date, "year"), units = "weeks")) + 1
+  
+  return(week_num)
+}
+
+#provides weekly number
+floor(week_wednesday(as.Date(weekly_dates)))
+```
 
