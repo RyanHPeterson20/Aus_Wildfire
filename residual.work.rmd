@@ -429,39 +429,64 @@ plot(1:32, SE_resids[2,], type = "l")
 ## TS set-up
 
 ```{r}
-years <- 2001:2010 #2001:2019
 
 weekly_dates <- c()
 
 
-#TODO: make this
-for (year in years) {
-  start_date <- as.Date(paste(year, "08-29", sep = "-")) #get week 35
-  end_date <- as.Date(paste(year, "12-31", sep = "-")) 
+#TODO: add in 2019/2020
+for (year in 2002:2019) {
   
-  weekly <- seq(from = start_date, to = end_date, by = "week")
+  temp1 <- bounded_pred_df[which(bounded_resp_df$year == year), ]
+  start1 <- as.Date(temp1[which(temp1$week == 35), 1])
+  end1 <- as.Date(temp1[which(temp1$week == 52), 1])
   
-  # Combine with the main list of dates
-  weekly_dates <- c(weekly_dates, weekly)
+  temp2 <- bounded_pred_df[which(bounded_resp_df$year == year+1), ]
+  start2 <- as.Date(temp2[which(temp2$week == 1), 1])
+  end2 <- as.Date(temp2[which(temp2$week == 14), 1])
+  
+  weekly1 <- seq(from = start1, to = end1, by = "week")
+  weekly2 <- seq(from = start2, to = end2, by = "week")
+  
+  weekly_dates <- c(weekly_dates, weekly1, weekly2)
 }
 
-#week(weekly_dates)
+asWeek <- as.Date(weekly_dates)
 
-#print(weekly_dates)
-as.Date(weekly_dates)
+asWeek
 
-
-week_wednesday <- function(date) {
-  # Shift the date so Wednesday becomes the first day of the week
-  shifted_date <- date - (wday(date) - 4) %% 7  # `4` corresponds to Wednesday
-  
-  # Find the week number
-  week_num <- as.numeric(difftime(shifted_date, floor_date(shifted_date, "year"), units = "weeks")) + 1
-  
-  return(week_num)
-}
-
-#provides weekly number
-floor(week_wednesday(as.Date(weekly_dates)))
 ```
+
+```{r}
+NE_ts_df <- data.frame(
+  Date = asWeek,
+  Residuals = as.vector(t(NE_resids))
+)
+
+
+SE_ts_df <- data.frame(
+  Date = asWeek,
+  Residuals = as.vector(t(SE_resids))
+)
+
+#TODO: account for the large gaps
+#example code (adjust accordingly)
+
+# Create a complete sequence of weeks
+all_weeks <- seq(min(NE_ts_df$Date), max(NE_ts_df$Date), by = "week")
+
+# Merge original data with all weeks
+full_data <- merge(data.frame(Date = all_weeks), NE_ts_df, by = "Date", all.x = TRUE)
+
+# Fill missing weeks with NA
+full_ts <- ts(full_data$Residuals, frequency = 52)
+
+# ACF and PACF on the padded time series
+acf(full_ts, na.action = na.pass, main = "ACF with Missing Weeks")
+pacf(full_ts, na.action = na.pass, main = "PACF with Missing Weeks")
+```
+
+```{r}
+
+```
+
 
