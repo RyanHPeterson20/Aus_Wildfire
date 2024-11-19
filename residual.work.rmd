@@ -472,10 +472,10 @@ SE_ts_df <- data.frame(
 #example code (adjust accordingly)
 
 # Create a complete sequence of weeks
-all_weeks <- seq(min(NE_ts_df$Date), max(NE_ts_df$Date), by = "week")
+all_weeks <- seq(min(SE_ts_df$Date), max(SE_ts_df$Date), by = "week")
 
 # Merge original data with all weeks
-full_data <- merge(data.frame(Date = all_weeks), NE_ts_df, by = "Date", all.x = TRUE)
+full_data <- merge(data.frame(Date = all_weeks), SE_ts_df, by = "Date", all.x = TRUE)
 
 # Fill missing weeks with NA
 full_ts <- ts(full_data$Residuals, frequency = 52)
@@ -483,6 +483,12 @@ full_ts <- ts(full_data$Residuals, frequency = 52)
 # ACF and PACF on the padded time series
 acf(full_ts, na.action = na.pass, main = "ACF with Missing Weeks")
 pacf(full_ts, na.action = na.pass, main = "PACF with Missing Weeks")
+
+acf(NE_ts_df$Residuals, main = "ACF without Regular Frequency")
+pacf(NE_ts_df$Residuals, main = "PACF without Regular Frequency")
+
+acf(SE_ts_df$Residuals, main = "ACF without Regular Frequency")
+pacf(SE_ts_df$Residuals, main = "PACF without Regular Frequency")
 ```
 
 ```{r}
