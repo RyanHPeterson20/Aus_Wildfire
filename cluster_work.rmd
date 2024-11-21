@@ -11,6 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r library}
 suppressMessages(library(adespatial)) #for constr.hclust
+suppressMessages(library(dendextend)) 
+
+suppressMessages(library(scales))
 ```
 
 
@@ -61,21 +64,64 @@ plot(SEtest_clust)
 
 ```
 
+```{r}
+# Install and load dendextend
+#install.packages("dendextend")
+library(dendextend)
+
+# Perform hierarchical clustering
+hc <- hclust(dist(data))
+
+# Convert hclust to a dendrogram
+dend <- as.dendrogram(hc)
+
+# Manually set the order (e.g., reverse the default order)
+dend <- reorder(dend, order = rev(order.dendrogram(dend)))
+
+# Plot the reordered dendrogram
+plot(dend, main = "Manually Reordered Dendrogram")
+
+```
+
 
 constr.hclust
 
 ```{r constr.hclust_test}
+
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
+
+
 NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
 NEconst_clust <- constr.hclust(dist(t(NEbase_matrix)), chron = TRUE) #default with ward.d2 method
-plot(NEconst_clust, k = 5) #either, k = 5 or 6
-stats:::plot.hclust(NEconst_clust, hang = -1)
+
+NEconst_clust$order <- 1:32
+
+#plot(dend, k = 5) #either, k = 5 or 6
+png("NEcluster.png", width = 1000, height = 600, res = 100)
+stats:::plot.hclust(NEconst_clust, hang = -1, xlab = "Wildfire Season Weeks", main = "NE Aus - Response Clustering")
+rect(xleft = 0.5, xright = 3.5, ybottom = 0, ytop = 55, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 3.5, xright = 8.5, ybottom = 0, ytop = 55, col = rgb(0, 1, 0, 0.2), border = NA)
+rect(xleft = 8.5, xright = 12.5, ybottom = 0, ytop = 55, col = rgb(0, 0, 1, 0.2), border = NA)
+rect(xleft = 12.5, xright = 17.5, ybottom = 0, ytop = 55, col = rgb(1, 0.5, 0, 0.2), border = NA)
+rect(xleft = 17.5, xright = 21.5, ybottom = 0, ytop = 55, col = rgb(1, 0, 0.5, 0.2), border = NA)
+rect(xleft = 21.5, xright = 32.5, ybottom = 0, ytop = 55, col = rgb(0, 1, 0.5, 0.2), border = NA)
+dev.off()
 
 SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
 SEconst_clust <- constr.hclust(dist(t(SEbase_matrix)), chron = TRUE) #default with ward.d2 method
-plot(SEconst_clust, k = 5) #either, k = 4 or 5
-stats:::plot.hclust(SEconst_clust, hang = -1)
 
-#TODO: update the dendrograms to have ordered variables and colored groups.
+SEconst_clust$order <- 1:32
+
+#plot(SEconst_clust, k = 5) #either, k = 4 or 5
+png("SEcluster.png", width = 1000, height = 600, res = 100)
+stats:::plot.hclust(SEconst_clust, hang = -1, xlab = "Wildfire Season Weeks", main = "SE Aus - Response Clustering")
+rect(xleft = 0.5, xright = 3.5, ybottom = 0, ytop = 60, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 3.5, xright = 7.5, ybottom = 0, ytop = 60, col = rgb(0, 1, 0, 0.2), border = NA)
+rect(xleft = 7.5, xright = 16.5, ybottom = 0, ytop = 60, col = rgb(0, 0, 1, 0.2), border = NA)
+rect(xleft = 16.5, xright = 20.5, ybottom = 0, ytop = 60, col = rgb(1, 0.5, 0, 0.2), border = NA)
+rect(xleft = 20.5, xright = 32.5, ybottom = 0, ytop = 60, col = rgb(1, 0, 0.5, 0.2), border = NA)
+dev.off()
+
 ```
 
 ```{r clustered_data}

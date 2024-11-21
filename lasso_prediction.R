@@ -89,7 +89,8 @@ D_int <- rbind( c(1, rep(0, length.out = 208)), D_int)
 
 #TODO: check to see if I can pass these fusedlasso objects to a predict() function
 
-NE_gamma <- 0.67
+#NE_gamma <- 0.67 #original gamma
+NE_gamma <- 0.85
 
 NEfuse_baselist <- list()
 NEfuse_grouplist <- list()
@@ -108,7 +109,9 @@ for (i in 1:n) {
 
 # SE Fusion Predictions
 
-SE_gamma <- 0.67
+#SE_gamma <- 0.67 #original gamma
+SE_gamma <- 0.85
+
 
 SEfuse_baselist <- list()
 SEfuse_grouplist <- list()
@@ -134,6 +137,11 @@ legend_names <- c("Nino", "Nino - Base", "DMI", "DMI - Base",
 legend_col <- c("darkmagenta", "magenta", "blue", "cyan",
                 "red", "coral", "darkgreen", "green")
 legend_lty <- rep(c(1,2), length.out = 8)
+
+
+legend1_names <- c("Nino",  "DMI", "TSA", "AAO")
+legend1_col <- c("darkmagenta", "blue", "red", "darkgreen")
+legend1_lty <- rep(1, length.out = 4)
 
 #NE Visualizations
 NE_coefs <- list()
@@ -186,18 +194,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 1", ylim = range(NE_range, NEbase_range), 
      col = "darkmagenta")
-lines(1:52, NE_coefs_base$Group_1$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_1$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_1$dmi_coef, col = "blue")
-lines(1:52, NE_coefs_base$Group_1$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_1$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_1$tsa_coef, col = "red")
-lines(1:52, NE_coefs_base$Group_1$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_1$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_1$aao_coef, col = "darkgreen")
-lines(1:52, NE_coefs_base$Group_1$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, NE_coefs_base$Group_1$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -207,18 +215,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 2", ylim = range(NE_range, NEbase_range), 
      col = "darkmagenta")
-lines(1:52, NE_coefs_base$Group_2$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_2$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_2$dmi_coef, col = "blue")
-lines(1:52, NE_coefs_base$Group_2$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_2$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_2$tsa_coef, col = "red")
-lines(1:52, NE_coefs_base$Group_2$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_2$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_2$aao_coef, col = "darkgreen")
-lines(1:52, NE_coefs_base$Group_2$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, NE_coefs_base$Group_2$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -228,18 +236,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, NE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 3", ylim = range(NE_range, NEbase_range), 
      col = "darkmagenta")
-lines(1:52, NE_coefs_base$Group_3$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_3$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_3$dmi_coef, col = "blue")
-lines(1:52, NE_coefs_base$Group_3$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_3$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_3$tsa_coef, col = "red")
-lines(1:52, NE_coefs_base$Group_3$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_3$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_3$aao_coef, col = "darkgreen")
-lines(1:52, NE_coefs_base$Group_3$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, NE_coefs_base$Group_3$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 #NE group 4
@@ -248,18 +256,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, NE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 4", ylim = range(NE_range, NEbase_range), 
      col = "darkmagenta")
-lines(1:52, NE_coefs_base$Group_4$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_4$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_4$dmi_coef, col = "blue")
-lines(1:52, NE_coefs_base$Group_4$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_4$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_4$tsa_coef, col = "red")
-lines(1:52, NE_coefs_base$Group_4$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_4$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_4$aao_coef, col = "darkgreen")
-lines(1:52, NE_coefs_base$Group_4$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, NE_coefs_base$Group_4$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -269,18 +277,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, NE_coefs$Group_5$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 5", ylim = range(NE_range, NEbase_range), 
      col = "darkmagenta")
-lines(1:52, NE_coefs_base$Group_5$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_5$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_5$dmi_coef, col = "blue")
-lines(1:52, NE_coefs_base$Group_5$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_5$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_5$tsa_coef, col = "red")
-lines(1:52, NE_coefs_base$Group_5$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_5$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_5$aao_coef, col = "darkgreen")
-lines(1:52, NE_coefs_base$Group_5$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, NE_coefs_base$Group_5$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -290,18 +298,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, NE_coefs$Group_6$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 6", ylim = range(NE_range, NEbase_range), 
      col = "darkmagenta")
-lines(1:52, NE_coefs_base$Group_6$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_6$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_6$dmi_coef, col = "blue")
-lines(1:52, NE_coefs_base$Group_6$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_6$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_6$tsa_coef, col = "red")
-lines(1:52, NE_coefs_base$Group_6$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, NE_coefs_base$Group_6$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, NE_coefs$Group_6$aao_coef, col = "darkgreen")
-lines(1:52, NE_coefs_base$Group_6$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, NE_coefs_base$Group_6$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -355,18 +363,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "SE Group 1", ylim = range(SE_range, SEbase_range), 
      col = "darkmagenta")
-lines(1:52, SE_coefs_base$Group_1$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_1$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_1$dmi_coef, col = "blue")
-lines(1:52, SE_coefs_base$Group_1$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_1$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_1$tsa_coef, col = "red")
-lines(1:52, SE_coefs_base$Group_1$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_1$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_1$aao_coef, col = "darkgreen")
-lines(1:52, SE_coefs_base$Group_1$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, SE_coefs_base$Group_1$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -376,18 +384,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, SE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "SE Group 2", ylim = range(SE_range, SEbase_range), 
      col = "darkmagenta")
-lines(1:52, SE_coefs_base$Group_2$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_2$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_2$dmi_coef, col = "blue")
-lines(1:52, SE_coefs_base$Group_2$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_2$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_2$tsa_coef, col = "red")
-lines(1:52, SE_coefs_base$Group_2$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_2$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_2$aao_coef, col = "darkgreen")
-lines(1:52, SE_coefs_base$Group_2$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, SE_coefs_base$Group_2$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -398,18 +406,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, SE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "SE Group 3", ylim = range(SE_range, SEbase_range), 
      col = "darkmagenta")
-lines(1:52, SE_coefs_base$Group_3$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_3$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_3$dmi_coef, col = "blue")
-lines(1:52, SE_coefs_base$Group_3$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_3$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_3$tsa_coef, col = "red")
-lines(1:52, SE_coefs_base$Group_3$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_3$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_3$aao_coef, col = "darkgreen")
-lines(1:52, SE_coefs_base$Group_3$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, SE_coefs_base$Group_3$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -419,18 +427,18 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, SE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "SE Group 4", ylim = range(SE_range, SEbase_range), 
      col = "darkmagenta")
-lines(1:52, SE_coefs_base$Group_4$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_4$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_4$dmi_coef, col = "blue")
-lines(1:52, SE_coefs_base$Group_4$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_4$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_4$tsa_coef, col = "red")
-lines(1:52, SE_coefs_base$Group_4$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_4$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_4$aao_coef, col = "darkgreen")
-lines(1:52, SE_coefs_base$Group_4$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, SE_coefs_base$Group_4$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -440,18 +448,19 @@ par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth 
 plot(1:52, SE_coefs$Group_5$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "SE Group 5", ylim = range(SE_range, SEbase_range), 
      col = "darkmagenta")
-lines(1:52, SE_coefs_base$Group_5$nino_base, col = "magenta", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_5$nino_base, col = "magenta", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_5$dmi_coef, col = "blue")
-lines(1:52, SE_coefs_base$Group_5$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_5$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_5$tsa_coef, col = "red")
-lines(1:52, SE_coefs_base$Group_5$tsa_base, col = "coral", lty = 2, lwd = 1.5)
+#lines(1:52, SE_coefs_base$Group_5$tsa_base, col = "coral", lty = 2, lwd = 1.5)
 lines(1:52, SE_coefs$Group_5$aao_coef, col = "darkgreen")
-lines(1:52, SE_coefs_base$Group_5$aao_base, col = "green", lty = 2, lwd = 1.5)
-abline(h = 0, lty = 2)
+#lines(1:52, SE_coefs_base$Group_5$aao_base, col = "green", lty = 2, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+#abline(h = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
-       legend = legend_names,
-       col = legend_col, 
-       lty = legend_lty, lwd = 2, bty = "o") #, bg = "white")
+       legend = legend1_names,
+       col = legend1_col, 
+       lty = legend1_lty, lwd = 2, bty = "o") #, bg = "white")
 dev.off()
 
 
@@ -847,9 +856,9 @@ NEgroup_list <- c(NEgroup1_list, NEgroup2_list, NEgroup3_list, NEgroup4_list, NE
 SEgroup_list <- c(SEgroup1_list, SEgroup2_list, SEgroup3_list, SEgroup4_list, SEgroup5_list)
 
 #TODO: export this to mess with elsewhere
-setwd("~/CO_AUS/Aus_CO-main")
+#setwd("~/CO_AUS/Aus_CO-main")
 
-save(NEgroup_list, SEgroup_list, NEfuse_coefs, SEfuse_coefs, file = "base_preds.rda")
+#save(NEgroup_list, SEgroup_list, NEfuse_coefs, SEfuse_coefs, file = "base_preds.rda")
 
 #residual histograms
 
@@ -912,12 +921,12 @@ residNEfull_box_df <- rbind(residNE1_box_df, residNE2_box_df)
 residSEfull_box_df <- rbind(residSE1_box_df, residSE2_box_df)
 
 
-setwd("~/CO_AUS/Aus_CO-main/Figures_Simple")
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
 
 #TODO:update using resid_lim from the simplified linear model
 resid_lim <- c(-20, 20)
 
-png("NEresidsd_new.png", width = 800, height = 600, res = 100)
+png("NEresidsd_newgamma.png", width = 800, height = 600, res = 100)
 par(mar = c(8, 4, 4, 2) + 0.1)
 boxplot(values ~ group, data = residNEfull_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
         main = "NE Aus Lasso Model Residuals",axes = FALSE, pch = 20)
@@ -927,10 +936,16 @@ axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
      las = 3)
 abline(h = 0, lty = 2)
 abline(v = c(3.5, 8.5, 12.5, 17.5, 21.5), lty =2, col = "red")
+text(1.5, -15, "Group 1", col = "red", cex = 0.75)
+text(6, -15, "Group 2", col = "red", cex = 0.75)
+text(10.5, -15, "Group 3", col = "red", cex = 0.75)
+text(15, -15, "Group 4", col = "red", cex = 0.75)
+text(19.5, -15, "Group 5", col = "red", cex = 0.75)
+text(25, -15, "Group 6", col = "red", cex = 0.75)
 dev.off()
 
 
-png("SEresidsd_new.png", width = 800, height = 600, res = 100)
+png("SEresidsd_newgamma.png", width = 800, height = 600, res = 100)
 par(mar = c(8, 4, 4, 2) + 0.1)
 boxplot(values ~ group, data = residSEfull_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
         main = "SE Aus Lasso Model Residuals", axes = FALSE, pch = 20)
@@ -940,6 +955,11 @@ axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
      las = 3)
 abline(h = 0, lty = 2)
 abline(v = c(3.5, 7.5, 16.5, 20.5), lty =2, col = "red")
+text(1.5, -15, "Group 1", col = "red", cex = 0.75)
+text(5.5, -15, "Group 2", col = "red", cex = 0.75)
+text(12, -15, "Group 3", col = "red", cex = 0.75)
+text(18.5, -15, "Group 4", col = "red", cex = 0.75)
+text(24, -15, "Group 5", col = "red", cex = 0.75)
 dev.off()
 
 
