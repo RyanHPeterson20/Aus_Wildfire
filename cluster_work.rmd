@@ -99,12 +99,12 @@ NEconst_clust$order <- 1:32
 #plot(dend, k = 5) #either, k = 5 or 6
 png("NEcluster.png", width = 1000, height = 600, res = 100)
 stats:::plot.hclust(NEconst_clust, hang = -1, xlab = "Wildfire Season Weeks", main = "NE Aus - Response Clustering")
-rect(xleft = 0.5, xright = 3.5, ybottom = 0, ytop = 55, col = rgb(1, 0, 0, 0.2), border = NA)
-rect(xleft = 3.5, xright = 8.5, ybottom = 0, ytop = 55, col = rgb(0, 1, 0, 0.2), border = NA)
-rect(xleft = 8.5, xright = 12.5, ybottom = 0, ytop = 55, col = rgb(0, 0, 1, 0.2), border = NA)
-rect(xleft = 12.5, xright = 17.5, ybottom = 0, ytop = 55, col = rgb(1, 0.5, 0, 0.2), border = NA)
-rect(xleft = 17.5, xright = 21.5, ybottom = 0, ytop = 55, col = rgb(1, 0, 0.5, 0.2), border = NA)
-rect(xleft = 21.5, xright = 32.5, ybottom = 0, ytop = 55, col = rgb(0, 1, 0.5, 0.2), border = NA)
+rect(xleft = 0.5, xright = 3.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 3.5, xright = 8.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
+rect(xleft = 8.5, xright = 12.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
+rect(xleft = 12.5, xright = 17.5, ybottom = 0, ytop = 50, col = rgb(1, 0.5, 0, 0.2), border = NA)
+rect(xleft = 17.5, xright = 21.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0.5, 0.2), border = NA)
+rect(xleft = 21.5, xright = 32.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0.5, 0.2), border = NA)
 dev.off()
 
 SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
@@ -115,11 +115,11 @@ SEconst_clust$order <- 1:32
 #plot(SEconst_clust, k = 5) #either, k = 4 or 5
 png("SEcluster.png", width = 1000, height = 600, res = 100)
 stats:::plot.hclust(SEconst_clust, hang = -1, xlab = "Wildfire Season Weeks", main = "SE Aus - Response Clustering")
-rect(xleft = 0.5, xright = 3.5, ybottom = 0, ytop = 60, col = rgb(1, 0, 0, 0.2), border = NA)
-rect(xleft = 3.5, xright = 7.5, ybottom = 0, ytop = 60, col = rgb(0, 1, 0, 0.2), border = NA)
-rect(xleft = 7.5, xright = 16.5, ybottom = 0, ytop = 60, col = rgb(0, 0, 1, 0.2), border = NA)
-rect(xleft = 16.5, xright = 20.5, ybottom = 0, ytop = 60, col = rgb(1, 0.5, 0, 0.2), border = NA)
-rect(xleft = 20.5, xright = 32.5, ybottom = 0, ytop = 60, col = rgb(1, 0, 0.5, 0.2), border = NA)
+rect(xleft = 0.5, xright = 3.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 3.5, xright = 7.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
+rect(xleft = 7.5, xright = 16.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
+rect(xleft = 16.5, xright = 20.5, ybottom = 0, ytop = 50, col = rgb(1, 0.5, 0, 0.2), border = NA)
+rect(xleft = 20.5, xright = 32.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0.5, 0.2), border = NA)
 dev.off()
 
 ```

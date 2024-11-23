@@ -464,6 +464,174 @@ legend("topright", inset = c(-0.3, 0),
 dev.off()
 
 
+#TODO: create new plots for index only, with 5-6 lines per index
+## match colors with those in the cluster plots
+
+group1_col <- rgb(1, 0, 0, 0.9)
+group2_col <- rgb(0, 1, 0, 0.9)
+group3_col <- rgb(0, 0, 1, 0.9)
+group4_col <- rgb(1, 0.5, 0, 0.9)
+group5_col <- rgb(1, 0, 0.5, 0.9)
+group6_col <- rgb(0, 1, 0.5, 0.9)
+
+group_names <- c("Group 1", "Group 2", "Group 3", "Group 4", 
+                  "Group 5", "Group 6")
+group_col <- c(group1_col, group2_col, group3_col, group4_col,
+                group5_col, group6_col)
+group_lty <- rep(1, length.out = 6)
+
+
+
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
+
+
+#NE nino
+png(filename = "NE_nino.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus Nino Coefficients", ylim = range(NE_range, NEbase_range), 
+     col = group1_col)
+lines(1:52, NE_coefs$Group_2$nino_coef, col = group2_col)
+lines(1:52, NE_coefs$Group_3$nino_coef, col = group3_col)
+lines(1:52, NE_coefs$Group_4$nino_coef, col = group4_col)
+lines(1:52, NE_coefs$Group_5$nino_coef, col = group5_col)
+lines(1:52, NE_coefs$Group_6$nino_coef, col = group6_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names,
+       col = group_col, 
+       lty = group_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#NE dmi
+png(filename = "NE_dmi.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$dmi_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus DMI Coefficients", ylim = range(NE_range, NEbase_range), 
+     col = group1_col)
+lines(1:52, NE_coefs$Group_2$dmi_coef, col = group2_col)
+lines(1:52, NE_coefs$Group_3$dmi_coef, col = group3_col)
+lines(1:52, NE_coefs$Group_4$dmi_coef, col = group4_col)
+lines(1:52, NE_coefs$Group_5$dmi_coef, col = group5_col)
+lines(1:52, NE_coefs$Group_6$dmi_coef, col = group6_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names,
+       col = group_col, 
+       lty = group_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#NE tsa
+png(filename = "NE_tsa.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$tsa_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus TSA Coefficients", ylim = range(NE_range, NEbase_range), 
+     col = group1_col)
+lines(1:52, NE_coefs$Group_2$tsa_coef, col = group2_col)
+lines(1:52, NE_coefs$Group_3$tsa_coef, col = group3_col)
+lines(1:52, NE_coefs$Group_4$tsa_coef, col = group4_col)
+lines(1:52, NE_coefs$Group_5$tsa_coef, col = group5_col)
+lines(1:52, NE_coefs$Group_6$tsa_coef, col = group6_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names,
+       col = group_col, 
+       lty = group_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#NE aao
+png(filename = "NE_aao.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$aao_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus AAO Coefficients", ylim = range(NE_range, NEbase_range), 
+     col = group1_col)
+lines(1:52, NE_coefs$Group_2$aao_coef, col = group2_col)
+lines(1:52, NE_coefs$Group_3$aao_coef, col = group3_col)
+lines(1:52, NE_coefs$Group_4$aao_coef, col = group4_col)
+lines(1:52, NE_coefs$Group_5$aao_coef, col = group5_col)
+lines(1:52, NE_coefs$Group_6$aao_coef, col = group6_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names,
+       col = group_col, 
+       lty = group_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE groups
+
+#SE nino
+png(filename = "SE_nino.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus Nino Coefficients", ylim = range(SE_range), 
+     col = group1_col)
+lines(1:52, SE_coefs$Group_2$nino_coef, col = group2_col)
+lines(1:52, SE_coefs$Group_3$nino_coef, col = group3_col)
+lines(1:52, SE_coefs$Group_4$nino_coef, col = group4_col)
+lines(1:52, SE_coefs$Group_5$nino_coef, col = group5_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names[1:5],
+       col = group_col[1:5], 
+       lty = group_lty[1:5], lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE dmi
+png(filename = "SE_dmi.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$dmi_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus DMI Coefficients", ylim = range(SE_range), 
+     col = group1_col)
+lines(1:52, SE_coefs$Group_2$dmi_coef, col = group2_col)
+lines(1:52, SE_coefs$Group_3$dmi_coef, col = group3_col)
+lines(1:52, SE_coefs$Group_4$dmi_coef, col = group4_col)
+lines(1:52, SE_coefs$Group_5$dmi_coef, col = group5_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names[1:5],
+       col = group_col[1:5], 
+       lty = group_lty[1:5], lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE tsa
+png(filename = "SE_tsa.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$tsa_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus TSA Coefficients", ylim = range(SE_range), 
+     col = group1_col)
+lines(1:52, SE_coefs$Group_2$tsa_coef, col = group2_col)
+lines(1:52, SE_coefs$Group_3$tsa_coef, col = group3_col)
+lines(1:52, SE_coefs$Group_4$tsa_coef, col = group4_col)
+lines(1:52, SE_coefs$Group_5$tsa_coef, col = group5_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names[1:5],
+       col = group_col[1:5], 
+       lty = group_lty[1:5], lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE aao
+png(filename = "SE_aao.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$aao_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus AAO Coefficients", ylim = range(SE_range), 
+     col = group1_col)
+lines(1:52, SE_coefs$Group_2$aao_coef, col = group2_col)
+lines(1:52, SE_coefs$Group_3$aao_coef, col = group3_col)
+lines(1:52, SE_coefs$Group_4$aao_coef, col = group4_col)
+lines(1:52, SE_coefs$Group_5$aao_coef, col = group5_col)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = group_names[1:5],
+       col = group_col[1:5], 
+       lty = group_lty[1:5], lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+
 # Predictions
 
 #TODO: make the following sections of predictions more flexible with for loops
@@ -856,9 +1024,9 @@ NEgroup_list <- c(NEgroup1_list, NEgroup2_list, NEgroup3_list, NEgroup4_list, NE
 SEgroup_list <- c(SEgroup1_list, SEgroup2_list, SEgroup3_list, SEgroup4_list, SEgroup5_list)
 
 #TODO: export this to mess with elsewhere
-#setwd("~/CO_AUS/Aus_CO-main")
+setwd("~/CO_AUS/Aus_CO-main")
 
-#save(NEgroup_list, SEgroup_list, NEfuse_coefs, SEfuse_coefs, file = "base_preds.rda")
+save(NEgroup_list, SEgroup_list, NEfuse_coefs, SEfuse_coefs, file = "base_preds.rda")
 
 #residual histograms
 
