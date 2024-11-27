@@ -1,0 +1,252 @@
+---
+title: "validation_work"
+author: "Ryan Peterson"
+date: "2024-11-25"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r data_load}
+setwd("~/CO_AUS/Aus_CO-main")
+
+load("ne_data.rda")
+load("se_data.rda")
+load("bounded_data.rda")
+load("data_matrix.rda")
+load("lag_list.rda")
+
+load("base_preds.rda")
+
+source("group_functions.R")
+```
+
+
+```{r}
+#set up season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+```
+
+
+# In-sample
+
+MSE and R^2
+
+```{r}
+#MSE
+##mean(resids^2) #example code for an specific group
+
+#NE Aus (group MSE)
+NE_mse1 <- mean(c(NEgroup_list$Week_35$Resid^2, NEgroup_list$Week_36$Resid^2, NEgroup_list$Week_37$Resid^2))
+NE_mse2 <- mean(c(NEgroup_list$Week_38$Resid^2, NEgroup_list$Week_39$Resid^2, NEgroup_list$Week_40$Resid^2,
+                   NEgroup_list$Week_41$Resid^2,  NEgroup_list$Week_42$Resid^2))
+NE_mse3 <- mean(c(NEgroup_list$Week_43$Resid^2, NEgroup_list$Week_44$Resid^2, NEgroup_list$Week_45$Resid^2,
+                   NEgroup_list$Week_46$Resid^2))
+NE_mse4 <- mean(c(NEgroup_list$Week_47$Resid^2, NEgroup_list$Week_48$Resid^2, NEgroup_list$Week_49$Resid^2,
+                   NEgroup_list$Week_50$Resid^2,  NEgroup_list$Week_51$Resid^2))
+NE_mse5 <- mean(c(NEgroup_list$Week_51$Resid^2, NEgroup_list$Week_1$Resid^2,  NEgroup_list$Week_2$Resid^2,
+                   NEgroup_list$Week_3$Resid^2))
+NE_mse6 <- mean(c(NEgroup_list$Week_4$Resid^2, NEgroup_list$Week_5$Resid^2,  NEgroup_list$Week_6$Resid^2,
+                   NEgroup_list$Week_7$Resid^2, NEgroup_list$Week_8$Resid^2,  NEgroup_list$Week_9$Resid^2,
+                   NEgroup_list$Week_10$Resid^2, NEgroup_list$Week_11$Resid^2,  NEgroup_list$Week_12$Resid^2,
+                   NEgroup_list$Week_13$Resid^2, NEgroup_list$Week_14$Resid^2))
+
+#SE Aus (group MSE)
+SE_mse1 <- mean(c(SEgroup_list$Week_35$Resid^2, SEgroup_list$Week_36$Resid^2, SEgroup_list$Week_37$Resid^2))
+SE_mse2 <- mean(c(SEgroup_list$Week_38$Resid^2, SEgroup_list$Week_38$Resid^2, SEgroup_list$Week_40$Resid^2,
+                  SEgroup_list$Week_41$Resid^2))
+SE_mse3 <- mean(c(SEgroup_list$Week_42$Resid^2, SEgroup_list$Week_43$Resid^2, SEgroup_list$Week_44$Resid^2,
+                  SEgroup_list$Week_45$Resid^2, SEgroup_list$Week_46$Resid^2, SEgroup_list$Week_47$Resid^2,
+                  SEgroup_list$Week_48$Resid^2, SEgroup_list$Week_49$Resid^2, SEgroup_list$Week_50$Resid^2))
+SE_mse4 <- mean(c(SEgroup_list$Week_51$Resid^2, SEgroup_list$Week_52$Resid^2, SEgroup_list$Week_1$Resid^2,
+                  SEgroup_list$Week_2$Resid^2))
+SE_mse5 <- mean(c(SEgroup_list$Week_3$Resid^2 ,SEgroup_list$Week_4$Resid^2, SEgroup_list$Week_5$Resid^2,  
+                  SEgroup_list$Week_6$Resid^2, SEgroup_list$Week_7$Resid^2, SEgroup_list$Week_8$Resid^2, 
+                  SEgroup_list$Week_9$Resid^2, SEgroup_list$Week_10$Resid^2, SEgroup_list$Week_11$Resid^2,
+                  SEgroup_list$Week_12$Resid^2, SEgroup_list$Week_13$Resid^2, SEgroup_list$Week_14$Resid^2))
+
+```
+
+
+
+
+```{r}
+#TODO: write an R^2 function
+#add in R^2 for group
+#NE Aus group 1
+NE_resp1 <- c(NEgroup_list$Week_35$True, NEgroup_list$Week_36$True, NEgroup_list$Week_37$True)
+NE_hat1 <- c(NEgroup_list$Week_35$Pred, NEgroup_list$Week_36$Pred, NEgroup_list$Week_37$Pred)
+NE_resid1 <- c(NEgroup_list$Week_35$Resid, NEgroup_list$Week_36$Resid, NEgroup_list$Week_37$Resid)
+NE_mean1 <- mean(NE_resp1)
+NE_SSR1 <- sum(NE_resid1^2)
+NE_SST1 <- sum((NE_resp1 - NE_mean1)^2)
+R2_NEgroup1 <- 1 - (NE_SSR1 / NE_SST1)
+
+#NE Aus group 2
+NE_resp2 <- c(NEgroup_list$Week_38$True, NEgroup_list$Week_39$True, NEgroup_list$Week_40$True,
+                   NEgroup_list$Week_41$True,  NEgroup_list$Week_42$True)
+NE_hat2 <- c(NEgroup_list$Week_38$Pred, NEgroup_list$Week_39$Pred, NEgroup_list$Week_40$Pred,
+                   NEgroup_list$Week_41$Pred,  NEgroup_list$Week_42$Pred)
+NE_resid2 <- c(NEgroup_list$Week_38$Resid, NEgroup_list$Week_39$Resid, NEgroup_list$Week_40$Resid,
+                   NEgroup_list$Week_41$Resid,  NEgroup_list$Week_42$Resid)
+NE_mean2 <- mean(NE_resp2)
+NE_SSR2 <- sum(NE_resid2^2)
+NE_SST2 <- sum((NE_resp2 - NE_mean2)^2)
+R2_NEgroup2 <- 1 - (NE_SSR2 / NE_SST2)
+
+#NE Aus group 3
+NE_resp3 <- c(NEgroup_list$Week_43$True, NEgroup_list$Week_44$True, NEgroup_list$Week_45$True,
+                   NEgroup_list$Week_46$True)
+NE_hat3 <- c(NEgroup_list$Week_43$Pred, NEgroup_list$Week_44$Pred, NEgroup_list$Week_45$Pred,
+                   NEgroup_list$Week_46$Pred)
+NE_resid3 <- c(NEgroup_list$Week_43$Resid, NEgroup_list$Week_44$Resid, NEgroup_list$Week_45$Resid,
+                   NEgroup_list$Week_46$Resid)
+NE_mean3 <- mean(NE_resp3)
+NE_SSR3 <- sum(NE_resid3^2)
+NE_SST3 <- sum((NE_resp3 - NE_mean3)^2)
+R2_NEgroup3 <- 1 - (NE_SSR3 / NE_SST3)
+
+#NE Aus group 4
+NE_resp4 <- c(NEgroup_list$Week_47$True, NEgroup_list$Week_48$True, NEgroup_list$Week_49$True,
+                   NEgroup_list$Week_50$True,  NEgroup_list$Week_51$True)
+NE_hat4 <- c(NEgroup_list$Week_47$Pred, NEgroup_list$Week_48$Pred, NEgroup_list$Week_49$Pred,
+                   NEgroup_list$Week_50$Pred,  NEgroup_list$Week_51$Pred)
+NE_resid4 <- c(NEgroup_list$Week_47$Resid, NEgroup_list$Week_48$Resid, NEgroup_list$Week_49$Resid,
+                   NEgroup_list$Week_50$Resid,  NEgroup_list$Week_51$Resid)
+NE_mean4 <- mean(NE_resp4)
+NE_SSR4 <- sum(NE_resid4^2)
+NE_SST4 <- sum((NE_resp4 - NE_mean4)^2)
+R2_NEgroup4 <- 1 - (NE_SSR4 / NE_SST4)
+
+#NE Aus group 5
+NE_resp5 <- c(NEgroup_list$Week_51$True, NEgroup_list$Week_1$True,  NEgroup_list$Week_2$True,
+                   NEgroup_list$Week_3$True)
+NE_hat5 <- c(NEgroup_list$Week_51$Pred, NEgroup_list$Week_1$Pred,  NEgroup_list$Week_2$Pred,
+                   NEgroup_list$Week_3$Pred)
+NE_resid5 <- c(NEgroup_list$Week_51$Resid, NEgroup_list$Week_1$Resid,  NEgroup_list$Week_2$Resid,
+                   NEgroup_list$Week_3$Resid)
+NE_mean5 <- mean(NE_resp5)
+NE_SSR5 <- sum(NE_resid5^2)
+NE_SST5 <- sum((NE_resp5 - NE_mean5)^2)
+R2_NEgroup5 <- 1 - (NE_SSR5 / NE_SST5)
+
+#NE Aus group 6
+NE_resp6 <- c(NEgroup_list$Week_4$True, NEgroup_list$Week_5$True,  NEgroup_list$Week_6$True,
+                   NEgroup_list$Week_7$True, NEgroup_list$Week_8$True,  NEgroup_list$Week_9$True,
+                   NEgroup_list$Week_10$True, NEgroup_list$Week_11$True,  NEgroup_list$Week_12$True,
+                   NEgroup_list$Week_13$True, NEgroup_list$Week_14$True)
+NE_hat6 <- c(NEgroup_list$Week_4$Pred, NEgroup_list$Week_5$Pred,  NEgroup_list$Week_6$Pred,
+                   NEgroup_list$Week_7$Pred, NEgroup_list$Week_8$Pred,  NEgroup_list$Week_9$Pred,
+                   NEgroup_list$Week_10$Pred, NEgroup_list$Week_11$Pred,  NEgroup_list$Week_12$Pred,
+                   NEgroup_list$Week_13$Pred, NEgroup_list$Week_14$Pred)
+NE_resid6 <- c(NEgroup_list$Week_4$Resid, NEgroup_list$Week_5$Resid,  NEgroup_list$Week_6$Resid,
+                   NEgroup_list$Week_7$Resid, NEgroup_list$Week_8$Resid,  NEgroup_list$Week_9$Resid,
+                   NEgroup_list$Week_10$Resid, NEgroup_list$Week_11$Resid,  NEgroup_list$Week_12$Resid,
+                   NEgroup_list$Week_13$Resid, NEgroup_list$Week_14$Resid)
+NE_mean6 <- mean(NE_resp6)
+NE_SSR6 <- sum(NE_resid6^2)
+NE_SST6 <- sum((NE_resp6 - NE_mean6)^2)
+R2_NEgroup6 <- 1 - (NE_SSR6 / NE_SST6)
+
+
+#SE Aus R^2
+#SE Aus group 1
+SE_resp1 <- c(SEgroup_list$Week_35$True, SEgroup_list$Week_36$True, SEgroup_list$Week_37$True)
+SE_hat1 <- c(SEgroup_list$Week_35$Pred, SEgroup_list$Week_36$Pred, SEgroup_list$Week_37$Pred)
+SE_resid1 <- c(SEgroup_list$Week_35$Resid, SEgroup_list$Week_36$Resid, SEgroup_list$Week_37$Resid)
+SE_mean1 <- mean(SE_resp1)
+SE_SSR1 <- sum(SE_resid1^2)
+SE_SST1 <- sum((SE_resp1 - SE_mean1)^2)
+R2_SEgroup1 <- 1 - (SE_SSR1 / SE_SST1)
+
+#SE Aus group 2
+SE_resp2 <- c(SEgroup_list$Week_38$True, SEgroup_list$Week_38$True, SEgroup_list$Week_40$True,
+                  SEgroup_list$Week_41$True)
+SE_hat2 <- c(SEgroup_list$Week_38$Pred, SEgroup_list$Week_38$Pred, SEgroup_list$Week_40$Pred,
+                  SEgroup_list$Week_41$Pred)
+SE_resid2 <- c(SEgroup_list$Week_38$Resid, SEgroup_list$Week_38$Resid, SEgroup_list$Week_40$Resid,
+                  SEgroup_list$Week_41$Resid)
+SE_mean2 <- mean(SE_resp2)
+SE_SSR2 <- sum(SE_resid2^2)
+SE_SST2 <- sum((SE_resp2 - SE_mean2)^2)
+R2_SEgroup2 <- 1 - (SE_SSR2 / SE_SST2)
+
+#SE Aus group 3
+SE_resp3 <- c(SEgroup_list$Week_42$True, SEgroup_list$Week_43$True, SEgroup_list$Week_44$True,
+                  SEgroup_list$Week_45$True, SEgroup_list$Week_46$True, SEgroup_list$Week_47$True,
+                  SEgroup_list$Week_48$True, SEgroup_list$Week_49$True, SEgroup_list$Week_50$True)
+SE_hat3 <- c(SEgroup_list$Week_42$Pred, SEgroup_list$Week_43$Pred, SEgroup_list$Week_44$Pred,
+                  SEgroup_list$Week_45$Pred, SEgroup_list$Week_46$Pred, SEgroup_list$Week_47$Pred,
+                  SEgroup_list$Week_48$Pred, SEgroup_list$Week_49$Pred, SEgroup_list$Week_50$Pred)
+SE_resid3 <- c(SEgroup_list$Week_42$Resid, SEgroup_list$Week_43$Resid, SEgroup_list$Week_44$Resid,
+                  SEgroup_list$Week_45$Resid, SEgroup_list$Week_46$Resid, SEgroup_list$Week_47$Resid,
+                  SEgroup_list$Week_48$Resid, SEgroup_list$Week_49$Resid, SEgroup_list$Week_50$Resid)
+SE_mean3 <- mean(SE_resp3)
+SE_SSR3 <- sum(SE_resid3^2)
+SE_SST3 <- sum((SE_resp3 - SE_mean3)^2)
+R2_SEgroup3 <- 1 - (SE_SSR3 / SE_SST3)
+
+#SE Aus group 4
+SE_resp4 <- c(SEgroup_list$Week_51$True, SEgroup_list$Week_52$True, SEgroup_list$Week_1$True,
+                  SEgroup_list$Week_2$True)
+SE_hat4 <- c(SEgroup_list$Week_51$Pred, SEgroup_list$Week_52$Pred, SEgroup_list$Week_1$Pred,
+                  SEgroup_list$Week_2$Pred)
+SE_resid4 <- c(SEgroup_list$Week_51$Resid, SEgroup_list$Week_52$Resid, SEgroup_list$Week_1$Resid,
+                  SEgroup_list$Week_2$Resid)
+SE_mean4 <- mean(SE_resp4)
+SE_SSR4 <- sum(SE_resid4^2)
+SE_SST4 <- sum((SE_resp4 - SE_mean4)^2)
+R2_SEgroup4 <- 1 - (SE_SSR4 / SE_SST4)
+
+#SE Aus group 5
+SE_resp5 <- c(SEgroup_list$Week_3$True ,SEgroup_list$Week_4$True, SEgroup_list$Week_5$True,  
+                  SEgroup_list$Week_6$True, SEgroup_list$Week_7$True, SEgroup_list$Week_8$True, 
+                  SEgroup_list$Week_9$True, SEgroup_list$Week_10$True, SEgroup_list$Week_11$True,
+                  SEgroup_list$Week_12$True, SEgroup_list$Week_13$True, SEgroup_list$Week_14$True)
+SE_hat5 <- c(SEgroup_list$Week_3$Pred ,SEgroup_list$Week_4$Pred, SEgroup_list$Week_5$Pred,  
+                  SEgroup_list$Week_6$Pred, SEgroup_list$Week_7$Pred, SEgroup_list$Week_8$Pred, 
+                  SEgroup_list$Week_9$Pred, SEgroup_list$Week_10$Pred, SEgroup_list$Week_11$Pred,
+                  SEgroup_list$Week_12$Pred, SEgroup_list$Week_13$Pred, SEgroup_list$Week_14$Pred)
+SE_resid5 <- c(SEgroup_list$Week_3$Resid ,SEgroup_list$Week_4$Resid, SEgroup_list$Week_5$Resid,  
+                  SEgroup_list$Week_6$Resid, SEgroup_list$Week_7$Resid, SEgroup_list$Week_8$Resid, 
+                  SEgroup_list$Week_9$Resid, SEgroup_list$Week_10$Resid, SEgroup_list$Week_11$Resid,
+                  SEgroup_list$Week_12$Resid, SEgroup_list$Week_13$Resid, SEgroup_list$Week_14$Resid)
+SE_mean5 <- mean(SE_resp5)
+SE_SSR5 <- sum(SE_resid5^2)
+SE_SST5 <- sum((SE_resp5 - SE_mean5)^2)
+R2_SEgroup5 <- 1 - (SE_SSR5 / SE_SST5)
+
+
+```
+
+
+# Prediction Intervals (2019-2020)
+
+## Predictions
+
+Only for 2019-2020 since everything else needs some loo_cv work (lasso_cv.R for this)
+
+Note: due to how we needed to use our fused lasso we need to treat n as the total number of response data in a group not a week. So most of work needs to be done with respect to the group and not the week.
+
+```{r preds}
+
+
+#NE Aus preds
+NE_laglist_std$`Week  35`$NE_Aus
+```
+
+

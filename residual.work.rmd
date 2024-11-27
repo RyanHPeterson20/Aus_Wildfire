@@ -16,6 +16,8 @@ suppressMessages(library(glmnet)) #base lasso (elastic net, etc.)
 suppressMessages(library(lubridate))
 suppressMessages(library(forecast))
 suppressMessages(library(tseries))
+
+suppressMessages(library(rugarch))
 ```
 
 
@@ -732,6 +734,136 @@ see we can fit a var/varma on the residuals.
 
 # Time Series Residuals
 
+
+## New Time Series Work:
+
+create a full residual plot for NE and SE Aus
+
+```{r ts_setup}
+#NE Aus residuals
+NE_resids <- matrix(NA, nrow = 18)
+for (k in 1:length(season_weeks)) {
+  NE_resids <- cbind(NE_resids, NEgroup_list[[k]]$Resid)
+}
+
+NE_resids <- NE_resids[,-1]
+colnames(NE_resids) <- season_weeks
+
+#plot(1:32, NE_resids[1,], type = "l")
+#lines(1:32, NE_resids[2,])
+
+#SEgroup_list
+SE_resids <- matrix(NA, nrow = 18)
+for (k in 1:length(season_weeks)) {
+  SE_resids <- cbind(SE_resids, SEgroup_list[[k]]$Resid)
+}
+
+SE_resids <- SE_resids[,-1]
+colnames(SE_resids) <- season_weeks
+
+#plot(1:32, SE_resids[2,], type = "l")
+```
+
+## TS set-up
+
+```{r}
+
+weekly_dates <- c()
+
+
+#TODO: add in 2019/2020
+for (year in 2001:2018) {
+  
+  temp1 <- bounded_resp_df[which(bounded_resp_df$year == year), ]
+  start1 <- as.Date(temp1[which(temp1$week == 35), 1])
+  end1 <- as.Date(temp1[which(temp1$week == 52), 1])
+  
+  temp2 <- bounded_resp_df[which(bounded_resp_df$year == year+1), ]
+  start2 <- as.Date(temp2[which(temp2$week == 1), 1])
+  end2 <- as.Date(temp2[which(temp2$week == 14), 1])
+  
+  weekly1 <- seq(from = start1, to = end1, by = "week")
+  weekly2 <- seq(from = start2, to = end2, by = "week")
+  
+  weekly_dates <- c(weekly_dates, weekly1, weekly2)
+}
+
+asWeek <- as.Date(weekly_dates)
+
+
+```
+
+```{r}
+NE_ts_df <- data.frame(
+  Date = asWeek,
+  Residuals = as.vector(t(NE_resids[,1:32]))
+)
+
+
+SE_ts_df <- data.frame(
+  Date = asWeek,
+  Residuals = as.vector(t(SE_resids[,1:32]))
+)
+
+#TODO: account for the large gaps
+#example code (adjust accordingly)
+# Create a complete sequence of weeks
+NEall_weeks <- seq(min(NE_ts_df$Date), max(NE_ts_df$Date), by = "week")
+
+# Merge original data with all weeks
+NEfull_data <- merge(data.frame(Date = NEall_weeks), NE_ts_df, by = "Date", all.x = TRUE)
+
+# Fill missing weeks with NA
+NEfull_ts <- ts(NEfull_data$Residuals, frequency = 52)
+
+
+# Create a complete sequence of weeks
+SEall_weeks <- seq(min(SE_ts_df$Date), max(SE_ts_df$Date), by = "week")
+
+# Merge original data with all weeks
+SEfull_data <- merge(data.frame(Date = SEall_weeks), SE_ts_df, by = "Date", all.x = TRUE)
+
+# Fill missing weeks with NA
+SEfull_ts <- ts(SEfull_data$Residuals, frequency = 52)
+
+
+
+```
+
+```{r}
+plot.ts(NEfull_ts)
+plot.ts(SEfull_ts)
+```
+
+```{r}
+    NEfull_data[is.na(NEfull_data$Residuals),2] <- 0
+```
+
+
+```{r}
+arch_spec <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(4, 0)), # ARCH(2)
+  mean.model = list(armaOrder = c(0, 0), include.mean = FALSE), # No mean term
+  distribution.model = "std" # Assuming normal distribution for errors (try std later)
+  #solver.control = list(maxit = 1000)
+)
+
+arch_fit <- ugarchfit(spec = arch_spec, data = NEfull_data$Residuals, solver = "hybrid")
+
+summary(arch_fit)
+
+# Display results
+print(arch_fit)
+
+plot(arch_fit, which = "all")
+
+plot(arch_fit, which = 3)
+```
+
+
+
+## OLD Time Series work
+
 Building AR, ARMA, ARIMA models on the model residuals.
 
 ```{r ts_setup}
@@ -773,14 +905,14 @@ for (year in 2001:2018) {
   start1 <- as.Date(temp1[which(temp1$week == 35), 1])
   end1 <- as.Date(temp1[which(temp1$week == 52), 1])
   
-  #temp2 <- bounded_resp_df[which(bounded_resp_df$year == year+1), ]
-  #start2 <- as.Date(temp2[which(temp2$week == 1), 1])
-  #end2 <- as.Date(temp2[which(temp2$week == 14), 1])
+  temp2 <- bounded_resp_df[which(bounded_resp_df$year == year+1), ]
+  start2 <- as.Date(temp2[which(temp2$week == 1), 1])
+  end2 <- as.Date(temp2[which(temp2$week == 14), 1])
   
   weekly1 <- seq(from = start1, to = end1, by = "week")
-  #weekly2 <- seq(from = start2, to = end2, by = "week")
+  weekly2 <- seq(from = start2, to = end2, by = "week")
   
-  weekly_dates <- c(weekly_dates, weekly1)#, weekly2)
+  weekly_dates <- c(weekly_dates, weekly1, weekly2)
 }
 
 asWeek <- as.Date(weekly_dates)
@@ -804,13 +936,13 @@ max(FullasWeek)
 ```{r}
 NE_ts_df <- data.frame(
   Date = asWeek,
-  Residuals = as.vector(t(NE_resids[,1:18]))
+  Residuals = as.vector(t(NE_resids[,1:32]))
 )
 
 
 SE_ts_df <- data.frame(
   Date = asWeek,
-  Residuals = as.vector(t(SE_resids[,1:18]))
+  Residuals = as.vector(t(SE_resids[,1:32]))
 )
 
 #TODO: account for the large gaps
@@ -834,6 +966,11 @@ SEfull_data <- merge(data.frame(Date = SEall_weeks), SE_ts_df, by = "Date", all.
 # Fill missing weeks with NA
 SEfull_ts <- ts(SEfull_data$Residuals, frequency = 52)
 
+
+
+```
+
+```{r }
 # ACF and PACF on the padded time series
 
 acf(NEfull_ts, na.action = na.pass, main = "NE ACF with Missing Weeks")
