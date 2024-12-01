@@ -2,8 +2,13 @@
 
 #How do we want to arrange all of this??
 
+##k-fold
+##loo-cv
+##predictions with above information
+
 #libraries
 suppressMessages(library(genlasso)) #used for fused lasso 
+suppressMessages(library(MASS)) #for matrix shenanigans in functions.
 
 # Data Set-Up
 setwd("~/CO_AUS/Aus_CO-main")
@@ -76,7 +81,7 @@ NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
 SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
 
-NE_gamma <- 0.85
+NE_gamma <- 1
 NEfuse_grouplist <- list()
 NEfuse_cv <- list()
 NE_lambdamin <- c()
@@ -96,7 +101,7 @@ for (i in 1:n) {
 }
 
 
-SE_gamma <- 0.85
+SE_gamma <- 1
 SEfuse_grouplist <- list()
 SEfuse_cv <- list()
 SE_lambdamin <- c()
@@ -163,7 +168,7 @@ for(k in 1:18){
   SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19,k))
   SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19,k))
   
-  NE_gamma <- 0.85
+  NE_gamma <- 1
   NEfuse_loo <- list()
   
   n <- length(NE_resp)
@@ -178,7 +183,7 @@ for(k in 1:18){
   
   NEfuse_all[[paste0("TestYear", season_years[k])]] <- NEfuse_loo
   
-  SE_gamma <- 0.85
+  SE_gamma <- 1
   SEfuse_loo <- list()
   
   n <- length(SE_resp)
@@ -200,9 +205,10 @@ save(NEfuse_all, SEfuse_all, file = "lasso_loo.rda") #save
 #compare coefficients
 
 #baseline (full model coefs)
-j <- 1 #group number
 
-#for (j in 1:6) {
+NE_coef <- list()
+NE_ratio <- list()
+for (j in 1:6) {
   NE_beta <- coef(NEfuse_grouplist[[j]], lambda = NE_newlambda[j])$beta
   
   NEgroup_coef <- matrix(0, ncol = length(NE_beta))
@@ -223,13 +229,18 @@ j <- 1 #group number
   
   NEgroup_coef <- NEgroup_coef[-1, ]
   
+  NE_coef[[paste0("Group_", j)]] <- NEgroup_coef
+  
   coef_ratio <- colSums(NEcoef_count)/18
-  coef_ratio[which(NE_beta != 0)]
+  NE_ratio[[paste0("Group_", j)]] <- coef_ratio[which(NE_beta != 0)]
 
-#}
+  
+}
 
 #SE Aus
-#for (j in 1:5) {
+SE_coef <- list()
+SE_ratio <- list()
+for (j in 1:5) {
   SE_beta <- coef(SEfuse_grouplist[[j]], lambda = SE_newlambda[j])$beta
   
   SEgroup_coef <- matrix(0, ncol = length(SE_beta))
@@ -250,15 +261,56 @@ j <- 1 #group number
   
   SEgroup_coef <- SEgroup_coef[-1, ]
   
+  SE_coef[[paste0("Group_", j)]] <- SEgroup_coef
+  
   coef_ratio <- colSums(SEcoef_count)/18
-  coef_ratio[which(SE_beta != 0)]
+  SE_ratio[[paste0("Group_", j)]]   <- coef_ratio[which(SE_beta != 0)]
 
-#}
+}
+
+#TODO: clean up the below plots
+boxplot(NE_ratio, ylim = c(0,1), main = "(NE Aus) LOO Coef Ratio")
+boxplot(SE_ratio, ylim = c(0,1), main = "(SE Aus) LOO Coef Ratio")
+
+#probably not going to use these
+#TODO: add all together for a NE and SE hist.
+hist(NE_ratio$Group_1, xlim = c(0,1))  
+hist(NE_ratio$Group_2, xlim = c(0,1))  
+hist(NE_ratio$Group_3, xlim = c(0,1))
+#....
+hist(SE_ratio$Group_4, xlim = c(0,1))
+hist(SE_ratio$Group_5, xlim = c(0,1))
 
 
+#get predictions for each test year (loo) with prediction CI (and combined R^2)
 
-  
-  
+#begin with 2019 (work backwards)
+
+NE_testpreds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(1:18))
+NE_testresp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(1:18))
+
+j <- 1 #group
+test_object <- NEfuse_grouplist[[j]]
+test_lambda <- NE_newlambda[j]
+test_resp <- NE_testresp[[j]]
+test_preds <- NE_testpreds[[j]][,1:208]
+
+
+#testing preds
+years <- 1:18
+k <- years[-2]
+
+NE_testpreds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19, k))
+NE_testresp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19, k))
+
+j <- 1 #group
+temp_coef <- NE_coef[[j]][2, ]
+temp_cov <- as.matrix(NE_testpreds[[j]][,1:208])
+temp_cov %*% temp_coef
+NE_testresp[[j]]
+
+#TODO: modifiy cv.fusedlasso test fold predictions and R^2
+
 
 #intercept vector (set-up) Temporary
 #TODO: testing a manual intercept term
@@ -286,21 +338,28 @@ NEfull_coef <- which(NEgroup_coef$beta != 0)
 
 
 #TODO: double check with various version of lambda 
-SEgroup_coef <- coef(SEfuse_grouplist[[1]], lambda = alt_SEgroup1_lambda)
+j <- 1
+SEgroup_coef <- coef(SEfuse_grouplist[[j]], lambda = SE_newlambda[j])$beta
+SEgroup1_nino <- SEgroup_coef[1:52]
+SEgroup1_dmi <- SEgroup_coef[53:104]
+SEgroup1_tsa <- SEgroup_coef[105:156]
+SEgroup1_aao <- SEgroup_coef[157:208]
+
+
 
 #TEST plots for new lambdas
 #SE group 1
-png(filename = "SE_group1.png", width = 2400, height = 1800, res = 300)
+#png(filename = "SE_group1.png", width = 2400, height = 1800, res = 300)
 par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
-plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
-     main = "SE Group 1", ylim = range(SE_range, SEbase_range), 
+plot(1:52, SEgroup1_nino, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 1", ylim = range(SEgroup_coef), 
      col = "darkmagenta")
 #lines(1:52, SE_coefs_base$Group_1$nino_base, col = "magenta", lty = 2, lwd = 1.5)
-lines(1:52, SE_coefs$Group_1$dmi_coef, col = "blue")
+lines(1:52, SEgroup1_dmi, col = "blue")
 #lines(1:52, SE_coefs_base$Group_1$dmi_base, col = "cyan", lty = 2, lwd = 1.5)
-lines(1:52, SE_coefs$Group_1$tsa_coef, col = "red")
+lines(1:52, SEgroup1_tsa, col = "red")
 #lines(1:52, SE_coefs_base$Group_1$tsa_base, col = "coral", lty = 2, lwd = 1.5)
-lines(1:52, SE_coefs$Group_1$aao_coef, col = "darkgreen")
+lines(1:52, SEgroup1_aao, col = "darkgreen")
 #lines(1:52, SE_coefs_base$Group_1$aao_base, col = "green", lty = 2, lwd = 1.5)
 segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
 legend("topright", inset = c(-0.3, 0),
