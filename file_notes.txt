@@ -40,8 +40,12 @@ Brief file notes and summaries:
   - for working on prediction using clustered responses and fused lasso.
   - goal is to refine the prediction at this level of the hierarchical model.
 
+
 6. predictionTest_function.R
   - R script that includes simplified versions of CRPS, interval scores and coverage
   - Needs added flexibility for distributions other than normal. 
 
+ . residual.work.rmd
+  - temp working file for exploring the residuals of our model.
 
+Note: delete test_lasso_cv.R  when done with development.
