@@ -20,7 +20,8 @@ load( "data_matrix.rda")
 load( "lag_list.rda")
 
 source("group_functions.R")
-source("lasso_valid_functions.R") #include cv.fusedlasso
+source("lasso_valid_functions.R") #include predict.fusedlasso
+source("genlasso_func.R") #includes cv.fusedlasso (DO NOT USE in final work, correct and move)
 
 #set up season years/weeks
 season_weeks <- c(35:52, 1:14)
@@ -284,16 +285,99 @@ hist(SE_ratio$Group_5, xlim = c(0,1))
 
 #get predictions for each test year (loo) with prediction CI (and combined R^2)
 
+
+#TODO: move predictions over to a different file
+#need to save full fused, loo fused lasso, cv lambdas
+#import methods of groupings
+
+#include by week predictions instead of by group
+
 #begin with 2019 (work backwards)
+
+#and generalize for out of sample preds 
 
 NE_testpreds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(1:18))
 NE_testresp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(1:18))
 
-j <- 1 #group
+NE_2019preds <- as.data.frame(matrix(NA, ncol = 4))
+colnames(NE_2019preds) <- c("y"," y.hat", "PI.upper", "PI.lower")
+
+for (j in 1:6) {
+  test_object <- NEfuse_grouplist[[j]]
+  test_lambda <- NE_newlambda[j]
+  test_resp <- NE_testresp[[j]]
+  test_preds <- NE_testpreds[[j]][,1:208]
+  
+  test_out <- predict.fusedlasso(test_object, test_lambda, 
+                                 y_new = test_resp, X_new = test_preds)
+  NE_2019preds <- rbind(NE_2019preds, test_out)
+}
+
+NE_2019preds <- NE_2019preds[-1, ]
+
+x_vals <- 1:32
+NEy_range <- range(NE_2019preds)
+
+plot(x_vals, NE_2019preds$y, type = "l", lwd = 2, ylim = NEy_range)
+lines(x_vals, NE_2019preds$` y.hat`, lwd = 2, col = "magenta3")
+lines(x_vals, NE_2019preds$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, NE_2019preds$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
+
+#SE Aus 2019/2020 preds
+SE_testpreds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(1:18))
+SE_testresp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(1:18))
+
+SE_2019preds <- as.data.frame(matrix(NA, ncol = 4))
+colnames(SE_2019preds) <- c("y"," y.hat", "PI.upper", "PI.lower")
+
+for (j in 1:5) {
+  test_object <- SEfuse_grouplist[[j]]
+  test_lambda <- SE_newlambda[j]
+  test_resp <- SE_testresp[[j]]
+  test_preds <- SE_testpreds[[j]][,1:208]
+  
+  test_out <- predict.fusedlasso(test_object, test_lambda, 
+                                 y_new = test_resp, X_new = test_preds)
+  SE_2019preds <- rbind(SE_2019preds, test_out)
+}
+
+SE_2019preds <- SE_2019preds[-1, ]
+
+x_vals <- 1:32
+SEy_range <- range(SE_2019preds)
+
+plot(x_vals, SE_2019preds$y, type = "l", lwd = 2, ylim = SEy_range)
+lines(x_vals, SE_2019preds$` y.hat`, lwd = 2, col = "magenta3")
+lines(x_vals, SE_2019preds$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, SE_2019preds$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
+
+
+
+
+#test sections
+j <- 2 #group
 test_object <- NEfuse_grouplist[[j]]
 test_lambda <- NE_newlambda[j]
 test_resp <- NE_testresp[[j]]
 test_preds <- NE_testpreds[[j]][,1:208]
+
+test_out <- predict.fusedlasso(test_object, test_lambda, 
+                               y_new = test_resp, X_new = test_preds)
+
+x_vals <- 1:nrow(test_out)
+y_range <- range(test_out)
+
+plot(x_vals, test_out$y, type = "l", lwd = 2, ylim = y_range)
+lines(x_vals, test_out$y.hat, lwd = 2, col = "magenta3")
+lines(x_vals, test_out$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, test_out$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
+
 
 
 #testing preds
@@ -369,4 +453,70 @@ legend("topright", inset = c(-0.3, 0),
 dev.off()
 
 
+
+
+#begin with 2018 (work backwards)
+k <- c(1:17,19)
+
+NE_testpreds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -k)
+NE_testresp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -k)
+
+SE_testpreds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -k)
+SE_testresp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -k)
+
+NE_2018preds <- as.data.frame(matrix(NA, ncol = 4))
+colnames(NE_2018preds) <- c("y"," y.hat", "PI.upper", "PI.lower")
+
+for (j in 1:6) {
+  test_object <- NEfuse_grouplist[[j]]
+  test_lambda <- NE_newlambda[j]
+  test_resp <- NE_testresp[[j]]
+  test_preds <- NE_testpreds[[j]][,1:208]
+  
+  test_out <- predict.fusedlasso(test_object, test_lambda, 
+                                 y_new = test_resp, X_new = test_preds)
+  
+  NE_2018preds <- rbind(NE_2018preds, test_out)
+}
+
+NE_2018preds <- NE_2018preds[-1, ]
+
+x_vals <- 1:32
+NEy_range <- range(NE_2018preds)
+
+plot(x_vals, NE_2018preds$y, type = "l", lwd = 2, ylim = NEy_range)
+lines(x_vals, NE_2018preds$` y.hat`, lwd = 2, col = "magenta3")
+lines(x_vals, NE_2018preds$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, NE_2018preds$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
+
+#SE Aus 2019/2020 preds
+
+
+SE_2018preds <- as.data.frame(matrix(NA, ncol = 4))
+colnames(SE_2018preds) <- c("y"," y.hat", "PI.upper", "PI.lower")
+
+for (j in 1:5) {
+  test_object <- SEfuse_grouplist[[j]]
+  test_lambda <- SE_newlambda[j]
+  test_resp <- SE_testresp[[j]]
+  test_preds <- SE_testpreds[[j]][,1:208]
+  
+  test_out <- predict.fusedlasso(test_object, test_lambda, 
+                                 y_new = test_resp, X_new = test_preds)
+  SE_2018preds <- rbind(SE_2018preds, test_out)
+}
+
+SE_2018preds <- SE_2018preds[-1, ]
+
+x_vals <- 1:32
+SEy_range <- range(SE_2018preds)
+
+plot(x_vals, SE_2018preds$y, type = "l", lwd = 2, ylim = SEy_range)
+lines(x_vals, SE_2018preds$` y.hat`, lwd = 2, col = "magenta3")
+lines(x_vals, SE_2018preds$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, SE_2018preds$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
 
