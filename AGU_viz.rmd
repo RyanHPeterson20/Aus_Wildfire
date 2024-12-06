@@ -1,0 +1,1166 @@
+---
+title: "AGU_viz"
+author: "Ryan Peterson"
+date: "2024-12-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+load( "lasso_pred.rda")
+
+
+```
+
+
+Overall fixes:
+- Make sure we set-up or import the necessary data,etc.
+
+
+# Coefficient Visualization
+
+
+```{r}
+## pre-define the legend vectors
+
+#for base preds (indices)
+legend1_names <- c("Nino",  "DMI", "TSA", "AAO")
+legend1_col <- c("darkmagenta", "blue", "red", "darkgreen")
+legend1_lty <- rep(1, length.out = 4)
+
+#with olr
+legend2_names <- c("Nino",  "DMI", "TSA", "AAO", "OLR")
+legend2_col <- c("darkmagenta", "blue", "red", "darkgreen", "orange3")
+legend2_lty <- rep(1, length.out = 5)
+
+
+#NE Visualizations
+NE_coefs <- list()
+#full coef list
+NEfuse_coefs <- list()
+NE_range <- c()
+
+for(k in 1:length(NEfuse_grouplist)){
+
+  lambda1 <- NE_newlambda[k]
+  
+  NEgroup_coef <- coef(NEfuse_grouplist[[k]], lambda = lambda1)
+  
+  NEfuse <- NEgroup_coef$beta
+  colnames(NEfuse) <- c("NEgroup")
+  NEfuse_coefs[[paste0("Group_", k)]] <- as.data.frame(NEfuse)
+  
+  NE_range <- c(NE_range, range(NEgroup_coef$beta))
+
+  #extract each index
+  nino_coef <- NEgroup_coef$beta[1:52,]
+  dmi_coef <- NEgroup_coef$beta[53:104,]
+  tsa_coef <- NEgroup_coef$beta[105:156,]
+  aao_coef <- NEgroup_coef$beta[157:208,]
+  olr_coef <- NEgroup_coef$beta[209:260,]
+  
+  NE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+}
+
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
+
+
+#NE group 1
+png(filename = "NE_olr1.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 1", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, NE_coefs$Group_1$dmi_coef, col = "blue")
+lines(1:52, NE_coefs$Group_1$tsa_coef, col = "red")
+lines(1:52, NE_coefs$Group_1$aao_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_1$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#NE group 2
+png(filename = "NE_olr2.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 2", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, NE_coefs$Group_2$dmi_coef, col = "blue")
+lines(1:52, NE_coefs$Group_2$tsa_coef, col = "red")
+lines(1:52, NE_coefs$Group_2$aao_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_2$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#NE group 3
+png(filename = "NE_olr3.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 3", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, NE_coefs$Group_3$dmi_coef, col = "blue")
+lines(1:52, NE_coefs$Group_3$tsa_coef, col = "red")
+lines(1:52, NE_coefs$Group_3$aao_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_3$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#NE group 4
+png(filename = "NE_olr4.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 4", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, NE_coefs$Group_4$dmi_coef, col = "blue")
+lines(1:52, NE_coefs$Group_4$tsa_coef, col = "red")
+lines(1:52, NE_coefs$Group_4$aao_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_4$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#NE group 5
+png(filename = "NE_olr5.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_5$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 5", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, NE_coefs$Group_5$dmi_coef, col = "blue")
+lines(1:52, NE_coefs$Group_5$tsa_coef, col = "red")
+lines(1:52, NE_coefs$Group_5$aao_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_5$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#NE group 6
+png(filename = "NE_olr6.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_6$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 6", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, NE_coefs$Group_6$dmi_coef, col = "blue")
+lines(1:52, NE_coefs$Group_6$tsa_coef, col = "red")
+lines(1:52, NE_coefs$Group_6$aao_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_6$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+#SE Visualizations
+SE_coefs <- list()
+#full coef list
+SEfuse_coefs <- list()
+
+SE_range <- c()
+
+for(k in 1:length(SEfuse_grouplist)){
+
+  lambda1 <- SE_newlambda[k]
+  
+  SEgroup_coef <- coef(SEfuse_grouplist[[k]], lambda = lambda1)
+  
+  SEfuse <- SEgroup_coef$beta
+  colnames(SEfuse) <- c("SEgroup")
+  SEfuse_coefs[[paste0("Group_", k)]] <- as.data.frame(SEfuse)
+  
+  SE_range <- c(SE_range, range(SEgroup_coef$beta))
+  
+  #extract each index
+  nino_coef <- SEgroup_coef$beta[1:52, ]
+  dmi_coef <- SEgroup_coef$beta[53:104, ]
+  tsa_coef <- SEgroup_coef$beta[105:156, ]
+  aao_coef <- SEgroup_coef$beta[157:208, ]
+  olr_coef <- SEgroup_coef$beta[209:260, ]
+  
+  SE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+  
+}
+
+
+#SE group 1
+png(filename = "SE_olr1.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 1", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, SE_coefs$Group_1$dmi_coef, col = "blue")
+lines(1:52, SE_coefs$Group_1$tsa_coef, col = "red")
+lines(1:52, SE_coefs$Group_1$aao_coef, col = "darkgreen")
+lines(1:52, SE_coefs$Group_1$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE group 2
+png(filename = "SE_olr2.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 2", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, SE_coefs$Group_2$dmi_coef, col = "blue")
+lines(1:52, SE_coefs$Group_2$tsa_coef, col = "red")
+lines(1:52, SE_coefs$Group_2$aao_coef, col = "darkgreen")
+lines(1:52, SE_coefs$Group_2$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE group 3
+png(filename = "SE_olr3.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 3", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, SE_coefs$Group_3$dmi_coef, col = "blue")
+lines(1:52, SE_coefs$Group_3$tsa_coef, col = "red")
+lines(1:52, SE_coefs$Group_3$aao_coef, col = "darkgreen")
+lines(1:52, SE_coefs$Group_3$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE group 4
+png(filename = "SE_olr4.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 4", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, SE_coefs$Group_4$dmi_coef, col = "blue")
+lines(1:52, SE_coefs$Group_4$tsa_coef, col = "red")
+lines(1:52, SE_coefs$Group_4$aao_coef, col = "darkgreen")
+lines(1:52, SE_coefs$Group_4$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+#SE group 5
+png(filename = "SE_olr5.png", width = 2400, height = 1800, res = 300)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_5$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 5", ylim = range(NE_range), 
+     col = "darkmagenta")
+lines(1:52, SE_coefs$Group_5$dmi_coef, col = "blue")
+lines(1:52, SE_coefs$Group_5$tsa_coef, col = "red")
+lines(1:52, SE_coefs$Group_5$aao_coef, col = "darkgreen")
+lines(1:52, SE_coefs$Group_5$olr_coef, col = "orange2")
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+dev.off()
+
+
+```
+
+
+
+## DMI Coefficients
+
+```{r}
+dmi_range <- range(NE_coefs$Group_2$dmi_coef,
+                   NE_coefs$Group_3$dmi_coef,
+                   NE_coefs$Group_4$dmi_coef)
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_2$dmi_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : DMI Coefficients", ylim = dmi_range, 
+     col = "blue1", lwd = 2)
+lines(1:52, NE_coefs$Group_1$dmi_coef, col = "orange3", lty = 4, lwd = 1.5)
+lines(1:52, NE_coefs$Group_3$dmi_coef, col = "cyan4", lty = 2, lwd = 2)
+lines(1:52, NE_coefs$Group_4$dmi_coef, col = "blue4", lty = 3, lwd = 2)
+lines(1:52, NE_coefs$Group_5$dmi_coef, col = "darkorange", lty = 6, lwd = 1.5)
+lines(1:52, NE_coefs$Group_6$dmi_coef, col = "orange2", lty = 3, lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = c("Group 2", "Group 3", "Group 4"),
+       col = c("blue1", "cyan4", "blue4"), 
+       lty = c(1,3,4), lwd = 2, bty = "o") #, bg = "white")
+#dev.off()
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_3$dmi_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : DMI Coefficients", ylim = dmi_range, 
+     col = "blue1", lwd = 2)
+lines(1:52, SE_coefs$Group_4$dmi_coef, col = "blue4", lty = 2, lwd= 2)
+lines(1:52, SE_coefs$Group_1$dmi_coef, col = "orange3", lty = 4, lwd= 1.5)
+lines(1:52, SE_coefs$Group_2$dmi_coef, col = "darkorange", lty = 6, lwd= 1.5)
+lines(1:52, SE_coefs$Group_2$dmi_coef, col = "orange2", lty = 3, lwd= 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = c("Group 3", "Group 4"),
+       col = c("blue1", "blue4"), 
+       lty = c(1,2), lwd = 2, bty = "o") #, bg = "white")
+```
+
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
+
+png(filename = "DMI_coeff.png", width = 2000, height = 1200, res = 200)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_2$dmi_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "DMI Coefficients", ylim = dmi_range, 
+     col = "blue1", lwd = 2)
+lines(1:52, NE_coefs$Group_3$dmi_coef, col = "cyan4", lty = 2, lwd = 2)
+lines(1:52, NE_coefs$Group_4$dmi_coef, col = "blue4", lty = 3, lwd = 2)
+lines(1:52, SE_coefs$Group_3$dmi_coef, col = "orange3", lty = 1, lwd= 2)
+lines(1:52, SE_coefs$Group_4$dmi_coef, col = "darkorange", lty = 2, lwd= 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.2, 0),
+       legend = c("Group 2", "Group 3", "Group 4"),
+       col = c("blue1", "cyan4", "blue4"), 
+       lty = c(1,2,3), lwd = 2, bty = "o",
+       title = "NE Aus") #, bg = "white")
+legend("bottomright", inset = c(-0.2, 0),
+       legend = c("Group 3", "Group 4"),
+       col = c("orange3", "darkorange"),
+       lty = c(1,2), lwd = 2, bty = "o",
+       title = "SE Aus") #, bg = "white")
+dev.off()
+
+nino_range <- range(NE_coefs$Group_2$nino_coef,
+                    NE_coefs$Group_3$nino_coef,
+                    NE_coefs$Group_4$nino_coef,
+                    SE_coefs$Group_3$nino_coef,
+                    SE_coefs$Group_4$nino_coef)
+
+
+png(filename = "nino_coeff.png", width = 2000, height = 1200, res = 200)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "Nino Coefficients", ylim = c( nino_range[1], 1.07), 
+     col = "green4", lwd = 2)
+lines(1:52, NE_coefs$Group_3$nino_coef, col = "chartreuse3", lty = 2, lwd = 2)
+lines(1:52, NE_coefs$Group_4$nino_coef, col = "darkgreen", lty = 3, lwd = 2)
+lines(1:52, SE_coefs$Group_3$nino_coef, col = "red3", lty = 1, lwd= 2)
+lines(1:52, SE_coefs$Group_4$nino_coef, col = "darkmagenta", lty = 2, lwd= 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.2, 0),
+       legend = c("Group 2", "Group 3", "Group 4"),
+       col = c("green4", "chartreuse3", "darkgreen"), 
+       lty = c(1,2,3), lwd = 2, bty = "o",
+       title = "NE Aus") #, bg = "white")
+legend("bottomright", inset = c(-0.2, 0),
+       legend = c("Group 3", "Group 4"),
+       col = c("red3", "darkmagenta"),
+       lty = c(1,2), lwd = 2, bty = "o",
+       title = "SE Aus") #, bg = "white")
+dev.off()
+
+```
+
+
+
+
+## Non-zero Coefficients
+
+Get effective number of predictors
+
+```{r}
+#NE Aus effective parameters
+p_NE1 <- sum(diff(NEfuse_coefs$Group_1$NEgroup) != 0)
+p_NE2 <- sum(diff(NEfuse_coefs$Group_2$NEgroup) != 0)
+p_NE3 <- sum(diff(NEfuse_coefs$Group_3$NEgroup) != 0)
+p_NE4 <- sum(diff(NEfuse_coefs$Group_4$NEgroup) != 0)
+p_NE5 <- sum(diff(NEfuse_coefs$Group_5$NEgroup) != 0)
+p_NE6 <- sum(diff(NEfuse_coefs$Group_6$NEgroup) != 0)
+
+#SE Aus effective parameters
+p_SE1 <- sum(diff(SEfuse_coefs$Group_1$SEgroup) != 0)
+p_SE2 <- sum(diff(SEfuse_coefs$Group_2$SEgroup) != 0)
+p_SE3 <- sum(diff(SEfuse_coefs$Group_3$SEgroup) != 0)
+p_SE4 <- sum(diff(SEfuse_coefs$Group_4$SEgroup) != 0)
+p_SE5 <- sum(diff(SEfuse_coefs$Group_5$SEgroup) != 0)
+
+```
+
+
+# Residuals 
+
+## Predictions
+
+```{r}
+#OLR predictions
+#NE in-sample predictions
+
+#NE groups (move up later)
+NEgroup1 <- season_weeks[1:3]
+NEgroup2 <- season_weeks[4:8]
+NEgroup3 <- season_weeks[9:12]
+NEgroup4 <- season_weeks[13:17]
+NEgroup5 <- season_weeks[18:21]
+NEgroup6 <- season_weeks[22:32]
+
+#SE groups
+SEgroup1 <- season_weeks[1:3]
+SEgroup2 <- season_weeks[4:7]
+SEgroup3 <- season_weeks[8:16]
+SEgroup4 <- season_weeks[17:20]
+SEgroup5 <- season_weeks[21:32]
+
+
+#NE group 1
+NEgroup1_list <- list()
+
+ne_resp1 <- NEAus_mat[[1]]
+ne_beta1 <- NEfuse_coefs$Group_1$NEgroup
+
+
+for (k in 1:3) {
+  ne_week <- NE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:262])
+    temp_resp <- ne_resp1[i, k]
+    
+    pred_temp <- temp_preds %*% ne_beta1
+    temp_resid <- temp_resp - pred_temp
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup1_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#NE group 2
+NEgroup2_list <- list()
+
+ne_resp2 <- NEAus_mat[[2]]
+ne_beta2 <- NEfuse_coefs$Group_2$NEgroup
+
+for (k in 4:8) {
+  ne_week <- NE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA,ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(NEgroup2 == season_weeks[k])
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:262])
+    temp_resp <- ne_resp2[i, week_k]
+    
+    pred_temp <- temp_preds %*% ne_beta2
+    temp_resid <- temp_resp - pred_temp
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup2_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#NE group 3
+NEgroup3_list <- list()
+
+ne_resp3 <- NEAus_mat[[3]]
+ne_beta3 <- NEfuse_coefs$Group_3$NEgroup
+
+for (k in 9:12) {
+  ne_week <- NE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(NEgroup3 == season_weeks[k])
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:262])
+    temp_resp <- ne_resp3[i, week_k]
+    
+    pred_temp <- temp_preds %*% ne_beta3
+    temp_resid <- temp_resp - pred_temp
+    
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup3_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#NE group 4
+NEgroup4_list <- list()
+
+ne_resp4 <- NEAus_mat[[4]]
+ne_beta4 <- NEfuse_coefs$Group_4$NEgroup
+
+for (k in 13:17) {
+  ne_week <- NE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+
+  week_k <- which(NEgroup4 == season_weeks[k])  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:262])
+    temp_resp <- ne_resp4[i, week_k]
+    
+    pred_temp <- temp_preds %*% ne_beta4
+    temp_resid <- temp_resp - pred_temp
+
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup4_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#NE group 5
+NEgroup5_list <- list()
+
+ne_resp5 <- NEAus_mat[[5]]
+ne_beta5 <- NEfuse_coefs$Group_5$NEgroup
+
+for (k in 18:21) {
+  ne_week <- NE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(NEgroup5 == season_weeks[k]) 
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:262])
+    temp_resp <- ne_resp5[i, week_k]
+    
+    pred_temp <- temp_preds %*% ne_beta5
+    temp_resid <- temp_resp - pred_temp
+    
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup5_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#NE group 6
+NEgroup6_list <- list()
+
+ne_resp6 <- NEAus_mat[[6]]
+ne_beta6 <- NEfuse_coefs$Group_6$NEgroup
+
+for (k in 22:32) {
+  ne_week <- NE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(NEgroup6 == season_weeks[k]) 
+  for (i in 1:18) {
+    temp_preds <- as.matrix(ne_week[i, 3:262])
+    temp_resp <- ne_resp6[i, week_k]
+    
+    pred_temp <- temp_preds %*% ne_beta6
+    temp_resid <- temp_resp - pred_temp
+
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  NEgroup6_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+#SE in-sample Predictions
+
+
+#SE group 1
+SEgroup1_list <- list()
+
+se_resp1 <- SEAus_mat[[1]]
+se_beta1 <- SEfuse_coefs$Group_1$SEgroup
+
+for (k in 1:3) {
+  se_week <- SE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA,ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:262])
+    temp_resp <- se_resp1[i, k]
+    
+    pred_temp <- temp_preds %*% se_beta1
+    temp_resid <- temp_resp - pred_temp
+
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup1_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#SE group 2
+SEgroup2_list <- list()
+
+se_resp2 <- SEAus_mat[[2]]
+se_beta2 <- SEfuse_coefs$Group_2$SEgroup
+
+for (k in 4:7) {
+  se_week <- SE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(SEgroup2 == season_weeks[k])
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:262])
+    temp_resp <- se_resp2[i, week_k]
+    
+    pred_temp <- temp_preds %*% se_beta2
+    temp_resid <- temp_resp - pred_temp
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup2_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#SE group 3
+SEgroup3_list <- list()
+
+se_resp3 <- SEAus_mat[[3]]
+se_beta3 <- SEfuse_coefs$Group_3$SEgroup
+
+
+for (k in 8:16) {
+  se_week <- SE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(SEgroup3 == season_weeks[k])
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:262])
+    temp_resp <- se_resp3[i, week_k]
+    
+    pred_temp <- temp_preds %*% se_beta3
+    temp_resid <- temp_resp - pred_temp
+    
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup3_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#SE group 4
+SEgroup4_list <- list()
+
+se_resp4 <- SEAus_mat[[4]]
+se_beta4 <- SEfuse_coefs$Group_4$SEgroup
+
+for (k in 17:20) {
+  se_week <- SE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(SEgroup4 == season_weeks[k])
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:262])
+    temp_resp <- se_resp4[i, week_k]
+    
+    pred_temp <- temp_preds %*% se_beta4
+    temp_resid <- temp_resp - pred_temp
+  
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup4_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+#SE group 5
+SEgroup5_list <- list()
+
+se_resp5 <- SEAus_mat[[5]]
+se_beta5 <- SEfuse_coefs$Group_5$SEgroup
+
+for (k in 21:32) {
+  se_week <- SE_laglist_std[[k]]
+  
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  week_k <- which(SEgroup5 == season_weeks[k])
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:262])
+    temp_resp <- se_resp5[i, week_k]
+    
+    pred_temp <- temp_preds %*% se_beta5
+    temp_resid <- temp_resp - pred_temp
+
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
+  }
+  
+  week_preds <- week_preds[-1, ]
+  
+  SEgroup5_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+}
+
+
+
+```
+
+
+## Resid Box-Plots
+
+```{r}
+
+NEgroup_list <- c(NEgroup1_list, NEgroup2_list, NEgroup3_list, NEgroup4_list, NEgroup5_list, NEgroup6_list)
+SEgroup_list <- c(SEgroup1_list, SEgroup2_list, SEgroup3_list, SEgroup4_list, SEgroup5_list)
+
+
+residNE1_box_df <- data.frame(values = NA, group = NA)
+residSE1_box_df <- data.frame(values = NA, group = NA)
+
+for (i in 1:16) {
+  temp_vals <- NEgroup_list[[i]]$Resid
+  temp_group <- rep(season_weeks[i], length(NEgroup_list[[i]]$Resid))
+  residNE1_box_df <- rbind(residNE1_box_df, list(temp_vals, temp_group))
+  
+  temp_vals1 <- SEgroup_list[[i]]$Resid
+  temp_group1 <- rep(season_weeks[i], length(SEgroup_list[[i]]$Resid))
+  residSE1_box_df <- rbind(residSE1_box_df, list(temp_vals1, temp_group1))
+}
+
+residNE1_box_df <- residNE1_box_df[-1, ]
+residNE1_box_df$group <- as.factor(residNE1_box_df$group)
+residNE1_box_df$values <- as.numeric(residNE1_box_df$values)
+
+residSE1_box_df <- residSE1_box_df[-1, ]
+residSE1_box_df$group <- as.factor(residSE1_box_df$group)
+residSE1_box_df$values <- as.numeric(residSE1_box_df$values)
+
+
+#second half
+residNE2_box_df <- data.frame(values = NA, group = NA)
+residSE2_box_df <- data.frame(values = NA, group = NA)
+for (i in 17:32) {
+  temp_vals <- NEgroup_list[[i]]$Resid
+  temp_group <- rep(season_weeks[i], length(NEgroup_list[[i]]$Resid))
+  residNE2_box_df <- rbind(residNE2_box_df, list(temp_vals, temp_group))
+  
+  temp_vals1 <- SEgroup_list[[i]]$Resid
+  temp_group1 <- rep(season_weeks[i], length(SEgroup_list[[i]]$Resid))
+  residSE2_box_df <- rbind(residSE2_box_df, list(temp_vals1, temp_group1))
+}
+
+residNE2_box_df <- residNE2_box_df[-1, ]
+residNE2_box_df$group <- as.factor(residNE2_box_df$group)
+residNE2_box_df$values <- as.numeric(residNE2_box_df$values)
+
+residSE2_box_df <- residSE2_box_df[-1, ]
+residSE2_box_df$group <- as.factor(residSE2_box_df$group)
+residSE2_box_df$values <- as.numeric(residSE2_box_df$values)
+
+resid_lim <- range(residNE1_box_df$values, residNE2_box_df$values)
+
+#resid_min <- min(residNE1_box_df$values, residNE2_box_df$values, 
+#                 residSE1_box_df$values, residSE2_box_df$values)
+
+#resid_max <- max(residNE1_box_df$values, residNE2_box_df$values, 
+#                 residSE1_box_df$values, residSE2_box_df$values)
+
+#resid_lim <- c(resid_min, resid_max)
+
+residNEfull_box_df <- rbind(residNE1_box_df, residNE2_box_df)
+residSEfull_box_df <- rbind(residSE1_box_df, residSE2_box_df)
+
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
+
+#TODO:update using resid_lim from the simplified linear model
+resid_lim <- c(-20, 20)
+
+png("NEresidsd_olr.png", width = 2000, height = 1200, res = 200)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = residNEfull_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "NE Aus : Lasso Model Residuals",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3)
+abline(h = 0, lty = 2)
+abline(v = c(3.5, 8.5, 12.5, 17.5, 21.5), lty =2, col = "red")
+text(1.5, -15, "Group 1", col = "red", cex = 0.75)
+text(6, -15, "Group 2", col = "red", cex = 0.75)
+text(10.5, -15, "Group 3", col = "red", cex = 0.75)
+text(15, -15, "Group 4", col = "red", cex = 0.75)
+text(19.5, -15, "Group 5", col = "red", cex = 0.75)
+text(25, -15, "Group 6", col = "red", cex = 0.75)
+dev.off()
+
+
+png("SEresidsd_olr.png", width = 2000, height = 1200, res = 200)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = residSEfull_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "SE Aus : Lasso Model Residuals", axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3)
+abline(h = 0, lty = 2)
+abline(v = c(3.5, 7.5, 16.5, 20.5), lty =2, col = "red")
+text(1.5, -15, "Group 1", col = "red", cex = 0.75)
+text(5.5, -15, "Group 2", col = "red", cex = 0.75)
+text(12, -15, "Group 3", col = "red", cex = 0.75)
+text(18.5, -15, "Group 4", col = "red", cex = 0.75)
+text(24, -15, "Group 5", col = "red", cex = 0.75)
+dev.off()
+```
+
+
+## R^2
+
+```{r }
+#TODO: write an R^2 function
+#add in R^2 for group
+#NE Aus group 1
+NE_resp1 <- c(NEgroup_list$Week_35$True, NEgroup_list$Week_36$True, NEgroup_list$Week_37$True)
+NE_hat1 <- c(NEgroup_list$Week_35$Pred, NEgroup_list$Week_36$Pred, NEgroup_list$Week_37$Pred)
+NE_resid1 <- c(NEgroup_list$Week_35$Resid, NEgroup_list$Week_36$Resid, NEgroup_list$Week_37$Resid)
+NE_mean1 <- mean(NE_resp1)
+NE_SSR1 <- sum(NE_resid1^2)
+NE_SST1 <- sum((NE_resp1 - NE_mean1)^2)
+R2_NEgroup1 <- 1 - (NE_SSR1 / NE_SST1)
+
+#NE Aus group 2
+NE_resp2 <- c(NEgroup_list$Week_38$True, NEgroup_list$Week_39$True, NEgroup_list$Week_40$True,
+                   NEgroup_list$Week_41$True,  NEgroup_list$Week_42$True)
+NE_hat2 <- c(NEgroup_list$Week_38$Pred, NEgroup_list$Week_39$Pred, NEgroup_list$Week_40$Pred,
+                   NEgroup_list$Week_41$Pred,  NEgroup_list$Week_42$Pred)
+NE_resid2 <- c(NEgroup_list$Week_38$Resid, NEgroup_list$Week_39$Resid, NEgroup_list$Week_40$Resid,
+                   NEgroup_list$Week_41$Resid,  NEgroup_list$Week_42$Resid)
+NE_mean2 <- mean(NE_resp2)
+NE_SSR2 <- sum(NE_resid2^2)
+NE_SST2 <- sum((NE_resp2 - NE_mean2)^2)
+R2_NEgroup2 <- 1 - (NE_SSR2 / NE_SST2)
+
+#NE Aus group 3
+NE_resp3 <- c(NEgroup_list$Week_43$True, NEgroup_list$Week_44$True, NEgroup_list$Week_45$True,
+                   NEgroup_list$Week_46$True)
+NE_hat3 <- c(NEgroup_list$Week_43$Pred, NEgroup_list$Week_44$Pred, NEgroup_list$Week_45$Pred,
+                   NEgroup_list$Week_46$Pred)
+NE_resid3 <- c(NEgroup_list$Week_43$Resid, NEgroup_list$Week_44$Resid, NEgroup_list$Week_45$Resid,
+                   NEgroup_list$Week_46$Resid)
+NE_mean3 <- mean(NE_resp3)
+NE_SSR3 <- sum(NE_resid3^2)
+NE_SST3 <- sum((NE_resp3 - NE_mean3)^2)
+R2_NEgroup3 <- 1 - (NE_SSR3 / NE_SST3)
+
+#NE Aus group 4
+NE_resp4 <- c(NEgroup_list$Week_47$True, NEgroup_list$Week_48$True, NEgroup_list$Week_49$True,
+                   NEgroup_list$Week_50$True,  NEgroup_list$Week_51$True)
+NE_hat4 <- c(NEgroup_list$Week_47$Pred, NEgroup_list$Week_48$Pred, NEgroup_list$Week_49$Pred,
+                   NEgroup_list$Week_50$Pred,  NEgroup_list$Week_51$Pred)
+NE_resid4 <- c(NEgroup_list$Week_47$Resid, NEgroup_list$Week_48$Resid, NEgroup_list$Week_49$Resid,
+                   NEgroup_list$Week_50$Resid,  NEgroup_list$Week_51$Resid)
+NE_mean4 <- mean(NE_resp4)
+NE_SSR4 <- sum(NE_resid4^2)
+NE_SST4 <- sum((NE_resp4 - NE_mean4)^2)
+R2_NEgroup4 <- 1 - (NE_SSR4 / NE_SST4)
+
+#NE Aus group 5
+NE_resp5 <- c(NEgroup_list$Week_51$True, NEgroup_list$Week_1$True,  NEgroup_list$Week_2$True,
+                   NEgroup_list$Week_3$True)
+NE_hat5 <- c(NEgroup_list$Week_51$Pred, NEgroup_list$Week_1$Pred,  NEgroup_list$Week_2$Pred,
+                   NEgroup_list$Week_3$Pred)
+NE_resid5 <- c(NEgroup_list$Week_51$Resid, NEgroup_list$Week_1$Resid,  NEgroup_list$Week_2$Resid,
+                   NEgroup_list$Week_3$Resid)
+NE_mean5 <- mean(NE_resp5)
+NE_SSR5 <- sum(NE_resid5^2)
+NE_SST5 <- sum((NE_resp5 - NE_mean5)^2)
+R2_NEgroup5 <- 1 - (NE_SSR5 / NE_SST5)
+
+#NE Aus group 6
+NE_resp6 <- c(NEgroup_list$Week_4$True, NEgroup_list$Week_5$True,  NEgroup_list$Week_6$True,
+                   NEgroup_list$Week_7$True, NEgroup_list$Week_8$True,  NEgroup_list$Week_9$True,
+                   NEgroup_list$Week_10$True, NEgroup_list$Week_11$True,  NEgroup_list$Week_12$True,
+                   NEgroup_list$Week_13$True, NEgroup_list$Week_14$True)
+NE_hat6 <- c(NEgroup_list$Week_4$Pred, NEgroup_list$Week_5$Pred,  NEgroup_list$Week_6$Pred,
+                   NEgroup_list$Week_7$Pred, NEgroup_list$Week_8$Pred,  NEgroup_list$Week_9$Pred,
+                   NEgroup_list$Week_10$Pred, NEgroup_list$Week_11$Pred,  NEgroup_list$Week_12$Pred,
+                   NEgroup_list$Week_13$Pred, NEgroup_list$Week_14$Pred)
+NE_resid6 <- c(NEgroup_list$Week_4$Resid, NEgroup_list$Week_5$Resid,  NEgroup_list$Week_6$Resid,
+                   NEgroup_list$Week_7$Resid, NEgroup_list$Week_8$Resid,  NEgroup_list$Week_9$Resid,
+                   NEgroup_list$Week_10$Resid, NEgroup_list$Week_11$Resid,  NEgroup_list$Week_12$Resid,
+                   NEgroup_list$Week_13$Resid, NEgroup_list$Week_14$Resid)
+NE_mean6 <- mean(NE_resp6)
+NE_SSR6 <- sum(NE_resid6^2)
+NE_SST6 <- sum((NE_resp6 - NE_mean6)^2)
+R2_NEgroup6 <- 1 - (NE_SSR6 / NE_SST6)
+
+
+#SE Aus R^2
+#SE Aus group 1
+SE_resp1 <- c(SEgroup_list$Week_35$True, SEgroup_list$Week_36$True, SEgroup_list$Week_37$True)
+SE_hat1 <- c(SEgroup_list$Week_35$Pred, SEgroup_list$Week_36$Pred, SEgroup_list$Week_37$Pred)
+SE_resid1 <- c(SEgroup_list$Week_35$Resid, SEgroup_list$Week_36$Resid, SEgroup_list$Week_37$Resid)
+SE_mean1 <- mean(SE_resp1)
+SE_SSR1 <- sum(SE_resid1^2)
+SE_SST1 <- sum((SE_resp1 - SE_mean1)^2)
+R2_SEgroup1 <- 1 - (SE_SSR1 / SE_SST1)
+
+#SE Aus group 2
+SE_resp2 <- c(SEgroup_list$Week_38$True, SEgroup_list$Week_38$True, SEgroup_list$Week_40$True,
+                  SEgroup_list$Week_41$True)
+SE_hat2 <- c(SEgroup_list$Week_38$Pred, SEgroup_list$Week_38$Pred, SEgroup_list$Week_40$Pred,
+                  SEgroup_list$Week_41$Pred)
+SE_resid2 <- c(SEgroup_list$Week_38$Resid, SEgroup_list$Week_38$Resid, SEgroup_list$Week_40$Resid,
+                  SEgroup_list$Week_41$Resid)
+SE_mean2 <- mean(SE_resp2)
+SE_SSR2 <- sum(SE_resid2^2)
+SE_SST2 <- sum((SE_resp2 - SE_mean2)^2)
+R2_SEgroup2 <- 1 - (SE_SSR2 / SE_SST2)
+
+#SE Aus group 3
+SE_resp3 <- c(SEgroup_list$Week_42$True, SEgroup_list$Week_43$True, SEgroup_list$Week_44$True,
+                  SEgroup_list$Week_45$True, SEgroup_list$Week_46$True, SEgroup_list$Week_47$True,
+                  SEgroup_list$Week_48$True, SEgroup_list$Week_49$True, SEgroup_list$Week_50$True)
+SE_hat3 <- c(SEgroup_list$Week_42$Pred, SEgroup_list$Week_43$Pred, SEgroup_list$Week_44$Pred,
+                  SEgroup_list$Week_45$Pred, SEgroup_list$Week_46$Pred, SEgroup_list$Week_47$Pred,
+                  SEgroup_list$Week_48$Pred, SEgroup_list$Week_49$Pred, SEgroup_list$Week_50$Pred)
+SE_resid3 <- c(SEgroup_list$Week_42$Resid, SEgroup_list$Week_43$Resid, SEgroup_list$Week_44$Resid,
+                  SEgroup_list$Week_45$Resid, SEgroup_list$Week_46$Resid, SEgroup_list$Week_47$Resid,
+                  SEgroup_list$Week_48$Resid, SEgroup_list$Week_49$Resid, SEgroup_list$Week_50$Resid)
+SE_mean3 <- mean(SE_resp3)
+SE_SSR3 <- sum(SE_resid3^2)
+SE_SST3 <- sum((SE_resp3 - SE_mean3)^2)
+R2_SEgroup3 <- 1 - (SE_SSR3 / SE_SST3)
+
+#SE Aus group 4
+SE_resp4 <- c(SEgroup_list$Week_51$True, SEgroup_list$Week_52$True, SEgroup_list$Week_1$True,
+                  SEgroup_list$Week_2$True)
+SE_hat4 <- c(SEgroup_list$Week_51$Pred, SEgroup_list$Week_52$Pred, SEgroup_list$Week_1$Pred,
+                  SEgroup_list$Week_2$Pred)
+SE_resid4 <- c(SEgroup_list$Week_51$Resid, SEgroup_list$Week_52$Resid, SEgroup_list$Week_1$Resid,
+                  SEgroup_list$Week_2$Resid)
+SE_mean4 <- mean(SE_resp4)
+SE_SSR4 <- sum(SE_resid4^2)
+SE_SST4 <- sum((SE_resp4 - SE_mean4)^2)
+R2_SEgroup4 <- 1 - (SE_SSR4 / SE_SST4)
+
+#SE Aus group 5
+SE_resp5 <- c(SEgroup_list$Week_3$True ,SEgroup_list$Week_4$True, SEgroup_list$Week_5$True,  
+                  SEgroup_list$Week_6$True, SEgroup_list$Week_7$True, SEgroup_list$Week_8$True, 
+                  SEgroup_list$Week_9$True, SEgroup_list$Week_10$True, SEgroup_list$Week_11$True,
+                  SEgroup_list$Week_12$True, SEgroup_list$Week_13$True, SEgroup_list$Week_14$True)
+SE_hat5 <- c(SEgroup_list$Week_3$Pred ,SEgroup_list$Week_4$Pred, SEgroup_list$Week_5$Pred,  
+                  SEgroup_list$Week_6$Pred, SEgroup_list$Week_7$Pred, SEgroup_list$Week_8$Pred, 
+                  SEgroup_list$Week_9$Pred, SEgroup_list$Week_10$Pred, SEgroup_list$Week_11$Pred,
+                  SEgroup_list$Week_12$Pred, SEgroup_list$Week_13$Pred, SEgroup_list$Week_14$Pred)
+SE_resid5 <- c(SEgroup_list$Week_3$Resid ,SEgroup_list$Week_4$Resid, SEgroup_list$Week_5$Resid,  
+                  SEgroup_list$Week_6$Resid, SEgroup_list$Week_7$Resid, SEgroup_list$Week_8$Resid, 
+                  SEgroup_list$Week_9$Resid, SEgroup_list$Week_10$Resid, SEgroup_list$Week_11$Resid,
+                  SEgroup_list$Week_12$Resid, SEgroup_list$Week_13$Resid, SEgroup_list$Week_14$Resid)
+SE_mean5 <- mean(SE_resp5)
+SE_SSR5 <- sum(SE_resid5^2)
+SE_SST5 <- sum((SE_resp5 - SE_mean5)^2)
+R2_SEgroup5 <- 1 - (SE_SSR5 / SE_SST5)
+
+
+```
+
+
+## MSE 
+
+## Adj R^2
+
+```{r}
+#get n for each group
+n_NE1 <- length(NEfuse_grouplist$Group_1$y)
+n_NE2 <- length(NEfuse_grouplist$Group_2$y)
+n_NE3 <- length(NEfuse_grouplist$Group_3$y)
+n_NE4 <- length(NEfuse_grouplist$Group_4$y)
+n_NE5 <- length(NEfuse_grouplist$Group_5$y)
+n_NE6 <- length(NEfuse_grouplist$Group_6$y)
+
+
+n_SE1 <- length(SEfuse_grouplist$Group_1$y)
+n_SE2 <- length(SEfuse_grouplist$Group_2$y)
+n_SE3 <- length(SEfuse_grouplist$Group_3$y)
+n_SE4 <- length(SEfuse_grouplist$Group_4$y)
+n_SE5 <- length(SEfuse_grouplist$Group_5$y)
+
+
+#adjusted R2 calc
+1 - (1 - R2_NEgroup1)*((n_NE1-1)/(n_NE1 - p_NE1)) 
+
+
+```
+
+
+
+# New Preds
+
+```{r}
+
+#TODO: update the plots to look better and have appropriate 
+
+NE_testpreds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(1:18))
+NE_testresp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(1:18))
+
+NE_2019preds <- as.data.frame(matrix(NA, ncol = 4))
+colnames(NE_2019preds) <- c("y"," y.hat", "PI.upper", "PI.lower")
+
+for (j in 1:6) {
+  test_object <- NEfuse_grouplist[[j]]
+  test_lambda <- NE_newlambda[j]
+  test_resp <- NE_testresp[[j]]
+  test_preds <- NE_testpreds[[j]][,1:260]
+  
+  test_out <- predict.fusedlasso(test_object, test_lambda, 
+                                 y_new = test_resp, X_new = test_preds)
+  NE_2019preds <- rbind(NE_2019preds, test_out)
+}
+
+NE_2019preds <- NE_2019preds[-1, ]
+
+
+
+#SE Aus 2019/2020 preds
+SE_testpreds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(1:18))
+SE_testresp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(1:18))
+
+SE_2019preds <- as.data.frame(matrix(NA, ncol = 4))
+colnames(SE_2019preds) <- c("y"," y.hat", "PI.upper", "PI.lower")
+
+for (j in 1:5) {
+  test_object <- SEfuse_grouplist[[j]]
+  test_lambda <- SE_newlambda[j]
+  test_resp <- SE_testresp[[j]]
+  test_preds <- SE_testpreds[[j]][,1:260]
+  
+  test_out <- predict.fusedlasso(test_object, test_lambda, 
+                                 y_new = test_resp, X_new = test_preds)
+  SE_2019preds <- rbind(SE_2019preds, test_out)
+}
+
+SE_2019preds <- SE_2019preds[-1, ]
+
+
+```
+
+
+```{r}
+#viz:
+
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
+
+#ne Aus
+x_vals <- 1:32
+y_range <- range(NE_2019preds, SE_2019preds)
+
+
+png(filename = "NE_preds2019.png", width = 2000, height = 1200, res = 200)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE) 
+plot(x_vals, NE_2019preds$y, type = "l", lwd = 2, ylim = y_range, ylab = "Atmospheric CO",
+        xlab = "", main = "NE Aus : 2019 - 2020 Wildfire Season", axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3)
+lines(x_vals, NE_2019preds$` y.hat`, lwd = 2, col = "magenta2")
+lines(x_vals, NE_2019preds$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, NE_2019preds$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
+legend("topright", inset = c(-0.24, 0),
+       legend = c("True", "Predicted", "Upper 95% PI", "Lower 95% PI"),
+       col = c("black", "magenta2", "red2", "blue2"), 
+       lty = c(1,1,2,2), lwd = c(2,2,1,1), bty = "o") #, bg = "white")
+dev.off()
+
+#se Aus
+
+png(filename = "SE_preds2019.png", width = 2000, height = 1200, res = 200)
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE) 
+plot(x_vals, SE_2019preds$y, type = "l", lwd = 2, ylim = y_range, ylab = "Atmospheric CO",
+        xlab = "", main = "SE Aus : 2019 - 2020 Wildfire Season", axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3)
+lines(x_vals, SE_2019preds$` y.hat`, lwd = 2, col = "magenta2")
+lines(x_vals, SE_2019preds$PI.upper, lwd = 1.5, lty = 2,
+      col = "red2")
+lines(x_vals, SE_2019preds$PI.lower, lwd = 1.5, lty = 2,
+      col = "blue2")
+legend("topright", inset = c(-0.24, 0),
+       legend = c("True", "Predicted", "Upper 95% PI", "Lower 95% PI"),
+       col = c("black", "magenta2", "red2", "blue2"), 
+       lty = c(1,1,2,2), lwd = c(2,2,1,1), bty = "o") #, bg = "white")
+dev.off()
+```
+
