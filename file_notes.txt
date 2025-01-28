@@ -19,6 +19,10 @@ Brief file notes and summaries:
   - base data cleaning methods inside a markdown file.
   - needs conversion to R script.
 
+  3.1. CO_dataupdate.rmd
+    - updated data cleaning/modification for OLR and Qunatile Indicators
+
+
  . group_function.R
   - methods for creating groups of response and predictor data structures.
   - currently wip, needs to be flexible with respect to groups.
