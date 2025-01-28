@@ -1,0 +1,52 @@
+---
+title: "CO_dataupdate.rmd"
+author: "Ryan Peterson"
+date: "2025-01-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+
+```
+
+Work on data updates for:
+  1. OLR: add in kernel function to scale larger lags
+  2. Climate Mode Index: add in the excedance indicator functions to relate (via graph) to existing data.
+
+# Data Import
+  
+```{r}
+setwd("~/CO_AUS/Aus_CO-main")
+
+load( "ne_data.rda")
+load( "se_data.rda")
+load( "bounded_data.rda")
+load( "data_matrix.rda")
+load( "lag_list.rda")
+
+load( "lasso_pred.rda")
+```
+  
+  
+# 1. OLR Kernel 
+
+
+
+# 2. Climate Mode Indicator
+
+Do we do like a quantile regression here? 
+
+## Plot Data
+
+(by week/lag)
+
+```{r}
+#TODO plot data by week across all years (maybe include jitter?)
+
+```
+
