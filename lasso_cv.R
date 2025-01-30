@@ -40,7 +40,6 @@ NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 
 #group response matrices
-
 #NEAus
 NEAus_1 <- NEbase_matrix[ ,1:3]
 NEAus_2 <- NEbase_matrix[ ,4:8]
@@ -71,7 +70,16 @@ D4 <- cbind(empty_D, empty_D, empty_D, D)
 
 D_new <- rbind(D1, D2, D3, D4)
 
-rm(D, empty_D, D1, D2, D3, D4)
+#Update for OLR (D5)
+D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
+D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
+
+D_olr <- rbind(D1, D2, D3, D4, D5)
+
+rm(D, empty_D, D1, D2, D3, D4, D5)
 
 # grouping functions 
 
@@ -82,7 +90,7 @@ NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
 SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
 
-NE_gamma <- 1
+NE_gamma <- 0.85
 NEfuse_grouplist <- list()
 NEfuse_cv <- list()
 NE_lambdamin <- c()
@@ -90,11 +98,11 @@ NE_lambdamin <- c()
 n <- length(NE_resp)
 for (i in 1:n) {
   NEresp_temp <- NE_resp[[i]]
-  NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:208])
+  NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:260])
   
-  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_new, gamma = NE_gamma)
+  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
   
-  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_new) 
+  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_olr) 
     
   NE_lambdamin <- c(NE_lambdamin, NEgroup_cv$lambda.min)  
   NEfuse_grouplist[[paste0("Group_", i)]] <- NEgroup_temp
@@ -102,7 +110,7 @@ for (i in 1:n) {
 }
 
 
-SE_gamma <- 1
+SE_gamma <- 0.85
 SEfuse_grouplist <- list()
 SEfuse_cv <- list()
 SE_lambdamin <- c()
@@ -110,11 +118,11 @@ SE_lambdamin <- c()
 n <- length(SE_resp)
 for (i in 1:n) {
   SEresp_temp <- SE_resp[[i]]
-  SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:208])
+  SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
   
-  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_new, gamma = SE_gamma)
+  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
   
-  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_new) 
+  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
   
   SE_lambdamin <- c(SE_lambdamin, SEgroup_cv$lambda.min) 
   SEfuse_grouplist[[paste0("Group_", i)]] <- SEgroup_temp
@@ -124,12 +132,32 @@ for (i in 1:n) {
 
 
 # compare lambda's
+
+#NE Aus
+plot(NEfuse_cv[[1]])
+plot(NEfuse_cv[[2]])
+plot(NEfuse_cv[[3]])
+plot(NEfuse_cv[[4]])
+plot(NEfuse_cv[[5]])
+plot(NEfuse_cv[[6]])
+
+#SE Aus
+plot(SEfuse_cv[[1]])
+plot(SEfuse_cv[[2]]) #use one stand error
+plot(SEfuse_cv[[3]])
+plot(SEfuse_cv[[4]])
+plot(SEfuse_cv[[5]])
+
+
+
 NE_newlambda <- NE_lambdamin
 SE_newlambda <- SE_lambdamin
 
 new_min <- which.min(SEfuse_cv[[1]]$err[1:800])
 alt_SEgroup1_lambda <- SEfuse_cv$Group_1$lambda[new_min] #alternative lambda
 SE_newlambda[1] <- SEfuse_cv$Group_1$lambda[new_min]
+
+SE_newlambda[2] <- SEfuse_cv[[2]]$lambda.1se
 
 NE_oldlambda <- c()
 for(k in 1:length(NEfuse_grouplist)){
@@ -169,7 +197,7 @@ for(k in 1:18){
   SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19,k))
   SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19,k))
   
-  NE_gamma <- 1
+  NE_gamma <- 0.85
   NEfuse_loo <- list()
   
   n <- length(NE_resp)
@@ -184,7 +212,7 @@ for(k in 1:18){
   
   NEfuse_all[[paste0("TestYear", season_years[k])]] <- NEfuse_loo
   
-  SE_gamma <- 1
+  SE_gamma <- 0.85
   SEfuse_loo <- list()
   
   n <- length(SE_resp)
@@ -200,6 +228,12 @@ for(k in 1:18){
   SEfuse_all[[paste0("TestYear", season_years[k])]] <- SEfuse_loo
   
 }
+
+NEfuse_all_new <- NEfuse_all
+NEfuse_all_new <- SEfuse_all
+
+save(NEfuse_all_new, SEfuse_all_new, NE_newlambda, SE_newlambda,
+     NEfuse_grouplist, SEfuse_grouplist, file = "lasso_pred.rda")
 
 save(NEfuse_all, SEfuse_all, file = "lasso_loo.rda") #save 
 
@@ -306,7 +340,7 @@ for (j in 1:6) {
   test_object <- NEfuse_grouplist[[j]]
   test_lambda <- NE_newlambda[j]
   test_resp <- NE_testresp[[j]]
-  test_preds <- NE_testpreds[[j]][,1:208]
+  test_preds <- NE_testpreds[[j]][,1:260]
   
   test_out <- predict.fusedlasso(test_object, test_lambda, 
                                  y_new = test_resp, X_new = test_preds)
@@ -336,7 +370,7 @@ for (j in 1:5) {
   test_object <- SEfuse_grouplist[[j]]
   test_lambda <- SE_newlambda[j]
   test_resp <- SE_testresp[[j]]
-  test_preds <- SE_testpreds[[j]][,1:208]
+  test_preds <- SE_testpreds[[j]][,1:260]
   
   test_out <- predict.fusedlasso(test_object, test_lambda, 
                                  y_new = test_resp, X_new = test_preds)
@@ -519,4 +553,48 @@ lines(x_vals, SE_2018preds$PI.upper, lwd = 1.5, lty = 2,
       col = "red2")
 lines(x_vals, SE_2018preds$PI.lower, lwd = 1.5, lty = 2,
       col = "blue2")
+
+
+#TODO: work include quantile data
+
+setwd("~/CO_AUS/Aus_CO-main")
+load( "data_quantile.rda") #quantile data
+
+#first include indicator quantiles as series for each climate mode.
+# distance matrices 
+
+#TODO: update distance matrices for indicator quantiles $I[x>c]$
+D <- getD1d(52)
+empty_D <- matrix(rep(0, (52*51)) , ncol = 52, nrow = 51)
+D1 <- cbind(D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D)
+
+D_new <- rbind(D1, D2, D3, D4)
+
+#Update for OLR (D5)
+D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
+D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
+
+D_olr <- rbind(D1, D2, D3, D4, D5)
+
+rm(D, empty_D, D1, D2, D3, D4, D5)
+
+# grouping functions 
+
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+
+
+#second connect an edge of a quantile to its lag.
+
 

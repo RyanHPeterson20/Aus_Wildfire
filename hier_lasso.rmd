@@ -92,7 +92,9 @@ SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
 
 ```{r test_ind}
 #TODO: interactions between data/indicator
-y <- cbind(NE_resp[[3]])
+y <- cbind(as.numeric(NE_resp[[3]]))
+y <- as.numeric(y[,1])
+
 X_2 <- cbind(as.matrix(NE_preds[[3]][,1:208]), NE_preds_q90[[3]]) #nino
 
 
@@ -105,11 +107,18 @@ test_cv$lamhat.1se
 
 plot(test_cv)
 
+#X_2 <- as.matrix(X_2)
+
 test_fit <- hierNet(X_2, y, lam = test_cv$lamhat, strong = TRUE, delta = 0.5)
+
+print(test_fit$th)
 
 summary(test_fit)
 coefs <- test_fit$bp - test_fit$bn
 which(coefs != 0)
+
+plot(1:208, coefs[1:208], type = "l", main = "Main Effects - Climate Mode")
+plot(1:208, coefs[209:416], type = "l", main = "Main Effects - Quantile")
 
 int_matrix <- test_fit$th
 
@@ -118,6 +127,11 @@ length(which(int_matrix != 0, arr.ind = TRUE))
 var_imp <- hierNet.varimp(test_fit, X_2, y)
 
 plot(var_imp[,1], var_imp[,2], pch = 16)
+
+which(test_fit$th != 0, arr.ind = TRUE)
+
+colnames(NE_preds[[3]])[77]
+
 ```
 
 
@@ -153,19 +167,22 @@ plot(var_imp[,1], var_imp[,2], pch = 16)
 
 ```{r}
 NE_2019preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(1:18))
+NE_2019preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(1:18))
+
 NE_2019resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(1:18))
 
-new_NE <- as.matrix(NE_2019preds[[3]][,1:208])
+new_NE <- cbind(as.matrix(NE_2019preds[[3]][,1:208]), NE_2019preds_q90[[3]])
+new_NE <- as.matrix(new_NE)
 y_new <- NE_2019resp[[3]]
 
 out <- predict(test_fit, new_NE)
 
 
-old_y_hat <- NE_2019preds$` y.hat`[9:12]
+#old_y_hat <- NE_2019preds$` y.hat`[9:12]
 
 
 plot(1:4, y_new, type = "l" , ylim = range(y_new, out, old_y_hat))
-lines(1:4, old_y_hat, col = "magenta2")
+#lines(1:4, old_y_hat, col = "magenta2")
 lines(1:4, out, lwd = 2, col = "darkmagenta")
 ```
 
