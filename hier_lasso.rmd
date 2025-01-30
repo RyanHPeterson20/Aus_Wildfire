@@ -1,0 +1,317 @@
+---
+title: "hier_lasso.rmd"
+author: "Ryan Peterson"
+date: "2024-12-02"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+suppressMessages(library(hierNet))
+```
+
+
+```{r}
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main")
+
+load( "ne_data.rda")
+load( "se_data.rda")
+load( "bounded_data.rda")
+load( "data_matrix.rda")
+load( "lag_list.rda")
+load( "data_quantile.rda")
+
+source("group_functions.R") #grouping/clustering
+```
+
+
+```{r}
+#set up 
+
+#season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#group response matrices
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:3]
+NEAus_2 <- NEbase_matrix[ ,4:8]
+NEAus_3 <- NEbase_matrix[ ,9:12]
+NEAus_4 <- NEbase_matrix[ ,13:17]
+NEAus_5 <- NEbase_matrix[ ,18:21]
+NEAus_6 <- NEbase_matrix[ ,22:32]
+
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:3]
+SEAus_2 <- SEbase_matrix[ ,4:7]
+SEAus_3 <- SEbase_matrix[ ,8:16]
+SEAus_4 <- SEbase_matrix[ ,17:20]
+SEAus_5 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6, SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+```
+
+
+```{r}
+#groupings
+
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+#quantile 90 indicator
+NE_preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(19))
+SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
+
+```
+
+
+```{r test_ind}
+#TODO: interactions between data/indicator
+y <- cbind(NE_resp[[3]])
+X_2 <- cbind(as.matrix(NE_preds[[3]][,1:208]), NE_preds_q90[[3]]) #nino
+
+
+test_path <- hierNet.path( X_2, y)
+
+test_cv <- hierNet.cv(test_path, X_2,  y)
+test_cv$lamhat
+test_cv$lamhat.1se
+
+
+plot(test_cv)
+
+test_fit <- hierNet(X_2, y, lam = test_cv$lamhat, strong = TRUE, delta = 0.5)
+
+summary(test_fit)
+coefs <- test_fit$bp - test_fit$bn
+which(coefs != 0)
+
+int_matrix <- test_fit$th
+
+length(which(int_matrix != 0, arr.ind = TRUE))
+
+var_imp <- hierNet.varimp(test_fit, X_2, y)
+
+plot(var_imp[,1], var_imp[,2], pch = 16)
+```
+
+
+```{r test_Block}
+#test ne_group 3 with nino only
+y <- NE_resp[[3]]
+X_2 <- as.matrix(NE_preds[[3]][,1:208]) #nino
+
+test_path <- hierNet.path( X_2, y)
+
+test_cv <- hierNet.cv(test_path, X_2,  y)
+test_cv$lamhat
+
+plot(test_cv)
+
+test_fit <- hierNet(X_2, y, lam = test_cv$lamhat.1se, delta = 0.25)
+
+summary(test_fit)
+coefs <- test_fit$bp - test_fit$bn
+which(coefs != 0)
+
+int_matrix <- test_fit$th
+
+length(which(int_matrix != 0, arr.ind = TRUE))
+
+var_imp <- hierNet.varimp(test_fit, X_2, y)
+
+plot(var_imp[,1], var_imp[,2], pch = 16)
+
+
+```
+
+
+```{r}
+NE_2019preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(1:18))
+NE_2019resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(1:18))
+
+new_NE <- as.matrix(NE_2019preds[[3]][,1:208])
+y_new <- NE_2019resp[[3]]
+
+out <- predict(test_fit, new_NE)
+
+
+old_y_hat <- NE_2019preds$` y.hat`[9:12]
+
+
+plot(1:4, y_new, type = "l" , ylim = range(y_new, out, old_y_hat))
+lines(1:4, old_y_hat, col = "magenta2")
+lines(1:4, out, lwd = 2, col = "darkmagenta")
+```
+
+
+```{r}
+#TODO: add in indicators
+low <- 0.1
+upp <- 0.9
+
+nino_matrix <- pred_matrix[ ,1:52]
+nino_quantiles  <- quantile(nino_matrix, probs = c(low, upp))
+
+dmi_matrix <- pred_matrix[ ,53:104]
+dmi_quantiles <- quantile(dmi_matrix, probs = c(low, upp))
+
+tsa_matrix <- pred_matrix[ ,105:156]
+tsa_quantiles <- quantile(tsa_matrix, probs = c(low, upp))
+
+aao_matrix <- pred_matrix[ ,157:208]
+aao_quantiles <- quantile(aao_matrix, probs = c(low, upp))
+
+SEGroup4_upper <- c(rep(nino_quantiles[2], 52),
+                    rep(dmi_quantiles[2], 52),
+                    rep(tsa_quantiles[2], 52),
+                    rep(aao_quantiles[2], 52))
+
+#look at all data
+SEweek_preds <-  SE_laglist_std[[17]][,3:210]
+SEGroup4_exceed <- matrix(NA, ncol = length(SEweek_preds))
+colnames(SEGroup4_exceed) <- colnames(SEweek_preds)
+
+#build a matrix of 1/0 
+for (k in 17:20) {
+  SEweek_preds <-  SE_laglist_std[[k]][,3:210]
+  #SEweek_olr <- SE_laglist_std[[k]][,211:262]
+
+  temp_preds <- SEweek_preds[ -19, ]
+
+  temp_exceed <- matrix(0, nrow(temp_preds), ncol(temp_preds))
+  colnames(SEGroup4_exceed) <- colnames(temp_preds)
+  
+  for(j in 1:208){
+    
+    ind_upper <- which(temp_preds[ ,j] >= SEGroup4_upper[j])
+    temp_exceed[ind_upper,j] <- 1
+  }
+  
+  SEGroup4_exceed <- rbind(SEGroup4_exceed, temp_exceed)
+}
+
+SEGroup4_exceed <- SEGroup4_exceed[-1, ]
+
+Nino_exceed <-SEGroup4_exceed[,1:52]
+DMI_exceed <- SEGroup4_exceed[,53:104]
+
+```
+
+
+```{r SE group 4}
+y <- SE_resp[[4]]
+X_new <- as.matrix(SE_preds[[4]]) #including olr
+
+X_1 <- as.matrix(SE_preds[[4]][,1:52]) #nino
+X_2 <- as.matrix(SE_preds[[4]][,53:104]) #dmi
+X_4 <-  as.matrix(SE_preds[[4]][,105:208])#everything else
+X_part <- cbind(X_1, Nino_exceed, X_2, DMI_exceed)
+
+test_path <- hierNet.path( X_new, y)
+
+test_cv <- hierNet.cv(test_path, X_new,  y)
+test_cv$lamhat
+
+plot(test_cv)
+
+test_fit <- hierNet(X_new, y, lam = test_cv$lamhat.1se, delta = 0.05, strong = TRUE)
+
+summary(test_fit)
+coefs <- test_fit$bp - test_fit$bn
+which(coefs != 0)
+
+int_matrix <- test_fit$th
+
+length(which(int_matrix != 0, arr.ind = TRUE))
+
+var_imp <- hierNet.varimp(test_fit, X_new, y)
+
+plot(var_imp[,1], var_imp[,2], pch = 16)
+```
+
+
+```{r}
+#get identity functions for new data
+
+#look at all data
+SEweek_preds <-  SE_laglist_std[[17]][,3:210]
+SEGroup4_exceed <- matrix(NA, ncol = length(SEweek_preds))
+colnames(SEGroup4_exceed) <- colnames(SEweek_preds)
+
+#build a matrix of 1/0 
+for (k in 17:20) {
+  SEweek_preds <-  SE_laglist_std[[k]][,3:210]
+  #SEweek_olr <- SE_laglist_std[[k]][,211:262]
+
+  temp_preds <- SEweek_preds[ 19, ]
+
+  temp_exceed <- matrix(0, nrow(temp_preds), ncol(temp_preds))
+  colnames(SEGroup4_exceed) <- colnames(temp_preds)
+  
+  for(j in 1:208){
+    
+    ind_upper <- which(temp_preds[ ,j] >= SEGroup4_upper[j])
+    temp_exceed[ind_upper,j] <- 1
+  }
+  
+  SEGroup4_exceed <- rbind(SEGroup4_exceed, temp_exceed)
+}
+
+SEGroup4_exceed <- SEGroup4_exceed[-1, ]
+
+Nino_exceed <-SEGroup4_exceed[,1:52]
+DMI_exceed <- SEGroup4_exceed[,53:104]
+```
+
+
+```{r}
+SE_2019preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(1:18))
+SE_2019resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(1:18))
+
+
+new_SE <- as.matrix(SE_2019preds[[4]])
+
+new_nino <- new_SE[,1:52]
+new_dmi <- new_SE[,53:104]
+
+#new_preds <- cbind(new_nino, Nino_exceed, new_dmi, DMI_exceed)
+
+y_new <- SE_2019resp[[4]]
+
+out <- predict(test_fit, new_SE)
+
+
+old_y_hat <- SE_2019preds$` y.hat`[17:20]
+
+
+plot(1:4, y_new, type = "l" , ylim = range(y_new, out, old_y_hat))
+lines(1:4, old_y_hat, col = "magenta2")
+lines(1:4, out, lwd = 2, col = "darkmagenta")
+```
+

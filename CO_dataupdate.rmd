@@ -11,12 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r library}
-
+suppressMessages( library(fields))
 ```
 
 Work on data updates for:
   1. OLR: add in kernel function to scale larger lags
   2. Climate Mode Index: add in the excedance indicator functions to relate (via graph) to existing data.
+
+Reference:
+- data_cleaning.rmd (how all of this was originally orgnaized.)
 
 # Data Import
   
@@ -30,6 +33,8 @@ load( "data_matrix.rda")
 load( "lag_list.rda")
 
 load( "lasso_pred.rda")
+
+season_weeks <- c(35:52, 1:14)
 ```
   
   
@@ -43,10 +48,256 @@ Do we do like a quantile regression here?
 
 ## Plot Data
 
-(by week/lag)
+(by week)
 
 ```{r}
 #TODO plot data by week across all years (maybe include jitter?)
+#x-axis as weeks
 
+scale_preds <- bounded_pred_df
+scale_preds$nino.anomaly <- scale(bounded_pred_df$nino.anomaly)
+scale_preds$dmi.anomaly <- scale(bounded_pred_df$dmi.anomaly)
+scale_preds$tsa.anomaly <- scale(bounded_pred_df$tsa.anomaly)
+scale_preds$aao.anomaly <- scale(bounded_pred_df$aao.anomaly)
+
+set.panel(2,2)
+hist(scale_preds$nino.anomaly, main = "Nino")
+hist(scale_preds$dmi.anomaly, main = "DMI")
+hist(scale_preds$tsa.anomaly, main = "TSA")
+hist(scale_preds$aao.anomaly, main = "AAO")
+
+#data plot (test)
+#TODO: add in color and a legend
+#do this where only specific years have color
+year_colors <- rep("black", length(unique(scale_preds$year)))
+#loc_int <- which(unique(scale_preds$year) == 2015)
+#year_colors[loc_int] <- "magenta2"
+
+set.panel(2,2)
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$nino.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly Nino Data")
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$nino.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$dmi.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly DMI Data")
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$dmi.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$tsa.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly TSA Data")
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$tsa.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$aao.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly AAO Data")
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$aao.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+
+#dev.off()
+```
+
+## Quantile Checks
+
+Plot a basic quantile lines on plots
+
+Create a quantile regression for the data as well.
+
+```{r nino_quantiles}
+nino_base <- quantile(scale_preds$nino.anomaly, probs = c(0.25, 0.5, 0.75, 0.90))
+
+nino_quant <- as.data.frame(matrix(NA, ncol = 5))
+colnames(nino_quant) <- c("first", "second", "third", "top", "week")
+
+for (j in unique(scale_preds$week)) {
+  week_data <- subset(scale_preds, week == j)
+  temp_quant <- quantile(week_data$nino.anomaly, probs = c(0.25, 0.5, 0.75, 0.9))
+  nino_quant <- rbind(nino_quant, c(temp_quant,j))
+}
+
+nino_quant <- nino_quant[-1, ]
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$nino.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly Nino Data")
+lines(unique(scale_preds$week), nino_quant$second, col = "cyan3", lwd = 3)
+lines(unique(scale_preds$week), nino_quant$first, col = "blue2", lwd = 3)
+lines(unique(scale_preds$week), nino_quant$third, col = "red3", lwd = 3)
+lines(unique(scale_preds$week), nino_quant$top, col = "magenta3", lwd = 3)
+yline(nino_base[1:3], col = c("blue2", "cyan3", "red3"), lty = 2, lwd =3)
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$nino.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+
+#TODO add in legend
+
+```
+
+
+```{r dmi_quant}
+dmi_base <- quantile(scale_preds$dmi.anomaly, probs = c(0.25, 0.5, 0.75, 0.90))
+
+dmi_quant <- as.data.frame(matrix(NA, ncol = 5))
+colnames(dmi_quant) <- c("first", "second", "third", "top", "week")
+
+for (j in unique(scale_preds$week)) {
+  week_data <- subset(scale_preds, week == j)
+  temp_quant <- quantile(week_data$dmi.anomaly, probs = c(0.25, 0.5, 0.75, 0.9))
+  dmi_quant <- rbind(dmi_quant, c(temp_quant,j))
+}
+
+dmi_quant <- dmi_quant[-1, ]
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$dmi.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly DMI Data")
+lines(unique(scale_preds$week), dmi_quant$second, col = "cyan3", lwd = 3)
+lines(unique(scale_preds$week), dmi_quant$first, col = "blue2", lwd = 3)
+lines(unique(scale_preds$week), dmi_quant$third, col = "red3", lwd = 3)
+lines(unique(scale_preds$week), dmi_quant$top, col = "magenta3", lwd = 3)
+yline(dmi_base[1:3], col = c("blue2", "cyan3", "red3"), lty = 2, lwd =3)
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$dmi.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+```
+
+
+```{r tsa_quant}
+tsa_base <- quantile(scale_preds$tsa.anomaly, probs = c(0.25, 0.5, 0.75, 0.90))
+
+tsa_quant <- as.data.frame(matrix(NA, ncol = 5))
+colnames(tsa_quant) <- c("first", "second", "third", "top", "week")
+
+for (j in unique(scale_preds$week)) {
+  week_data <- subset(scale_preds, week == j)
+  temp_quant <- quantile(week_data$tsa.anomaly, probs = c(0.25, 0.5, 0.75, 0.9))
+  tsa_quant <- rbind(tsa_quant, c(temp_quant,j))
+}
+
+tsa_quant <- tsa_quant[-1, ]
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$tsa.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly TSA Data")
+lines(unique(scale_preds$week), tsa_quant$second, col = "cyan3", lwd = 3)
+lines(unique(scale_preds$week), tsa_quant$first, col = "blue2", lwd = 3)
+lines(unique(scale_preds$week), tsa_quant$third, col = "red3", lwd = 3)
+lines(unique(scale_preds$week), tsa_quant$top, col = "magenta3", lwd = 3)
+yline(tsa_base[1:3], col = c("blue2", "cyan3", "red3"), lty = 2, lwd =3)
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$tsa.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+```
+
+```{r aao_quant}
+aao_base <- quantile(scale_preds$aao.anomaly, probs = c(0.25, 0.5, 0.75, 0.9))
+
+aao_quant <- as.data.frame(matrix(NA, ncol = 5))
+colnames(aao_quant) <- c("first", "second", "third", "top", "week")
+
+for (j in unique(scale_preds$week)) {
+  week_data <- subset(scale_preds, week == j)
+  temp_quant <- quantile(week_data$aao.anomaly, probs = c(0.25, 0.5, 0.75, 0.9))
+  aao_quant <- rbind(aao_quant, c(temp_quant,j))
+}
+
+aao_quant <- aao_quant[-1, ]
+
+plot(1, type = "n", xlim = c(1, 52), ylim = range(scale_preds$aao.anomaly),
+     xlab = "Week Number", ylab = " ", main = "Weekly AAO Data")
+lines(unique(scale_preds$week), aao_quant$second, col = "cyan3", lwd = 3)
+lines(unique(scale_preds$week), aao_quant$first, col = "blue2", lwd = 3)
+lines(unique(scale_preds$week), aao_quant$third, col = "red3", lwd = 3)
+lines(unique(scale_preds$week), aao_quant$top, col = "magenta3", lwd = 3)
+yline(aao_base[1:3], col = c("blue2", "cyan3", "red3"), lty = 2, lwd =3)
+for (i in unique(scale_preds$year)) {
+  year_data <- subset(scale_preds, year == i)
+  points(jitter(year_data$week, amount = 0.25 ), year_data$aao.anomaly, pch = 20,
+  col = year_colors[which(unique(scale_preds$year) == i)])
+}
+
+```
+
+## Create Identity Function
+
+```{r}
+#using 0.9 quantile for full dataset
+nino_subset <- subset(scale_preds, nino.anomaly >= nino_base[4])
+dmi_subset <- subset(scale_preds, dmi.anomaly >= dmi_base[4])
+tsa_subset <- subset(scale_preds, tsa.anomaly >= tsa_base[4])
+aao_subset <- subset(scale_preds, aao.anomaly >= aao_base[4])
+
+```
+
+
+Referencing data_cleaning.rmd to create new matrices for this data.
+
+
+```{r}
+#using laglists (and the full quantiles) to create new identity function matrix
+
+NE_laglist_q90 <- list()
+SE_laglist_q90 <- list()
+
+for (k in 1:32) {
+  #temp dfs
+  tempNE_df <- NE_laglist_std[[k]]
+  tempSE_df <- SE_laglist_std[[k]]
+  
+  #NE modes
+  nino_tempNE <- tempNE_df[,3:54]
+  nino_indNE <- as.data.frame(ifelse(nino_tempNE > nino_base[4], 1, 0))
+  
+  dmi_tempNE <- tempNE_df[,55:106]
+  dmi_indNE <- as.data.frame(ifelse(dmi_tempNE > dmi_base[4], 1, 0))
+  
+  tsa_tempNE <- tempNE_df[,107:158]
+  tsa_indNE <- as.data.frame(ifelse(tsa_tempNE > tsa_base[4], 1, 0))
+  
+  aao_tempNE <- tempNE_df[,159:210]
+  aao_indNE <- as.data.frame(ifelse(aao_tempNE > aao_base[4], 1, 0))
+  
+  #SE modes
+  nino_tempSE <- tempSE_df[,3:54]
+  nino_indSE <- as.data.frame(ifelse(nino_tempSE > nino_base[4], 1, 0))
+  
+  dmi_tempSE <- tempSE_df[,55:106]
+  dmi_indSE <- as.data.frame(ifelse(dmi_tempSE > dmi_base[4], 1, 0))
+  
+  tsa_tempSE <- tempSE_df[,107:158]
+  tsa_indSE <- as.data.frame(ifelse(tsa_tempSE > tsa_base[4], 1, 0))
+  
+  aao_tempSE <- tempSE_df[,159:210]
+  aao_indSE <- as.data.frame(ifelse(aao_tempSE > aao_base[4], 1, 0)) 
+  
+  
+  NEweek <- data.frame(tempNE_df[,1:2], nino_indNE, dmi_indNE, tsa_indNE, aao_indNE)
+  SEweek <- data.frame(tempSE_df[,1:2], nino_indSE, dmi_indSE, tsa_indSE, aao_indSE)
+  
+  NE_laglist_q90[[paste("Week ", season_weeks[k])]] <- NEweek
+  SE_laglist_q90[[paste("Week ", season_weeks[k])]] <- SEweek
+}
+```
+
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main")
+
+save(NE_laglist_q90, SE_laglist_q90, file = "data_quantile.rda")
 ```
 
