@@ -296,8 +296,53 @@ for (k in 1:32) {
 
 
 ```{r}
+NE_laglist_q75 <- list()
+SE_laglist_q75 <- list()
+
+for (k in 1:32) {
+  #temp dfs
+  tempNE_df <- NE_laglist_std[[k]]
+  tempSE_df <- SE_laglist_std[[k]]
+  
+  #NE modes
+  nino_tempNE <- tempNE_df[,3:54]
+  nino_indNE <- as.data.frame(ifelse(nino_tempNE > nino_base[3], 1, 0))
+  
+  dmi_tempNE <- tempNE_df[,55:106]
+  dmi_indNE <- as.data.frame(ifelse(dmi_tempNE > dmi_base[3], 1, 0))
+  
+  tsa_tempNE <- tempNE_df[,107:158]
+  tsa_indNE <- as.data.frame(ifelse(tsa_tempNE > tsa_base[3], 1, 0))
+  
+  aao_tempNE <- tempNE_df[,159:210]
+  aao_indNE <- as.data.frame(ifelse(aao_tempNE > aao_base[3], 1, 0))
+  
+  #SE modes
+  nino_tempSE <- tempSE_df[,3:54]
+  nino_indSE <- as.data.frame(ifelse(nino_tempSE > nino_base[3], 1, 0))
+  
+  dmi_tempSE <- tempSE_df[,55:106]
+  dmi_indSE <- as.data.frame(ifelse(dmi_tempSE > dmi_base[3], 1, 0))
+  
+  tsa_tempSE <- tempSE_df[,107:158]
+  tsa_indSE <- as.data.frame(ifelse(tsa_tempSE > tsa_base[3], 1, 0))
+  
+  aao_tempSE <- tempSE_df[,159:210]
+  aao_indSE <- as.data.frame(ifelse(aao_tempSE > aao_base[3], 1, 0)) 
+  
+  
+  NEweek <- data.frame(tempNE_df[,1:2], nino_indNE, dmi_indNE, tsa_indNE, aao_indNE)
+  SEweek <- data.frame(tempSE_df[,1:2], nino_indSE, dmi_indSE, tsa_indSE, aao_indSE)
+  
+  NE_laglist_q75[[paste("Week ", season_weeks[k])]] <- NEweek
+  SE_laglist_q75[[paste("Week ", season_weeks[k])]] <- SEweek
+}
+```
+
+
+```{r}
 setwd("~/CO_AUS/Aus_CO-main")
 
-save(NE_laglist_q90, SE_laglist_q90, file = "data_quantile.rda")
+save(NE_laglist_q90, SE_laglist_q90, NE_laglist_q75, SE_laglist_q75, file = "data_quantile.rda")
 ```
 

@@ -91,11 +91,14 @@ SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
 
 
 ```{r test_ind}
-#TODO: interactions between data/indicator
+#TODO: repeat without aao data and see if it does anything?
+
+
 y <- cbind(as.numeric(NE_resp[[3]]))
 y <- as.numeric(y[,1])
 
-X_2 <- cbind(as.matrix(NE_preds[[3]][,1:208]), NE_preds_q90[[3]]) #nino
+X_2 <- cbind(as.matrix(NE_preds[[3]][,1:156]),
+             NE_preds_q90[[3]][,1:156]  ) #nino
 
 
 test_path <- hierNet.path( X_2, y)
@@ -107,7 +110,7 @@ test_cv$lamhat.1se
 
 plot(test_cv)
 
-#X_2 <- as.matrix(X_2)
+X_2 <- as.matrix(X_2)
 
 test_fit <- hierNet(X_2, y, lam = test_cv$lamhat, strong = TRUE, delta = 0.5)
 
@@ -117,8 +120,14 @@ summary(test_fit)
 coefs <- test_fit$bp - test_fit$bn
 which(coefs != 0)
 
-plot(1:208, coefs[1:208], type = "l", main = "Main Effects - Climate Mode")
-plot(1:208, coefs[209:416], type = "l", main = "Main Effects - Quantile")
+
+plot(1:156, coefs[1:156], type = "l", main = "Main Effects - Climate Mode")
+xline(c(52.5, 104.5))
+
+plot(1:156, coefs[157:312], type = "l", main = "Main Effects - Quantile")
+xline(c(52.5, 104.5))
+
+#TODO: replace with point plots, then make another plot for interactions using color gradients and some 2d method
 
 int_matrix <- test_fit$th
 
