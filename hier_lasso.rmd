@@ -12,6 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 suppressMessages(library(hierNet))
+
+suppressMessages( library( fields))
+
+suppressMessages( library( colorspace)) #for some color alternatives
 ```
 
 
@@ -87,6 +91,10 @@ SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
 NE_preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(19))
 SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
 
+#quantile 75 indicator
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = -c(19))
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = -c(19))
+
 ```
 
 
@@ -101,20 +109,21 @@ X_2 <- cbind(as.matrix(NE_preds[[3]][,1:156]),
              NE_preds_q90[[3]][,1:156]  ) #nino
 
 
-test_path <- hierNet.path( X_2, y)
+test_path <- hierNet.path( X_2, y, diagonal = FALSE, strong = TRUE)
 
-test_cv <- hierNet.cv(test_path, X_2,  y)
+test_cv <- hierNet.cv(test_path, X_2,  y, nfolds = 5)
 test_cv$lamhat
 test_cv$lamhat.1se
-
 
 plot(test_cv)
 
 X_2 <- as.matrix(X_2)
 
-test_fit <- hierNet(X_2, y, lam = test_cv$lamhat, strong = TRUE, delta = 0.5)
+test_fit <- hierNet(X_2, y, lam = test_cv$lamhat, strong = TRUE, delta = 0.5, diagonal = FALSE)
 
 print(test_fit$th)
+
+length(which(test_fit$th > 0))
 
 summary(test_fit)
 coefs <- test_fit$bp - test_fit$bn
@@ -122,7 +131,7 @@ which(coefs != 0)
 
 
 plot(1:156, coefs[1:156], type = "l", main = "Main Effects - Climate Mode")
-xline(c(52.5, 104.5))
+xline(c(52.5, 104.5))#maybe a fields thing?
 
 plot(1:156, coefs[157:312], type = "l", main = "Main Effects - Quantile")
 xline(c(52.5, 104.5))
@@ -141,6 +150,15 @@ which(test_fit$th != 0, arr.ind = TRUE)
 
 colnames(NE_preds[[3]])[77]
 
+```
+
+
+```{r interaction_viz}
+image.plot(test_fit$th, col = diverge_hsv(256))
+
+which(test_fit$th !=0, arr.ind = TRUE)
+
+test_fit$th[which(test_fit$th !=0, arr.ind = TRUE)]
 ```
 
 
@@ -180,7 +198,9 @@ NE_2019preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(1:18))
 
 NE_2019resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(1:18))
 
-new_NE <- cbind(as.matrix(NE_2019preds[[3]][,1:208]), NE_2019preds_q90[[3]])
+
+
+new_NE <- cbind(as.matrix(NE_2019preds[[3]][,1:156]), NE_2019preds_q90[[3]][,1:156])
 new_NE <- as.matrix(new_NE)
 y_new <- NE_2019resp[[3]]
 
@@ -190,7 +210,7 @@ out <- predict(test_fit, new_NE)
 #old_y_hat <- NE_2019preds$` y.hat`[9:12]
 
 
-plot(1:4, y_new, type = "l" , ylim = range(y_new, out, old_y_hat))
+plot(1:4, y_new, type = "l" , ylim = range(y_new, out))
 #lines(1:4, old_y_hat, col = "magenta2")
 lines(1:4, out, lwd = 2, col = "darkmagenta")
 ```
