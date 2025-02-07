@@ -709,7 +709,6 @@ lines(1:52, NE_coefs$Group_1$ninoQ_coef, col = "blue")
 lines(1:52, NE_coefs$Group_1$dmi_coef, col = "red")
 lines(1:52, NE_coefs$Group_1$dmiQ_coef, col = "darkgreen")
 
-
 #group 2
 plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
      main = "NE Group 2", ylim = range(NE_range))
@@ -817,12 +816,267 @@ lines(1:52, SE_coefs$Group_5$dmiQ_coef, col = "darkgreen")
 
 ##second connect an edge of a quantile to its lag.
 
-#TODO: rebuild D matrix with different edge connections
-#repeat for better connections (start with a single mode first)
-D_test <- getD1d(10)
-D_up <- rbind(rep(0,10), D_test)
-D_up <-cbind(D_up, c(-1, rep(0,9)))
-D_up <-rbind(D_up, c(1, rep(0,10)))
 
-getGraph(D_up)
+
+### --------- modified penalty matrix --------------###
+
+#TODO: rebuild D matrix with different edge connections
+#repeat for better connections (start with a single mode (nino) first)
+#D_test <- getD1d(52)
+
+D <- getD1d(52)
+empty_D <- matrix(rep(0, (52*51)) , ncol = 52, nrow = 51)
+D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
+D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
+
+D_olr <- rbind(D1, D2, D3, D4, D5)
+
+rm(D, empty_D, D1, D2, D3, D4, D5)
+
+graph_obj <- getGraph(D_olr)
+
+#TODO: igraph stuff?? (yes)
+#testing the inclusion of new nodes and edges
+new_graph <- add_vertices(graph_obj, 104)
+
+#create list of alternating values
+v1 <- 1:104
+v2 <- 261:364
+v_c <- c(rbind(v1,v2))
+
+new_graph <- add_edges(new_graph, v_c)
+
+plot(new_graph)
+
+#back to the penalty matrix
+D_new <- getDg(new_graph)
+
+#test for nino and indicator nino
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+#quantile 90 indicator
+NE_preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(19))
+SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
+
+#quantile 75 indicator
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = -c(19))
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = -c(19))
+
+#cv checks
+
+NE_gamma <- 0.85
+NEfuse_grouplist <- list()
+NEfuse_cv <- list()
+NE_lambdamin <- c()
+
+n <- length(NE_resp)
+for (i in 1:n) {
+  NEresp_temp <- NE_resp[[i]]
+  NEpred_temp <- as.matrix(cbind(NE_preds[[i]], NE_preds_q75[[i]][ ,1:104]))
+  
+  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_new, gamma = NE_gamma)
+  
+  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_new) 
+  
+  NE_lambdamin <- c(NE_lambdamin, NEgroup_cv$lambda.min)  
+  NEfuse_grouplist[[paste0("Group_", i)]] <- NEgroup_temp
+  NEfuse_cv[[paste0("Group_", i)]] <- NEgroup_cv
+}
+
+
+SE_gamma <- 0.85
+SEfuse_grouplist <- list()
+SEfuse_cv <- list()
+SE_lambdamin <- c()
+
+n <- length(SE_resp)
+for (i in 1:n) {
+  SEresp_temp <- SE_resp[[i]]
+  SEpred_temp <- as.matrix(cbind(SE_preds[[i]], SE_preds_q75[[i]][ ,1:104]))
+  
+  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_new, gamma = SE_gamma)
+  
+  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_new) 
+  
+  SE_lambdamin <- c(SE_lambdamin, SEgroup_cv$lambda.min) 
+  SEfuse_grouplist[[paste0("Group_", i)]] <- SEgroup_temp
+  SEfuse_cv[[paste0("Group_", i)]] <- SEgroup_cv
+}
+
+#lambda checks
+
+#NE Aus
+plot(NEfuse_cv[[1]])
+plot(NEfuse_cv[[2]])
+plot(NEfuse_cv[[3]])
+plot(NEfuse_cv[[4]])
+plot(NEfuse_cv[[5]])
+plot(NEfuse_cv[[6]])
+
+#SE Aus
+plot(SEfuse_cv[[1]])
+plot(SEfuse_cv[[2]]) 
+plot(SEfuse_cv[[3]])
+plot(SEfuse_cv[[4]])
+plot(SEfuse_cv[[5]])
+
+NE_newlambda <- NE_lambdamin
+SE_newlambda <- SE_lambdamin
+
+
+#NE Visualizations
+NE_coefs <- list()
+#full coef list
+NEfuse_coefs <- list()
+NE_range <- c()
+
+for(k in 1:length(NEfuse_grouplist)){
+  
+  lambda1 <- NE_newlambda[k]
+  
+  NEgroup_coef <- coef(NEfuse_grouplist[[k]], lambda = lambda1)
+  
+  NEfuse <- NEgroup_coef$beta
+  colnames(NEfuse) <- c("NEgroup")
+  NEfuse_coefs[[paste0("Group_", k)]] <- as.data.frame(NEfuse)
+  
+  NE_range <- c(NE_range, range(NEgroup_coef$beta))
+  
+  #extract each index
+  nino_coef <- NEgroup_coef$beta[1:52,]
+  dmi_coef <-    NEgroup_coef$beta[53:104,]
+  ninoQ_coef <- NEgroup_coef$beta[105:156,]
+  dmiQ_coef <- NEgroup_coef$beta[157:208,]
+  
+  NE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, ninoQ_coef, dmiQ_coef)
+}
+
+#se coefs
+#SE Visualizations
+SE_coefs <- list()
+#full coef list
+SEfuse_coefs <- list()
+
+SE_range <- c()
+
+for(k in 1:length(SEfuse_grouplist)){
+  
+  lambda1 <- SE_newlambda[k]
+  
+  SEgroup_coef <- coef(SEfuse_grouplist[[k]], lambda = lambda1)
+  
+  SEfuse <- SEgroup_coef$beta
+  colnames(SEfuse) <- c("SEgroup")
+  SEfuse_coefs[[paste0("Group_", k)]] <- as.data.frame(SEfuse)
+  
+  SE_range <- c(SE_range, range(SEgroup_coef$beta))
+  
+  #extract each index
+  nino_coef <- SEgroup_coef$beta[1:52,]
+  dmi_coef <-    SEgroup_coef$beta[53:104,]
+  ninoQ_coef <- SEgroup_coef$beta[105:156,]
+  dmiQ_coef <- SEgroup_coef$beta[157:208,]
+  
+  SE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, ninoQ_coef, dmiQ_coef)
+}
+
+#plot coefs
+
+#ne coefs
+#group1
+plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 1", ylim = range(NE_range))
+abline(h = 0, lty = 2)
+lines(1:52, NE_coefs$Group_1$ninoQ_coef, col = "blue")
+lines(1:52, NE_coefs$Group_1$dmi_coef, col = "red")
+lines(1:52, NE_coefs$Group_1$dmiQ_coef, col = "darkgreen")
+
+#group 2
+plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 2", ylim = range(NE_range))
+abline(h = 0, lty = 2)
+lines(1:52, NE_coefs$Group_2$ninoQ_coef, col = "blue")
+lines(1:52, NE_coefs$Group_2$dmi_coef, col = "red")
+lines(1:52, NE_coefs$Group_2$dmiQ_coef, col = "darkgreen")
+
+#group 3
+plot(1:52, NE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 3", ylim = range(NE_range))
+abline(h = 0, lty = 2)
+lines(1:52, NE_coefs$Group_3$ninoQ_coef, col = "blue")
+lines(1:52, NE_coefs$Group_3$dmi_coef, col = "red")
+lines(1:52, NE_coefs$Group_3$dmiQ_coef, col = "darkgreen")
+
+#group 4
+plot(1:52, NE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 4", ylim = range(NE_range))
+abline(h = 0, lty = 2)
+lines(1:52, NE_coefs$Group_4$ninoQ_coef, col = "blue")
+lines(1:52, NE_coefs$Group_4$dmi_coef, col = "red")
+lines(1:52, NE_coefs$Group_4$dmiQ_coef, col = "darkgreen")
+
+#group 5
+plot(1:52, NE_coefs$Group_5$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 5", ylim = range(NE_range))
+abline(h = 0, lty = 2)
+lines(1:52, NE_coefs$Group_5$ninoQ_coef, col = "blue")
+lines(1:52, NE_coefs$Group_5$dmi_coef, col = "red")
+lines(1:52, NE_coefs$Group_5$dmiQ_coef, col = "darkgreen")
+
+#group 6
+plot(1:52, NE_coefs$Group_6$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Group 6", ylim = range(NE_range))
+abline(h = 0, lty = 2)
+lines(1:52, NE_coefs$Group_6$ninoQ_coef, col = "blue")
+lines(1:52, NE_coefs$Group_6$dmi_coef, col = "red")
+lines(1:52, NE_coefs$Group_6$dmiQ_coef, col = "darkgreen")
+
+#se coefs
+#group1
+plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 1", ylim = range(SE_range))
+abline(h = 0, lty = 2)
+lines(1:52, SE_coefs$Group_1$ninoQ_coef, col = "blue")
+lines(1:52, SE_coefs$Group_1$dmi_coef, col = "red")
+lines(1:52, SE_coefs$Group_1$dmiQ_coef, col = "darkgreen")
+
+#group 2
+plot(1:52, SE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 2", ylim = range(SE_range))
+abline(h = 0, lty = 2)
+lines(1:52, SE_coefs$Group_2$ninoQ_coef, col = "blue")
+lines(1:52, SE_coefs$Group_2$dmi_coef, col = "red")
+lines(1:52, SE_coefs$Group_2$dmiQ_coef, col = "darkgreen")
+
+#group 3
+plot(1:52, SE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 3", ylim = range(SE_range))
+abline(h = 0, lty = 2)
+lines(1:52, SE_coefs$Group_3$ninoQ_coef, col = "blue")
+lines(1:52, SE_coefs$Group_3$dmi_coef, col = "red")
+lines(1:52, SE_coefs$Group_3$dmiQ_coef, col = "darkgreen")
+
+#group 4
+plot(1:52, SE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 4", ylim = range(SE_range))
+abline(h = 0, lty = 2)
+lines(1:52, SE_coefs$Group_4$ninoQ_coef, col = "blue")
+lines(1:52, SE_coefs$Group_4$dmi_coef, col = "red")
+lines(1:52, SE_coefs$Group_4$dmiQ_coef, col = "darkgreen")
+
+#group 5
+plot(1:52, SE_coefs$Group_5$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Group 5", ylim = range(SE_range))
+abline(h = 0, lty = 2)
+lines(1:52, SE_coefs$Group_5$ninoQ_coef, col = "blue")
+lines(1:52, SE_coefs$Group_5$dmi_coef, col = "red")
+lines(1:52, SE_coefs$Group_5$dmiQ_coef, col = "darkgreen")
 
