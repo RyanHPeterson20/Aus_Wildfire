@@ -911,6 +911,8 @@ for (i in 1:n) {
   SEfuse_cv[[paste0("Group_", i)]] <- SEgroup_cv
 }
 
+
+
 #lambda checks
 
 #NE Aus
@@ -930,6 +932,13 @@ plot(SEfuse_cv[[5]])
 
 NE_newlambda <- NE_lambdamin
 SE_newlambda <- SE_lambdamin
+
+#TODO: save the above work since it takes a while to run
+
+save(NE_newlambda, SE_newlambda, NEfuse_cv, SEfuse_cv,
+     NEfuse_grouplist, SEfuse_grouplist, file = "lasso_quantpred.rda")
+
+#TODO: move this elsewhere since we need to do a lot of validation work
 
 
 #NE Visualizations
@@ -951,12 +960,16 @@ for(k in 1:length(NEfuse_grouplist)){
   NE_range <- c(NE_range, range(NEgroup_coef$beta))
   
   #extract each index
-  nino_coef <- NEgroup_coef$beta[1:52,]
-  dmi_coef <-    NEgroup_coef$beta[53:104,]
-  ninoQ_coef <- NEgroup_coef$beta[105:156,]
-  dmiQ_coef <- NEgroup_coef$beta[157:208,]
+  nino_coef <- NEgroup_coef$beta[1:52, ]
+  dmi_coef <- NEgroup_coef$beta[53:104, ]
+  tsa_coef <- NEgroup_coef$beta[105:156, ]
+  aao_coef <- NEgroup_coef$beta[157:208, ]
+  olr_coef <- NEgroup_coef$beta[209:260, ]
+  ninoQ_coef <- NEgroup_coef$beta[261:312,]
+  dmiQ_coef <- NEgroup_coef$beta[313:364,]
   
-  NE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, ninoQ_coef, dmiQ_coef)
+  NE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, 
+                                                aao_coef, olr_coef, ninoQ_coef, dmiQ_coef)
 }
 
 #se coefs
@@ -980,16 +993,69 @@ for(k in 1:length(SEfuse_grouplist)){
   SE_range <- c(SE_range, range(SEgroup_coef$beta))
   
   #extract each index
-  nino_coef <- SEgroup_coef$beta[1:52,]
-  dmi_coef <-    SEgroup_coef$beta[53:104,]
-  ninoQ_coef <- SEgroup_coef$beta[105:156,]
-  dmiQ_coef <- SEgroup_coef$beta[157:208,]
+  nino_coef <- SEgroup_coef$beta[1:52, ]
+  dmi_coef <- SEgroup_coef$beta[53:104, ]
+  tsa_coef <- SEgroup_coef$beta[105:156, ]
+  aao_coef <- SEgroup_coef$beta[157:208, ]
+  olr_coef <- SEgroup_coef$beta[209:260, ]
+  ninoQ_coef <- SEgroup_coef$beta[261:312,]
+  dmiQ_coef <- SEgroup_coef$beta[313:364,]
   
-  SE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, ninoQ_coef, dmiQ_coef)
+  SE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, 
+                                                aao_coef, olr_coef, ninoQ_coef, dmiQ_coef)
+  
 }
 
-#plot coefs
+#nino range (ne first)
+nino_NErange <- range(NE_coefs$Group_1$nino_coef, NE_coefs$Group_2$nino_coef,
+                    NE_coefs$Group_3$nino_coef, NE_coefs$Group_4$nino_coef,
+                    NE_coefs$Group_5$nino_coef, NE_coefs$Group_6$nino_coef)
+ninoQ_NErange <- range(NE_coefs$Group_1$ninoQ_coef, NE_coefs$Group_2$ninoQ_coef,
+                     NE_coefs$Group_3$ninoQ_coef, NE_coefs$Group_4$ninoQ_coef,
+                     NE_coefs$Group_5$ninoQ_coef, NE_coefs$Group_6$ninoQ_coef)
 
+nino_SErange <- range(SE_coefs$Group_1$nino_coef, SE_coefs$Group_2$nino_coef,
+                      SE_coefs$Group_3$nino_coef, SE_coefs$Group_4$nino_coef,
+                      SE_coefs$Group_5$nino_coef, SE_coefs$Group_6$nino_coef)
+ninoQ_SErange <- range(SE_coefs$Group_1$ninoQ_coef, SE_coefs$Group_2$ninoQ_coef,
+                       SE_coefs$Group_3$ninoQ_coef, SE_coefs$Group_4$ninoQ_coef,
+                       SE_coefs$Group_5$ninoQ_coef, SE_coefs$Group_6$ninoQ_coef)
+
+## plot coefs
+
+#TODO: set up a function or for-loop for the following coef plots
+
+#by climate mode
+plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus - Nino", col = "blue2", ylim = range(nino_NErange, ninoQ_NErange))
+lines(1:52, NE_coefs$Group_1$ninoQ_coef, col = "blue2", lty = 2)
+lines(1:52, NE_coefs$Group_2$nino_coef, col = "red2")
+lines(1:52, NE_coefs$Group_2$ninoQ_coef, col = "red2", lty = 2)
+lines(1:52, NE_coefs$Group_3$nino_coef, col = "green3")
+lines(1:52, NE_coefs$Group_3$ninoQ_coef, col = "green3", lty = 2)
+lines(1:52, NE_coefs$Group_4$nino_coef, col = "magenta3")
+lines(1:52, NE_coefs$Group_4$ninoQ_coef, col = "magenta3", lty = 2)
+lines(1:52, NE_coefs$Group_5$nino_coef, col = "orange3")
+lines(1:52, NE_coefs$Group_5$ninoQ_coef, col = "orange3", lty = 2)
+lines(1:52, NE_coefs$Group_6$nino_coef, col = "cyan4")
+lines(1:52, NE_coefs$Group_6$ninoQ_coef, col = "cyan4", lty = 2)
+
+plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus - Nino", col = "blue2", ylim = range(nino_SErange, ninoQ_SErange))
+lines(1:52, SE_coefs$Group_1$ninoQ_coef, col = "blue2", lty = 2)
+lines(1:52, SE_coefs$Group_2$nino_coef, col = "red2")
+lines(1:52, SE_coefs$Group_2$ninoQ_coef, col = "red2", lty = 2)
+lines(1:52, SE_coefs$Group_3$nino_coef, col = "green3")
+lines(1:52, SE_coefs$Group_3$ninoQ_coef, col = "green3", lty = 2)
+lines(1:52, SE_coefs$Group_4$nino_coef, col = "magenta3")
+lines(1:52, SE_coefs$Group_4$ninoQ_coef, col = "magenta3", lty = 2)
+lines(1:52, SE_coefs$Group_5$nino_coef, col = "orange3")
+lines(1:52, SE_coefs$Group_5$ninoQ_coef, col = "orange3", lty = 2)
+lines(1:52, SE_coefs$Group_6$nino_coef, col = "cyan4")
+lines(1:52, SE_coefs$Group_6$ninoQ_coef, col = "cyan4", lty = 2)
+
+
+#by region
 #ne coefs
 #group1
 plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
@@ -998,6 +1064,10 @@ abline(h = 0, lty = 2)
 lines(1:52, NE_coefs$Group_1$ninoQ_coef, col = "blue")
 lines(1:52, NE_coefs$Group_1$dmi_coef, col = "red")
 lines(1:52, NE_coefs$Group_1$dmiQ_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_1$tsa_coef, col = "cyan4")
+lines(1:52, NE_coefs$Group_1$aao_coef, col = "magenta3")
+lines(1:52, NE_coefs$Group_1$olr_coef, col = "darkorange")
+
 
 #group 2
 plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
@@ -1006,6 +1076,10 @@ abline(h = 0, lty = 2)
 lines(1:52, NE_coefs$Group_2$ninoQ_coef, col = "blue")
 lines(1:52, NE_coefs$Group_2$dmi_coef, col = "red")
 lines(1:52, NE_coefs$Group_2$dmiQ_coef, col = "darkgreen")
+lines(1:52, NE_coefs$Group_2$tsa_coef, col = "cyan4")
+lines(1:52, NE_coefs$Group_2$aao_coef, col = "magenta3")
+lines(1:52, NE_coefs$Group_2$olr_coef, col = "darkorange")
+
 
 #group 3
 plot(1:52, NE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
