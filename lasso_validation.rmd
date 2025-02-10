@@ -1,0 +1,331 @@
+---
+title: "lasso_validation"
+author: "Ryan Peterson"
+date: "2025-02-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#libraries
+suppressMessages(library(genlasso)) #used for fused lasso 
+suppressMessages(library(MASS)) #for matrix shenanigans in functions.
+
+suppressMessages( library(tictoc)) #some timing
+```
+
+```{r data_functions}
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main")
+
+load( "ne_data.rda")
+load( "se_data.rda")
+load( "bounded_data.rda")
+load( "data_matrix.rda")
+load( "lag_list.rda")
+
+load( "lasso_pred.rda") #base lasso predictions
+#load( "lasso_quantpred.rda")
+
+#functions
+source("group_functions.R")
+source("lasso_valid_functions.R") #include predict.fusedlasso
+source("genlasso_func.R") #includes cv.fusedlasso (DO NOT USE in final work; change, correct, and move)
+
+```
+
+
+```{r data_setup}
+#set up season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#group response matrices
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:3]
+NEAus_2 <- NEbase_matrix[ ,4:8]
+NEAus_3 <- NEbase_matrix[ ,9:12]
+NEAus_4 <- NEbase_matrix[ ,13:17]
+NEAus_5 <- NEbase_matrix[ ,18:21]
+NEAus_6 <- NEbase_matrix[ ,22:32]
+
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:3]
+SEAus_2 <- SEbase_matrix[ ,4:7]
+SEAus_3 <- SEbase_matrix[ ,8:16]
+SEAus_4 <- SEbase_matrix[ ,17:20]
+SEAus_5 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6, SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+#Update for OLR (D5)
+# distance matrices
+D <- getD1d(52)
+empty_D <- matrix(rep(0, (52*51)) , ncol = 52, nrow = 51)
+D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
+D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
+
+D_olr <- rbind(D1, D2, D3, D4, D5)
+
+rm(D, empty_D, D1, D2, D3, D4, D5)
+```
+
+
+```{r base_test}
+#non-bootstrap
+beta_matrix <- NEfuse_grouplist[[1]]$beta
+nino_beta <- beta_matrix[1:52, ]
+dmi_beta <- beta_matrix[53:104, ]
+
+boxplot(t(nino_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "Nino - NE Group 1")
+boxplot(t(dmi_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "DMI - NE Group 1")
+
+```
+
+# Bootstrap
+
+We want to re-use this bootstrap for a lot of things so we only want to do this once.
+
+```{r bootstrap_setup}
+#TODO: setup look for all groups
+
+
+
+n <- length(NE_resp)
+#n <- length(SE_resp)
+
+
+#for(i in 1:n) {}
+i <- 1
+
+NEresp_temp <- NE_resp[[i]]
+NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:260])
+
+NE_temp <- cbind(NEresp_temp, NEpred_temp)
+
+SEresp_temp <- SE_resp[[i]]
+SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
+
+SE_temp <- cbind(SEresp_temp, SEpred_temp)
+
+B <- 2
+set.seed(351)
+NE_bootstrap <- lapply(1:B, function(i) NE_temp[sample(1:nrow(NE_temp), replace = TRUE), ])
+
+NE_gamma <- 0.85
+NEfuse_grouplist <- list()
+NEfuse_cv <- list()
+NE_lambdamin <- c()
+
+for (j in 1:B) {
+  NEresp_temp <- NE_bootstrap[[j]][ ,1]
+  NEpred_temp <- as.matrix(NE_bootstrap[[j]][ ,2:261])
+    
+  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, 
+                             D_olr, gamma = NE_gamma)
+    
+  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =10, D_olr) 
+      
+  NE_lambdamin <- c(NE_lambdamin, NEgroup_cv$lambda.min)  
+  NEfuse_grouplist[[paste0("Group_", j)]] <- NEgroup_temp
+  NEfuse_cv[[paste0("Group_", j)]] <- NEgroup_cv
+}
+
+
+#TODO: use lambdamin to for each bootstrap to determine which beta's to use
+
+```
+
+
+```{r}
+
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+NE_gamma <- 0.85
+NEfuse_grouplist <- list()
+#NEfuse_cv <- list()
+NE_coefs <- list()
+NE_lambdamin <- list()
+
+tic()
+n <- length(NE_resp)
+for (i in 1:n) {
+  NEresp_temp <- NE_resp[[i]]
+  NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:260])
+  
+  NE_temp <- cbind(NEresp_temp, NEpred_temp)
+  
+  B <- 50
+  set.seed(351)
+  NE_bootstrap <- lapply(1:B, 
+                         function(i) NE_temp[sample(1:nrow(NE_temp), 
+                                                    replace = TRUE), ])
+  
+  NE_beta <- matrix(NA, ncol = 260)
+  NEfuse_boot <- list()
+  NElambda_boot <- c()
+  #NEfuseCV_boot <- list()
+  for (j in 1:B) {
+    NEresp_boot <- NE_bootstrap[[j]][ ,1]
+    NEpred_boot <- as.matrix(NE_bootstrap[[j]][ ,2:261])
+    
+    NEgroup_temp <- fusedlasso(y = NEresp_boot, X = NEpred_boot, 
+                             D_olr, gamma = NE_gamma)
+    
+    NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =10, D_olr) 
+      
+    NElambda_boot <- c(NElambda_boot, NEgroup_cv$lambda.min)
+    NE_beta <- rbind(NE_beta, c(coef(NEgroup_temp,
+                     lambda = NEgroup_cv$lambda.min)$beta))
+    NEfuse_boot[[paste0("Boot_", j)]] <- NEgroup_temp
+    #NEfuseCV_boot[[paste0("Boot_", j)]] <- NEgroup_cv
+  }
+
+  NE_coefs[[paste0("Group_", i)]] <- NE_beta[-1, ]
+  NEfuse_grouplist[[paste0("Group_", i)]] <- NEfuse_boot
+  NE_lambdamin[[paste0("Group_", i)]] <- NElambda_boot
+  #NEfuse_cv[[paste0("Group_", i)]] <- NEfuseCV_boot
+}
+
+toc()
+
+save(NE_coefs, NEfuse_grouplist,NE_lambdamin,
+     file = "NE_boot.rda") #save 
+```
+
+
+```{r}
+
+#full model
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+SE_gamma <- 0.85
+SEfuse_grouplist <- list()
+#NEfuse_cv <- list()
+SE_coefs <- list()
+SE_lambdamin <- list()
+
+tic()
+n <- length(SE_resp)
+for (i in 1:n) {
+  SEresp_temp <- SE_resp[[i]]
+  SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
+  
+  SE_temp <- cbind(SEresp_temp, SEpred_temp)
+  
+  B <- 50
+  set.seed(351)
+  SE_bootstrap <- lapply(1:B, 
+                         function(i) SE_temp[sample(1:nrow(SE_temp), 
+                                                    replace = TRUE), ])
+  
+  SE_beta <- matrix(NA, ncol = 260)
+  SEfuse_boot <- list()
+  SElambda_boot <- c()
+  #NEfuseCV_boot <- list()
+  for (j in 1:B) {
+    SEresp_boot <- SE_bootstrap[[j]][ ,1]
+    SEpred_boot <- as.matrix(SE_bootstrap[[j]][ ,2:261])
+    
+    SEgroup_temp <- fusedlasso(y = SEresp_boot, X = SEpred_boot, 
+                             D_olr, gamma = SE_gamma)
+    
+    SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =10, D_olr) 
+      
+    SElambda_boot <- c(SElambda_boot, SEgroup_cv$lambda.min)
+    SE_beta <- rbind(SE_beta, c(coef(SEgroup_temp,
+                     lambda = SEgroup_cv$lambda.min)$beta))
+    SEfuse_boot[[paste0("Boot_", j)]] <- SEgroup_temp
+    #NEfuseCV_boot[[paste0("Boot_", j)]] <- NEgroup_cv
+  }
+
+  SE_coefs[[paste0("Group_", i)]] <- SE_beta[-1, ]
+  SEfuse_grouplist[[paste0("Group_", i)]] <- SEfuse_boot
+  SE_lambdamin[[paste0("Group_", i)]] <- SElambda_boot
+  #NEfuse_cv[[paste0("Group_", i)]] <- NEfuseCV_boot
+}
+
+toc()
+
+save(SE_coefs, SEfuse_grouplist,SE_lambdamin,
+     file = "SE_boot.rda") #save 
+```
+
+# Coefficients
+
+Reproducing some of the coefficient work from the lasso book.
+
+```{r}
+#TODO: create effective viz for all groups and regions
+beta_matrix <- SE_coefs$Group_4
+nino_beta <- beta_matrix[ ,1:52]
+dmi_beta <- beta_matrix[ ,53:104]
+tsa_beta <- beta_matrix[ ,105:156]
+aao_beta <- beta_matrix[ ,157:208]
+olr_beta <- beta_matrix[ ,209:260]
+
+boxplot(t(nino_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "Nino - SE Group 4")
+boxplot(t(dmi_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "DMI - SE Group 4")
+boxplot(t(tsa_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "TSA - SE Group 4")
+boxplot(t(aao_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "AAO - SE Group 4")
+boxplot(t(olr_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "OLR - SE Group 4")
+```
+
+```{r}
+#get zero ration
+beta_matrix <- SE_coefs$Group_5
+SE1_zero <- colSums(beta_matrix != 0)/50
+
+barplot(SE1_zero[1:52], col = "skyblue", border = "black", ylim = c(0,1),
+        main = "Nino - SE Group 5 ")
+barplot(SE1_zero[53:104], col = "skyblue", border = "black", ylim = c(0,1),
+        main = "DMi - SE Group 5 ")
+barplot(SE1_zero[105:156], col = "skyblue", border = "black", ylim = c(0,1),
+        main = "TSA - SE Group 5 ")
+barplot(SE1_zero[157:208], col = "skyblue", border = "black", ylim = c(0,1),
+        main = "AAO - SE Group 5 ")
+barplot(SE1_zero[209:260], col = "skyblue", border = "black", ylim = c(0,1),
+        main = "OLR - SE Group 5 ")
+```
+
+
+# Validation 
+
+```{r}
+
+```
+
