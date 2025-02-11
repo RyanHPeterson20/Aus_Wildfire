@@ -285,35 +285,51 @@ save(SE_coefs, SEfuse_grouplist,SE_lambdamin,
      file = "SE_boot.rda") #save 
 ```
 
+
+```{r}
+bootNE_coefs <- NE_coefs
+bootNEfuse_grouplist <- NEfuse_grouplist
+bootNE_lambdamin <- NE_lambdamin
+
+bootSE_coefs <- SE_coefs
+bootSEfuse_grouplist <- SEfuse_grouplist
+bootSE_lambdamin <- SE_lambdamin
+```
+
+
 # Coefficients
 
 Reproducing some of the coefficient work from the lasso book.
 
 ```{r}
 #TODO: create effective viz for all groups and regions
-beta_matrix <- SE_coefs$Group_4
+beta_matrix <- bootSE_coefs$Group_4
 nino_beta <- beta_matrix[ ,1:52]
 dmi_beta <- beta_matrix[ ,53:104]
 tsa_beta <- beta_matrix[ ,105:156]
 aao_beta <- beta_matrix[ ,157:208]
 olr_beta <- beta_matrix[ ,209:260]
 
+#TODO: reduce the size and chage shape of outliers
+#TODO: include "true" value from base lasso
 boxplot(t(nino_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "Nino - SE Group 4")
 boxplot(t(dmi_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "DMI - SE Group 4")
 boxplot(t(tsa_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "TSA - SE Group 4")
 boxplot(t(aao_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "AAO - SE Group 4")
 boxplot(t(olr_beta), horizontal = TRUE, col = "lightblue", pch = 16, main = "OLR - SE Group 4")
+
+#TODO: compare with "true" coefficient values from the data
 ```
 
 ```{r}
 #get zero ration
-beta_matrix <- SE_coefs$Group_5
+beta_matrix <- bootSE_coefs$Group_5
 SE1_zero <- colSums(beta_matrix != 0)/50
 
 barplot(SE1_zero[1:52], col = "skyblue", border = "black", ylim = c(0,1),
         main = "Nino - SE Group 5 ")
 barplot(SE1_zero[53:104], col = "skyblue", border = "black", ylim = c(0,1),
-        main = "DMi - SE Group 5 ")
+        main = "DMI - SE Group 5 ")
 barplot(SE1_zero[105:156], col = "skyblue", border = "black", ylim = c(0,1),
         main = "TSA - SE Group 5 ")
 barplot(SE1_zero[157:208], col = "skyblue", border = "black", ylim = c(0,1),
@@ -322,10 +338,83 @@ barplot(SE1_zero[209:260], col = "skyblue", border = "black", ylim = c(0,1),
         main = "OLR - SE Group 5 ")
 ```
 
+```{r lambda_min}
+#TODO: plot lambda_min and compare with "theoretical" values
+```
+
 
 # Validation 
 
-```{r}
+Perform validation work, repeated from Report 2 and simple linear models:
+(check for de-biased/bias issues)
+- Proper scoring rules
+- RMSE (maybe?)
+- Residuals
+- Covariance test statistic
+
+Do we need to repeat some LOO work here?
+
+```{r reload_base}
+#TODO: repeat earlier validation work
+#start with base then add in 
+
+#load in original data
+load( "lasso_pred.rda") #base lasso predictions
+load( "lasso_loo.rda") #NE,SE All
+```
+
+## Residuals (and RMSE)
+
+```{r insample}
+# in-sample resids
+#TODO: begin with group based resids
+
+SE_resids <- list()
+for (j in 1:length(SEfuse_grouplist)) {
+  resp_vec <- SE_resp[[j]]
+  pred_matrix <- as.matrix(SE_preds[[j]])
+
+  SE1_coefs <- coef(SEfuse_grouplist[[j]], lambda = SEfuse_cv[[j]]$lambda.min)$beta
+
+  resp_hat <- c(pred_matrix %*% SE1_coefs)
+  resids <- resp_vec - resp_hat 
+  SE_resids[[paste0("Group_", j)]] <- resids
+}
+
+NE_resids <- list()
+for (j in 1:length(NEfuse_grouplist)) {
+  resp_vec <- NE_resp[[j]]
+  pred_matrix <- as.matrix(NE_preds[[j]])
+
+  NE1_coefs <- coef(NEfuse_grouplist[[j]], lambda = NEfuse_cv[[j]]$lambda.min)$beta
+
+  resp_hat <- c(pred_matrix %*% NE1_coefs)
+  resids <- resp_vec - resp_hat 
+  NE_resids[[paste0("Group_", j)]] <- resids
+}
+
+boxplot(SE_resids, main = "SE Aus Residuals", 
+        xlab = "Group", ylab = "", pch = 16)
+boxplot(NE_resids, main = "NE Aus Residuals", 
+        xlab = "Group", ylab = "", pch = 16)
+```
+
+
+```{r outofsample}
+#out-of sample resids
+#TODO: set-up code for out of sample checks
+#uses NEfuse_all and SEfuse_all
+
+#by year first
+testyear <- NEfuse_all[[1]]
+testyear[[1]]
+
+for (i in 1:18) {
+  temp_fuse <- NEfuse_all[[i]]
+  for (j in 1:length(temp_fuse)) {
+    
+  }
+}
 
 ```
 
