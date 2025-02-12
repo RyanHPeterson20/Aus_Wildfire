@@ -102,7 +102,7 @@ for (i in 1:n) {
   
   NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
   
-  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_olr) 
+  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =10, D_olr) 
     
   NE_lambdamin <- c(NE_lambdamin, NEgroup_cv$lambda.min)  
   NEfuse_grouplist[[paste0("Group_", i)]] <- NEgroup_temp
@@ -122,12 +122,14 @@ for (i in 1:n) {
   
   SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
   
-  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
+  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =10, D_olr) 
   
   SE_lambdamin <- c(SE_lambdamin, SEgroup_cv$lambda.min) 
   SEfuse_grouplist[[paste0("Group_", i)]] <- SEgroup_temp
   SEfuse_cv[[paste0("Group_", i)]] <- SEgroup_cv
 }
+
+#TODO: add in save for above fits
 
 
 
@@ -203,9 +205,9 @@ for(k in 1:18){
   n <- length(NE_resp)
   for (i in 1:n) {
     NEresp_temp <- NE_resp[[i]]
-    NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:208])
+    NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:260])
     
-    NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_new, gamma = NE_gamma)
+    NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
     
     NEfuse_loo[[paste0("Group_", i)]] <- NEgroup_temp
   }
@@ -218,9 +220,9 @@ for(k in 1:18){
   n <- length(SE_resp)
   for (i in 1:n) {
     SEresp_temp <- SE_resp[[i]]
-    SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:208])
+    SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
     
-    SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_new, gamma = SE_gamma)
+    SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
     
     SEfuse_loo[[paste0("Group_", i)]] <- SEgroup_temp
   }
