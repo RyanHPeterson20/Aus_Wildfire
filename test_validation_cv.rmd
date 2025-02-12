@@ -1,0 +1,15 @@
+---
+title: "test_validation_cv.rmd"
+author: "Ryan Peterson"
+date: "2025-02-12"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Code for testing out modifications to cv.fusedlasso() (or similar variant) to perform various validation statistics.
+
+Work on cv R^2 first, include 
+

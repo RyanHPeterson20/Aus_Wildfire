@@ -90,6 +90,8 @@ NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
 SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
 
+#TODO: rebuild cv.fusedlasso to include all of our metrics since
+
 NE_gamma <- 0.85
 NEfuse_grouplist <- list()
 NEfuse_cv <- list()

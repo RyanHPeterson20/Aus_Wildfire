@@ -409,104 +409,225 @@ boxplot(NE_resids, main = "NE Aus Lasso Residuals",
 ```
 
 
-```{r outofsample}
+```{r group_setup}
+#assign groups and functions
 
-#NE group 1
-NEgroup1_list <- list()
+#NE groups
+NE_groups <- list(
+  NEgroup1 <- season_weeks[1:3],
+  NEgroup2 <- season_weeks[4:8],
+  NEgroup3 <- season_weeks[9:12],
+  NEgroup4 <- season_weeks[13:17],
+  NEgroup5 <- season_weeks[18:21],
+  NEgroup6 <- season_weeks[22:32] )
 
-ne_resp1 <- NEAus_mat[[1]]
-#ne_beta1 <- NEfuse_coefs$Group_1$NEgroup
+#SE groups
+SE_groups <- list(
+  SEgroup1 <- season_weeks[1:3],
+  SEgroup2 <- season_weeks[4:7],
+  SEgroup3 <- season_weeks[8:16],
+  SEgroup4 <- season_weeks[17:20],
+  SEgroup5 <- season_weeks[21:32] )
 
-#test block for internals of for loops
-k <- 1 #week (season_weeks[k])
-ne_week <- NE_laglist_std[[k]]
-week_preds <- as.data.frame(matrix(NA, ncol = 3))
-colnames(week_preds) <- c("True", "Pred", "Resid")
-i <- 1 # year
-temp_preds <- as.matrix(ne_week[i, 3:262])
-temp_resp <- ne_resp1[i, k]
-#get coeffs
-#TODO: set group values
-j <- 1 #group 1 (since week 1 is in group 1)
-temp_fuse <- NEfuse_all[[i]][[j]]
-
-#TODO: get lambda from temp_fuse
-
-temp_lambda <- temp_fuse$lambda[which.min(abs(temp_fuse$lambda - NEfuse_cv[[j]]$lambda.min))]
-
-ne_beta <- coef(temp_fuse, lambda = temp_lambda)$beta
-
-pred_temp <- temp_preds %*% ne_beta
-temp_resid <- temp_resp - pred_temp
+#define and correct function
+find_group <- function(weeks, groups) {
+  group_val <- 1:length(groups)
+  found_group <- group_val[sapply(groups, function(g) weeks %in% g)]
+  return(ifelse(length(found_group) > 0, found_group, NA))
+}
 
 ```
 
 
-```{r }
-#out-of sample weekly resids
-#TODO: set-up code for out of sample checks
-#uses NEfuse_all and SEfuse_all
-#group (weekly setup) refer to AGU_viz.rmd
+```{r outofsample}
+##TODO: update with correct lambda values
 
-#NE groups
-NEgroup1 <- season_weeks[1:3]
-NEgroup2 <- season_weeks[4:8]
-NEgroup3 <- season_weeks[9:12]
-NEgroup4 <- season_weeks[13:17]
-NEgroup5 <- season_weeks[18:21]
-NEgroup6 <- season_weeks[22:32]
+#NE Outofsample resids
 
-#SE groups
-SEgroup1 <- season_weeks[1:3]
-SEgroup2 <- season_weeks[4:7]
-SEgroup3 <- season_weeks[8:16]
-SEgroup4 <- season_weeks[17:20]
-SEgroup5 <- season_weeks[21:32]
-
-
-#```
-#-------------------------##
-
-#NE group 1
-NEgroup1_list <- list()
-
-ne_resp1 <- NEAus_mat[[1]]
-
-for (k in 1:3) {
+NE_weekpreds <- list()
+for (k in 1:32) {
   ne_week <- NE_laglist_std[[k]]
   
   week_preds <- as.data.frame(matrix(NA, ncol = 3))
   colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  #requires group info
+  j <- find_group(season_weeks[k], NE_groups)
 
+  temp_lambda <- temp_fuse$lambda[which.min(abs(temp_fuse$lambda - NEfuse_cv[[j]]$lambda.min))]
+  
   for (i in 1:18) {
     temp_preds <- as.matrix(ne_week[i, 3:262])
-    temp_resp <- ne_resp1[i, k]
+    temp_resp <- NEbase_matrix[i, k]
     
-    pred_temp <- temp_preds %*% ne_beta1
+    #get coeffs
+    temp_fuse <- NEfuse_all[[i]][[j]]
+    ne_beta <- coef(temp_fuse, lambda = temp_lambda)$beta
+    
+    pred_temp <- temp_preds %*% ne_beta
     temp_resid <- temp_resp - pred_temp
     
     week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
   }
   
-  week_preds <- week_preds[-1, ]
-  
-  NEgroup1_list[[paste0("Week_", season_weeks[k])]] <- week_preds
+  NE_weekpreds[[paste0("Week_", season_weeks[k])]] <- week_preds[-1, ]
 }
 
-#repeat the weekly data using NEbase_matrix and SEbase_matrix
-#by year
-for (i in 1:18) {
 
-  temp_fuse <- NEfuse_all[[i]]
+#SE Outofsample resids
+
+SE_weekpreds <- list()
+for (k in 1:32) {
+  se_week <- SE_laglist_std[[k]]
   
-  for (j in 1:length(temp_fuse)) {
-    temp_resp <- NE_resp[[j]]
-    temp_pred <- as.matrix(NE_preds[[j]])
+  week_preds <- as.data.frame(matrix(NA, ncol = 3))
+  colnames(week_preds) <- c("True", "Pred", "Resid")
+  
+  #requires group info
+  j <- find_group(season_weeks[k], SE_groups)
+
+  temp_lambda <- temp_fuse$lambda[which.min(abs(temp_fuse$lambda - SEfuse_cv[[j]]$lambda.min))]
+  
+  for (i in 1:18) {
+    temp_preds <- as.matrix(se_week[i, 3:262])
+    temp_resp <- SEbase_matrix[i, k]
     
-    temp_group <- temp_fuse[[j]]
-    temp_coef <- coef()
+    #get coeffs
+    temp_fuse <- SEfuse_all[[i]][[j]]
+    se_beta <- coef(temp_fuse, lambda = temp_lambda)$beta
+    
+    pred_temp <- temp_preds %*% se_beta
+    temp_resid <- temp_resp - pred_temp
+    
+    week_preds <- rbind(week_preds, c(temp_resp, pred_temp, temp_resid))
   }
+  
+  SE_weekpreds[[paste0("Week_", season_weeks[k])]] <- week_preds[-1, ]
 }
+
+
+```
+
+
+
+```{r resid_viz}
+
+#visualize out-of-sample residuals 
+residNE_box_df <- data.frame(values = NA, group = NA)
+residSE_box_df <- data.frame(values = NA, group = NA)
+
+for (i in 1:32) {
+  temp_NEvals <- NE_weekpreds[[i]]$Resid
+  temp_NEgroup <- rep(season_weeks[i], length(NE_weekpreds[[i]]$Resid))
+  residNE_box_df <- rbind(residNE_box_df, list(temp_NEvals, temp_NEgroup))
+  
+  temp_SEvals <- SE_weekpreds[[i]]$Resid
+  temp_SEgroup <- rep(season_weeks[i], length(SE_weekpreds[[i]]$Resid))
+  residSE_box_df <- rbind(residSE_box_df, list(temp_SEvals, temp_SEgroup))
+}
+
+residNE_box_df <- residNE_box_df[-1, ]
+residNE_box_df$group <- as.factor(residNE_box_df$group)
+residNE_box_df$values <- as.numeric(residNE_box_df$values)
+
+residSE_box_df <- residSE_box_df[-1, ]
+residSE_box_df$group <- as.factor(residSE_box_df$group)
+residSE_box_df$values <- as.numeric(residSE_box_df$values)
+
+
+
+```
+
+```{r}
+#TODO: redo with cv
+
+setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso/Pred_Fig")
+
+#TODO:update using resid_lim from the simplified linear model
+resid_lim <- c(-20, 40)
+
+png("NEresidsd_out.png", width = 2250, height = 1250, res = 200)
+par(mar = c(8, 4, 4, 2) + 0.2)
+boxplot(values ~ group, data = residNE_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "NE Aus : Model Residuals",axes = FALSE, pch = 20, 
+         cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+abline(v = c(3.5, 8.5, 12.5, 17.5, 21.5), lty =2, col = "red")
+text(1.5, -15, "Group 1", col = "red", cex =1)
+text(6, -15, "Group 2", col = "red", cex = 1)
+text(10.5, -15, "Group 3", col = "red", cex = 1)
+text(15, -15, "Group 4", col = "red", cex = 1)
+text(19.5, -15, "Group 5", col = "red", cex = 1)
+text(25, -15, "Group 6", col = "red", cex = 1)
+dev.off()
+
+
+png("SEresidsd_out.png", width = 2250, height = 1250, res = 200)
+par(mar = c(8, 4, 4, 2) + 0.2)
+boxplot(values ~ group, data = residSE_box_df, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "SE Aus : Model Residuals", axes = FALSE, pch = 20, 
+         cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+abline(v = c(3.5, 7.5, 16.5, 20.5), lty =2, col = "red")
+text(1.5, -15, "Group 1", col = "red", cex = 1)
+text(5.5, -15, "Group 2", col = "red", cex = 1)
+text(12, -15, "Group 3", col = "red", cex = 1)
+text(18.5, -15, "Group 4", col = "red", cex = 1)
+text(24, -15, "Group 5", col = "red", cex = 1)
+dev.off()
+
+```
+
+## RMSE
+
+```{r in-sample}
+#brought in from AGU_viz.rmd
+NEgroup_list <- c(NEgroup1_list, NEgroup2_list, NEgroup3_list, NEgroup4_list, NEgroup5_list, NEgroup6_list)
+
+SEgroup_list <- c(SEgroup1_list, SEgroup2_list, SEgroup3_list, SEgroup4_list, SEgroup5_list)
+
+#TODO: add in rm() for both
+
+
+#rmse
+NE_rmse <- c()
+SE_rmse <- c()
+for (i in 1:32) {
+  temp_NEresid <- NEgroup_list[[i]]$Resid
+  temp_NErmse <- sqrt(mean(temp_NEresid^2))
+  
+  temp_SEresid <- SEgroup_list[[i]]$Resid
+  temp_SErmse <- sqrt(mean(temp_SEresid^2))
+  
+  NE_rmse <- c(NE_rmse, temp_NErmse)
+  SE_rmse <- c(SE_rmse, temp_SErmse)
+}
+
+#TODO: compare the following to simple linear model with var select 
+plot(1:32, NE_rmse, type = "l", main = "NE Aus - RMSE")
+plot(1:32, SE_rmse, type = "l", main = "SE Aus - RMSE")
+```
+
+## Scoring Validation
+
+CPRS
+Int Score 95\%
+
+Do I need the bootstrap for this? Since we need a se.fit
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main")
+source("predictionTest_functions.R")
+
+
 
 ```
 
