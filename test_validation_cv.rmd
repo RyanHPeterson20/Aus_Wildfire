@@ -11,5 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Code for testing out modifications to cv.fusedlasso() (or similar variant) to perform various validation statistics.
 
-Work on cv R^2 first, include 
+Work on cv R^2 first, potentially include crps and int score
+
+(Look into the predict function to figure out how the std error is determined and replicate this for crps and int score.)
 
