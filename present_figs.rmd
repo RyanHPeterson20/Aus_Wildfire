@@ -1,0 +1,36 @@
+---
+title: "present_figs.rmd"
+author: "Ryan Peterson"
+date: "2025-02-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Presentation Figures
+
+```{r data}
+
+# data import 
+load( "lasso_pred.rda") #full lasso models (and loo)
+load( "valid_cv.rda") #k-fold cv (rmse, r2, lambda min)
+load( "fuse_grouplist.rda") #redundant fused lasso group lists
+
+load( "simple_pred_data.rda") #simple linear model (vsurf)
+
+```
+
+
+# Compare (stuff)
+
+1. Coefficients
+2. Coefficients ("robustness" e.g. do the coeffs line up with respect to cv/bootstraping)
+  a. Bootsrapped coeff analysis
+3. ... look at word doc for more
+
+```{r}
+
+```
+

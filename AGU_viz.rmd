@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
+#data import
 load( "lasso_pred.rda")
 
 

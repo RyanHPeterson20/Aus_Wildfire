@@ -257,7 +257,6 @@ for(i in prediction_years){
 setwd("~/CO_AUS/Aus_CO-main/Figures_Simple")
 save(NE_yearly, SE_yearly, file = "simple_pred_data.rda")
 
-
 #test plots:
 
 #se aus
@@ -460,10 +459,40 @@ resid_min <- min(residNE1_box_df$values, residNE2_box_df$values,
 resid_max <- max(residNE1_box_df$values, residNE2_box_df$values, 
                  residSE1_box_df$values, residSE2_box_df$values)
 
-resid_lim <- c(resid_min, resid_max)
+#resid_lim <- c(resid_min, resid_max)
+
+resisNE_base <- rbind(residNE1_box_df ,residNE2_box_df)
+resisSE_base <- rbind(residSE1_box_df ,residSE2_box_df)
+
+resid_lim <- c(-20, 20)
 
 #resid boxplots
 setwd("~/CO_AUS/Aus_CO-main/Figures_Simple")
+
+
+png("NEresid_base.png", width = 800, height = 600, res = 100)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = resisNE_base, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "NE Aus Model Residuals",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3)
+abline(h = 0, lty = 2)
+dev.off()
+
+png("SEresid_base.png", width = 800, height = 600, res = 100)
+par(mar = c(8, 4, 4, 2) + 0.1)
+boxplot(values ~ group, data = resisSE_base, ylim = resid_lim, ylab = "Residuals", xlab = "",
+        main = "SE Aus Model Residuals",axes = FALSE, pch = 20)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3)
+abline(h = 0, lty = 2)
+dev.off()
+
+
 
 png("NEresid_box1.png", width = 800, height = 600, res = 100)
 par(mar = c(8, 4, 4, 2) + 0.1)

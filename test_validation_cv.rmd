@@ -15,3 +15,357 @@ Work on cv R^2 first, potentially include crps and int score
 
 (Look into the predict function to figure out how the std error is determined and replicate this for crps and int score.)
 
+
+```{r set-up}
+#library, data, and functions
+
+#libraries
+suppressMessages(library(genlasso)) #used for fused lasso 
+suppressMessages(library(MASS)) #for matrix shenanigans in functions.
+
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main")
+
+load( "ne_data.rda")
+load( "se_data.rda")
+load( "bounded_data.rda")
+load( "data_matrix.rda")
+load( "lag_list.rda")
+
+source("group_functions.R")
+source("lasso_valid_functions.R") #include predict.fusedlasso
+source("genlasso_func.R") #includes cv.fusedlasso (DO NOT USE in final work, correct and move)
+source("predictionTest_functions.R") #
+
+#additional function
+Seq <- function(a, b, ...) {
+  if (a<=b) return(seq(a,b,...))
+  else return(numeric(0))
+}
+
+
+#set up season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#group response matrices
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:3]
+NEAus_2 <- NEbase_matrix[ ,4:8]
+NEAus_3 <- NEbase_matrix[ ,9:12]
+NEAus_4 <- NEbase_matrix[ ,13:17]
+NEAus_5 <- NEbase_matrix[ ,18:21]
+NEAus_6 <- NEbase_matrix[ ,22:32]
+
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:3]
+SEAus_2 <- SEbase_matrix[ ,4:7]
+SEAus_3 <- SEbase_matrix[ ,8:16]
+SEAus_4 <- SEbase_matrix[ ,17:20]
+SEAus_5 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, NEAus_5, NEAus_6, SEAus_1, SEAus_2, SEAus_3, SEAus_4, SEAus_5)
+
+
+# distance matrices
+D <- getD1d(52)
+empty_D <- matrix(rep(0, (52*51)) , ncol = 52, nrow = 51)
+
+#Update for OLR (D5)
+D1 <- cbind(D, empty_D, empty_D, empty_D, empty_D)
+D2 <- cbind(empty_D, D, empty_D, empty_D, empty_D)
+D3 <- cbind(empty_D, empty_D, D, empty_D, empty_D)
+D4 <- cbind(empty_D, empty_D, empty_D, D, empty_D)
+D5 <- cbind(empty_D, empty_D, empty_D, empty_D, D)
+
+D_olr <- rbind(D1, D2, D3, D4, D5)
+
+rm(D, empty_D, D1, D2, D3, D4, D5)
+
+# grouping functions 
+
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+
+```
+
+
+```{r functions}
+
+
+#updated cv.fusedlasso to include 
+#TODO: build test function
+cv.validation <- function(object, k =5, D) {
+  cl = match.call()
+  
+  y <- object$y
+  X <- object$X
+  D_new <- Matrix(D, sparse=TRUE)
+  n <- length(y)
+  
+  foldid <- c(0, rep(Seq(1, k), n-2)[Seq(1, n-2)], 0) #fold id
+  lambda <- object$lambda
+  
+  cvall <- matrix(0, nrow = k, ncol = length(lambda))
+  cvr2 <- matrix(0, nrow = k, ncol = length(lambda))
+  
+  for (i in Seq(1, k)) {
+    
+    otr <- which(foldid != i) #training id 
+    ntr <- length(otr) #length of training data
+    ytr <- y[otr] #training response
+    Xtr <- X[otr, ] #training predictors
+    
+    gamma <- object$gamma
+    
+    out_new <- fusedlasso(y = ytr, X = Xtr, D, gamma = gamma, minlam = min(lambda))
+    
+    b_new <- coef(out_new, lambda = lambda)$beta
+    
+    ote <- which(foldid == i) #testing id
+    yte <- matrix(y[ote], length(ote), length(lambda)) #testing data
+    Xte <- X[ote, ]
+    
+    pred_new <- Xte%*%b_new
+    cvall[i,] <- colMeans((yte-pred_new)^2) #cv mse
+    cvr2[i, ] <- 1-(colMeans((yte-pred_new)^2)/var(y[ote])) #cv r^2
+    
+  }
+  #directly from cv.trendfilter.R
+  cverr <- colMeans(cvall)
+  #cvse <- apply(cvall,2,sd)/sqrt(k)
+  names(cverr) = round(lambda,3)
+  i0 = which.min(cverr)
+  lam.min = lambda[i0]
+  i.min = which(lambda==lam.min)
+  
+  
+  out_ls <- list(MSE = cvall[,i.min], R2 = cvr2[,i.min], lambda_min = lam.min)
+  return(out_ls)
+}
+
+```
+
+
+# Function testing
+Building cv.validation()
+
+add in:
+-cv r^2
+-cv rmse
+-cv scoring functions
+
+```{r}
+
+
+NE_gamma <- 0.85
+NEfuse_grouplist <- list()
+NEfuse_cv <- list()
+NE_lambdamin <- c()
+
+j <- 1
+NEresp_temp <- NE_resp[[j]]
+NEpred_temp <- as.matrix(NE_preds[[j]][ ,1:260])
+
+NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
+#NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =10, D_olr) 
+
+#TODO: move this into lasso cv code
+test_list <- cv.validation(NEgroup_temp, k = 10, D = D_olr)
+
+test_list[[3]]
+
+#params:
+object <- NEgroup_temp #fusedlasso object  
+k <- 10 #number of folds
+D <- D_olr #D matrix
+
+cl = match.call()
+  
+y <- object$y
+X <- object$X
+D_new <- Matrix(D, sparse=TRUE)
+n <- length(y)
+  
+foldid <- c(0, rep(Seq(1, k), n-2)[Seq(1, n-2)], 0) #fold id
+lambda <- object$lambda
+  
+cvall <- matrix(0, nrow = k, ncol = length(lambda))
+cvr2 <- matrix(0, nrow = k, ncol = length(lambda))
+
+#Seq(1, k)
+for (i in Seq(1, k)) {
+#i <- 1 #fold 1 test
+    
+  otr <- which(foldid != i) #training id 
+  ntr <- length(otr) #length of training data
+  ytr <- y[otr] #training response
+  Xtr <- X[otr, ] #training predictors
+  
+  gamma <- object$gamma
+  
+  out_new <- fusedlasso(y = ytr, X = Xtr, D, 
+                        gamma = gamma, minlam = min(lambda))
+  
+  b_new <- coef(out_new, lambda = lambda)$beta
+  
+  ote <- which(foldid == i) #testing id
+  yte <- matrix(y[ote], length(ote), length(lambda)) #testing data
+  Xte <- X[ote, ]
+  
+  pred_new <- Xte%*%b_new
+  cvall[i,] <- colMeans((yte-pred_new)^2) #cv mse
+  cvr2[i, ] <- 1-(colMeans((yte-pred_new)^2)/var(y[ote])) #cv r^2
+  
+
+}
+#get pred sd (might not work with lasso)
+#pred_sd <- apply(pred_new, 2, sd)
+
+#directly from cv.trendfilter.R
+cverr <- colMeans(cvall)
+#cvse <- apply(cvall,2,sd)/sqrt(k)
+names(cverr) = round(lambda,3)
+i0 = which.min(cverr)
+lam.min = lambda[i0]
+i.min = which(lambda==lam.min)
+
+
+out_ls <- list(MSE = cvall[,i.min], R2 = cvr2[,i.min], lambda_min = lam.min)
+
+
+```
+
+
+```{r}
+NE_gamma <- 0.85
+NEfuse_grouplist <- list()
+NEvalid_cv <- list()
+NE_lambdamin <- c()
+
+n <- length(NE_resp)
+for (i in 1:n) {
+  NEresp_temp <- NE_resp[[i]]
+  NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:260])
+  
+  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
+  
+  NEgroup_cv <- cv.validation(NEgroup_temp, k =10, D_olr) 
+  
+  #note: NEgroup_cv[[3]] lambda min  
+  NE_lambdamin <- c(NE_lambdamin, NEgroup_cv[[3]])  
+  NEfuse_grouplist[[paste0("Group_", i)]] <- NEgroup_temp
+  NEvalid_cv[[paste0("Group_", i)]] <- NEgroup_cv
+}
+
+
+SE_gamma <- 0.85
+SEfuse_grouplist <- list()
+SEvalid_cv <- list()
+SE_lambdamin <- c()
+
+n <- length(SE_resp)
+for (i in 1:n) {
+  SEresp_temp <- SE_resp[[i]]
+  SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
+  
+  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
+  
+  SEgroup_cv <- cv.validation(SEgroup_temp, k =10, D_olr) 
+  
+  #note: SEgroup_cv[[3]] lambda min  
+  SE_lambdamin <- c(SE_lambdamin, SEgroup_cv[[3]]) 
+  SEfuse_grouplist[[paste0("Group_", i)]] <- SEgroup_temp
+  SEvalid_cv[[paste0("Group_", i)]] <- SEgroup_cv
+}
+
+save(SEfuse_grouplist, NEfuse_grouplist, file = "fuse_grouplist.rda")
+save(NEvalid_cv, SEvalid_cv, file = "valid_cv.rda")
+```
+
+
+## CV Validation
+
+```{r}
+
+NE_rmse <- c()
+NE_r2 <- c()
+NE_r2sd <- c()
+for(j in 1:length(NEvalid_cv)) {
+  NE_rmse <- c(NE_rmse, sqrt(mean(NEvalid_cv[[j]]$MSE)))
+  NE_r2 <- c(NE_r2, mean(NEvalid_cv[[j]]$R2))
+  NE_r2sd <- c(NE_r2sd, sd(NEvalid_cv[[j]]$R2))
+}
+
+SE_rmse <- c()
+SE_r2 <- c()
+SE_r2sd <- c()
+for(j in 1:length(SEvalid_cv)) {
+  SE_rmse <- c(SE_rmse, sqrt(mean(SEvalid_cv[[j]]$MSE)))
+  SE_r2 <- c(SE_r2, mean(SEvalid_cv[[j]]$R2))
+  SE_r2sd <- c(SE_r2sd, sd(SEvalid_cv[[j]]$R2))
+}
+
+NE_r2
+SE_r2
+
+SEvalid_cv[[1]]$R2
+```
+
+
+# CV: lambda min v. 1se
+
+```{r}
+#looking at cv.fusedlass() standard error values
+k <- 2 #group
+
+#plot lambdas (again)
+plot(NEfuse_cv[[k]])
+
+temp_cv <- NEfuse_cv[[k]]
+
+temp_cv$lambda.min
+temp_cv$lambda.1se
+
+temp_cv$se[temp_cv$i.min]
+temp_cv$se[temp_cv$i.1se]
+
+#k-fold rmse
+sqrt(temp_cv$err[temp_cv$i.min])
+
+#SEfuse_cv
+
+
+```
+
+# Coeffs
+
+```{r}
+
+NEcoef_cv1 <- coef(NEfuse_grouplist[[k]], lambda = temp_cv$lambda.min)
+NEcoef_cv2 <- coef(NEfuse_grouplist[[k]], lambda = temp_cv$lambda.1se)  
+
+NEfuse1 <- NEcoef_cv1$beta
+NEfuse2 <- NEcoef_cv2$beta
+```
+
