@@ -252,7 +252,7 @@ for (j in 1:6) {
   
   NEgroup_coef <- matrix(0, ncol = length(NE_beta))
   NEcoef_count <- matrix(0, ncol = length(NE_beta)) 
-  colnames(NEgroup_coef) <- colnames(NE_preds[[j]][1:208])
+  colnames(NEgroup_coef) <- colnames(NE_preds[[j]][1:260])
   colnames(NEcoef_count) <- colnames(NEgroup_coef)
   
   for (k in 1:18) {
@@ -261,7 +261,7 @@ for (j in 1:6) {
     NEgroup_coef <- rbind(NEgroup_coef, t(temp_beta))
     
     coef_index <- which(temp_beta != 0)
-    coeff <- numeric(208)
+    coeff <- numeric(260)
     coeff[coef_index] <- 1
     NEcoef_count <- rbind(NEcoef_count, coeff)
   }
