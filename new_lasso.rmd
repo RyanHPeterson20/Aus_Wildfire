@@ -142,33 +142,6 @@ for (i in 1:n) {
 ```
 
 
-```{r}
-
-SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
-SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
-
-
-SE_gamma <- 0.75
-SEfuse_grouplist_new <- list()
-SEfuse_cv_new <- list()
-SE_lambdamin_new <- c()
-
-n <- length(SE_resp)
-for (i in 1:n) {
-  SEresp_temp <- SE_resp[[i]]
-  SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
-  
-  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
-  
-  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
-  
-  SE_lambdamin_new <- c(SE_lambdamin_new, SEgroup_cv$lambda.min) 
-  SEfuse_grouplist_new[[paste0("Group_", i)]] <- SEgroup_temp
-  SEfuse_cv_new[[paste0("Group_", i)]] <- SEgroup_cv
-}
-```
-
-
 
 ```{r}
 #NE Aus
@@ -188,7 +161,8 @@ plot(SEfuse_cv[[4]])
 
 ```
 
-```{r}
+
+```{r coef_setup}
 #NE Visualizations
 NE_coefs <- list()
 #full coef list
@@ -682,9 +656,353 @@ image.plot(out, xlab = "Nino", ylab = "DMI")
 #diag(out)
 ```
 
-# 3. Relaxed Lasso
+
+## Coeff Analysis with 2019/2020 Data
+
+
+```{r fusedlasso_loop}
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
+
+
+SE_gamma <- 0.75
+SEfuse_grouplist_new <- list()
+SEfuse_cv_new <- list()
+SE_lambdamin_new <- c()
+
+n <- length(SE_resp)
+for (i in 1:n) {
+  SEresp_temp <- SE_resp[[i]]
+  SEpred_temp <- as.matrix(SE_preds[[i]][ ,1:260])
+  
+  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
+  
+  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
+  
+  SE_lambdamin_new <- c(SE_lambdamin_new, SEgroup_cv$lambda.min) 
+  SEfuse_grouplist_new[[paste0("Group_", i)]] <- SEgroup_temp
+  SEfuse_cv_new[[paste0("Group_", i)]] <- SEgroup_cv
+}
+
+
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
+
+
+NE_gamma <- 0.75
+NEfuse_grouplist_new <- list()
+NEfuse_cv_new <- list()
+NE_lambdamin_new <- c()
+
+n <- length(NE_resp)
+for (i in 1:n) {
+  NEresp_temp <- NE_resp[[i]]
+  NEpred_temp <- as.matrix(NE_preds[[i]][ ,1:260])
+  
+  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
+  
+  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_olr) 
+  
+  NE_lambdamin_new <- c(NE_lambdamin_new, NEgroup_cv$lambda.min) 
+  NEfuse_grouplist_new[[paste0("Group_", i)]] <- NEgroup_temp
+  NEfuse_cv_new[[paste0("Group_", i)]] <- NEgroup_cv
+}
+```
+
+
+```{r lambdaCV_check}
+#NE Aus
+plot(NEfuse_cv_new[[1]])
+plot(NEfuse_cv_new[[2]])
+plot(NEfuse_cv_new[[3]])
+plot(NEfuse_cv_new[[4]])
+
+
+
+#SE Aus
+plot(SEfuse_cv_new[[1]])
+plot(SEfuse_cv_new[[2]]) #use one stand error
+plot(SEfuse_cv_new[[3]])
+plot(SEfuse_cv_new[[4]])
+```
+
+### SE Aus with Nino/DMI
+
+```{r get_coefs}
+
+#SE Visualizations
+SEcoefs_new <- list()
+#full coef list
+SEfusecoefs_new <- list()
+
+SErange_new <- c()
+
+for(k in 1:length(SEfuse_grouplist_new)){
+
+  lambda1 <- SE_lambdamin_new[k]
+  
+  SEgroup_coef <- coef(SEfuse_grouplist_new[[k]], lambda = lambda1)
+  
+  SEfuse <- SEgroup_coef$beta
+  colnames(SEfuse) <- c("SEgroup")
+  SEfusecoefs_new[[paste0("Group_", k)]] <- as.data.frame(SEfuse)
+  
+  SErange_new <- c(SErange_new, range(SEgroup_coef$beta))
+  
+  #extract each index
+  nino_coef <- SEgroup_coef$beta[1:52, ]
+  dmi_coef <- SEgroup_coef$beta[53:104, ]
+  tsa_coef <- SEgroup_coef$beta[105:156, ]
+  aao_coef <- SEgroup_coef$beta[157:208, ]
+  olr_coef <- SEgroup_coef$beta[209:260, ]
+  
+  SEcoefs_new[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+  
+}
+
+
+#for base preds (indices)
+new_names <- c("Nino",  "DMI", "Nino-Full", "DMI-Full")
+new_col <- c("magenta3", "cyan4", "magenta4", "blue1")
+new_lty <- c(1,1,2,2)
+
+SEgroup1_new <- range(SE_coefs$Group_1$nino_coef,
+                      SE_coefs$Group_1$dmi_coef,
+                      SEcoefs_new$Group_1$nino_coef,
+                      SEcoefs_new$Group_1$dmi_coef)
+
+SEgroup2_new <- range(SE_coefs$Group_2$nino_coef,
+                      SE_coefs$Group_2$dmi_coef,
+                      SEcoefs_new$Group_2$nino_coef,
+                      SEcoefs_new$Group_2$dmi_coef)
+
+SEgroup3_new <- range(SE_coefs$Group_3$nino_coef,
+                      SE_coefs$Group_3$dmi_coef,
+                      SEcoefs_new$Group_3$nino_coef,
+                      SEcoefs_new$Group_3$dmi_coef)
+
+SEgroup4_new <- range(SE_coefs$Group_4$nino_coef,
+                      SE_coefs$Group_4$dmi_coef,
+                      SEcoefs_new$Group_4$nino_coef,
+                      SEcoefs_new$Group_4$dmi_coef)
+
+
+```
+
+
+```{r compare_coefs}
+
+#SE group comparison between model w/o and w/ 2019-2020 wildfire season
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Group 1 Coefficients", ylim = range(SEgroup1_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, SE_coefs$Group_1$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, SEcoefs_new$Group_1$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, SEcoefs_new$Group_1$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Group 2 Coefficients", ylim = range(SEgroup2_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, SE_coefs$Group_2$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, SEcoefs_new$Group_2$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, SEcoefs_new$Group_2$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+#TODO: repeat this plot later on but only lag 0-15
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Group 3 Coefficients", ylim = range(SEgroup3_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, SE_coefs$Group_3$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, SEcoefs_new$Group_3$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, SEcoefs_new$Group_3$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Group 4 Coefficients", ylim = range(SEgroup4_new),
+     col = "magenta3", lwd = 1.5)
+lines(1:52, SE_coefs$Group_4$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, SEcoefs_new$Group_4$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, SEcoefs_new$Group_4$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+
+```
+
+
+### NE Aus with Nino/DMI
 
 ```{r}
+
+#NE Visualizations
+NEcoefs_new <- list()
+#full coef list
+NEfusecoefs_new <- list()
+
+NErange_new <- c()
+
+for(k in 1:length(NEfuse_grouplist_new)){
+
+  lambda1 <- NE_lambdamin_new[k]
+  
+  NEgroup_coef <- coef(NEfuse_grouplist_new[[k]], lambda = lambda1)
+  
+  NEfuse <- NEgroup_coef$beta
+  colnames(NEfuse) <- c("NEgroup")
+  NEfusecoefs_new[[paste0("Group_", k)]] <- as.data.frame(NEfuse)
+  
+  NErange_new <- c(NErange_new, range(NEgroup_coef$beta))
+  
+  #extract each index
+  nino_coef <- NEgroup_coef$beta[1:52, ]
+  dmi_coef <- NEgroup_coef$beta[53:104, ]
+  tsa_coef <- NEgroup_coef$beta[105:156, ]
+  aao_coef <- NEgroup_coef$beta[157:208, ]
+  olr_coef <- NEgroup_coef$beta[209:260, ]
+  
+  NEcoefs_new[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+  
+}
+
+new2_names <- c("Nino",  "DMI", "TSA", "Nino-Full", "DMI-Full", "TSA-Full")
+new2_col <- c("magenta3", "cyan4", "orange3", "magenta4", "blue1", "darkorange")
+new2_lty <- c(1,1,1,2,2,2)
+
+NEgroup1_new <- range(NE_coefs$Group_1$nino_coef,
+                      NE_coefs$Group_1$dmi_coef,
+                      NE_coefs$Group_1$tsa_coef,
+                      NEcoefs_new$Group_1$nino_coef,
+                      NEcoefs_new$Group_1$dmi_coef,
+                      NEcoefs_new$Group_1$tsa_coef)
+
+NEgroup2_new <- range(NE_coefs$Group_2$nino_coef,
+                      NE_coefs$Group_2$dmi_coef,
+                      NE_coefs$Group_2$tsa_coef,
+                      NEcoefs_new$Group_2$nino_coef,
+                      NEcoefs_new$Group_2$dmi_coef,
+                      NEcoefs_new$Group_2$tsa_coef)
+
+NEgroup3_new <- range(NE_coefs$Group_3$nino_coef,
+                      NE_coefs$Group_3$dmi_coef,
+                      NE_coefs$Group_3$tsa_coef,
+                      NEcoefs_new$Group_3$nino_coef,
+                      NEcoefs_new$Group_3$dmi_coef,
+                      NEcoefs_new$Group_3$tsa_coef)
+
+NEgroup4_new <- range(NE_coefs$Group_4$nino_coef,
+                      NE_coefs$Group_4$dmi_coef,
+                      NE_coefs$Group_4$tsa_coef,
+                      NEcoefs_new$Group_4$nino_coef,
+                      NEcoefs_new$Group_4$dmi_coef,
+                      NEcoefs_new$Group_4$tsa_coef)
+
+```
+
+
+```{r}
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Group 1 Coefficients", ylim = range(NEgroup1_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, NE_coefs$Group_1$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, NE_coefs$Group_1$tsa_coef, col = "orange3", lwd = 1.5)
+lines(1:52, NEcoefs_new$Group_1$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, NEcoefs_new$Group_1$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+lines(1:52, NEcoefs_new$Group_1$tsa_coef, col = "darkorange", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new2_names,
+       col = new2_col, 
+       lty = new2_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Group 2 Coefficients", ylim = range(NEgroup2_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, NE_coefs$Group_2$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, NEcoefs_new$Group_2$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, NEcoefs_new$Group_2$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_3$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Group 3 Coefficients", ylim = range(NEgroup3_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, NE_coefs$Group_3$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, NEcoefs_new$Group_3$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, NEcoefs_new$Group_3$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_4$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Group 4 Coefficients", ylim = range(NEgroup4_new), 
+     col = "magenta3", lwd = 1.5)
+lines(1:52, NE_coefs$Group_4$dmi_coef, col = "cyan4", lwd = 1.5)
+lines(1:52, NEcoefs_new$Group_4$nino_coef, col = "magenta4", lwd = 1.5, lty = 2)
+lines(1:52, NEcoefs_new$Group_4$dmi_coef, col = "blue1", lwd = 1.5, lty = 2)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = new_names,
+       col = new_col, 
+       lty = new_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+```
+
+
+# 3. Relaxed Lasso
+
+Explore using a relaxed lasso for our data so that we are only looking at the essential lag values
+
+```{r}
+#existing glmnet
+reduced_preds <- as.matrix(NE1_preds[,1:208])
+reduced_preds <- scale(reduced_preds, center = TRUE, scale = TRUE)
+row.names(NEAus_1) <- 1:19
+
+set.seed(300)
+cv_fit <- cv.glmnet(reduced_preds, NEAus_1, alpha = 0.815, nfolds = 5, family = "mgaussian")
+plot(cv_fit)
+
+
+#modify pred/resp for above code to include relaxed and the correct data.
 
 set.seed(351)
 test_cv <- cv.glmnet(x, y, relax = TRUE)
