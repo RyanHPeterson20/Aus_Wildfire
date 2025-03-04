@@ -1,0 +1,223 @@
+---
+title: "base_eda"
+author: "Ryan Peterson"
+date: "2025-02-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages( library(LatticeKrig))
+
+#parallel packages for integration
+suppressMessages(library(foreach))
+suppressMessages(library(parallel))
+suppressMessages(library(doParallel))
+
+#color
+suppressMessages(library(scales))
+```
+
+
+```{r data_import}
+setwd("~/COS_LK/CubicBSpline")
+
+#TODO: figure out which .rda is the correct data to use, currently testing these
+load("Data/trop_data_full.rda")
+load("Data/mop_data_full.rda")
+
+source("R/CubicBSpline.R")
+
+#COSP import
+source("R/basisIntegral.R")
+source("R/integralPolyFunction.R")
+
+source("R/basisIntegralNew.R")
+source("R/integralPolyFunctionNew.R")
+```
+
+Prep data to test integration and data fusion for LK.
+- Include synthetic data (simulated and quadratic)
+-- Set-up data so that we have a complete grid of rectangle polygons
+-- Change to `sparse' polygons
+- Include TROPOMI and MOPITT data
+
+# Quadratic Function Data
+
+```{r}
+
+```
+
+
+
+# Synthetic Sim Data
+
+```{r}
+sDomain <- cbind(c(-5,5),
+                 c(-5,5))
+M <- 144
+gridList<- list( x= seq( -5, 5, length.out= M),
+                 y= seq( -5, 5, length.out= M) )
+sGrid <- make.surface.grid(gridList)
+
+LKinfo_stat <- LKrigSetup(sDomain, nu=1.0, nlevel=1, NC.buffer = 5,
+                          a.wght = 4.1,  lambda = 2, sigma = 1, rho = 0.5,
+                          NC=20, normalize=TRUE)
+
+set.seed(144)
+look_stat <- LKrig.sim(sGrid, LKinfo_stat, M=1)
+
+synth_df <- data.frame(sGrid, look_stat)
+synth_data <- cbind(synth_df$look_stat)
+
+bubblePlot(x = synth_df$x, y = synth_df$y, z= synth_df$look_stat,
+           xlab = "x", ylab = "y", main = "Synthetic Data (True Field)",
+           col = tim.colors, size = 0.75)
+
+#image.plot(matrix(look_stat, M, M))
+
+#get sample 
+n <- 1000
+set.seed(350)
+sub1_df <- synth_df[sample(nrow(synth_df), n, replace = FALSE), ]
+
+#sample plot
+bubblePlot(sub1_df$x, sub1_df$y, sub1_df$look_stat, 
+           col = tim.colors, main = "Synth Data - Sample Points", size = 0.75)
+
+```
+
+```{r base_polygons}
+#M1, M2 are the number blocks per side
+M1<- 25
+M2<- 25
+tileGridX <- seq( sDomain[1,1],sDomain[2,1], length.out = M1+1)
+tileGridY <- seq( sDomain[1,2],sDomain[2,2], length.out = M2+1)
+tmpGrid <- list( x= tileGridX[1:M1] + diff(tileGridX)/2, 
+                y= tileGridY[1:M2] + diff(tileGridY)/2
+                )
+
+# for plotting later on (centroids of each block)
+tileCenters <-  make.surface.grid( tmpGrid)
+
+polyGroups<- NULL
+for( j in 1:M1){
+  for ( k in 1:M2){
+    newPoly<-  rbind( c(tileGridX[j], tileGridY[k]),
+                      c(tileGridX[j+1], tileGridY[k]),
+                      c(tileGridX[j+1], tileGridY[k+1]),
+                      c(tileGridX[j], tileGridY[k+1]),
+                      c(tileGridX[j], tileGridY[k])
+    )
+    polyGroups<- c( polyGroups,list(newPoly))
+  }
+}
+
+#add viz of polyGroups and tileCenters
+N <- length(polyGroups)
+layout <- setupLegend()
+plot( sDomain, type="n", xlab = "x", ylab = "y")
+for ( k in 1:N){
+  polyTmp<- polyGroups[[k]]
+  polygon(polyTmp, border="black", lwd=.2)
+}
+
+points(tileCenters, pch =16, cex = 0.2) #check tileCenters
+
+
+N <- length(polyGroups)
+layout <- setupLegend()
+bubblePlot(x = synth_df$x, y = synth_df$y, z= synth_df$look_stat,
+           xlab = "x", ylab = "y", main = "Synthetic Data (True Field)",
+           col = tim.colors, size = 0.75)
+for ( k in 1:N){
+  polyTmp<- polyGroups[[k]]
+  polygon(polyTmp, border="black", lwd=.2)
+}
+
+rm(j,k, newPoly)
+```
+
+
+```{r}
+#TODO: write function average the point values within a block.
+
+spatial_agg <- function(base_df, polygon){
+  point_loc <- cbind(base_df$x, base_df$y) 
+  
+  sp_agg <- c()
+  for (j in 1:length(polygon)) {
+    temp <- fields::in.poly(point_loc, polyGroups[[j]])
+    agg_temp <- mean(base_df[temp, 3])
+    sp_agg <- c(sp_agg, agg_temp)
+  }
+  
+  return(sp_agg)
+}
+```
+
+```{r}
+#aggregation from samples
+agg_out <- spatial_agg(synth_df, polygon = polyGroups)
+
+#TODO: add in noise for each (block/point)
+set.seed(155)
+n <- length(agg_out)
+tau <- 0.1
+agg_new <- agg_out +  tau*rnorm(n )
+
+n_pt <- length(sub1_df$look_stat)
+tau_pt <- 0.05
+sub1_df$new_stat <- sub1_df$look_stat + tau_pt * rnorm(n_pt)
+
+#Plots
+N<- length(polyGroups)
+cScale<- alpha(turbo(256), 0.85)
+cTab<- color.scale(agg_new, cScale)
+layout<-setupLegend()
+plot( sDomain, type="n")
+for ( k in 1:N){
+  polyTmp<- polyGroups[[k]]
+  polygon(polyTmp, col=cTab[k], border="black", lwd=.2)
+}
+addLegend(layout, col=alpha(turbo(256),.95), zlim= range(agg_new ))
+
+bubblePlot(sub1_df$x, sub1_df$y, sub1_df$new_stat, 
+           col = tim.colors, main = "Synth Data - Sample Points", size = 0.75)
+
+bubblePlot(x = synth_df$x, y = synth_df$y, z= synth_df$look_stat,
+           xlab = "x", ylab = "y", main = "Synthetic Data (True Field)",
+           col = tim.colors, size = 0.75)
+
+
+setwd("~/COS_LK/CubicBSpline/Data")
+save(sub1_df, polyGroups, agg_new, synth_df, file = "integration_testdata.rda")
+```
+
+
+
+
+
+```{r test_function}
+point_loc <- cbind(sub1_df$x, sub1_df$y) 
+#polyGroups[[1]]
+
+temp <- fields::in.poly(point_loc, polyGroups[[3]])
+
+mean(sub1_df[temp,3])
+
+test_out <- spatial_agg(sub1_df, polygon = polyGroups)
+
+polygon <- polyGroups[[2]]
+
+length(polygon)
+
+plot( sDomain, type="n", xlab = "x", ylab = "y")
+polygon(polyGroups[[2]], border="black", lwd=.2)
+
+```
+

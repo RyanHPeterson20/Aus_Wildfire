@@ -1,0 +1,392 @@
+---
+title: "new_ssdf.rmd"
+author: "Ryan Peterson"
+date: "2025-02-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages( library(LatticeKrig))
+
+#parallel packages for integration
+suppressMessages(library(foreach))
+suppressMessages(library(parallel))
+suppressMessages(library(doParallel))
+
+#color
+suppressMessages(library(scales))
+
+#timing
+suppressMessages( library(tictoc))
+```
+
+
+```{r data_functions}
+setwd("~/COS_LK/CubicBSpline")
+
+#data
+load("Data/integration_testdata.rda")
+
+
+load("Data/COSExampleData.rda") #load separately from integration test data
+
+
+#functions (new)
+source("R/CubicBSpline.R")
+source("R/new_basisintegral.R") #WIP functions
+
+#(old - linear)
+source("R/integralPolyFunction.R")
+
+# patch in newer version of LK functions
+source("R/LatticeKrig.R")
+source("R/LKrigFindLambda.R")
+source("R/print.LatticeKrig.R" )
+
+
+setwd("~/COS_LK")
+# patch in updates to integral functions
+source("DF_LK/R/basisIntegralNew.R")
+source("DF_LK/R/integralPolyFunctionNew.R")
+
+#old integral funcionts
+source("COSExample/R/basisIntegral.R")
+source("COSExample/R/integralPolyFunction.R")
+
+
+```
+
+
+```{r}
+source("R/LatticeKrig.R")
+source("R/LKrigFindLambda.R")
+source("R/print.LatticeKrig.R" )
+#
+load("Data/COSExampleData.rda")
+
+```
+
+
+Changes: 
+-Begin with a simple fields with dense blocks to see if we are correctly recovering our data.
+
+
+```{r}
+N<- length(polyGroupsRandomBig)
+cScale<- alpha(turbo(256),.5)
+cTab<- color.scale(yTrueRandomBig, cScale)
+layout<-setupLegend()
+plot( sDomain, type="n")
+for ( k in 1:N){
+  polyTmp<- polyGroupsRandomBig[[k]]
+  polygon(polyTmp, col=cTab[k], border="black", lwd=.2)
+}
+addLegend(layout, col=alpha(turbo(256),.75), zlim= range(yTrueRandomBig ))
+```
+
+
+
+```{r lk setup}
+#LK setup
+#s_new <- cbind(sub1_df$x, sub1_df$y)
+#z_new <- cbind(sub1_df$new_stat)
+
+#updated domain
+sDomain <- rbind( c( -1, 0), c( 1 ,2))
+#testing "big example"
+
+LK_info <- LKrigSetup(sDomain, NC=25, nlevel=2, a.wght=4.1, overlap = 2, NC.buffer = 2, nu = 1,
+                      LKGeometry="LKRectangle", BasisFunction = "CubicBSpline", 
+                      BasisType = "Tensor", normalize = FALSE,
+                      fixedFunctionArgs = list(m=1))
+
+LKinfo_base <- LKrigSetup(sDomain, NC=25, nlevel=2, a.wght = 4.1,
+                     NC.buffer = 2, normalize = FALSE, nu = 1)
+
+#creates a couple functions
+FUNX<- function(s){
+  s[,1]
+}
+
+FUNY<- function(s){
+  s[,2]
+}
+
+```
+
+
+
+```{r cov_mat}
+tic()
+U1<- integralPolyFunctionForEach(polyGroupsRandomBig, M = 200, cores = 8)  # default is constant function 
+U2<- integralPolyFunctionForEach(polyGroupsRandomBig,
+                                 FUN=function(s){s[,1]}, M = 200, cores = 8)
+U3<- integralPolyFunctionForEach(polyGroupsRandomBig,
+                                 FUN=function(s){s[,2]}, M = 200, cores = 8)
+U_1<- cbind( U1,U2,U3) # U can be a dense matrix
+toc()
+```
+
+```{r}
+# integrals of basis functions
+tic()
+X_1<- basisIntegral_rect(polyGroupsRandomBig, LK_info)
+toc()
+X_1<- spind2spam(X_1)
+
+tic()
+X_base <- basisIntegral_New(polyGroupsRandomBig, LKinfo_base, M = 200, cores = 8, normalize = FALSE)
+toc()
+X_base <- spind2spam(X_base)
+```
+
+
+```{r}
+out_test <- round(spam2full(X_1), 6)
+out_new <- as.spam(out_test)
+
+range(out_test)
+
+which(out_test < 0, arr.ind = TRUE)
+which(spam2full(X_1) < 0, arr.ind = TRUE)
+```
+
+
+
+```{r}
+U1_temp <- U1/ abs(mean(U1))
+
+rowSums(X_1[300, ])
+rowSums(X_base[300,])
+```
+
+
+
+```{r}
+
+# estimating lambda and the a.wght parameter
+fit1 <- LatticeKrig( sDomain, yObsRandomBig, U=U1_temp, X=X_1, LKinfo=LK_info, findAwght=TRUE)
+#surface(fit1, col = tim.colors(256))
+
+fit2 <- LatticeKrig( sDomain, yObsRandomBig, U=U_1, X=X_base, LKinfo=LKinfo_base, findAwght=TRUE)
+
+#fit2 <- LatticeKrig( sDomain, yObsRandomBig, U=U1_temp, X=X_1, LKinfo=LK_info, findAwght=TRUE)
+```
+
+
+```{r}
+fhat1 <- predictSurface(fit1, nx = 100, ny = 100)
+fhat2 <- predictSurface(fit2, nx = 100, ny = 100)
+#bubblePlot(x = synth_df$x, y = synth_df$y, z= synth_df$look_stat,
+#           xlab = "x", ylab = "y", main = "Synthetic Data (True Field)",
+#           col = tim.colors, size = 0.75)
+image.plot(fhat1, main = " ", xlab = "x", ylab = "y")
+image.plot(fhat2, main = " ", xlab = "x", ylab = "y")
+```
+
+
+```{r}
+#set.panel(1,2)
+zlim<- range( gTrue)
+surface(as.surface( gridTrue, gTrue) , 
+        zlim =zlim, col=tim.colors(256))
+#title("true surface")
+#surface( fit1, zlim =zlim)
+#title("MLE")
+```
+
+
+# Testing point/block Fusion
+
+
+```{r data_cleaning}
+temp <- !is.na(agg_new)
+polygroups_new <- polyGroups[temp]
+agg_new <- agg_new[temp]
+```
+
+
+```{r}
+sDomain_new <- cbind(c(-5,5),
+                 c(-5,5))
+
+LKinfo_new <- LKrigSetup(sDomain_new, NC=25, nlevel=2, a.wght=4.1, overlap = 2, NC.buffer = 5, nu = 1,
+                      LKGeometry="LKRectangle", BasisFunction = "CubicBSpline", 
+                      BasisType = "Tensor", normalize = FALSE,
+                      fixedFunctionArgs = list(m=1))
+
+#added fixedFunctionArgs = list(m=1) to LKrigSetup to
+```
+
+
+```{r}
+tic()
+X_new <- basisIntegral_rect(polygroups_new, LKinfo_new)
+toc()
+X_new <- spind2spam(X_new)
+
+out_full <- spam2full(X_new)
+range(out_full)
+#which.min(out_full[35,])
+
+#image.plot(out_full)
+plot(out_full[267,], pch = 16)
+```
+
+
+```{r}
+Xindex <- which(out_full[ ,240] != 0, arr.ind = TRUE)
+Xindex
+
+poly_temp <- polygroups_new[Xindex]
+
+L <- 2
+basisGridList <- LKinfo_new$latticeInfo$grid[[L]]
+basisCenters <- make.surface.grid(basisGridList)
+
+#plot
+plot(basisCenters,  pch = 16, cex = 0.67, xlim = c(-1, 1), ylim = c(-5, -3))
+#points(basisCenters[240, 1], basisCenters[240,2], pch = 16, col = "red2")
+for ( k in 1:length(poly_temp)){
+  polyTmp<- poly_temp[[k]]
+  polygon(polyTmp, border="magenta3", lwd=1)
+}
+polygon(poly_temp[[1]], border = "red2", lwd = 1.5)
+
+poly_intercept <- which(out_full[267,] != 0, arr.ind = TRUE)
+poly_intercept
+
+```
+
+
+
+```{r}
+
+
+tic()
+U_1<- integralPolyFunction(polygroups_new, M = 200)  # default is constant function 
+U_2<- integralPolyFunction(polygroups_new,
+                                 FUN=function(s){s[,1]}, M = 200)
+U_3<- integralPolyFunction(polygroups_new,
+                                 FUN=function(s){s[,2]}, M = 200)
+U_new<- cbind( U_1, U_2, U_3) # U can be a dense matrix
+toc()
+```
+```{r covariate_prep}
+##example code (from mop/trop fusion work)
+# U_2<- cbind( U1_2,U2_2,U3_2) # U can be a dense matrix
+
+# U1_temp <- U1_2 / abs(mean(U1_2))
+# U1_temp[,] <- 1
+U1_temp <- U_1/ abs(mean(U_1))
+#U1_temp[,] <- 1
+```
+
+```{r polygon_prep}
+## example code from mop/trop polygon fusion
+#X_2<- spind2spam(X_2)
+
+polygon_area <- function(poly_gon) {
+  x <- poly_gon[ ,1]
+  y <- poly_gon[ ,2]
+  n <- length(x)
+  i <- c(2:n, 1)  # Index to circle back around to the first coordinate
+  sum(x[i] * y - y[i] * x) / 2
+}
+
+
+poly_area <- lapply(polygroups_new, polygon_area)
+
+range(poly_area)
+
+test_Xnew <- as.matrix(X_new)
+abs_area <- abs(unlist(poly_area))
+X_2adj <- sweep(test_Xnew, MARGIN = 1, STATS = abs_area, FUN = "/")
+X_2adj <- as.spam(X_2adj)
+```
+
+
+```{r}
+fit_new <- LatticeKrig( sDomain_new, agg_new, U=U1_temp, X=X_new, LKinfo=LKinfo_new, 
+                        findAwght=TRUE)#,  collapseFixedEffect = TRUE)
+```
+
+
+```{r manual_pred}
+range(agg_new)
+```
+
+
+
+```{r}
+#test_area <- abs(poly_area[[1]])
+
+fhat_new <- predictSurface(fit_new, nx = 200, ny = 200)
+#fhat_test <- fhat_new
+#fhat_test$z <- fhat_new$z/test_area
+```
+
+```{r}
+look_range <- range(synth_df$look_stat)#, range(fhat_new$z))
+  
+  
+bubblePlot(x = synth_df$x, y = synth_df$y, z= synth_df$look_stat,
+           xlab = "x", ylab = "y", main = "Synthetic Data (True Field)",
+           col = tim.colors, size = 0.75, zlim = look_range)
+image.plot(fhat_new, main = " ", xlab = "x", ylab = "y", zlim = look_range)
+
+```
+
+
+
+```{r}
+set.panel(1,2)
+zlim<- range( synth_df$look_stat)
+surface(as.surface(sGrid, synth_df$look_stat) , 
+        zlim =zlim, col=viridis(256))
+title("true surface")
+surface( fit_new, zlim =zlim)
+title("MLE")
+```
+
+
+
+# Old/test material
+
+```{r}
+
+rm(polygroups_new)
+#lk_hat_base <- predictSurface(fit2d_base, nx = 100, ny = 100)
+#fhat <- predictSurface(fit1, nx = 80, ny = 80, verbose = TRUE, extrap = FALSE)
+nx = 80
+ny = 80 
+xy = c(1, 2)
+#grid.list <- fields.x.to.grid(fit1$x, nx = nx, ny = ny, xy = xy)
+
+gridList_new <- list( x= seq(-5, 5, ,100),
+                      y= seq(-5, 5, ,100))
+
+xg <- make.surface.grid(gridList_new)
+
+#xg <- make.surface.grid(grid.list)
+
+#polygon area
+poly_Temp <- polygroups_new[[1]]
+poly_area <- 0.5 * ( abs(poly_Temp[1,1] - poly_Temp[2,1])* abs(poly_Temp[2,2] - poly_Temp[3,2]))
+
+
+f_hat <- predict.LKrig(fit1, xg, drop.Z = FALSE)
+
+fhat_new <- poly_area * f_hat
+#surface()
+lk_hat <- predictSurface(fit1, nx = 100, ny = 100) 
+
+surface(fhat_new, col = tim.colors(256))
+#surface(fit1, )
+```
+
