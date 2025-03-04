@@ -1,5 +1,5 @@
 # functions for grouping of response and predictor variables:
-
+#and other lasso functions
 
 
 #grouped response set-up functions
@@ -177,4 +177,16 @@ SElag_grouping <- function(SE_laglist, j = (1:19)){
   
   SEAus_preds <- list(SE1_lag, SE2_lag, SE3_lag, SE4_lag)
   return(SEAus_preds)
-}  
+} 
+
+
+
+#TODO finish writing function for extracting coefs from the fused lasso 
+## 
+LassoCoefs <- function(){
+  
+  
+  
+}
+
+

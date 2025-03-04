@@ -39,8 +39,16 @@ Changes:
 1. Combines groups 
   - NE group 1,2,3 -> single group
   - SE group 1,2 -> single group
+  
+  Other Combinations
+  - NE group 1 (old 1,2,3; new 1)
+  - NE group 2 (new 2,3,4)
+  
+  - SE group 1 (old 1,2; new 1,2)
+  - SE group 2 (new 3,4)
 
-2. 
+2. (other/placeholder)
+  - More HierNet work
 
 3. Relaxed Lasso fit
   - glmnet(,, relaxed = TRUE)
@@ -141,7 +149,227 @@ for (i in 1:n) {
 }
 ```
 
+## Variations of Response Regions
 
+### Additional Data Cleaning
+
+```{r}
+j = -c(19)
+
+#prediction set-up
+NE_laglist = NE_laglist_std
+
+NEfull_lag <- NE_laglist[[1]][j, -(1:2)]
+for (i in 2:length(NE_laglist)) {
+  NEfull_lag <-  rbind(NEfull_lag, NE_laglist[[i]][j, -(1:2)])
+}
+
+SE_laglist = SE_laglist_std
+
+SEfull_lag <- SE_laglist[[1]][j, -(1:2)]
+for (i in 2:length(SE_laglist)) {
+  SEfull_lag <-  rbind(SEfull_lag, SE_laglist[[i]][j, -(1:2)])
+}
+
+#response
+NEfull_resp <- rbind(cbind(NE_resp[[1]]), cbind(NE_resp[[2]]), 
+                     cbind(NE_resp[[3]]), cbind(NE_resp[[4]]))
+SEfull_resp <- rbind(cbind(SE_resp[[1]]), cbind(SE_resp[[2]]), 
+                     cbind(SE_resp[[3]]), cbind(SE_resp[[4]]))
+
+#split response regions
+NElag1 <- rbind(NE_preds[[1]])
+NElag2 <- rbind(NE_preds[[2]], NE_preds[[3]], NE_preds[[4]])
+
+SElag1 <- rbind(SE_preds[[1]], SE_preds[[2]])
+SElag2 <- rbind(SE_preds[[3]], SE_preds[[4]])
+
+NEresp1 <- NE_preds[[1]]
+NEresp2 <- rbind(cbind(NE_resp[[2]]), cbind(NE_resp[[3]]), cbind(NE_resp[[4]]))
+  
+SEresp1 <- rbind(cbind(SE_resp[[1]]), cbind(SE_resp[[2]]))
+SEresp2 <- rbind(cbind(SE_resp[[3]]), cbind(SE_resp[[4]]))
+
+#TODO: update as a list.
+
+```
+
+### Full Response Season 
+
+```{r full_response}
+NE_gamma <- 0.75
+NEfuse_grouplist <- list()
+NEfuse_cv <- list()
+NE_lambdamin <- c()
+  
+NEgroup_temp <- fusedlasso(y = NEfull_resp, X = as.matrix(NEfull_lag), D_olr, gamma = NE_gamma)
+  
+NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_olr) 
+    
+NE_lambdamin <- c(NE_lambdamin, NEgroup_cv$lambda.min)  
+NEfuse_grouplist[[paste0("Group_", i)]] <- NEgroup_temp
+NEfuse_cv[[paste0("Group_", i)]] <- NEgroup_cv
+
+
+SE_gamma <- 0.75
+SEfuse_grouplist <- list()
+SEfuse_cv <- list()
+SE_lambdamin <- c()
+
+SEgroup_temp <- fusedlasso(y = SEfull_resp, X = as.matrix(SEfull_lag), D_olr, gamma = SE_gamma)
+  
+SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
+  
+SE_lambdamin <- c(SE_lambdamin, SEgroup_cv$lambda.min) 
+SEfuse_grouplist[[paste0("Group_", i)]] <- SEgroup_temp
+SEfuse_cv[[paste0("Group_", i)]] <- SEgroup_cv
+
+
+```
+
+```{r repeat_coefs}
+plot(NEfuse_cv[[1]])
+plot(SEfuse_cv[[1]])
+
+NE_coefs <- list()
+#full coef list
+NEfuse_coefs <- list()
+NE_range <- c()
+
+k <- 1
+
+lambdaNE <- NE_lambdamin[[k]]
+#lambda1 <- NEfuse_cv[[k]]$lambda.1se
+
+NEgroup_coef <- coef(NEfuse_grouplist[[k]], lambda = lambdaNE)
+
+NEfuse <- NEgroup_coef$beta
+colnames(NEfuse) <- c("NEgroup")
+NEfuse_coefs[[paste0("Group_", k)]] <- as.data.frame(NEfuse)
+
+NE_range <- c(NE_range, range(NEgroup_coef$beta))
+
+#extract each index
+nino_coef <- NEgroup_coef$beta[1:52,]
+dmi_coef <- NEgroup_coef$beta[53:104,]
+tsa_coef <- NEgroup_coef$beta[105:156,]
+aao_coef <- NEgroup_coef$beta[157:208,]
+olr_coef <- NEgroup_coef$beta[209:260,]
+
+NE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+
+#SE Visualizations
+SE_coefs <- list()
+#full coef list
+SEfuse_coefs <- list()
+
+SE_range <- c()
+
+lambdaSE <- SE_lambdamin[k]
+
+SEgroup_coef <- coef(SEfuse_grouplist[[k]], lambda = lambdaSE)
+
+SEfuse <- SEgroup_coef$beta
+colnames(SEfuse) <- c("SEgroup")
+SEfuse_coefs[[paste0("Group_", k)]] <- as.data.frame(SEfuse)
+
+SE_range <- c(SE_range, range(SEgroup_coef$beta))
+
+#extract each index
+nino_coef <- SEgroup_coef$beta[1:52, ]
+dmi_coef <- SEgroup_coef$beta[53:104, ]
+tsa_coef <- SEgroup_coef$beta[105:156, ]
+aao_coef <- SEgroup_coef$beta[157:208, ]
+olr_coef <- SEgroup_coef$beta[209:260, ]
+
+SE_coefs[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+  
+
+
+```
+
+```{r coef_viz}
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Coefficients", ylim = NE_range, 
+     col = "darkmagenta", lwd = 1.5)
+lines(1:52, NE_coefs$Group_1$dmi_coef, col = "blue", lwd = 1.5)
+lines(1:52, NE_coefs$Group_1$tsa_coef, col = "red", lwd = 1.5)
+lines(1:52, NE_coefs$Group_1$aao_coef, col = "darkgreen", lwd = 1.5)
+lines(1:52, NE_coefs$Group_1$olr_coef, col = "orange3", lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Coefficients", ylim = SE_range, 
+     col = "darkmagenta", lwd = 1.5)
+lines(1:52, SE_coefs$Group_1$dmi_coef, col = "blue", lwd = 1.5)
+lines(1:52, SE_coefs$Group_1$tsa_coef, col = "red", lwd = 1.5)
+lines(1:52, SE_coefs$Group_1$aao_coef, col = "darkgreen", lwd = 1.5)
+lines(1:52, SE_coefs$Group_1$olr_coef, col = "orange3", lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+```
+
+```{r preds}
+j <- 19
+SEresp_test <- SEbase_matrix[j,]
+#NEresp_test <- NEbase_matrix[j, ]
+
+season_range <- range(SEresp_test)
+
+#group 1 preds
+se_group <- c()
+for(i in 1:32) {
+  pred_out <- as.matrix(SE_laglist_std[[i]][j,-c(1,2)])
+  coef_out <- c(SE_coefs$Group_1$nino_coef, SE_coefs$Group_1$dmi_coef,
+              SE_coefs$Group_1$tsa_coef, SE_coefs$Group_1$aao_coef,
+              SE_coefs$Group_1$olr_coef)
+  se_group <-  c(se_group, pred_out %*% coef_out)
+}
+
+plot(1:32, SEresp_test, type = "l", ylim = season_range, main = "SE Aus - Preds")
+lines(1:32, se_group, col = "magenta3")
+abline(h = 0, lty = 2)
+
+
+
+NEresp_test <- NEbase_matrix[j, ]
+
+season_range <- range(NEresp_test)
+
+#group 1 preds
+ne_group <- c()
+for(i in 1:32) {
+  pred_out <- as.matrix(NE_laglist_std[[i]][j,-c(1,2)])
+  coef_out <- c(NE_coefs$Group_1$nino_coef, NE_coefs$Group_1$dmi_coef,
+              NE_coefs$Group_1$tsa_coef, NE_coefs$Group_1$aao_coef,
+              NE_coefs$Group_1$olr_coef)
+  ne_group <-  c(ne_group, pred_out %*% coef_out)
+}
+
+plot(1:32, NEresp_test, type = "l", ylim = season_range, main = "SE Aus - Preds")
+lines(1:32, ne_group, col = "magenta3")
+abline(h = 0, lty = 2)
+
+```
+
+### Split Response Season
+
+```{r split_response}
+
+```
+
+
+## Previous Coeffs
 
 ```{r}
 #NE Aus
@@ -463,7 +691,7 @@ legend("topright", inset = c(-0.3, 0),
 ```{r group_vis}
 par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
 plot(1:52, SE_coefs$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
-     main = "SE Aus : Group 1 Coefficients", ylim = range(SE_coefs$Group_1), 
+     main = "SE Aus : Group 1 Coefficients", ylim = SE_range, 
      col = "darkmagenta", lwd = 1.5)
 lines(1:52, SE_coefs$Group_1$dmi_coef, col = "blue", lwd = 1.5)
 lines(1:52, SE_coefs$Group_1$tsa_coef, col = "red", lwd = 1.5)
@@ -989,23 +1217,64 @@ legend("topright", inset = c(-0.3, 0),
 
 # 3. Relaxed Lasso
 
-Explore using a relaxed lasso for our data so that we are only looking at the essential lag values
+Explore using a relaxed lasso for our data so that we are only looking at the essential lag values.
+
+So far, so good. What's next:
+-perform for all response groups with predictions.
+-check on glmnet followed by relaxed.glmnet (with different alpha values).
+-repeat with different response groups sizes. 
 
 ```{r}
-#existing glmnet
-reduced_preds <- as.matrix(NE1_preds[,1:208])
-reduced_preds <- scale(reduced_preds, center = TRUE, scale = TRUE)
-row.names(NEAus_1) <- 1:19
-
-set.seed(300)
-cv_fit <- cv.glmnet(reduced_preds, NEAus_1, alpha = 0.815, nfolds = 5, family = "mgaussian")
-plot(cv_fit)
-
 
 #modify pred/resp for above code to include relaxed and the correct data.
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+
+test_X <- as.matrix(SE_preds[[2]])
+test_y <- SE_resp[[2]]
 
 set.seed(351)
-test_cv <- cv.glmnet(x, y, relax = TRUE)
+test_cv <- cv.glmnet(test_X, test_y, alpha = 0.5, nfolds = 5, relax = TRUE)
 plot(test_cv)
+
+test_fit <- glmnet(test_X, test_y, alpha = 0.5, relax = TRUE)
+
+plot(test_fit, gamma = 0.75)
+xline(log(test_cv$relaxed$lambda.min))
+xline(log(test_cv$relaxed$lambda.1se), col = "red", lty = 2)
+
+plot(test_fit, gamma = test_cv$relaxed$gamma.min)
+xline(log(test_cv$relaxed$lambda.min))
+xline(log(test_cv$relaxed$lambda.1se), col = "red", lty = 2)
+
+plot(test_fit, gamma = test_cv$relaxed$gamma.1se)
+xline(log(test_cv$relaxed$lambda.min))
+xline(log(test_cv$relaxed$lambda.1se), col = "red", lty = 2)
+
+#plot(fit, gamma = 0.5, main = "gamma = 0.5")
+#plot(fit, gamma = 0, main = "gamma = 0")
+
+test_pred <- predict(test_fit, s = test_cv$relaxed$lambda.min,
+                     gamma = test_cv$relaxed$gamma.1se,
+                     type = "coefficients")
+
+#test_pred <- predict(test_fit, s = test_cv$relaxed$lambda.min,
+#                     gamma = 0.75,
+#                     type = "coefficients")
+
+coef_index <- test_pred@i
+test_pred@Dimnames[[1]][test_pred@i+1]
+test_pred@x
+
+coef_df <- data.frame(names = test_pred@Dimnames[[1]][test_pred@i+1], value = test_pred@x)
+
+plot(test_pred@x, pch = 16, ylab = "Coef")
+yline(0, lty = 2)
+xline(c(1.5, 7.5, 16.5, 18.5, 26.5), col = "red", lty = 2)
 ```
 
