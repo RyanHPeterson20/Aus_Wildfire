@@ -1,0 +1,42 @@
+---
+title: "new_interaction"
+author: "Ryan Peterson"
+date: "2025-03-06"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages( library(hierNet))
+```
+
+```{r data_functions}
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+```
+
+Goal of this is to include interaction terms into our methodology.
+
+Beginning with:
+1. hierNet
+2. Adding indicator terms into Will's quadratic fit. 
+3. Other hierarchical methods.
+
+#1 HierNet
+
+Notes on HierNet
+
+```{r}
+
+```
+
