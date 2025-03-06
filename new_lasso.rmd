@@ -80,8 +80,6 @@ SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 ```
 
-
-
 ```{r}
 # distance matrices
 D <- getD1d(52)
@@ -98,7 +96,6 @@ D_olr <- rbind(D1, D2, D3, D4, D5)
 
 rm(D, empty_D, D1, D2, D3, D4, D5)
 ```
-
 
 ```{r}
 #full model
@@ -147,6 +144,7 @@ for (i in 1:n) {
   SEfuse_grouplist[[paste0("Group_", i)]] <- SEgroup_temp
   SEfuse_cv[[paste0("Group_", i)]] <- SEgroup_cv
 }
+
 ```
 
 ## Variations of Response Regions
@@ -184,13 +182,19 @@ NElag2 <- rbind(NE_preds[[2]], NE_preds[[3]], NE_preds[[4]])
 SElag1 <- rbind(SE_preds[[1]], SE_preds[[2]])
 SElag2 <- rbind(SE_preds[[3]], SE_preds[[4]])
 
-NEresp1 <- NE_preds[[1]]
+NEresp1 <- cbind(NE_resp[[1]])
 NEresp2 <- rbind(cbind(NE_resp[[2]]), cbind(NE_resp[[3]]), cbind(NE_resp[[4]]))
   
 SEresp1 <- rbind(cbind(SE_resp[[1]]), cbind(SE_resp[[2]]))
 SEresp2 <- rbind(cbind(SE_resp[[3]]), cbind(SE_resp[[4]]))
 
-#TODO: update as a list.
+
+#
+NE_preds1 <- list(NElag1, NElag2)
+NE_resp1 <- list(NEresp1, NEresp2)
+
+SE_preds1 <- list(SElag1, SElag2)
+SE_resp1 <- list(SEresp1, SEresp2)
 
 ```
 
@@ -320,6 +324,7 @@ legend("topright", inset = c(-0.3, 0),
 ```
 
 ```{r preds}
+
 j <- 19
 SEresp_test <- SEbase_matrix[j,]
 #NEresp_test <- NEbase_matrix[j, ]
@@ -360,13 +365,268 @@ plot(1:32, NEresp_test, type = "l", ylim = season_range, main = "SE Aus - Preds"
 lines(1:32, ne_group, col = "magenta3")
 abline(h = 0, lty = 2)
 
+
+
 ```
+
 
 ### Split Response Season
 
 ```{r split_response}
 
+NE_gamma <- 0.75
+NEfuse_grouplist1 <- list()
+NEfuse_cv1 <- list()
+NE_lambdamin1 <- c()
+
+n <- length(NE_resp1)
+for (i in 1:n) {
+  NEresp_temp <- NE_resp1[[i]]
+  NEpred_temp <- as.matrix(NE_preds1[[i]][ ,1:260])
+  
+  NEgroup_temp <- fusedlasso(y = NEresp_temp, X = NEpred_temp, D_olr, gamma = NE_gamma)
+  
+  NEgroup_cv <- cv.fusedlasso(NEgroup_temp, k =5, D_olr) 
+    
+  NE_lambdamin1 <- c(NE_lambdamin1, NEgroup_cv$lambda.min)  
+  NEfuse_grouplist1[[paste0("Group_", i)]] <- NEgroup_temp
+  NEfuse_cv1[[paste0("Group_", i)]] <- NEgroup_cv
+}
+
+SE_gamma <- 0.75
+SEfuse_grouplist1 <- list()
+SEfuse_cv1 <- list()
+SE_lambdamin1 <- c()
+
+n <- length(SE_resp1)
+for (i in 1:n) {
+  SEresp_temp <- SE_resp1[[i]]
+  SEpred_temp <- as.matrix(SE_preds1[[i]][ ,1:260])
+  
+  SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
+  
+  SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
+  
+  #SE_lambdamin1 <- c(SE_lambdamin1, SEgroup_cv$lambda.min) 
+  SEfuse_grouplist1[[paste0("Group_", i)]] <- SEgroup_temp
+  #SEfuse_cv1[[paste0("Group_", i)]] <- SEgroup_cv
+}
+
+SEresp_temp <- SE_resp1[[2]]
+SEpred_temp <- as.matrix(SE_preds1[[2]][ ,1:260])
+  
+SEgroup_temp <- fusedlasso(y = SEresp_temp, X = SEpred_temp, D_olr, gamma = SE_gamma)
+  
+SEgroup_cv <- cv.fusedlasso(SEgroup_temp, k =5, D_olr) 
+
 ```
+
+```{r repeat_coefs}
+#use/compare SE early season group lambda values.
+plot(NEfuse_cv1[[1]])
+plot(NEfuse_cv1[[2]])
+
+plot(SEfuse_cv[[1]])
+plot(SEgroup_cv)
+
+
+NE_coefs1 <- list()
+#full coef list
+NEfuse_coefs1 <- list()
+NE_range1 <- c()
+
+for(k in 1:length(NEfuse_grouplist1)){
+  
+  lambdaNE <- NE_lambdamin1[[k]]
+  #lambda1 <- NEfuse_cv[[k]]$lambda.1se
+  
+  NEgroup_coef <- coef(NEfuse_grouplist1[[k]], lambda = lambdaNE)
+  
+  NEfuse <- NEgroup_coef$beta
+  colnames(NEfuse) <- c("NEgroup")
+  NEfuse_coefs1[[paste0("Group_", k)]] <- as.data.frame(NEfuse)
+  
+  NE_range1 <- c(NE_range1, range(NEgroup_coef$beta))
+  
+  #extract each index
+  nino_coef <- NEgroup_coef$beta[1:52,]
+  dmi_coef <- NEgroup_coef$beta[53:104,]
+  tsa_coef <- NEgroup_coef$beta[105:156,]
+  aao_coef <- NEgroup_coef$beta[157:208,]
+  olr_coef <- NEgroup_coef$beta[209:260,]
+
+  NE_coefs1[[paste0("Group_", k)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+}
+
+
+#SE Visualizations
+SE_coefs1 <- list()
+#full coef list
+SEfuse_coefs1 <- list()
+SE_range1 <- c()
+
+
+lambdaSE <- SE_lambdamin
+
+SEgroup_coef <- coef(SEfuse_grouplist1[[1]], lambda = lambdaSE)
+
+SEfuse <- SEgroup_coef$beta
+colnames(SEfuse) <- c("SEgroup")
+SEfuse_coefs1[[paste0("Group_", k)]] <- as.data.frame(SEfuse)
+
+SE_range1 <- c(SE_range1, range(SEgroup_coef$beta))
+
+#extract each index
+nino_coef <- SEgroup_coef$beta[1:52, ]
+dmi_coef <- SEgroup_coef$beta[53:104, ]
+tsa_coef <- SEgroup_coef$beta[105:156, ]
+aao_coef <- SEgroup_coef$beta[157:208, ]
+olr_coef <- SEgroup_coef$beta[209:260, ]
+
+SE_coefs1[[paste0("Group_", 1)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+
+
+lambdaSE <- SEgroup_cv$lambda.min
+
+SEgroup_coef <- coef(SEfuse_grouplist1[[2]], lambda = lambdaSE)
+
+SEfuse <- SEgroup_coef$beta
+colnames(SEfuse) <- c("SEgroup")
+SEfuse_coefs1[[paste0("Group_", k)]] <- as.data.frame(SEfuse)
+
+SE_range1 <- c(SE_range1, range(SEgroup_coef$beta))
+
+#extract each index
+nino_coef <- SEgroup_coef$beta[1:52, ]
+dmi_coef <- SEgroup_coef$beta[53:104, ]
+tsa_coef <- SEgroup_coef$beta[105:156, ]
+aao_coef <- SEgroup_coef$beta[157:208, ]
+olr_coef <- SEgroup_coef$beta[209:260, ]
+
+SE_coefs1[[paste0("Group_", 2)]] <- data.frame(nino_coef, dmi_coef, tsa_coef, aao_coef, olr_coef)
+
+
+
+```
+
+```{r coefs}
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs1$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Group 1 Coefficients", ylim = range(NE_range1), 
+     col = "darkmagenta", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_1$dmi_coef, col = "blue", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_1$tsa_coef, col = "red", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_1$aao_coef, col = "darkgreen", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_1$olr_coef, col = "orange3", lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, NE_coefs1$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "NE Aus : Group 2 Coefficients", ylim = range(NE_range1), 
+     col = "darkmagenta", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_2$dmi_coef, col = "blue", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_2$tsa_coef, col = "red", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_2$aao_coef, col = "darkgreen", lwd = 1.5)
+lines(1:52, NE_coefs1$Group_2$olr_coef, col = "orange3", lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs1$Group_1$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Group 1 Coefficients", ylim = range(SE_range1), 
+     col = "darkmagenta", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_1$dmi_coef, col = "blue", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_1$tsa_coef, col = "red", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_1$aao_coef, col = "darkgreen", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_1$olr_coef, col = "orange3", lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+
+par(mar = c(5, 4, 4, 9) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+plot(1:52, SE_coefs1$Group_2$nino_coef, type = "l", xlab = "Lag", ylab = "Coefficients",
+     main = "SE Aus : Group 2 Coefficients", ylim = range(SE_range1), 
+     col = "darkmagenta", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_2$dmi_coef, col = "blue", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_2$tsa_coef, col = "red", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_2$aao_coef, col = "darkgreen", lwd = 1.5)
+lines(1:52, SE_coefs1$Group_2$olr_coef, col = "orange3", lwd = 1.5)
+segments(x0 = -1, y0 = 0, x1 = 54, y1 = 0, lty = 2)
+legend("topright", inset = c(-0.3, 0),
+       legend = legend2_names,
+       col = legend2_col, 
+       lty = legend2_lty, lwd = 2, bty = "o") #, bg = "white")
+```
+
+```{r preds}
+j <- 19
+SEresp_test <- SEbase_matrix[j,]
+#NEresp_test <- NEbase_matrix[j, ]
+
+season_range <- range(SEresp_test)
+
+#group 1 preds
+se_group <- c()
+for(i in 1:16) {
+  pred_out <- as.matrix(SE_laglist_std[[i]][j,-c(1,2)])
+  coef_out <- c(SE_coefs1$Group_1$nino_coef, SE_coefs1$Group_1$dmi_coef,
+              SE_coefs1$Group_1$tsa_coef, SE_coefs1$Group_1$aao_coef,
+              SE_coefs1$Group_1$olr_coef)
+  se_group <-  c(se_group, pred_out %*% coef_out)
+}
+
+for(i in 17:32) {
+  pred_out <- as.matrix(SE_laglist_std[[i]][j,-c(1,2)])
+  coef_out <- c(SE_coefs1$Group_2$nino_coef, SE_coefs1$Group_2$dmi_coef,
+              SE_coefs1$Group_2$tsa_coef, SE_coefs1$Group_2$aao_coef,
+              SE_coefs1$Group_2$olr_coef)
+  se_group <-  c(se_group, pred_out %*% coef_out)
+}
+
+plot(1:32, SEresp_test, type = "l", ylim = season_range, main = "SE Aus - Preds")
+lines(1:32, se_group, col = "magenta3")
+abline(h = 0, lty = 2)
+
+
+
+NEresp_test <- NEbase_matrix[j, ]
+
+season_range <- range(NEresp_test)
+
+#group 1 preds
+ne_group <- c()
+for(i in 1:12) {
+  pred_out <- as.matrix(NE_laglist_std[[i]][j,-c(1,2)])
+  coef_out <- c(NE_coefs1$Group_1$nino_coef, NE_coefs1$Group_1$dmi_coef,
+              NE_coefs1$Group_1$tsa_coef, NE_coefs1$Group_1$aao_coef,
+              NE_coefs1$Group_1$olr_coef)
+  ne_group <-  c(ne_group, pred_out %*% coef_out)
+}
+for(i in 13:32) {
+  pred_out <- as.matrix(NE_laglist_std[[i]][j,-c(1,2)])
+  coef_out <- c(NE_coefs1$Group_2$nino_coef, NE_coefs1$Group_2$dmi_coef,
+              NE_coefs1$Group_2$tsa_coef, NE_coefs1$Group_2$aao_coef,
+              NE_coefs1$Group_2$olr_coef)
+  ne_group <-  c(ne_group, pred_out %*% coef_out)
+}
+
+plot(1:32, NEresp_test, type = "l", ylim = season_range, main = "NE Aus - Preds")
+lines(1:32, ne_group, col = "magenta3")
+abline(h = 0, lty = 2)
+```
+
+
 
 
 ## Previous Coeffs
@@ -1277,4 +1537,215 @@ plot(test_pred@x, pch = 16, ylab = "Coef")
 yline(0, lty = 2)
 xline(c(1.5, 7.5, 16.5, 18.5, 26.5), col = "red", lty = 2)
 ```
+
+
+## Full-Response
+
+```{r}
+NE_X <- as.matrix(NEfull_lag)
+NE_y <- NEfull_resp
+
+SE_X <- as.matrix(SEfull_lag)
+SE_y <- SEfull_resp
+
+set.seed(351)
+SE_cv <- cv.glmnet(SE_X, SE_y, alpha = 0.5, nfolds = 5, relax = TRUE)
+plot(SE_cv)
+
+SE_fit <- glmnet(SE_X, SE_y, alpha = 0.5, relax = TRUE)
+
+NE_cv <- cv.glmnet(NE_X, NE_y, alpha = 0.5, nfolds = 5, relax = TRUE)
+plot(NE_cv)
+
+NE_fit <- glmnet(NE_X, NE_y, alpha = 0.5, relax = TRUE)
+```
+
+```{r}
+
+SE_coef <- predict(SE_fit, s = SE_cv$relaxed$lambda.min,
+                     gamma = SE_cv$relaxed$gamma.1se,
+                     type = "coefficients")
+
+
+NE_coef <- predict(NE_fit, s = NE_cv$relaxed$lambda.min,
+                     gamma = NE_cv$relaxed$gamma.1se,
+                     type = "coefficients")
+
+
+coef_index <- SE_coef@i
+SE_coef@Dimnames[[1]][SE_coef@i+1]
+SE_coef@x
+
+plot(SE_coef@x, pch = 16, ylab = "Coef", main = "SE Coefs")
+yline(0, lty = 2)
+xline(c(1.5, 10.5, 21.5, 34.5, 54.5), col = "red", lty = 2)
+
+coef_index <- NE_coef@i
+NE_coef@Dimnames[[1]][NE_coef@i+1]
+NE_coef@x
+
+plot(NE_coef@x, pch = 16, ylab = "Coef", main = "NE Coefs")
+yline(0, lty = 2)
+xline(c(1.5, 8.5, 24.5, 39.5, 63.5), col = "red", lty = 2)
+```
+
+```{r predict_relaxed}
+
+j <- 19
+SEresp_test <- SEbase_matrix[j, ]
+NEresp_test <- NEbase_matrix[j, ]
+
+
+SE_pred <- c()
+for (i in 1:32) {
+  new_X <- as.matrix(SE_laglist_std[[i]][j, -c(1,2)])
+  SE_pred <- c(SE_pred, predict(SE_fit, newx = new_X, s = SE_cv$relaxed$lambda.min,
+                     gamma = SE_cv$relaxed$gamma.1se, type = "response"))
+}
+
+plot(1:32, SEresp_test, type = "l", ylim = season_range, main = "SE Aus - Preds")
+lines(1:32, SE_pred, col = "magenta3")
+abline(h = 0, lty = 2)
+
+
+NE_pred <- c()
+for (i in 1:32) {
+  new_X <- as.matrix(NE_laglist_std[[i]][j, -c(1,2)])
+  NE_pred <- c(NE_pred, predict(NE_fit, newx = new_X, s = NE_cv$relaxed$lambda.min,
+                     gamma = NE_cv$relaxed$gamma.1se, type = "response"))
+}
+
+plot(1:32, NEresp_test, type = "l", ylim = season_range, main = "NE Aus - Preds")
+lines(1:32, NE_pred, col = "magenta3")
+abline(h = 0, lty = 2)
+
+```
+
+
+## Split-Response
+
+
+```{r}
+
+NE_preds1 <- list(NElag1, NElag2)
+NE_resp1 <- list(NEresp1, NEresp2)
+
+SE_preds1 <- list(SElag1, SElag2)
+SE_resp1 <- list(SEresp1, SEresp2)
+
+set.seed(351)
+SE_cv1 <- cv.glmnet(as.matrix(SE_preds1[[1]]), SE_resp1[[1]], alpha = 0.5, nfolds = 5, relax = TRUE)
+plot(SE_cv1)
+
+SE_fit1 <- glmnet(as.matrix(SE_preds1[[1]]), SE_resp1[[1]], alpha = 0.5, relax = TRUE)
+
+SE_cv2 <- cv.glmnet(as.matrix(SE_preds1[[2]]), SE_resp1[[2]], alpha = 0.5, nfolds = 5, relax = TRUE)
+plot(SE_cv2)
+
+SE_fit2 <- glmnet(as.matrix(SE_preds1[[2]]), SE_resp1[[2]], alpha = 0.5, relax = TRUE)
+
+
+NE_cv1 <- cv.glmnet(as.matrix(NE_preds1[[1]]), NE_resp1[[1]], alpha = 0.5, nfolds = 5, relax = TRUE)
+plot(NE_cv1)
+
+NE_fit1 <- glmnet(as.matrix(NE_preds1[[1]]), NE_resp1[[1]], alpha = 0.5, relax = TRUE)
+
+NE_cv2 <- cv.glmnet(as.matrix(NE_preds1[[2]]), NE_resp1[[2]], alpha = 0.5, nfolds = 5, relax = TRUE)
+plot(NE_cv2)
+
+NE_fit2 <- glmnet(as.matrix(NE_preds1[[2]]), NE_resp1[[2]], alpha = 0.5, relax = TRUE)
+
+```
+
+```{r}
+
+SE_coef1 <- predict(SE_fit1, s = SE_cv1$relaxed$lambda.min,
+                     gamma = SE_cv1$relaxed$gamma.1se,
+                     type = "coefficients")
+
+SE_coef2 <- predict(SE_fit2, s = SE_cv2$relaxed$lambda.min,
+                     gamma = SE_cv2$relaxed$gamma.1se,
+                     type = "coefficients")
+
+
+NE_coef1 <- predict(NE_fit1, s = NE_cv1$relaxed$lambda.min,
+                     gamma = NE_cv1$relaxed$gamma.1se,
+                     type = "coefficients")
+
+NE_coef2 <- predict(NE_fit2, s = NE_cv2$relaxed$lambda.min,
+                     gamma = NE_cv2$relaxed$gamma.1se,
+                     type = "coefficients")
+
+
+SE_coef1@Dimnames[[1]][SE_coef1@i+1]
+SE_coef1@x
+
+plot(SE_coef1@x, pch = 16, ylab = "Coef", main = "SE Group 1 Coefs")
+yline(0, lty = 2)
+xline(c(1.5, 5.5, 17.5, 27.5, 50.5), col = "red", lty = 2)
+
+SE_coef2@Dimnames[[1]][SE_coef2@i+1]
+SE_coef2@x
+
+plot(SE_coef2@x, pch = 16, ylab = "Coef", main = "SE Group 2 Coefs")
+yline(0, lty = 2)
+xline(c(1.5, 14.5, 24.5, 32.5, 44.5), col = "red", lty = 2)
+
+
+NE_coef1@Dimnames[[1]][NE_coef1@i+1]
+NE_coef1@x
+
+plot(NE_coef1@x, pch = 16, ylab = "Coef", main = "NE Group 1 Coefs")
+yline(0, lty = 2)
+xline(c(1.5, 11.5, 33.5, 47.5, 74.5), col = "red", lty = 2)
+
+NE_coef2@Dimnames[[1]][NE_coef2@i+1]
+NE_coef2@x
+
+plot(NE_coef2@x, pch = 16, ylab = "Coef", main = "NE Group 2 Coefs")
+yline(0, lty = 2)
+xline(c(1.5, 16.5, 34.5, 57.5, 83.5), col = "red", lty = 2)
+```
+
+```{r}
+j <- 19
+SEresp_test <- SEbase_matrix[j, ]
+NEresp_test <- NEbase_matrix[j, ]
+
+
+SE_pred <- c()
+for (i in 1:16) {
+  new_X <- as.matrix(SE_laglist_std[[i]][j, -c(1,2)])
+  SE_pred <- c(SE_pred, predict(SE_fit1, newx = new_X, s = SE_cv1$relaxed$lambda.min,
+                     gamma = SE_cv1$relaxed$gamma.1se, type = "response"))
+}
+for (i in 17:32) {
+  new_X <- as.matrix(SE_laglist_std[[i]][j, -c(1,2)])
+  SE_pred <- c(SE_pred, predict(SE_fit2, newx = new_X, s = SE_cv2$relaxed$lambda.min,
+                     gamma = SE_cv2$relaxed$gamma.1se, type = "response"))
+  
+}
+
+plot(1:32, SEresp_test, type = "l", ylim = season_range, main = "SE Aus - Preds")
+lines(1:32, SE_pred, col = "magenta3")
+abline(h = 0, lty = 2)
+
+
+NE_pred <- c()
+for (i in 1:12) {
+  new_X <- as.matrix(NE_laglist_std[[i]][j, -c(1,2)])
+  NE_pred <- c(NE_pred, predict(NE_fit1, newx = new_X, s = NE_cv1$relaxed$lambda.min,
+                     gamma = NE_cv1$relaxed$gamma.1se, type = "response"))
+}
+for (i in 13:32) {
+  new_X <- as.matrix(NE_laglist_std[[i]][j, -c(1,2)])
+  NE_pred <- c(NE_pred, predict(NE_fit2, newx = new_X, s = NE_cv2$relaxed$lambda.min,
+                     gamma = NE_cv2$relaxed$gamma.1se, type = "response"))  
+}
+
+plot(1:32, NEresp_test, type = "l", ylim = season_range, main = "NE Aus - Preds")
+lines(1:32, NE_pred, col = "magenta3")
+abline(h = 0, lty = 2)
+```
+
 
