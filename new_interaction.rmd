@@ -121,7 +121,7 @@ SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = -c(19))
 ### Testing (Building-up Model)
 
 Develop hierNet with simpler combinations
--Nino + DMI
+- Nino + DMI
 
 ```{r test_block}
 
@@ -192,6 +192,10 @@ SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = 19)
 NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 19)
 
+#quantile 75 indicator
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 19)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 19)
+
 ne_yhat <- list()
 neresp_new <- c()
 n <- length(NE_resp)
@@ -199,7 +203,8 @@ for (i in 1:n) {
   y_1 <- as.numeric(NE_resp[[i]])
   neresp_new <- c(neresp_new, y_1)
   
-  X_1 <- as.matrix(NE_new[[i]][,1:104]) 
+  X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:104]),
+             as.matrix(NE_preds_q75[[i]][ ,1:104])  )
   yhat <- predict(NE_fit[[i]], X_1)
   
   ne_yhat[[paste0("Group_", i)]] <- yhat
@@ -213,7 +218,9 @@ for (i in 1:n) {
   y_1 <- as.numeric(SE_resp[[i]])
   seresp_new <- c(seresp_new, y_1)
   
-  X_1 <- as.matrix(SE_new[[i]][,1:104]) 
+    
+  X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:104]),
+             as.matrix(SE_preds_q75[[i]][ ,1:104])  )
   yhat <- predict(SE_fit[[i]], X_1)
   
   se_yhat[[paste0("Group_", i)]] <- yhat
@@ -248,6 +255,131 @@ lines(1:32, y_sehat, col = "magenta3")
 abline(h = 0, lty = 2)
 ```
 
+### Predictions
+
+```{r}
+NE_season <- list()
+SE_season <- list()
+
+for (k in 1:18) {
+    
+  NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = k)
+  SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = k)
+  
+  NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = k)
+  SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = k)
+  
+  #quantile 75 indicator
+  NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = k)
+  SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = k)
+  
+  ne_yhat <- list()
+  neresp_new <- c()
+  n <- length(NE_resp)
+  for (i in 1:n) {
+    y_1 <- as.numeric(NE_resp[[i]])
+    neresp_new <- c(neresp_new, y_1)
+    
+    X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:104]),
+               as.matrix(NE_preds_q75[[i]][ ,1:104])  )
+    yhat <- predict(NE_fit[[i]], X_1)
+    
+    ne_yhat[[paste0("Group_", i)]] <- yhat
+  }
+  
+  
+  se_yhat <- list()
+  seresp_new <- c()
+  n <- length(SE_resp)
+  for (i in 1:n) {
+    y_1 <- as.numeric(SE_resp[[i]])
+    seresp_new <- c(seresp_new, y_1)
+    
+      
+    X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:104]),
+               as.matrix(SE_preds_q75[[i]][ ,1:104])  )
+    yhat <- predict(SE_fit[[i]], X_1)
+    
+    se_yhat[[paste0("Group_", i)]] <- yhat
+  }
+  
+  
+  y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]], ne_yhat[[3]], ne_yhat[[4]]) 
+  y_sehat <- c(se_yhat[[1]], se_yhat[[2]], se_yhat[[3]], se_yhat[[4]]) 
+  
+  NE_season[[paste0("Season_", seasons[k])]] <- y_nehat
+  SE_season[[paste0("Season_", seasons[k])]] <- y_sehat
+  
+  #visualizations
+  x_vals <- 1:32
+  
+  setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+  f_names <- paste0("Season_", seasons[k],".png" )
+  
+  png(filename = f_names, width = 3200, height = 1600, res = 200)
+  set.panel(1,2)
+  #par(mar = c(7, 4, 4, 11) + 0.3, xpd = TRUE) 
+  plot(x_vals, neresp_new, type = "l", lwd = 2, ylim = range(neresp_new, y_nehat), 
+          ylab = "Atmospheric CO",
+          xlab = "",  main = paste0("NE Aus: ", seasons[k]), axes = FALSE, 
+          cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+  box()
+  axis(2)
+  axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+       las = 3, cex.axis = 1.6)
+  lines(1:32, y_nehat, col = "magenta3", lwd = 2)
+  abline(h = 0, lty = 2) #TODO: correct this line
+  
+  #par(mar = c(7, 4, 4, 11) + 0.3, xpd = TRUE) 
+  plot(x_vals, seresp_new, type = "l", lwd = 2, ylim = range(seresp_new, y_sehat), 
+          ylab = "Atmospheric CO",
+          xlab = "",  main = paste0("SE Aus: ", seasons[k]), axes = FALSE, 
+          cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+  box()
+  axis(2)
+  axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+       las = 3, cex.axis = 1.6)
+  lines(1:32, y_sehat, col = "magenta3", lwd = 2)
+  abline(h = 0, lty = 2) #TODO: correct this line
+  
+
+}
+
+dev.off()
+```
+
+
+### Residuals
+
+```{r}
+#get residuals (y - yhat)
+NE_resids <- matrix(NA, ncol = 32)
+SE_resids <- matrix(NA, ncol = 32)
+
+for (k in 1:18) {
+  temp_NE <- NEbase_matrix[k, ] - NE_season[[k]]
+  temp_SE <- SEbase_matrix[k, ] - SE_season[[k]]
+  
+  NE_resids <- rbind(NE_resids, temp_NE)
+  SE_resids <- rbind(SE_resids, temp_SE)
+}
+
+NE_resids <- NE_resids[-1, ]
+SE_resids <- SE_resids[-1, ]
+
+```
+
+
+```{r}
+boxplot(NE_resids, pch = 20, ylim = c(-20,20))
+abline(h = 0, lty = 2)
+
+boxplot(SE_resids, pch = 20, ylim = c(-20,20))
+abline(h = 0, lty = 2)
+```
+
+
 
 ```{r var_imp}
 var_imp <- hierNet.varimp(test_fit, X_1, y_1)
@@ -255,6 +387,7 @@ var_imp <- hierNet.varimp(test_fit, X_1, y_1)
 plot(var_imp[,1], var_imp[,2], pch = 16)
 ```
 
+### Coefficients
 
 ```{r coefs}
 
@@ -288,4 +421,15 @@ test_int[1:42,]
 
 ```
 
+
+
+# glinternet 
+
+Testing and exploring another form of interaction models with lasso
+
+```{r test_code}
+#TODO: delete when done
+
+
+```
 
