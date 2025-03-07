@@ -125,38 +125,126 @@ Develop hierNet with simpler combinations
 
 ```{r test_block}
 
+NE_path <- list()
+NE_cv <- list()
+NE_fit <- list()
+
 #TODO: change to for loop over all groups
+n <- length(NE_resp) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(NE_resp[[i]])
 
-#testing with NE group 1
-y_1 <- cbind(as.numeric(NE_resp[[1]]))
-y_1 <- as.numeric(y_1[,1])
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:104]),
+             as.matrix(NE_preds_q75[[i]][ ,1:104])  )
 
-#using only nino/dmi
-X_1 <- as.matrix(NE_preds[[1]][,1:104]) 
+  #path -> cv -> fit
+  temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
+  temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
 
-#path -> cv -> fit
-test_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
-test_cv <- hierNet.cv(test_path, X_1, y_1, nfolds = 5)
-plot(test_cv)
+  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  
+  NE_path[[paste0("Group_", i)]] <- temp_path
+  NE_cv[[paste0("Group_", i)]] <- temp_cv
+  NE_fit[[paste0("Group_", i)]] <- temp_fit
+}
 
-test_fit <- hierNet(X_1, y_1, lam = test_cv$lamhat, strong = FALSE, diagonal = TRUE)
+plot(NE_cv[[1]])
+plot(NE_cv[[2]])
+plot(NE_cv[[3]])
+plot(NE_cv[[4]])
+
+#SE--------------##
+SE_path <- list()
+SE_cv <- list()
+SE_fit <- list()
+
+n <- length(SE_resp) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(SE_resp[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:104]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+  #path -> cv -> fit
+  temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
+  temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+
+  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  
+  SE_path[[paste0("Group_", i)]] <- temp_path
+  SE_cv[[paste0("Group_", i)]] <- temp_cv
+  SE_fit[[paste0("Group_", i)]] <- temp_fit
+}
+
+plot(SE_cv[[1]])
+plot(SE_cv[[2]])
+plot(SE_cv[[3]])
+plot(SE_cv[[4]])
 
 ```
 
 ```{r predict}
+NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = 19)
+SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = 19)
+
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 19)
+
+ne_yhat <- list()
+neresp_new <- c()
+n <- length(NE_resp)
+for (i in 1:n) {
+  y_1 <- as.numeric(NE_resp[[i]])
+  neresp_new <- c(neresp_new, y_1)
+  
+  X_1 <- as.matrix(NE_new[[i]][,1:104]) 
+  yhat <- predict(NE_fit[[i]], X_1)
+  
+  ne_yhat[[paste0("Group_", i)]] <- yhat
+}
+
+
+se_yhat <- list()
+seresp_new <- c()
+n <- length(SE_resp)
+for (i in 1:n) {
+  y_1 <- as.numeric(SE_resp[[i]])
+  seresp_new <- c(seresp_new, y_1)
+  
+  X_1 <- as.matrix(SE_new[[i]][,1:104]) 
+  yhat <- predict(SE_fit[[i]], X_1)
+  
+  se_yhat[[paste0("Group_", i)]] <- yhat
+}
+
+
+y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]], ne_yhat[[3]], ne_yhat[[4]]) 
+y_sehat <- c(se_yhat[[1]], se_yhat[[2]], se_yhat[[3]], se_yhat[[4]]) 
+
+NE_g1 <- seq(12, 216, length.out = 18)
+NE_g2 <- seq(5, 90, length.out = 18)
+NE_g3 <- seq(4, 72, length.out = 18)
+NE_g4 <- seq(11, 198, length.out = 18)
+
+
+SE_g1 <- seq(7, 126, length.out = 18)
+SE_g2 <- seq(9, 162, length.out = 18)
+SE_g3 <- seq(4, 72, length.out = 18)
+SE_g4 <- seq(12, 216, length.out = 18)
+```
+
+
+```{r }
 #TODO: do full season predictions (Create nice in/out of sample preds along with residual plots)
-yhat <- predict(test_fit, X_1)
 
-resids <- yhat - y_1
-plot(1:216, resids, pch = 16)
+plot(1:32, neresp_new,  type = "l")
+lines(1:32, y_nehat, col = "magenta3")
 abline(h = 0, lty = 2)
 
-plot(1:24, y_1[1:24],  type = "l")
-lines(1:24, yhat[1:24], col = "magenta3")
-abline(h = 0, lty = 2)
-
-plot(25:36, y_1[25:36],  type = "l", ylim = range(y_1[25:36], yhat[25:36]))
-lines(25:36, yhat[25:36], col = "magenta3")
+plot(1:32, seresp_new,  type = "l")
+lines(1:32, y_sehat, col = "magenta3")
 abline(h = 0, lty = 2)
 ```
 
