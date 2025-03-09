@@ -525,7 +525,7 @@ SE_preds1_q75 <- list(SEq75_pred1, SEq75_pred2)
 ### Model Fit
 
 ```{r}
-
+#TODO: repeat code for earlier model fit and run overnight
 ```
 
 
@@ -537,7 +537,8 @@ Testing and exploring another form of interaction models with lasso
 Compare with results from hiernet
 
 ```{r test_code}
-#TODO: delete when done 
+#TODO: figure out how to make this work with our current data
+## build up from smaller data sets
 
 # gaussian response, continuous features
 set.seed(155)
@@ -548,4 +549,9 @@ fit = glinternet(X, Y, numLevels)
 
 
 ```
+
+
+# RAMP 
+
+Using the method from Will's MSEA work but include my indicator functions
 
