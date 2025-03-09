@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r library}
 suppressMessages( library(hierNet))
+suppressMessages( library(glinternet))
 
 suppressMessages( library( colorspace)) #for some color alternatives
 ```
@@ -35,8 +36,11 @@ Goal of this is to include interaction terms into our methodology.
 
 Beginning with:
 1. hierNet
-2. Adding indicator terms into Will's quadratic fit. 
-3. Other hierarchical methods.
+  a. Change response groups
+  b. Try logistic regression for pos/neg (or threshold) 
+2. glinternet (other hier methods)
+3. Adding indicator terms into Will's quadratic fit. 
+
 
 #1 HierNet
 
@@ -118,10 +122,14 @@ NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = -c(19))
 SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = -c(19))
 ```
 
-### Testing (Building-up Model)
+
+
+### Testing (Building-up Model) 
 
 Develop hierNet with simpler combinations
 - Nino + DMI
+
+Currently works with 4 response group
 
 ```{r test_block}
 
@@ -135,7 +143,7 @@ for (i in 1:n) {
   y_1 <- as.numeric(NE_resp[[i]])
 
   #using only nino/dmi
-  X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:104]),
+  X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
 
   #path -> cv -> fit
@@ -164,7 +172,7 @@ for (i in 1:n) {
   y_1 <- as.numeric(SE_resp[[i]])
 
   #using only nino/dmi
-  X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:104]),
+  X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
                 as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
 
   #path -> cv -> fit
@@ -183,7 +191,11 @@ plot(SE_cv[[2]])
 plot(SE_cv[[3]])
 plot(SE_cv[[4]])
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(SE_fit, SE_cv, SE_path, NE_fit, NE_cv, NE_path, file = "hiernet_group.rda")
+
 ```
+
 
 ```{r predict}
 NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = 19)
@@ -203,7 +215,7 @@ for (i in 1:n) {
   y_1 <- as.numeric(NE_resp[[i]])
   neresp_new <- c(neresp_new, y_1)
   
-  X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:104]),
+  X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
   yhat <- predict(NE_fit[[i]], X_1)
   
@@ -219,7 +231,7 @@ for (i in 1:n) {
   seresp_new <- c(seresp_new, y_1)
   
     
-  X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:104]),
+  X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
              as.matrix(SE_preds_q75[[i]][ ,1:104])  )
   yhat <- predict(SE_fit[[i]], X_1)
   
@@ -280,7 +292,7 @@ for (k in 1:18) {
     y_1 <- as.numeric(NE_resp[[i]])
     neresp_new <- c(neresp_new, y_1)
     
-    X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:104]),
+    X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
                as.matrix(NE_preds_q75[[i]][ ,1:104])  )
     yhat <- predict(NE_fit[[i]], X_1)
     
@@ -296,7 +308,7 @@ for (k in 1:18) {
     seresp_new <- c(seresp_new, y_1)
     
       
-    X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:104]),
+    X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
                as.matrix(SE_preds_q75[[i]][ ,1:104])  )
     yhat <- predict(SE_fit[[i]], X_1)
     
@@ -372,6 +384,8 @@ SE_resids <- SE_resids[-1, ]
 
 
 ```{r}
+#TODO: update using the same scale as fused lasso
+
 boxplot(NE_resids, pch = 20, ylim = c(-20,20))
 abline(h = 0, lty = 2)
 
@@ -380,8 +394,46 @@ abline(h = 0, lty = 2)
 ```
 
 
+```{r}
+par(mar = c(8, 4, 4, 2) + 0.2)
+boxplot(NE_resids, ylim = c(-20,20), ylab = "Residuals", xlab = "",
+        main = "NE Aus : Model Residuals",axes = FALSE, pch = 20, 
+         cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+abline(v = c(12.5, 17.5, 21.5), lty =2, col = "red")
+text(7, -15, "Group 1", col = "red", cex =1)
+text(15, -15, "Group 2", col = "red", cex = 1)
+text(19.5, -15, "Group 3", col = "red", cex = 1)
+text(27, -15, "Group 4", col = "red", cex = 1)
+```
+
+```{r}
+par(mar = c(8, 4, 4, 2) + 0.2)
+boxplot(SE_resids, ylim = c(-20,20), ylab = "Residuals", xlab = "",
+        main = "SE Aus : Model Residuals",axes = FALSE, pch = 20, 
+         cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+abline(v = c(7.5, 16.5, 20.5), lty =2, col = "red")
+text(4, -15, "Group 1", col = "red", cex =1)
+text(12, -15, "Group 2", col = "red", cex = 1)
+text(18.5, -15, "Group 3", col = "red", cex = 1)
+text(26, -15, "Group 4", col = "red", cex = 1)
+```
+
+
+### Variable Importance
 
 ```{r var_imp}
+
+#TODO: change this for each group and region
 var_imp <- hierNet.varimp(test_fit, X_1, y_1)
 
 plot(var_imp[,1], var_imp[,2], pch = 16)
@@ -421,14 +473,78 @@ test_int[1:42,]
 
 ```
 
+```{r}
+#get NE_fit and SE_fit coefs, also visualize 
+
+```
+
+
+## Set-up Other Groups
+
+Repeat above with only two groups:
+NE Groups:
+1. Weeks 35-46; Index 1-12
+2. Weeks 47-52, 1-14; Index 13-32
+
+SE Groups:
+1. Weeks 35-50; Index 1-16
+2. Weeks 51, 52, 1-14; Index 17-32
+
+```{r new_groups}
+#updated lists 
+##predictors
+NE_group1 <- NE_preds[[1]]
+NE_group2 <- rbind(NE_preds[[2]], NE_preds[[3]], NE_preds[[4]])
+NE_preds1 <- list(NE_group1, NE_group2)
+
+SE_group1 <- rbind(SE_preds[[1]], SE_preds[[2]])
+SE_group2 <- rbind(SE_preds[[3]], SE_preds[[4]])
+SE_preds1 <- list(SE_group1, SE_group2)
+
+##response
+NEresp1 <- NE_resp[[1]]
+NEresp2 <- c(NE_resp[[2]], NE_resp[[3]], NE_resp[[4]])
+NE_resp1 <- list(NEresp1, NEresp2)
+
+SEresp1 <- c(SE_resp[[1]], SE_resp[[2]])
+SEresp2 <- c(SE_resp[[3]], SE_resp[[4]])
+SE_resp1 <- list(SEresp1, SEresp2)
+
+##indicator preds (q75)
+NEq75_pred1 <- NE_preds_q75[[1]]
+NEq75_pred2 <- rbind(NE_preds_q75[[2]], NE_preds_q75[[3]], NE_preds_q75[[4]])
+NE_preds1_q75 <- list(NEq75_pred1, NEq75_pred2)
+
+SEq75_pred1 <- rbind(SE_preds_q75[[1]], SE_preds_q75[[2]])
+SEq75_pred2 <- rbind(SE_preds_q75[[3]], SE_preds_q75[[4]])
+SE_preds1_q75 <- list(SEq75_pred1, SEq75_pred2)
+
+```
+
+
+### Model Fit
+
+```{r}
+
+```
+
 
 
 # glinternet 
 
 Testing and exploring another form of interaction models with lasso
 
+Compare with results from hiernet
+
 ```{r test_code}
-#TODO: delete when done
+#TODO: delete when done 
+
+# gaussian response, continuous features
+set.seed(155)
+Y = rnorm(100)
+X = matrix(rnorm(100*10), nrow=100)
+numLevels = rep(1, 10)
+fit = glinternet(X, Y, numLevels)
 
 
 ```
