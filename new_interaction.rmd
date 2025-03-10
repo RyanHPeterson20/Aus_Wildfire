@@ -39,8 +39,12 @@ Beginning with:
   a. Change response groups
   b. Try logistic regression for pos/neg (or threshold) 
 2. glinternet (other hier methods)
-3. Adding indicator terms into Will's quadratic fit. 
+3. Adding indicator terms into Will's quadratic fit (RAMP). 
 
+
+Logistic Regression:
+- If this works, update time series visualization for other thresholds
+-- that is, if the logisitic regression requires some threshold other than 0 update the response TS viz.
 
 #1 HierNet
 
@@ -395,6 +399,10 @@ abline(h = 0, lty = 2)
 
 
 ```{r}
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+png("NEresid.png", width = 2250, height = 1250, res = 200)
 par(mar = c(8, 4, 4, 2) + 0.2)
 boxplot(NE_resids, ylim = c(-20,20), ylab = "Residuals", xlab = "",
         main = "NE Aus : Model Residuals",axes = FALSE, pch = 20, 
@@ -409,9 +417,9 @@ text(7, -15, "Group 1", col = "red", cex =1)
 text(15, -15, "Group 2", col = "red", cex = 1)
 text(19.5, -15, "Group 3", col = "red", cex = 1)
 text(27, -15, "Group 4", col = "red", cex = 1)
-```
+dev.off()
 
-```{r}
+png("SEresid.png", width = 2250, height = 1250, res = 200)
 par(mar = c(8, 4, 4, 2) + 0.2)
 boxplot(SE_resids, ylim = c(-20,20), ylab = "Residuals", xlab = "",
         main = "SE Aus : Model Residuals",axes = FALSE, pch = 20, 
@@ -426,6 +434,8 @@ text(4, -15, "Group 1", col = "red", cex =1)
 text(12, -15, "Group 2", col = "red", cex = 1)
 text(18.5, -15, "Group 3", col = "red", cex = 1)
 text(26, -15, "Group 4", col = "red", cex = 1)
+dev.off()
+
 ```
 
 
@@ -511,6 +521,7 @@ SEresp2 <- c(SE_resp[[3]], SE_resp[[4]])
 SE_resp1 <- list(SEresp1, SEresp2)
 
 ##indicator preds (q75)
+
 NEq75_pred1 <- NE_preds_q75[[1]]
 NEq75_pred2 <- rbind(NE_preds_q75[[2]], NE_preds_q75[[3]], NE_preds_q75[[4]])
 NE_preds1_q75 <- list(NEq75_pred1, NEq75_pred2)
@@ -524,8 +535,74 @@ SE_preds1_q75 <- list(SEq75_pred1, SEq75_pred2)
 
 ### Model Fit
 
-```{r}
-#TODO: repeat code for earlier model fit and run overnight
+(2 groups per region)
+
+```{r test_block}
+NE_path1 <- list()
+NE_cv1 <- list()
+NE_fit1 <- list()
+
+#TODO: change to for loop over all groups
+n <- length(NE_resp1) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(NE_resp1[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(NE_preds1[[i]][ ,1:260]),
+             as.matrix(NE_preds1_q75[[i]][ ,1:104])  )
+
+  #path -> cv -> fit
+  temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
+  
+  set.seed(155)
+  temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+
+  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  
+  NE_path1[[paste0("Group_", i)]] <- temp_path
+  NE_cv1[[paste0("Group_", i)]] <- temp_cv
+  NE_fit1[[paste0("Group_", i)]] <- temp_fit
+}
+
+plot(NE_cv1[[1]])
+plot(NE_cv1[[2]])
+plot(NE_cv1[[3]])
+plot(NE_cv1[[4]])
+
+#SE--------------##
+SE_path1 <- list()
+SE_cv1 <- list()
+SE_fit1 <- list()
+
+n <- length(SE_resp1) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(SE_resp1[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+                as.matrix(SE_preds1_q75[[i]][ ,1:104]  ))
+
+  #path -> cv -> fit
+  temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
+  
+  set.seed(155)
+  temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+
+  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  
+  SE_path1[[paste0("Group_", i)]] <- temp_path
+  SE_cv1[[paste0("Group_", i)]] <- temp_cv
+  SE_fit1[[paste0("Group_", i)]] <- temp_fit
+}
+
+plot(SE_cv1[[1]])
+plot(SE_cv1[[2]])
+plot(SE_cv1[[3]])
+plot(SE_cv1[[4]])
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(SE_fit1, SE_cv1, SE_path1, NE_fit1, NE_cv1, NE_path1, file = "hiernet_group1.rda")
+
 ```
 
 
@@ -546,6 +623,42 @@ Y = rnorm(100)
 X = matrix(rnorm(100*10), nrow=100)
 numLevels = rep(1, 10)
 fit = glinternet(X, Y, numLevels)
+coef_test <- coef(fit)
+```
+
+
+```{r test_w/data}
+X_test <- NE_preds1[[1]][ ,1:52]
+Xtest_q75 <- NE_preds1_q75[[1]][ ,1:52]
+y_test <- NE_resp1[[1]]
+
+X_new <- cbind(X_test, Xtest_q75)
+  
+#sapply(X_test$nino_lag1, nlevels) 
+#sapply(test_factor$nino_lag1, nlevels)
+
+num_level <- c(rep(1, length(X_test)), rep(2, length(Xtest_q75)))
+
+#try nino only (first with only continuous data)
+
+set.seed(155)
+cv_test <- glinternet.cv(X_new, y_test, numLevels = num_level)
+
+plot(cv_test)
+cv_test$lambdaHat1Std
+cv_test$lambdaHat
+
+test_index <- which(cv_test$lambdaHat1Std == cv_test$lambda)
+
+sqrt(cv_test$cvErr[[test_index]]) #RMSE
+
+coef_test <- coef(cv_test$glinternetFit)[[test_index]]
+
+coef_test$mainEffects$cont
+coef_test$mainEffectsCoef$cont
+
+coef_test$interactions$contcont
+coef_test$interactionsCoef$contcont
 
 
 ```
