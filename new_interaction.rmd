@@ -60,7 +60,7 @@ Notes on HierNet:
 Using different response groupings:
 1. Base response clusters (e.g 4 groups)
 2. Split response groups (2 groups; early/late)
-3. Full response for each region
+(3. Full response for each region)
 
 ## Base Response Groups
 
@@ -446,13 +446,47 @@ for (k in 1:19) {
 #using will's code to viz preds and data
 #create plot for each region
 
+new_resp <- bounded_resp_df[which(bounded_resp_df$week %in% season_weeks, arr.ind = TRUE), ]
+new_resp <- new_resp[-c(1:14), ]
+
 #response data:
-NEbase_matrix
+temp_resp <- scale(new_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(new_resp$time)
+
+#TODO: remove everything outside of wildfire season
+out_season <- 15:34
+ 
+
+xlim_val <- ymd(c("20010103", "20200401"))
+plot(x = temp_time, y = temp_resp, pch = 16, 
+     col = "black", xlim = xlim_val, cex = 1)
+
+
+for (i in 1:19) {
+  
+}
+#NEbase_matrix
 
 NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
 
 #prediction data:
+NE_hat <- c()
+for (i in 1:19) {
+  NE_hat <- c(NE_hat, NE_season[[i]])
+}
+
+
+#base test
+xlim_val <- ymd(c("20010103", "20200401"))
+plot(x = temp_time, y = temp_resp, pch = 16, 
+     col = "black", xlim = xlim_val, cex = 1.2, ylab = "CO Anomaly", xlab = "",
+     main = "NE Aus")
+points(x = temp_time, y = NE_hat, pch = 19, 
+     col = "magenta3", cex = 0.85)
+
+#test with each group
+NE1_resp <- new_resp[which(new_resp$week %in% c(35:46), arr.ind = TRUE), ]
 
 ```
 
@@ -624,10 +658,10 @@ test_int[1:42,]
 
 #get NE_fit and SE_fit coefs, also visualize 
 #Begin with SE Group 3 (and cv.lambda1se since there are only 32 terms)
-temp_fit <- SE_fit2[[3]]
+temp_fit <- NE_fit2[[3]]
 
 #TODO: create a method to relate index to coefficient names
-coef_names <- c(colnames(SE_preds[[1]]), paste0( "IND_", colnames(SE_preds_q75[[1]][ ,1:104]) ) )
+coef_names <- c(colnames(NE_preds[[1]]), paste0( "IND_", colnames(NE_preds_q75[[1]][ ,1:104]) ) )
 
 main_eff <- temp_fit$bp - temp_fit$bn
 length(which(main_eff != 0, arr.ind = TRUE))
@@ -642,10 +676,13 @@ which_mat <- which(interact_eff != 0, arr.ind = TRUE)
 
 
 interact_names <- matrix(coef_names[which_mat], nrow = nrow(which_mat), ncol = ncol(which_mat))
-interact_names
+#interact_names
 coef_int <- interact_eff[which(interact_eff != 0, arr.ind = TRUE)]
 
 interact_df <- data.frame(interact_names[,2], interact_names[,1], coef_int )
+
+main_df
+interact_df
 ```
 
 
