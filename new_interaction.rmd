@@ -11,12 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r library}
-suppressMessages( library(hierNet))
-suppressMessages( library(glinternet))
-suppressMessages( library(RAMP))
+suppressMessages( library(hierNet)) #yes
+suppressMessages( library(glinternet)) #no
+suppressMessages( library(RAMP)) #maybe
 
+suppressMessages( library( lubridate)) #you know why
 suppressMessages( library( colorspace)) #for some color alternatives
-suppressMessages( library( fields)) #for set.panel() and other
+suppressMessages( library( fields)) #for set.panel() and others
+
+suppressMessages( library( caret)) #for confusion matrix
 ```
 
 ```{r data_functions}
@@ -206,10 +209,6 @@ for (i in 1:n) {
   NE_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
-plot(NE_cv[[1]])
-plot(NE_cv[[2]])
-plot(NE_cv[[3]])
-plot(NE_cv[[4]])
 
 #SE--------------##
 SE_path <- list()
@@ -255,6 +254,13 @@ for (i in 1:n) {
   SE_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
+set.panel(2,2)
+plot(NE_cv[[1]])
+plot(NE_cv[[2]])
+plot(NE_cv[[3]])
+plot(NE_cv[[4]])
+
+set.panel(2,2)
 plot(SE_cv[[1]])
 plot(SE_cv[[2]])
 plot(SE_cv[[3]])
@@ -266,29 +272,6 @@ save(SE_fit1, SE_fit2, SE_cv, SE_path, NE_fit1, NE_fit2, NE_cv, NE_path, file = 
 save(SE_logitfit1, SE_logitfit2, SE_logitcv, SE_logitcv, 
      NE_logitfit1, NE_logitfit2, NE_logitcv, NE_logitcv, file = "hiernet_log.rda")
 ```
-
-
-```{r redo_fit}
-#redo the se_fit1
-SE_fit1 <- list() #lambdahat
-
-n <- length(SE_resp) #setup for loop over list of groups
-for (i in 1:n) {
-  y_1 <- as.numeric(SE_resp[[i]])
-  
-  #using only nino/dmi
-  X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
-                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
-
-  #path -> cv -> fit
-  temp_cv <- SE_cv[[i]]
-
-  temp_fit1 <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
-  
-  SE_fit1[[paste0("Group_", i)]] <- temp_fit1
-}
-```
-
 
 ```{r predict_2019/2020}
 NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = 19)
@@ -310,7 +293,7 @@ for (i in 1:n) {
   
   X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
-  yhat <- predict(NE_fit1[[i]], X_1)
+  yhat <- predict(NE_fit2[[i]], X_1)
   
   ne_yhat[[paste0("Group_", i)]] <- yhat
 }
@@ -326,7 +309,7 @@ for (i in 1:n) {
     
   X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
              as.matrix(SE_preds_q75[[i]][ ,1:104])  )
-  yhat <- predict(SE_fit1[[i]], X_1)
+  yhat <- predict(SE_fit2[[i]], X_1)
   
   se_yhat[[paste0("Group_", i)]] <- yhat
 }
@@ -359,6 +342,8 @@ plot(1:32, seresp_new,  type = "l")
 lines(1:32, y_sehat, col = "magenta3")
 abline(h = 0, lty = 2)
 ```
+
+
 
 ### Predictions
 
@@ -454,10 +439,20 @@ for (k in 1:19) {
 }
 
 ```
+
 ### Prediction Visualizations
 
-```{r}
+```{r pred_viz}
 #using will's code to viz preds and data
+#create plot for each region
+
+#response data:
+NEbase_matrix
+
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
+
+#prediction data:
 
 ```
 
@@ -544,23 +539,47 @@ dev.off()
 ```{r var_imp}
 #TODO: change this for each group and region
 #create for loop to work through each group (and region)
-k <- 1 #season
+k <- 1:19 #season
+NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = k)
+SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = k)
 
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = k)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = k)
+
+#quantile 75 indicator
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = k)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = k)
 
 i <- 1 #group
+y_1 <- as.numeric(NE_resp[[i]])
+  
+X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
+           as.matrix(NE_preds_q75[[i]][ ,1:104])  )
+
+
 test_fit <- NE_fit1[[i]]
 
+#NOTE: this takes forever!!
 var_imp <- hierNet.varimp(test_fit, X_1, y_1)
 
 plot(var_imp[,1], var_imp[,2], pch = 20)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(var_imp, file = "temp_varimp.rda")
 ```
 
 
-### Logistic - Validation
-
-Checks on 
+### Logistic - Predictions
 
 ```{r}
+
+```
+
+
+Check on confusion matrix followed by overall accuracy, sensitivity, and specificity
+
+
+```{r conf_mat}
 
 ```
 
@@ -600,13 +619,39 @@ test_int[1:42,]
 
 ```
 
-```{r}
-#get NE_fit and SE_fit coefs, also visualize 
+```{r coef_Explore}
+#TODO: functionalize this so we can repeat it for all groups/regions
 
+#get NE_fit and SE_fit coefs, also visualize 
+#Begin with SE Group 3 (and cv.lambda1se since there are only 32 terms)
+temp_fit <- SE_fit2[[3]]
+
+#TODO: create a method to relate index to coefficient names
+coef_names <- c(colnames(SE_preds[[1]]), paste0( "IND_", colnames(SE_preds_q75[[1]][ ,1:104]) ) )
+
+main_eff <- temp_fit$bp - temp_fit$bn
+length(which(main_eff != 0, arr.ind = TRUE))
+main_names <- coef_names[which(main_eff != 0, arr.ind = TRUE)]
+coef_main <- main_eff[which(main_eff != 0, arr.ind = TRUE)]
+
+main_df <- data.frame(main_names, coef_main)
+
+interact_eff <- temp_fit$th
+length(which(interact_eff != 0, arr.ind = TRUE))
+which_mat <- which(interact_eff != 0, arr.ind = TRUE)
+
+
+interact_names <- matrix(coef_names[which_mat], nrow = nrow(which_mat), ncol = ncol(which_mat))
+interact_names
+coef_int <- interact_eff[which(interact_eff != 0, arr.ind = TRUE)]
+
+interact_df <- data.frame(interact_names[,2], interact_names[,1], coef_int )
 ```
 
 
 ## Set-up Other Groups
+
+Re-Run tonight for full data set (and logistic).
 
 Repeat above with only two groups:
 NE Groups:
@@ -1152,7 +1197,6 @@ fit = glinternet(X, Y, numLevels)
 coef_test <- coef(fit)
 ```
 
-
 ```{r test_w/data}
 X_test <- NE_preds1[[1]][ ,1:52]
 Xtest_q75 <- NE_preds1_q75[[1]][ ,1:52]
@@ -1194,6 +1238,7 @@ coef_test$interactionsCoef$contcont
 
 Using the method from Will's MSEA work but include my indicator functions, repeat previous hierNet work but with RAMP
 -Try to replicate the hierNet results here
+Note: there will be some changes in that we will use AIC, BIC, or eBIC instead of MSE for lambda selection.
 
 ```{r}
 
