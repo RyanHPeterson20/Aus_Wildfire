@@ -1,42 +1,66 @@
 Brief file notes and summaries:
 
-1. base_lasso.rmd
+1. AGU_viz.rmd
+  - Visualizations for AGU 2024.
+  - Used as baseline figures and plots.
+
+2. CO_dataupdate.rmd
+  - Data update to include indicator functions.
+  - Includes response thresholds for logistic regression.
+  - Combine with data_cleaning.rmd (and other data prep files.)
+
+ . base_lasso.rmd (DELETED; redundant)
   - Replace with lasso_work.rmd
   - intitial work for LASSO models inside a markdown file
   - if chosen as our model convert to R script
     - Potentially change to R script anyway.
 
- . cluster_work.rmd
+3. cluster_work.rmd
   - create manual time-constrained agglomerative clustering of response data.
   - this is all done manually since I don't necessarily like any of the existing R packages.
 
-2. co_olr.R
+4. co_olr.R
   -olr anomaly and visualization file. 
   -use the olr_full.rda (R data file)
     -TODO: convert .rda to .csv for general use.
 
-3. data_cleaning.rmd:
+5. data_cleaning.rmd:
   - base data cleaning methods inside a markdown file.
   - needs conversion to R script.
 
-  3.1. CO_dataupdate.rmd
-    - updated data cleaning/modification for OLR and Qunatile Indicators
+6. eda_work.rmd
+  - Exploratoty data analysis work.
+  - (add more later.)
 
+7. genlasso_func.R
+  - Includes cv.fusedlasso() that performs cross-validation for fused lasso in gen lasso
+  - Develops on existing cv that only works without predictors (e.g. signal trends)
+    - Includes the use of predictors in k-fold CV. 
 
- . group_function.R
+8. group_function.R
   - methods for creating groups of response and predictor data structures.
   - currently wip, needs to be flexible with respect to groups.
     - potentially combine with upated data functions so we can scale data correctly. 
+
+9. lasso_cv.R
+  - lasso cross-validation file
 
  . lasso_work.rmd
 
  . lasso_prediction.R
 
-4. new_simple_model.R
+ . new_interaction.rmd
+  - Interaction work for 5 continuous preds (CMI, OLR) and indicator functions (Nino, DMI).
+  - Working through other response groupings:
+    -Groups
+  - Includes logistic regression (hierNet).
+  - Works with hierNet (glinternet and RAMP to be tested later).
+
+ . new_simple_model.R
   - R script for the simplified linear models
   - Includes validation and predictive analysis methods. 
 
-5. pca_work.rmd:
+ . pca_work.rmd: (DELETED; redundant)
   - file for initial work using PCA on our data sets.
   - If this works we will clean up the work here and create an R script.
 
@@ -44,8 +68,7 @@ Brief file notes and summaries:
   - for working on prediction using clustered responses and fused lasso.
   - goal is to refine the prediction at this level of the hierarchical model.
 
-
-6. predictionTest_function.R
+ . predictionTest_function.R
   - R script that includes simplified versions of CRPS, interval scores and coverage
   - Needs added flexibility for distributions other than normal. 
 
