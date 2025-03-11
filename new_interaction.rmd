@@ -112,21 +112,43 @@ rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 
 ```{r model_data}
 #full model
-NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
-NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
 
-SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
-SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
 
 #quantile 90 indicator
 NE_preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(19))
 SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
 
 #quantile 75 indicator
-NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = -c(19))
-SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = -c(19))
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
 ```
 
+```{r logit}
+NEAus1 <- logit_NEresp[ ,1:12] #early season
+NEAus2 <- logit_NEresp[ ,13:17] #primary NE fire season
+NEAus3 <- logit_NEresp[ ,18:21] #feedback from SE
+NEAus4 <- logit_NEresp[ ,22:32] #late season
+
+#SEAus
+SEAus1 <- logit_SEresp[ ,1:7] #early season
+SEAus2 <- logit_SEresp[ ,8:16] #feedback from NE
+SEAus3 <- logit_SEresp[ ,17:20] #primary SE fire season
+SEAus4 <- logit_SEresp[ ,21:32] #late season
+
+NEAusmat <- list(NEAus1, NEAus2, NEAus3, NEAus4)
+SEAusmat <- list(SEAus1, SEAus2, SEAus3, SEAus4)
+
+rm(NEAus1, NEAus2, NEAus3, NEAus4, SEAus1, SEAus2, SEAus3, SEAus4)
+
+#setup data (resp/preds):
+#resp
+NElogitresp <- NEresp_grouping(NEAus_mat = NEAusmat, j = 1:19)
+SElogitresp <- SEresp_grouping(SEAus_mat = SEAusmat, j = 1:19)
+```
 
 
 ### Testing (Building-up Model) 
@@ -140,26 +162,47 @@ Currently works with 4 response group
 
 NE_path <- list()
 NE_cv <- list()
-NE_fit <- list()
+NE_fit1 <- list() #lambdahat
+NE_fit2 <- list() #lambda1se
+
+NE_logitpath <- list()
+NE_logitcv <- list()
+NE_logitfit1 <- list() #lambdahat
+NE_logitfit2 <- list() #lambda1se
 
 #TODO: change to for loop over all groups
 n <- length(NE_resp) #setup for loop over list of groups
 for (i in 1:n) {
   y_1 <- as.numeric(NE_resp[[i]])
+  y_logit <- NElogitresp[[i]]
 
   #using only nino/dmi
   X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
 
+  logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
   #path -> cv -> fit
   temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
   temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
 
-  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  temp_fit1 <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  temp_fit2 <- hierNet(X_1, y_1, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
   NE_path[[paste0("Group_", i)]] <- temp_path
   NE_cv[[paste0("Group_", i)]] <- temp_cv
-  NE_fit[[paste0("Group_", i)]] <- temp_fit
+  NE_fit1[[paste0("Group_", i)]] <- temp_fit1
+  NE_fit2[[paste0("Group_", i)]] <- temp_fit2
+  
+
+  logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
+
+  logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+  
+  NE_logitpath[[paste0("Group_", i)]] <- logit_path
+  NE_logitcv[[paste0("Group_", i)]] <- logit_cv
+  NE_logitfit1[[paste0("Group_", i)]] <- logit_fit1
+  NE_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
 plot(NE_cv[[1]])
@@ -170,12 +213,19 @@ plot(NE_cv[[4]])
 #SE--------------##
 SE_path <- list()
 SE_cv <- list()
-SE_fit <- list()
+SE_fit1 <- list() #lambdahat
+SE_fit2 <- list() #lambda1se
+
+SE_logitpath <- list()
+SE_logitcv <- list()
+SE_logitfit1 <- list() #lambdahat
+SE_logitfit2 <- list() #lambda1se
 
 n <- length(SE_resp) #setup for loop over list of groups
 for (i in 1:n) {
   y_1 <- as.numeric(SE_resp[[i]])
-
+  y_logit <- SElogitresp[[i]]
+  
   #using only nino/dmi
   X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
                 as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
@@ -184,11 +234,24 @@ for (i in 1:n) {
   temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
   temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
 
-  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  temp_fit1 <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  temp_fit2 <- hierNet(X_1, y_1, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
   SE_path[[paste0("Group_", i)]] <- temp_path
   SE_cv[[paste0("Group_", i)]] <- temp_cv
   SE_fit[[paste0("Group_", i)]] <- temp_fit
+  SE_fit2[[paste0("Group_", i)]] <- temp_fit2
+  
+  logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
+  logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
+
+  logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+  
+  SE_logitpath[[paste0("Group_", i)]] <- logit_path
+  SE_logitcv[[paste0("Group_", i)]] <- logit_cv
+  SE_logitfit1[[paste0("Group_", i)]] <- logit_fit1
+  SE_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
 plot(SE_cv[[1]])
@@ -197,8 +260,9 @@ plot(SE_cv[[3]])
 plot(SE_cv[[4]])
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
-save(SE_fit, SE_cv, SE_path, NE_fit, NE_cv, NE_path, file = "hiernet_group.rda")
-
+save(SE_fit1, SE_fit2, SE_cv, SE_path, NE_fit1, NE_fit2, NE_cv, NE_path, file = "hiernet_group.rda")
+save(SE_logitfit1, SE_logitfit2, SE_logitcv, SE_logitcv, 
+     NE_logitfit1, NE_logitfit2, NE_logitcv, NE_logitcv, file = "hiernet_log.rda")
 ```
 
 
@@ -1005,10 +1069,10 @@ SE_newq75 <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_q75, j = 19))
 
 
 i <- 2
-X_new <- cbind(as.matrix(SE_new[[i]][, 1:104]),
+X_new <- cbind(as.matrix(SE_new[[i]][, 1:104]), as.matrix(SE_new[[i]][ ,209:260]),
            as.matrix(SE_newq75[[i]][, 1:104])  )
 
-log_hat <- predict(temp_fit1se, X_new)
+log_hat <- predict(temp_fithat, X_new)
 log_hat[[1]]
 log_hat[[2]]
 logit_SEresp[k, 17:32] 
