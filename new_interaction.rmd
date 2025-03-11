@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r library}
 suppressMessages( library(hierNet))
 suppressMessages( library(glinternet))
+suppressMessages( library(RAMP))
 
 suppressMessages( library( colorspace)) #for some color alternatives
 ```
@@ -672,7 +673,7 @@ for (i in 1:n) {
 ```
 
 
-```{r}
+```{r 2019-2020pred}
 
 NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = 19)
 SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = 19)
@@ -743,12 +744,9 @@ for (i in 1:n) {
   se_yhat[[paste0("Group_", i)]] <- yhat
 }
 
-
 y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]]) 
 y_sehat <- c(se_yhat[[1]], se_yhat[[2]]) 
-```
 
-```{r}
 plot(1:32, neresp_new,  type = "l")
 lines(1:32, y_nehat, col = "magenta3")
 abline(h = 0, lty = 2)
@@ -757,6 +755,8 @@ plot(1:32, seresp_new,  type = "l")
 lines(1:32, y_sehat, col = "magenta3")
 abline(h = 0, lty = 2)
 ```
+
+
 
 ### Predictions
 
@@ -849,7 +849,6 @@ for (k in 1:18) {
   dev.off()
 }
 
-dev.off()
 ```
 
 ### Residuals
@@ -879,6 +878,9 @@ boxplot(SE_resids, pch = 20, ylim = c(-20,20))
 abline(h = 0, lty = 2)
 ```
 
+
+
+
 ```{r}
 #TODO: create a nice way to visualize this
 k <- 7
@@ -892,6 +894,9 @@ lines(1:32, SE_resids[k+1, ], col = "red1")
 lines(1:32, NE_resids[k+2, ], col = "orange3")
 abline(h = 0, lty = 2)
 ```
+
+
+
 
 Fit VAR(MA) model on residuals for both regions
 
@@ -929,6 +934,7 @@ ar_model <- ar(df_filtered$value, order.max = 5, method = "yw")
 
 Using base data
 
+
 ```{r data_update}
 #logit data
 
@@ -950,28 +956,68 @@ SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 
 rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 
-NElogitresp <- NEresp(NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19)))
-SElogitresp <- SEresp(SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19)))
+#setup data (resp/preds):
+#resp
+NElogitresp <- NEresp(NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19))
+SElogitresp <- SEresp(SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19))
+
+#preds
+NEpreds1 <- NEpreds( NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19))
+SEpreds1 <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19))
+
+#quantile 75 indicator
+NE_preds1_q75 <- NEpreds( NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19))
+SE_preds1_q75 <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19))
 
 ```
 
 ```{r}
-i <- 1
-y_logit <- NElogitresp[[i]]
+i <- 2
+y_logit <- SElogitresp[[i]]
 
 #using only nino/dmi
-X_1 <- cbind(as.matrix(NE_preds1[[i]][ ,1:104]),
-           as.matrix(NE_preds1_q75[[i]][ ,1:104])  )
+X_1 <- cbind(as.matrix(SEpreds1[[i]][ ,1:104]), as.matrix(SEpreds1[[i]][ ,209:260]),
+           as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
 
 #path -> cv -> fit
 temp_path <- hierNet.logistic.path( X_1, y_logit, strong = FALSE, diagonal = TRUE)
 
-set.seed(155)
+set.seed(156)
 temp_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
 
 plot(temp_cv)
 
-temp_fit <- hierNet.logistic(X_1, y_logit, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+temp_fithat <- hierNet.logistic(X_1, y_logit, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+temp_fit1se <- hierNet.logistic(X_1, y_logit, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+```
+
+
+```{r logit_preds}
+
+k <- 19
+#NEpred1 <- NEpreds( NElag_grouping(NE_laglist = NE_laglist_std, j = k))
+SE_new <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_std, j = 19))
+
+#quantile 75 indicator
+#NEpred1_q75 <- NEpreds( NElag_grouping(NE_laglist = NE_laglist_q75, j = k))
+SE_newq75 <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_q75, j = 19))
+
+
+
+i <- 2
+X_new <- cbind(as.matrix(SE_new[[i]][, 1:104]),
+           as.matrix(SE_newq75[[i]][, 1:104])  )
+
+log_hat <- predict(temp_fit1se, X_new)
+log_hat[[1]]
+log_hat[[2]]
+logit_SEresp[k, 17:32] 
+
+#temp_fit1se$bp - temp_fit1se$bn
+```
+
+```{r}
+
 ```
 
 
