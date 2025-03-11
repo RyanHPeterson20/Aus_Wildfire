@@ -16,6 +16,7 @@ suppressMessages( library(glinternet))
 suppressMessages( library(RAMP))
 
 suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages( library( fields)) #for set.panel() and other
 ```
 
 ```{r data_functions}
@@ -239,7 +240,7 @@ for (i in 1:n) {
   
   SE_path[[paste0("Group_", i)]] <- temp_path
   SE_cv[[paste0("Group_", i)]] <- temp_cv
-  SE_fit[[paste0("Group_", i)]] <- temp_fit
+  SE_fit1[[paste0("Group_", i)]] <- temp_fit1
   SE_fit2[[paste0("Group_", i)]] <- temp_fit2
   
   logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
@@ -259,6 +260,7 @@ plot(SE_cv[[2]])
 plot(SE_cv[[3]])
 plot(SE_cv[[4]])
 
+
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 save(SE_fit1, SE_fit2, SE_cv, SE_path, NE_fit1, NE_fit2, NE_cv, NE_path, file = "hiernet_group.rda")
 save(SE_logitfit1, SE_logitfit2, SE_logitcv, SE_logitcv, 
@@ -266,7 +268,29 @@ save(SE_logitfit1, SE_logitfit2, SE_logitcv, SE_logitcv,
 ```
 
 
-```{r predict}
+```{r redo_fit}
+#redo the se_fit1
+SE_fit1 <- list() #lambdahat
+
+n <- length(SE_resp) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(SE_resp[[i]])
+  
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+  #path -> cv -> fit
+  temp_cv <- SE_cv[[i]]
+
+  temp_fit1 <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  
+  SE_fit1[[paste0("Group_", i)]] <- temp_fit1
+}
+```
+
+
+```{r predict_2019/2020}
 NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = 19)
 SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = 19)
 
@@ -286,7 +310,7 @@ for (i in 1:n) {
   
   X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
-  yhat <- predict(NE_fit[[i]], X_1)
+  yhat <- predict(NE_fit1[[i]], X_1)
   
   ne_yhat[[paste0("Group_", i)]] <- yhat
 }
@@ -302,7 +326,7 @@ for (i in 1:n) {
     
   X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
              as.matrix(SE_preds_q75[[i]][ ,1:104])  )
-  yhat <- predict(SE_fit[[i]], X_1)
+  yhat <- predict(SE_fit1[[i]], X_1)
   
   se_yhat[[paste0("Group_", i)]] <- yhat
 }
@@ -342,7 +366,7 @@ abline(h = 0, lty = 2)
 NE_season <- list()
 SE_season <- list()
 
-for (k in 1:18) {
+for (k in 1:19) {
     
   NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = k)
   SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = k)
@@ -363,7 +387,7 @@ for (k in 1:18) {
     
     X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
                as.matrix(NE_preds_q75[[i]][ ,1:104])  )
-    yhat <- predict(NE_fit[[i]], X_1)
+    yhat <- predict(NE_fit1[[i]], X_1)
     
     ne_yhat[[paste0("Group_", i)]] <- yhat
   }
@@ -379,7 +403,8 @@ for (k in 1:18) {
       
     X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
                as.matrix(SE_preds_q75[[i]][ ,1:104])  )
-    yhat <- predict(SE_fit[[i]], X_1)
+    
+    yhat <- predict(SE_fit1[[i]], X_1)
     
     se_yhat[[paste0("Group_", i)]] <- yhat
   }
@@ -424,21 +449,28 @@ for (k in 1:18) {
   lines(1:32, y_sehat, col = "magenta3", lwd = 2)
   abline(h = 0, lty = 2) #TODO: correct this line
   
-
+  
+  dev.off()
 }
 
-dev.off()
 ```
+### Prediction Visualizations
+
+```{r}
+#using will's code to viz preds and data
+
+```
+
 
 
 ### Residuals
 
-```{r}
+```{r resids}
 #get residuals (y - yhat)
 NE_resids <- matrix(NA, ncol = 32)
 SE_resids <- matrix(NA, ncol = 32)
 
-for (k in 1:18) {
+for (k in 1:19) {
   temp_NE <- NEbase_matrix[k, ] - NE_season[[k]]
   temp_SE <- SEbase_matrix[k, ] - SE_season[[k]]
   
@@ -455,15 +487,15 @@ SE_resids <- SE_resids[-1, ]
 ```{r}
 #TODO: update using the same scale as fused lasso
 
-boxplot(NE_resids, pch = 20, ylim = c(-20,20))
+boxplot(NE_resids, pch = 20, ylim = c(-20,20), main ="NE Aus")
 abline(h = 0, lty = 2)
 
-boxplot(SE_resids, pch = 20, ylim = c(-20,20))
+boxplot(SE_resids, pch = 20, ylim = c(-20,20), main ="SE Aus")
 abline(h = 0, lty = 2)
 ```
 
 
-```{r}
+```{r resid_output}
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 
@@ -504,15 +536,35 @@ dev.off()
 ```
 
 
+
+
+
 ### Variable Importance
 
 ```{r var_imp}
-
 #TODO: change this for each group and region
+#create for loop to work through each group (and region)
+k <- 1 #season
+
+
+i <- 1 #group
+test_fit <- NE_fit1[[i]]
+
 var_imp <- hierNet.varimp(test_fit, X_1, y_1)
 
-plot(var_imp[,1], var_imp[,2], pch = 16)
+plot(var_imp[,1], var_imp[,2], pch = 20)
 ```
+
+
+### Logistic - Validation
+
+Checks on 
+
+```{r}
+
+```
+
+
 
 ### Coefficients
 
@@ -1080,10 +1132,6 @@ logit_SEresp[k, 17:32]
 #temp_fit1se$bp - temp_fit1se$bn
 ```
 
-```{r}
-
-```
-
 
 # glinternet 
 
@@ -1144,10 +1192,11 @@ coef_test$interactionsCoef$contcont
 
 # RAMP 
 
-Using the method from Will's MSEA work but include my indicator functions
+Using the method from Will's MSEA work but include my indicator functions, repeat previous hierNet work but with RAMP
+-Try to replicate the hierNet results here
+
+```{r}
+
+```
 
 
-
-# BigVAR
-
-Using VARX-L and HLAG
