@@ -533,6 +533,36 @@ SE_preds1_q75 <- list(SEq75_pred1, SEq75_pred2)
 ```
 
 
+```{r function}
+#create functions
+NEpreds <- function(NE_preds){
+  NE_group1 <- NE_preds[[1]]
+  NE_group2 <- rbind(NE_preds[[2]], NE_preds[[3]], NE_preds[[4]])
+  return(list(NE_group1, NE_group2))
+}
+
+SEpreds <- function(SE_preds){
+  SE_group1 <- rbind(SE_preds[[1]], SE_preds[[2]])
+  SE_group2 <- rbind(SE_preds[[3]], SE_preds[[4]])
+  return(list(SE_group1, SE_group2))
+}
+
+NEresp <- function(NE_resp){
+  NEresp1 <- NE_resp[[1]]
+  NEresp2 <- c(NE_resp[[2]], NE_resp[[3]], NE_resp[[4]])
+  return(list(NEresp1, NEresp2))
+}
+
+SEresp <- function(SE_resp){
+  SEresp1 <- c(SE_resp[[1]], SE_resp[[2]])
+  SEresp2 <- c(SE_resp[[3]], SE_resp[[4]])
+  return(list(SEresp1, SEresp2))
+}
+
+
+```
+
+
 ### Model Fit
 
 (2 groups per region)
@@ -566,8 +596,7 @@ for (i in 1:n) {
 
 plot(NE_cv1[[1]])
 plot(NE_cv1[[2]])
-plot(NE_cv1[[3]])
-plot(NE_cv1[[4]])
+
 
 #SE--------------##
 SE_path1 <- list()
@@ -597,14 +626,353 @@ for (i in 1:n) {
 
 plot(SE_cv1[[1]])
 plot(SE_cv1[[2]])
-plot(SE_cv1[[3]])
-plot(SE_cv1[[4]])
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 save(SE_fit1, SE_cv1, SE_path1, NE_fit1, NE_cv1, NE_path1, file = "hiernet_group1.rda")
 
 ```
 
+
+```{r}
+#play with lambda in fit
+NE_fit2 <- list()
+
+#TODO: change to for loop over all groups
+n <- length(NE_resp1) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(NE_resp1[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(NE_preds1[[i]][ ,1:260]),
+             as.matrix(NE_preds1_q75[[i]][ ,1:104])  )
+
+  temp_cv <- NE_cv1[[i]]
+  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+  
+  NE_fit2[[paste0("Group_", i)]] <- temp_fit
+}
+
+
+SE_fit2 <- list()
+
+#TODO: change to for loop over all groups
+n <- length(SE_resp1) #setup for loop over list of groups
+for (i in 1:n) {
+  y_1 <- as.numeric(SE_resp1[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+
+  temp_cv <- SE_cv1[[i]]
+  temp_fit <- hierNet(X_1, y_1, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+  
+  SE_fit2[[paste0("Group_", i)]] <- temp_fit
+}
+```
+
+
+```{r}
+
+NE_new <- NElag_grouping(NE_laglist = NE_laglist_std, j = 19)
+SE_new <- SElag_grouping(SE_laglist = SE_laglist_std, j = 19)
+
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 19)
+
+#quantile 75 indicator
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 19)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 19)
+
+
+NE_group1 <- NE_new[[1]]
+NE_group2 <- rbind(NE_new[[2]], NE_new[[3]], NE_new[[4]])
+NE_preds1 <- list(NE_group1, NE_group2)
+
+SE_group1 <- rbind(SE_new[[1]], SE_new[[2]])
+SE_group2 <- rbind(SE_new[[3]], SE_new[[4]])
+SE_preds1 <- list(SE_group1, SE_group2)
+
+##response
+NEresp1 <- NE_resp[[1]]
+NEresp2 <- c(NE_resp[[2]], NE_resp[[3]], NE_resp[[4]])
+NE_resp1 <- list(NEresp1, NEresp2)
+
+SEresp1 <- c(SE_resp[[1]], SE_resp[[2]])
+SEresp2 <- c(SE_resp[[3]], SE_resp[[4]])
+SE_resp1 <- list(SEresp1, SEresp2)
+
+##indicator preds (q75)
+
+NEq75_pred1 <- NE_preds_q75[[1]]
+NEq75_pred2 <- rbind(NE_preds_q75[[2]], NE_preds_q75[[3]], NE_preds_q75[[4]])
+NE_preds1_q75 <- list(NEq75_pred1, NEq75_pred2)
+
+SEq75_pred1 <- rbind(SE_preds_q75[[1]], SE_preds_q75[[2]])
+SEq75_pred2 <- rbind(SE_preds_q75[[3]], SE_preds_q75[[4]])
+SE_preds1_q75 <- list(SEq75_pred1, SEq75_pred2)
+
+
+ne_yhat <- list()
+neresp_new <- c()
+n <- length(NE_resp1)
+for (i in 1:n) {
+  y_1 <- as.numeric(NE_resp1[[i]])
+  neresp_new <- c(neresp_new, y_1)
+  
+  X_1 <- cbind(as.matrix(NE_preds1[[i]][ ,1:260]),
+             as.matrix(NE_preds1_q75[[i]][ ,1:104])  )
+  yhat <- predict(NE_fit2[[i]], X_1)
+  
+  ne_yhat[[paste0("Group_", i)]] <- yhat
+}
+
+
+se_yhat <- list()
+seresp_new <- c()
+n <- length(SE_resp1)
+for (i in 1:n) {
+  y_1 <- as.numeric(SE_resp1[[i]])
+  seresp_new <- c(seresp_new, y_1)
+  
+    
+  X_1 <- cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+  yhat <- predict(SE_fit2[[i]], X_1)
+  
+  se_yhat[[paste0("Group_", i)]] <- yhat
+}
+
+
+y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]]) 
+y_sehat <- c(se_yhat[[1]], se_yhat[[2]]) 
+```
+
+```{r}
+plot(1:32, neresp_new,  type = "l")
+lines(1:32, y_nehat, col = "magenta3")
+abline(h = 0, lty = 2)
+
+plot(1:32, seresp_new,  type = "l")
+lines(1:32, y_sehat, col = "magenta3")
+abline(h = 0, lty = 2)
+```
+
+### Predictions
+
+```{r}
+NE_season <- list()
+SE_season <- list()
+
+for (k in 1:18) {
+    
+  NE_new <- NEpreds(NElag_grouping(NE_laglist = NE_laglist_std, j = k))
+  SE_new <- SEpreds(SElag_grouping(SE_laglist = SE_laglist_std, j = k))
+  
+  NE_resp <- NEresp(NEresp_grouping(NEAus_mat = NEAus_mat, j = k))
+  SE_resp <- SEresp(SEresp_grouping(SEAus_mat = SEAus_mat, j = k))
+  
+  #quantile 75 indicator
+  NE_preds_q75 <- NEpreds(NElag_grouping(NE_laglist = NE_laglist_q75, j = k))
+  SE_preds_q75 <- SEpreds(SElag_grouping(SE_laglist = SE_laglist_q75, j = k))
+  
+  ne_yhat <- list()
+  neresp_new <- c()
+  n <- length(NE_resp)
+  for (i in 1:n) {
+    y_1 <- as.numeric(NE_resp[[i]])
+    neresp_new <- c(neresp_new, y_1)
+    
+    X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
+               as.matrix(NE_preds_q75[[i]][ ,1:104])  )
+    yhat <- predict(NE_fit1[[i]], X_1)
+    
+    ne_yhat[[paste0("Group_", i)]] <- yhat
+  }
+  
+  
+  se_yhat <- list()
+  seresp_new <- c()
+  n <- length(SE_resp)
+  for (i in 1:n) {
+    y_1 <- as.numeric(SE_resp[[i]])
+    seresp_new <- c(seresp_new, y_1)
+    
+      
+    X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
+               as.matrix(SE_preds_q75[[i]][ ,1:104])  )
+    yhat <- predict(SE_fit1[[i]], X_1)
+    
+    se_yhat[[paste0("Group_", i)]] <- yhat
+  }
+  
+  
+  y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]]) 
+  y_sehat <- c(se_yhat[[1]], se_yhat[[2]]) 
+  
+  NE_season[[paste0("Season_", seasons[k])]] <- y_nehat
+  SE_season[[paste0("Season_", seasons[k])]] <- y_sehat
+  
+  #visualizations
+  x_vals <- 1:32
+  
+  setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+  f_names <- paste0("Season_", seasons[k],"_1.png" )
+  
+  png(filename = f_names, width = 3200, height = 1600, res = 200)
+  set.panel(1,2)
+  #par(mar = c(7, 4, 4, 11) + 0.3, xpd = TRUE) 
+  plot(x_vals, neresp_new, type = "l", lwd = 2, ylim = range(neresp_new, y_nehat), 
+          ylab = "Atmospheric CO",
+          xlab = "",  main = paste0("NE Aus: ", seasons[k]), axes = FALSE, 
+          cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+  box()
+  axis(2)
+  axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+       las = 3, cex.axis = 1.6)
+  lines(1:32, y_nehat, col = "magenta3", lwd = 2)
+  abline(h = 0, lty = 2) #TODO: correct this line
+  
+  #par(mar = c(7, 4, 4, 11) + 0.3, xpd = TRUE) 
+  plot(x_vals, seresp_new, type = "l", lwd = 2, ylim = range(seresp_new, y_sehat), 
+          ylab = "Atmospheric CO",
+          xlab = "",  main = paste0("SE Aus: ", seasons[k]), axes = FALSE, 
+          cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+  box()
+  axis(2)
+  axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
+       las = 3, cex.axis = 1.6)
+  lines(1:32, y_sehat, col = "magenta3", lwd = 2)
+  abline(h = 0, lty = 2) #TODO: correct this line
+  
+  dev.off()
+}
+
+dev.off()
+```
+
+### Residuals
+
+```{r residuals}
+#get residuals (y - yhat)
+NE_resids <- matrix(NA, ncol = 32)
+SE_resids <- matrix(NA, ncol = 32)
+
+for (k in 1:18) {
+  temp_NE <- NEbase_matrix[k, ] - NE_season[[k]]
+  temp_SE <- SEbase_matrix[k, ] - SE_season[[k]]
+  
+  NE_resids <- rbind(NE_resids, temp_NE)
+  SE_resids <- rbind(SE_resids, temp_SE)
+}
+
+NE_resids <- NE_resids[-1, ]
+SE_resids <- SE_resids[-1, ]
+
+#TODO: update using the same scale as fused lasso
+
+boxplot(NE_resids, pch = 20, ylim = c(-20,20))
+abline(h = 0, lty = 2)
+
+boxplot(SE_resids, pch = 20, ylim = c(-20,20))
+abline(h = 0, lty = 2)
+```
+
+```{r}
+#TODO: create a nice way to visualize this
+k <- 7
+plot(1:32, NE_resids[k, ], type = "l", ylim = range(NE_resids))
+lines(1:32, NE_resids[k+1, ], col = "red1")
+lines(1:32, NE_resids[k+2, ], col = "orange3")
+abline(h = 0, lty = 2)
+
+plot(1:32, SE_resids[k, ], type = "l", ylim = range(SE_resids))
+lines(1:32, SE_resids[k+1, ], col = "red1")
+lines(1:32, NE_resids[k+2, ], col = "orange3")
+abline(h = 0, lty = 2)
+```
+
+Fit VAR(MA) model on residuals for both regions
+
+
+```{r test}
+#TODO: delete when done, test block
+suppressMessages( library(dplyr))
+
+# Simulate time series data for multiple years (weekly data)
+set.seed(123)
+years <- rep(2000:2020, each = 52)  # 52 weeks per year
+weeks <- rep(1:52, times = length(2000:2020))  # Repeating weeks
+values <- rnorm(length(years))  # Simulated data
+
+# Create data frame
+df <- data.frame(year = years, week = weeks, value = values)
+
+# Filter only August to December (Weeks 31-52)
+df_filtered <- df %>%
+  filter(week >= 31 & week <= 52)
+
+# Create a continuous time index ignoring January-July
+df_filtered$time_index <- seq_along(df_filtered$value)
+
+ar_model <- ar(df_filtered$value, order.max = 5, method = "yw")
+```
+
+
+```{r VARMA}
+#TODO: work out best way to do this with residuals
+```
+
+
+## Logistic HierNet
+
+Using base data
+
+```{r data_update}
+#logit data
+
+#group response matrices
+#NEAus
+NEAus_1 <- logit_NEresp[ ,1:12] #early season
+NEAus_2 <- logit_NEresp[ ,13:17] #primary NE fire season
+NEAus_3 <- logit_NEresp[ ,18:21] #feedback from SE
+NEAus_4 <- logit_NEresp[ ,22:32] #late season
+
+#SEAus
+SEAus_1 <- logit_SEresp[ ,1:7] #early season
+SEAus_2 <- logit_SEresp[ ,8:16] #feedback from NE
+SEAus_3 <- logit_SEresp[ ,17:20] #primary SE fire season
+SEAus_4 <- logit_SEresp[ ,21:32] #late season
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4)
+
+rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
+
+NElogitresp <- NEresp(NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19)))
+SElogitresp <- SEresp(SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19)))
+
+```
+
+```{r}
+i <- 1
+y_logit <- NElogitresp[[i]]
+
+#using only nino/dmi
+X_1 <- cbind(as.matrix(NE_preds1[[i]][ ,1:104]),
+           as.matrix(NE_preds1_q75[[i]][ ,1:104])  )
+
+#path -> cv -> fit
+temp_path <- hierNet.logistic.path( X_1, y_logit, strong = FALSE, diagonal = TRUE)
+
+set.seed(155)
+temp_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
+
+plot(temp_cv)
+
+temp_fit <- hierNet.logistic(X_1, y_logit, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
+```
 
 
 # glinternet 
@@ -668,3 +1036,8 @@ coef_test$interactionsCoef$contcont
 
 Using the method from Will's MSEA work but include my indicator functions
 
+
+
+# BigVAR
+
+Using VARX-L and HLAG
