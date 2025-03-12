@@ -116,19 +116,19 @@ rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 
 ```{r model_data}
 #full model
-NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)
-NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:18)
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:18)
 
-SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
-SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:18)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:18)
 
 #quantile 90 indicator
 NE_preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(19))
 SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
 
 #quantile 75 indicator
-NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
-SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:18)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:18)
 ```
 
 ```{r logit}
@@ -150,8 +150,8 @@ rm(NEAus1, NEAus2, NEAus3, NEAus4, SEAus1, SEAus2, SEAus3, SEAus4)
 
 #setup data (resp/preds):
 #resp
-NElogitresp <- NEresp_grouping(NEAus_mat = NEAusmat, j = 1:19)
-SElogitresp <- SEresp_grouping(SEAus_mat = SEAusmat, j = 1:19)
+NElogitresp <- NEresp_grouping(NEAus_mat = NEAusmat, j = 1:18)
+SElogitresp <- SEresp_grouping(SEAus_mat = SEAusmat, j = 1:18)
 ```
 
 
@@ -164,15 +164,15 @@ Currently works with 4 response group
 
 ```{r test_block}
 
-NE_path <- list()
-NE_cv <- list()
-NE_fit1 <- list() #lambdahat
-NE_fit2 <- list() #lambda1se
+NE1_path <- list()
+NE1_cv <- list()
+NE1_fit1 <- list() #lambdahat
+NE1_fit2 <- list() #lambda1se
 
-NE_logitpath <- list()
-NE_logitcv <- list()
-NE_logitfit1 <- list() #lambdahat
-NE_logitfit2 <- list() #lambda1se
+NE1_logitpath <- list()
+NE1_logitcv <- list()
+NE1_logitfit1 <- list() #lambdahat
+NE1_logitfit2 <- list() #lambda1se
 
 #TODO: change to for loop over all groups
 n <- length(NE_resp) #setup for loop over list of groups
@@ -192,10 +192,10 @@ for (i in 1:n) {
   temp_fit1 <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
   temp_fit2 <- hierNet(X_1, y_1, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
-  NE_path[[paste0("Group_", i)]] <- temp_path
-  NE_cv[[paste0("Group_", i)]] <- temp_cv
-  NE_fit1[[paste0("Group_", i)]] <- temp_fit1
-  NE_fit2[[paste0("Group_", i)]] <- temp_fit2
+  NE1_path[[paste0("Group_", i)]] <- temp_path
+  NE1_cv[[paste0("Group_", i)]] <- temp_cv
+  NE1_fit1[[paste0("Group_", i)]] <- temp_fit1
+  NE1_fit2[[paste0("Group_", i)]] <- temp_fit2
   
 
   logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
@@ -203,23 +203,23 @@ for (i in 1:n) {
   logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
   logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
-  NE_logitpath[[paste0("Group_", i)]] <- logit_path
-  NE_logitcv[[paste0("Group_", i)]] <- logit_cv
-  NE_logitfit1[[paste0("Group_", i)]] <- logit_fit1
-  NE_logitfit2[[paste0("Group_", i)]] <- logit_fit2
+  NE1_logitpath[[paste0("Group_", i)]] <- logit_path
+  NE1_logitcv[[paste0("Group_", i)]] <- logit_cv
+  NE1_logitfit1[[paste0("Group_", i)]] <- logit_fit1
+  NE1_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
 
 #SE--------------##
-SE_path <- list()
-SE_cv <- list()
-SE_fit1 <- list() #lambdahat
-SE_fit2 <- list() #lambda1se
+SE1_path <- list()
+SE1_cv <- list()
+SE1_fit1 <- list() #lambdahat
+SE1_fit2 <- list() #lambda1se
 
-SE_logitpath <- list()
-SE_logitcv <- list()
-SE_logitfit1 <- list() #lambdahat
-SE_logitfit2 <- list() #lambda1se
+SE1_logitpath <- list()
+SE1_logitcv <- list()
+SE1_logitfit1 <- list() #lambdahat
+SE1_logitfit2 <- list() #lambda1se
 
 n <- length(SE_resp) #setup for loop over list of groups
 for (i in 1:n) {
@@ -237,10 +237,10 @@ for (i in 1:n) {
   temp_fit1 <- hierNet(X_1, y_1, lam = temp_cv$lamhat, strong = FALSE, diagonal = TRUE)
   temp_fit2 <- hierNet(X_1, y_1, lam = temp_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
-  SE_path[[paste0("Group_", i)]] <- temp_path
-  SE_cv[[paste0("Group_", i)]] <- temp_cv
-  SE_fit1[[paste0("Group_", i)]] <- temp_fit1
-  SE_fit2[[paste0("Group_", i)]] <- temp_fit2
+  SE1_path[[paste0("Group_", i)]] <- temp_path
+  SE1_cv[[paste0("Group_", i)]] <- temp_cv
+  SE1_fit1[[paste0("Group_", i)]] <- temp_fit1
+  SE1_fit2[[paste0("Group_", i)]] <- temp_fit2
   
   logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
   logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
@@ -248,29 +248,29 @@ for (i in 1:n) {
   logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
   logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
-  SE_logitpath[[paste0("Group_", i)]] <- logit_path
-  SE_logitcv[[paste0("Group_", i)]] <- logit_cv
-  SE_logitfit1[[paste0("Group_", i)]] <- logit_fit1
-  SE_logitfit2[[paste0("Group_", i)]] <- logit_fit2
+  SE1_logitpath[[paste0("Group_", i)]] <- logit_path
+  SE1_logitcv[[paste0("Group_", i)]] <- logit_cv
+  SE1_logitfit1[[paste0("Group_", i)]] <- logit_fit1
+  SE1_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
 set.panel(2,2)
-plot(NE_cv[[1]])
-plot(NE_cv[[2]])
-plot(NE_cv[[3]])
-plot(NE_cv[[4]])
+plot(NE1_cv[[1]])
+plot(NE1_cv[[2]])
+plot(NE1_cv[[3]])
+plot(NE1_cv[[4]])
 
 set.panel(2,2)
-plot(SE_cv[[1]])
-plot(SE_cv[[2]])
-plot(SE_cv[[3]])
-plot(SE_cv[[4]])
+plot(SE1_cv[[1]])
+plot(SE1_cv[[2]])
+plot(SE1_cv[[3]])
+plot(SE1_cv[[4]])
 
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
-save(SE_fit1, SE_fit2, SE_cv, SE_path, NE_fit1, NE_fit2, NE_cv, NE_path, file = "hiernet_group.rda")
-save(SE_logitfit1, SE_logitfit2, SE_logitcv, SE_logitcv, 
-     NE_logitfit1, NE_logitfit2, NE_logitcv, NE_logitcv, file = "hiernet_log.rda")
+save(SE1_fit1, SE1_fit2, SE1_cv, SE1_path, NE1_fit1, NE1_fit2, NE1_cv, NE1_path, file = "hiernet1_group.rda")
+save(SE1_logitfit1, SE1_logitfit2, SE1_logitcv, SE1_logitcv, 
+     NE1_logitfit1, NE1_logitfit2, NE1_logitcv, NE1_logitcv, file = "hiernet1_log.rda")
 ```
 
 ```{r predict_2019/2020}
@@ -284,7 +284,11 @@ SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 19)
 NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 19)
 SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 19)
 
+
+#TODO: repeat for out sample preds (e.g. NE1_fit2 and SE1_fit2)
 ne_yhat <- list()
+ne1_yhat <- list()
+
 neresp_new <- c()
 n <- length(NE_resp)
 for (i in 1:n) {
@@ -293,13 +297,18 @@ for (i in 1:n) {
   
   X_1 <- cbind(as.matrix(NE_new[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
+  
   yhat <- predict(NE_fit2[[i]], X_1)
+  yhat1 <- predict(NE1_fit2[[i]], X_1)
   
   ne_yhat[[paste0("Group_", i)]] <- yhat
+  ne1_yhat[[paste0("Group_", i)]] <- yhat1
 }
 
 
 se_yhat <- list()
+se1_yhat <- list()
+
 seresp_new <- c()
 n <- length(SE_resp)
 for (i in 1:n) {
@@ -310,13 +319,18 @@ for (i in 1:n) {
   X_1 <- cbind(as.matrix(SE_new[[i]][ ,1:260]),
              as.matrix(SE_preds_q75[[i]][ ,1:104])  )
   yhat <- predict(SE_fit2[[i]], X_1)
+  yhat1 <- predict(SE1_fit2[[i]], X_1)
   
   se_yhat[[paste0("Group_", i)]] <- yhat
+  se1_yhat[[paste0("Group_", i)]] <- yhat1
 }
 
 
 y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]], ne_yhat[[3]], ne_yhat[[4]]) 
 y_sehat <- c(se_yhat[[1]], se_yhat[[2]], se_yhat[[3]], se_yhat[[4]]) 
+
+y1_nehat <- c(ne1_yhat[[1]], ne1_yhat[[2]], ne1_yhat[[3]], ne1_yhat[[4]]) 
+y1_sehat <- c(se1_yhat[[1]], se1_yhat[[2]], se1_yhat[[3]], se1_yhat[[4]]) 
 
 NE_g1 <- seq(12, 216, length.out = 18)
 NE_g2 <- seq(5, 90, length.out = 18)
@@ -332,15 +346,19 @@ SE_g4 <- seq(12, 216, length.out = 18)
 
 
 ```{r }
-#TODO: do full season predictions (Create nice in/out of sample preds along with residual plots)
+#TODO: update with in/out sample predictions and groups
 
 plot(1:32, neresp_new,  type = "l")
 lines(1:32, y_nehat, col = "magenta3")
+lines(1:32, y1_nehat, col = "darkmagenta", lty = 3)
 abline(h = 0, lty = 2)
+abline(v = c(12.5, 17.5, 21.5), lty = 2, col = "red" )
 
 plot(1:32, seresp_new,  type = "l")
 lines(1:32, y_sehat, col = "magenta3")
+lines(1:32, y1_sehat, col = "darkmagenta", lty = 3)
 abline(h = 0, lty = 2)
+abline(v = c(8.5, 16.5, 20.5), lty = 2, col = "red" )
 ```
 
 
@@ -456,15 +474,10 @@ temp_time <- as.Date(new_resp$time)
 #TODO: remove everything outside of wildfire season
 out_season <- 15:34
  
-
 xlim_val <- ymd(c("20010103", "20200401"))
 plot(x = temp_time, y = temp_resp, pch = 16, 
      col = "black", xlim = xlim_val, cex = 1)
 
-
-for (i in 1:19) {
-  
-}
 #NEbase_matrix
 
 NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
@@ -478,6 +491,8 @@ for (i in 1:19) {
 
 
 #base test
+
+#TODO: touch up this visualization to include the necessary labels
 xlim_val <- ymd(c("20010103", "20200401"))
 plot(x = temp_time, y = temp_resp, pch = 16, 
      col = "black", xlim = xlim_val, cex = 1.2, ylab = "CO Anomaly", xlab = "",
@@ -485,8 +500,7 @@ plot(x = temp_time, y = temp_resp, pch = 16,
 points(x = temp_time, y = NE_hat, pch = 19, 
      col = "magenta3", cex = 0.85)
 
-#test with each group
-NE1_resp <- new_resp[which(new_resp$week %in% c(35:46), arr.ind = TRUE), ]
+
 
 ```
 
@@ -658,7 +672,7 @@ test_int[1:42,]
 
 #get NE_fit and SE_fit coefs, also visualize 
 #Begin with SE Group 3 (and cv.lambda1se since there are only 32 terms)
-temp_fit <- NE_fit2[[3]]
+temp_fit <- NE_fit2[[2]]
 
 #TODO: create a method to relate index to coefficient names
 coef_names <- c(colnames(NE_preds[[1]]), paste0( "IND_", colnames(NE_preds_q75[[1]][ ,1:104]) ) )
@@ -667,6 +681,8 @@ main_eff <- temp_fit$bp - temp_fit$bn
 length(which(main_eff != 0, arr.ind = TRUE))
 main_names <- coef_names[which(main_eff != 0, arr.ind = TRUE)]
 coef_main <- main_eff[which(main_eff != 0, arr.ind = TRUE)]
+
+main_loc <- which(main_eff != 0, arr.ind = TRUE)
 
 main_df <- data.frame(main_names, coef_main)
 
@@ -684,6 +700,54 @@ interact_df <- data.frame(interact_names[,2], interact_names[,1], coef_int )
 main_df
 interact_df
 ```
+
+```{r coef_compare}
+temp_fit <- NE1_fit2[[2]]
+
+main_eff <- temp_fit$bp - temp_fit$bn
+length(which(main_eff != 0, arr.ind = TRUE))
+main_names <- coef_names[which(main_eff != 0, arr.ind = TRUE)]
+coef1_main <- main_eff[which(main_eff != 0, arr.ind = TRUE)]
+
+#TODO: get location from main_eff as x and value as y for a plot
+main1_loc <- which(main_eff != 0, arr.ind = TRUE)
+
+main1_df <- data.frame(main_names, coef1_main)
+
+interact_eff <- temp_fit$th
+length(which(interact_eff != 0, arr.ind = TRUE))
+which_mat <- which(interact_eff != 0, arr.ind = TRUE)
+
+
+interact_names <- matrix(coef_names[which_mat], nrow = nrow(which_mat), ncol = ncol(which_mat))
+#interact_names
+coef_int <- interact_eff[which(interact_eff != 0, arr.ind = TRUE)]
+
+interact1_df <- data.frame(interact_names[,2], interact_names[,1], coef_int )
+
+main1_df
+interact1_df
+```
+
+
+### Coef Plots/Tables
+
+```{r coef_plots}
+#TODO: add labels and makes this a better plot, also split into two for base and indicators
+plot(main_loc, coef_main, pch = 16, xlim = c(0,260))
+points(main1_loc, coef1_main, pch = 16, col = "magenta3")
+abline(h=0, lty =2)
+abline(v =c(0,52.5, 104.5, 156.5, 208.5, 260), lty = 2, col = "blue3")
+
+plot(main_loc, coef_main, pch = 16, xlim = c(261,365))
+points(main1_loc, coef1_main, pch = 16, col = "magenta3")
+abline(h=0, lty =2)
+abline(v = c(260, 310.5, 364), lty = 2, col = "blue3")
+
+#TODO: add interaction plot and use color for intensity with labels
+```
+
+
 
 
 ## Set-up Other Groups
