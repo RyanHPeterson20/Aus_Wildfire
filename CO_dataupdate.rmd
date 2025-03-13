@@ -144,6 +144,9 @@ for (i in unique(scale_preds$year)) {
 
 #TODO add in legend
 
+#update plot (and output .png) to color values above a quantile.
+#nino_col <- ifelse()
+
 ```
 
 
@@ -232,6 +235,27 @@ for (i in unique(scale_preds$year)) {
 }
 
 ```
+
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "pred_ind.png", width = 3200, height = 1600, res = 200)
+set.panel(1,2)
+hist(scale_preds$nino.anomaly, main = "Nino", xlab = "", cex.main = 2)
+abline(v = nino_base[3], lty = 2, col = "red2", lwd = 2)
+
+hist(scale_preds$dmi.anomaly, main = "DMI", xlab = "", cex.main = 2)
+abline(v= dmi_base[3], lty = 2, col = "red2", lwd = 2)
+dev.off()
+```
+
+Time permitting create a nice 'time-series' plot with values above the threshold a different color
+
+```{r}
+#get info from scale_preds to produce a point ts.
+```
+
 
 ## Create Identity Function
 
