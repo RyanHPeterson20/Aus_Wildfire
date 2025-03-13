@@ -278,8 +278,6 @@ plot(SE_cv[[2]])
 plot(SE_cv[[3]])
 plot(SE_cv[[4]])
 
-
-
 set.panel(2,2)
 plot(NE1_cv[[1]])
 plot(NE1_cv[[2]])
@@ -374,8 +372,8 @@ y_lim <- range(neresp_new, seresp_new)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
   
-png(filename = "the_season.png", width = 3200, height = 1500, res = 200)
-set.panel(1,2)
+png(filename = "the_season.png", width = 2200, height = 1800, res = 200)
+set.panel(2,1)
 #par(mar = c(7, 4, 4, 11) + 0.3, xpd = TRUE) 
 plot(1:32, neresp_new,  type = "l", ylab = "Atmospheric CO", ylim = y_lim,
     xlab = "",  main = paste0("NE Aus: ", seasons[19]), axes = FALSE, 
@@ -818,7 +816,7 @@ test_int[1:42,]
 
 #get NE_fit and SE_fit coefs, also visualize 
 #Begin with SE Group 3 (and cv.lambda1se since there are only 32 terms)
-temp_fit <- SE_fit2[[3]]
+temp_fit <- SE_fit2[[2]]
 
 #TODO: create a method to relate index to coefficient names
 coef_namesNE <- c(colnames(NE_preds[[1]]), paste0( "IND_", colnames(NE_preds_q75[[1]][ ,1:104]) ) )
@@ -897,8 +895,8 @@ interact1_df
 lag_at <- c(1, 52, 53, 104, 105, 156, 157, 208, 209, 260)
 
 #TODO add the 1 back in but shift slightly to the right
-text_atnew <- c(1, 51.8, 103.8, 155.8, 207.8, 260)
-label_new <- c(1, rep(52, 5))
+text_atnew <- c(2, 51.6, 55.5, 103.6, 108.5, 155.6, 160.5, 207.6, 212.5, 261)
+label_new <- rep(c(1,52), 5)
 
 text_one <- c(53, 105, 157, 209) 
 label_one <- rep(1, 4)
@@ -914,27 +912,32 @@ dist_factor <- 0.77
 #fix the labels by slightly shifting the values 52, 1 away from each other 
 #TODO remove the angle
 
-plot(main_loc, coef_main, pch = 16, xlim = c(0,260), main = "SE Aus : Group 3",
-     ylab = "Coefficients", xlab = "", xaxt = "n")
-points(main1_loc, coef1_main, pch = 16, col = "magenta3")
+ycoef <- range(coef_main, coef1_main)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NEAus_coef3.png", width = 2400, height = 1100, res = 200)
+par(mar = c(3, 4, 4, 7.5) + 0.25)
+plot(main_loc, coef_main, pch = 16, xlim = c(0,260), ylim = ycoef,
+     main = "NE Aus : Group 3",
+     ylab = "Coefficients", xlab = "", xaxt = "n", cex.main = 1.5, cex = 1.25)
+points(main1_loc, coef1_main, pch = 16, col = "magenta3", cex = 1.25)
 abline(h=0, lty =2)
-abline(v =c(0,52.5, 104.5, 156.5, 208.5, 260), lty = 2, col = "blue3")
+abline(v =c(0.5, 52.5, 104.5, 156.5, 208.5, 260.5), lty = 2, col = "blue3")
 axis(1, at = lag_at, labels = FALSE)
 text(text_atnew, par("usr")[3]-0.15, labels = label_new, xpd = TRUE, adj = 1, cex = 0.75)
-# Add manually rotated tick labels
-for (i in seq_along(text_one)) {
-  text(
-      x = text_one[i] + dist_factor * cos(radians[i]),  
-      y = par("usr")[3] - 0.5 + dist_factor * sin(radians[i]),  
-      labels = label_one[i], 
-      srt = tick_angles[i], xpd = TRUE, adj = 0, cex = 0.75)
-}
 text(x= c(26, 78, 130, 182, 234),
      y =par("usr")[3]-0.25,
      labels = c("Nino", "DMI", "TSA", "AAO", "OLR"), 
      xpd = TRUE, adj = 1)
 text(x = -4.5, par("usr")[3]-0.155, labels = c("Lag"), xpd = TRUE, adj = 1, cex = 0.75)
-
+legend("topright", inset = c(-0.12, 0),
+       legend = c("2001-2020", "2001-2019"),
+       col = c("black", "magenta3"),
+       pch = c(16,16),
+       pt.cex = c(1,1),
+       xpd = TRUE)
+dev.off()
 #TODO: add legends and repeat some of this for the indicator functions
 ```
 
@@ -944,16 +947,35 @@ text(x = -4.5, par("usr")[3]-0.155, labels = c("Lag"), xpd = TRUE, adj = 1, cex 
 ind_exp <- c( expression(bold("1")["{Nino > 0.581}"]), 
               expression(bold("1")["{DMI > 0.551}"]))
 
+ticks_new <- c(261, 312, 313, 364)
+
+at_new <- c(261.5, 311.5, 314, 364.5)
+labels_new <- rep(c(1,52), 2)
+
 #TODO: make this plot better, like the one from above
-plot(main_loc, coef_main, pch = 16, xlim = c(261,365),
-     ylab = "Coefficients", xlab = "", xaxt = "n")
-points(main1_loc, coef1_main, pch = 16, col = "magenta3")
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NEAus_coef2IND.png", width = 2400, height = 1100, res = 200)
+par(mar = c(4, 4, 3, 7.5) + 0.25)
+plot(main_loc[20:25], coef_main[20:25], pch = 16, xlim = c(261,365), ylim = ycoef,
+     ylab = "Coefficients", xlab = "", xaxt = "n", cex = 1.25)
+points(main1_loc[15:18], coef1_main[15:18], pch = 16, col = "magenta3", cex = 1.25)
 abline(h=0, lty =2)
-abline(v = c(260, 310.5, 364), lty = 2, col = "blue3")
-text(x = c(286, 338),
+abline(v = c(260.5, 312.5, 364.5), lty = 2, col = "blue3")
+axis(1, at = ticks_new, labels = FALSE)
+text(at_new, par("usr")[3]-0.15, labels = labels_new, xpd = TRUE, adj = 1, cex = 0.75)
+text(x = c(290, 342),
      y =par("usr")[3]-0.25,
      labels = ind_exp, 
      xpd = TRUE, adj = 1)
+text(x = 258.5, par("usr")[3]-0.155, labels = c("Lag"), xpd = TRUE, adj = 1, cex = 0.75)
+legend("topright", inset = c(-0.12, 0),
+       legend = c("2001-2020", "2001-2019"),
+       col = c("black", "magenta3"),
+       pch = c(16,16),
+       pt.cex = c(1,1),
+       xpd = TRUE)
+dev.off()
 
 #TODO: add interaction plot and use color for intensity with labels
 ```
@@ -978,8 +1000,8 @@ table2out <- ggtexttable(interact1_df, rows = NULL, theme = table_theme)
 table_plotout <- ggarrange(table1out, table2out, ncol = 2)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
-ggsave("SE_in2.png", plot = table_plot, width = 7, height = 5, dpi = 300)
-ggsave("SE_out2.png", plot = table_plotout, width = 7, height = 5, dpi = 300)
+ggsave("SE_in2.png", plot = table_plot, width = 7, height = 8, dpi = 300)
+ggsave("SE_out2.png", plot = table_plotout, width = 7, height = 7, dpi = 300)
 ```
 
 
