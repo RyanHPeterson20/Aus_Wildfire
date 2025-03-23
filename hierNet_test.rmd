@@ -91,27 +91,43 @@ stand.int <- !is.null(fit$szz)
 n.lamlist <- length(lamlist)
 err2 = matrix(NA, nrow=nfolds, ncol=length(lamlist))
 
-#for(ii in 1:nfolds) {
-ii <- 1
-
-a <- hierNet.path(x[-folds[[ii]],],y=y[-folds[[ii]]], 
-                        lamlist=lamlist, delta=fit$delta, diagonal=fit$diagonal, strong=fit$strong, trace=trace,
-                        stand.main=stand.main, stand.int=stand.int,
-                        rho=fit$rho, niter=fit$niter, sym.eps=fit$sym.eps, # ADMM parameters (which will be NULL if strong=F)
-                        step=fit$step, maxiter=fit$maxiter, backtrack=fit$backtrack, tol=fit$tol) # GG descent params
+for(ii in 1:nfolds) {
+#ii <- 1
+  
+  a <- hierNet.path(x[-folds[[ii]],],y=y[-folds[[ii]]], 
+                          lamlist=lamlist, delta=fit$delta, diagonal=fit$diagonal, strong=fit$strong, trace=trace,
+                          stand.main=stand.main, stand.int=stand.int,
+                          rho=fit$rho, niter=fit$niter, sym.eps=fit$sym.eps, # ADMM parameters (which will be NULL if strong=F)
+                          step=fit$step, maxiter=fit$maxiter, backtrack=fit$backtrack, tol=fit$tol) # GG descent params
+        
+  yhatt = predict(a,newx=x[folds[[ii]],]) #predict.hierNet
+  
       
-yhatt = predict(a,newx=x[folds[[ii]],]) #predict.hierNet
-
-    
-temp = matrix(y[folds[[ii]]],nrow=length(folds[[ii]]),ncol=n.lamlist)
-err2[ii,] = colMeans(errfun(yhatt,temp))
-#}
+  temp = matrix(y[folds[[ii]]],nrow=length(folds[[ii]]),ncol=n.lamlist)
+  err2[ii,] = colMeans(errfun(yhatt,temp))
+}
 
 #TODO: work in BIC/eBIC get log(n) and  size.main + size.inter
+## cut in more work from RAMP.
 nonzero = colSums(fit$bp-fit$bn!=0) + apply(fit$th!=0, 3, function(a) sum(diag(a)) + sum((a+t(a)!=0)[upper.tri(a)]))
 #nozero as size.main + size.inter
 test.n <- length(y[folds[[ii]]])
 test.n * log(err2[ii,]) + log(test.n) * nonzero
+errm
+
+  errm=colMeans(err2)
+  errse=sqrt(apply(err2,2,var)/nfolds)
+  o=which.min(errm)
+```
+
+
+```{r}
+test_fit <- a
+
+new_nonzero <- colSums(test_fit$bp-test_fit$bn!=0) + apply(test_fit$th!=0, 3, function(a) sum(diag(a)) + sum((a+t(a)!=0)[upper.tri(a)]))
+
+test.n <- length(y[folds[[ii]]])
+test.n * log(err2[ii,]) + log(test.n)*new_nonzero
 
 ```
 
