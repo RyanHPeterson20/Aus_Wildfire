@@ -15,7 +15,7 @@ suppressMessages( library(hierNet)) #yes
 
 suppressMessages( library(RAMP)) #maybe
 
-
+suppressMessages( library( lubridate)) #you know why
 ```
 
 ```{r data_functions}
@@ -120,6 +120,270 @@ errm
   o=which.min(errm)
 ```
 
+```{r}
+i <- 1
+y_1 <- as.numeric(SE_resp1[[i]])
+X_1 <- cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+
+#hierNet.cv(fit, x, y, nfolds=5, folds=NULL, trace=0) call
+fit <- SE1_path[[i]]
+
+full_yhat <- predict(fit, X_1)
+temp = matrix(y_1, nrow=length(y_1), ncol=n.lamlist)
+
+mse <- colMeans(errfun(full_yhat, temp))
+
+
+
+#compare to other loop method
+y_1 <- as.numeric(SE_resp1[[i]])
+#seresp_new <- c(seresp_new, y_1)
+
+X_1 <- cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+           as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+
+yhat <- predict(SE1_fit2[[i]], X_1)
+
+```
+
+## RAMP BIC/eBIC Methods
+
+Full exploration of the RAMP function
+
+```{r ramp}
+#outside (hierNet) fit
+i <- 1
+fit <- SE1_path[[i]]
+lamlist <- fit$lamlist
+n.lambda <- length(lamlist)
+
+#function parameters
+y = as.numeric(SE_resp1[[i]])
+X = cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+hier = "Strong"
+eps = 1e-15
+family = "gaussian"
+
+
+#dimensions of data (n) and parameters (p)
+n = dim(X)[1]
+p = dim(X)[2]
+
+
+#prep variables
+beta = rep(0, p)  ##the current beta estimates excluding the interation terms
+index = NULL
+
+#if (family == "gaussian") {
+max.lam = max(abs((1/n) * (t(X) %*% (y - mean(y)))))
+a0list = rep(mean(y), n.lambda) #not sure why this is here yet
+a0 = a0list[1]
+
+
+### find the candidate interation effects following strong heredity strong heredity
+aa = outer(index, index, f <- function(x, y) {
+    paste("X", pmin(x, y), "X", pmax(x, y), sep = "")
+})
+aa = as.vector(aa)
+newinter = outercprod(X0[, index], X0[, index])
+bb = unique(as.vector(aa))
+
+#TODO: fit in between these lines
+
+#get this working
+curInter = colnames(X)[-(1:p)]
+candInter = setdiff(bb, curInter)
+
+ncandInter = length(candInter)
+# nonPen[index] = 1 Xinter = NULL
+#if (ncandInter > 0 && inter) {
+    xnewname = c(colnames(X), candInter)
+    tmp = scale(newinter)
+    X  = cbind(X,tmp)
+
+
+#set beta from fit (main effects)
+beta_mat <- fit$bp - fit$bn #beta matrix with ncol = n.lambda
+
+#k <- 6 #equivalent to cv lamhat 1se
+
+k <- 7
+beta <- beta_mat[ ,k]
+
+index = which(abs(beta[1:p]) > eps)
+
+beta[index]
+#a0 = out$beta[p], beta = out$beta[-p] #from cd.general outputs
+
+index = sort(index)
+#beta, a0
+beta.n = beta 
+a0.n = a0 #intercept vector of length(lambda).
+```
+
+
+```{r}
+
+#work backwards from this
+#if (refit == TRUE & length(index) > 0 ) {
+  lmfit = glm(y ~ X[,index], family = family)
+  beta.lmfit = coef(lmfit)
+  #a0.n = beta.lmfit[1]
+  beta.n[index] = beta.lmfit[-1]
+beta[index]
+beta.n[index]
+beta.lmfit
+```
+
+
+```{r silly_plots}
+plot(1:length(index), beta[index], pch = 16, ylim = range(beta, beta.n))
+points(1:length(index), beta.n[index], pch = 17, col = "darkmagenta")
+abline(h = 0, lty =2)
+```
+
+
+
+# Fit (in-sample)
+
+```{r}
+NEseason <- list()
+SEseason <- list()
+
+for (k in 1:19) {
+  #k <- 1
+    
+  NEpred_test <- NEpreds( NElag_grouping(NE_laglist = NE_laglist_std, j = k))
+  SEpred_test <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_std, j = k))
+  
+  NEresp_test <- NEresp( NEresp_grouping(NEAus_mat = NEAus_mat, j = k))
+  SEresp_test <- SEresp( SEresp_grouping(SEAus_mat = SEAus_mat, j = k))
+  
+  #quantile 75 indicator
+  NEpredq75_test <- NEpreds( NElag_grouping(NE_laglist = NE_laglist_q75, j = k))
+  SEpredq75_test <- SEpreds( SElag_grouping(SE_laglist = SE_laglist_q75, j = k))
+  
+  ne_yhat <- list()
+  neresp_new <- c()
+  n <- length(NEresp_test)
+  for (i in 1:n) {
+    y_1 <- as.numeric(NEresp_test[[i]])
+    neresp_new <- c(neresp_new, y_1)
+    
+    X_1 <- cbind(as.matrix(NEpred_test[[i]][ ,1:260]),
+               as.matrix(NEpredq75_test[[i]][ ,1:104])  )
+    yhat <- predict(NE1_fit1[[i]], X_1)
+    
+    ne_yhat[[paste0("Group_", i)]] <- yhat
+  }
+  
+  se_yhat <- list()
+  seresp_new <- c()
+  n <- length(SEresp_test)
+  for (i in 1:n) {
+    y_1 <- as.numeric(SEresp_test[[i]])
+    seresp_new <- c(seresp_new, y_1)
+    
+      
+    X_1 <- cbind(as.matrix(SEpred_test[[i]][ ,1:260]),
+               as.matrix(SEpredq75_test[[i]][ ,1:104])  )
+    
+    yhat <- predict(SE1_fit1[[i]], X_1)
+    
+    se_yhat[[paste0("Group_", i)]] <- yhat
+  }
+  
+  y_nehat <- c(ne_yhat[[1]], ne_yhat[[2]])
+  y_sehat <- c(se_yhat[[1]], se_yhat[[2]])
+  
+  NEseason[[paste0("Season_", seasons[k])]] <- y_nehat
+  SEseason[[paste0("Season_", seasons[k])]] <- y_sehat
+}
+
+```
+
+
+```{r}
+#extract seasons
+new_resp <- bounded_resp_df[which(bounded_resp_df$week %in% season_weeks, arr.ind = TRUE), ]
+new_resp <- new_resp[-c(1:14), ]
+
+#setup vertical year lines
+unique_yr <- unique(year(new_resp$time))
+year_lines <- c(unique_yr[1:length(unique_yr)])
+year_lines <- paste0(year_lines, "0101")
+year_lines <- as_date(year_lines)
+
+#year_text <- year_lines
+#year_text <- as_date(year_text) + months(6)
+year_text <- year_lines + months(6)
+
+xlim_val <- ymd(c("20010829", "20200401"))
+
+temp_NE <- scale(new_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_SE <- scale(new_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(new_resp$time)
+
+#prediction data:
+NE_hat <- c()
+SE_hat <- c()
+for (i in 1:19) {
+  NE_hat <- c(NE_hat, NEseason[[i]])
+  SE_hat <- c(SE_hat, SEseason[[i]])
+}
+
+#region DFs
+NEAUS_df <- data.frame(time = temp_time, true = temp_NE, pred = NE_hat)
+SEAUS_df <- data.frame(time = temp_time, true = temp_SE, pred = SE_hat)
+
+#full plots
+  
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NEAUSpreds_new.png", width = 2400, height = 1100, res = 200)
+par(mar = c(3,5,4,1))
+plot(x = NEAUS_df$time, y = NEAUS_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "NE Aus : Predictions")
+points(x = NEAUS_df$time, y = NEAUS_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
+
+png(filename = "SEAUSpreds_new.png", width = 2400, height = 1100, res = 200)
+par(mar = c(3,5,4,1))
+plot(x = SEAUS_df$time, y = SEAUS_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "SE Aus : Predictions")
+points(x = SEAUS_df$time, y = SEAUS_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
+```
+
+
+
+
 
 ```{r}
 test_fit <- a
@@ -128,10 +392,7 @@ new_nonzero <- colSums(test_fit$bp-test_fit$bn!=0) + apply(test_fit$th!=0, 3, fu
 
 test.n <- length(y[folds[[ii]]])
 test.n * log(err2[ii,]) + log(test.n)*new_nonzero
-
 ```
-
-
 
 ```{r test_block}
 n = dim(x)[1]
