@@ -24,11 +24,41 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions")
 #loading in model fits
 load( "hiernet_group_split.rda")
 
-#
+#loading in 
+load( "hiernet1_group.rda")
 ```
 
 
 Testing some additional material/methods
+
+# Out-of-sample
+
+Using split response seasons.
+
+```{r}
+#se aus fits
+i <- 1
+y = as.numeric(SE_resp1[[i]])
+X = cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+coef_namesSE <- c(colnames(SE_preds1[[i]]), paste0( "IND_", colnames(SE_preds1_q75[[i]][ ,1:104]) ) )
+colnames(X) <- coef_namesSE
+
+temp_fit <- SE1_fit2[[i]] #lamhat.1se fit
+
+main_effect <- temp_fit$bp - temp_fit$bn
+main_terms <- which(main_effect != 0, arr.ind = TRUE)
+
+colnames(X)[main_terms]
+
+
+interact_effect <- temp_fit$th
+interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
+interact_names <- matrix(coef_namesSE[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
+#interact_names
+interact_subterms <- paste0(interact_names[,2], ":", interact_names[,1])
+```
+
 
 
 # BIC/eBIC
@@ -153,7 +183,7 @@ Full exploration of the RAMP function
 
 ```{r ramp}
 #outside (hierNet) fit
-i <- 1
+i <- 2
 fit <- SE1_path[[i]]
 lamlist <- fit$lamlist
 n.lambda <- length(lamlist)
@@ -225,7 +255,7 @@ a0.n = a0 #intercept vector of length(lambda).
 
 
 ```{r}
-
+#TODO: get the interaction terms working in this
 #work backwards from this
 #if (refit == TRUE & length(index) > 0 ) {
   lmfit = glm(y ~ X[,index], family = family)
@@ -382,9 +412,6 @@ dev.off()
 ```
 
 
-
-
-
 ```{r}
 test_fit <- a
 
@@ -393,6 +420,32 @@ new_nonzero <- colSums(test_fit$bp-test_fit$bn!=0) + apply(test_fit$th!=0, 3, fu
 test.n <- length(y[folds[[ii]]])
 test.n * log(err2[ii,]) + log(test.n)*new_nonzero
 ```
+
+# RAMP Test
+
+```{r}
+i <- 2
+y = as.numeric(SE_resp1[[i]])
+X = cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
+
+ramp.fit <- RAMP::RAMP(X = X, y = y,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             n.lambda = 100,
+                             ebic.gamma = 1) 
+
+main_terms <- ramp.fit$mainInd
+int_terms <- ramp.fit$interInd
+this.term <- int_terms[1]
+as.integer(strsplit(this.term, "X")[[1]][2:3])
+
+
+ramp.fit$cri.loc
+ramp.fit$cri.list[ramp.fit$cri.loc]
+```
+
+
 
 ```{r test_block}
 n = dim(x)[1]
