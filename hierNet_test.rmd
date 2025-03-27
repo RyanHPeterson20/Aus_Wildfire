@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 suppressMessages( library(hierNet)) #yes
 
 suppressMessages( library(RAMP)) #maybe
+suppressMessages(library(glmnet)) #test ridge regression for coefs
 
 suppressMessages( library( lubridate)) #you know why
 ```
@@ -29,6 +30,13 @@ load( "hiernet1_group.rda")
 ```
 
 
+```{r load_sort}
+load( "hiernet1_group.rda") #weak/4group
+load( "SEAus_hiernet_temp2.rda") #strong/se/4group
+load( "SEAus_hiernet_temp.rda") #strong/se/4group
+```
+
+
 Testing some additional material/methods
 
 # Out-of-sample
@@ -37,29 +45,375 @@ Using split response seasons.
 
 ```{r}
 #se aus fits
-i <- 1
-y = as.numeric(SE_resp1[[i]])
-X = cbind(as.matrix(SE_preds1[[i]][ ,1:260]),
-             as.matrix(SE_preds1_q75[[i]][ ,1:104])  )
-coef_namesSE <- c(colnames(SE_preds1[[i]]), paste0( "IND_", colnames(SE_preds1_q75[[i]][ ,1:104]) ) )
+j <- 1
+y = as.numeric(SE_resp1[[j]])
+X = cbind(as.matrix(SE_preds1[[j]][ ,1:260]),
+             as.matrix(SE_preds1_q75[[j]][ ,1:104])  )
+coef_namesSE <- c(colnames(SE_preds1[[j]]), paste0( "IND_", colnames(SE_preds1_q75[[j]][ ,1:104]) ) )
 colnames(X) <- coef_namesSE
 
-temp_fit <- SE1_fit2[[i]] #lamhat.1se fit
+temp_fit <- SE1_fit2[[j]] #lamhat.1se fit
 
 main_effect <- temp_fit$bp - temp_fit$bn
 main_terms <- which(main_effect != 0, arr.ind = TRUE)
 
-colnames(X)[main_terms]
-
+mains <- colnames(X)[main_terms]
+mains
 
 interact_effect <- temp_fit$th
 interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
 interact_names <- matrix(coef_namesSE[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
 #interact_names
-interact_subterms <- paste0(interact_names[,2], ":", interact_names[,1])
+#TODO: create an elif for square and interaction terms.
+interactions <-  paste0(interact_names[,2], ":", interact_names[,1])
+for (i in 1:nrow(interact_names)) {
+  interact_subterms <- interact_names[i, ]
+  if (interact_subterms[1] != interact_subterms[2]) {
+    #condition for interactions
+    this_term <- paste(interact_subterms, collapse = ":")
+  } else {
+    #condition for squared terms
+    this_term <- paste0("I(", interact_subterms[1], "^2)")
+  }
+  
+  interactions[i] <- this_term
+}
+interactions
+
+
+#set up model string to use for refit (LOO)
+model_string <- paste( paste(mains, collapse = " + "),
+                               paste(interactions, collapse = " + "),
+                               sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+
+
+#TODO: delete when everything is ready
+#interact_subterms <- paste0(interact_names[,2], ":", interact_names[,1])
+#interact_subterms
 ```
 
 
+```{r new_fits}
+#fit (test)
+data_df <- as.data.frame(cbind(y,X))
+test_fit <- lm(formula(model_string), data = data_df)
+summary(test_fit)
+
+sqrt( mean( test_fit$residuals^2))
+```
+
+
+```{r ridge_fits}
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+
+X_new <- model.matrix(f, X_df)
+
+set.seed(300)
+test_ridge <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+plot(test_ridge)
+
+test_ridge$lambda.1se
+
+test_model <- glmnet(X_new, y, alpha = 0.00)
+test_pred <- predict(test_model, s = test_ridge$lambda.1se, type = "coefficients")
+par_vec <- test_pred@i + 1
+test_pred[par_vec, ]
+```
+
+# Comparisons
+
+## Response Groupings
+Compare the models of different response groupings
+
+
+```{r otherlambda_fits}
+
+SEcv_new$Group_1$lamlist[10:15]
+#SEcv_new$Group_1$lamhat
+#SEcv_new$Group_1$lamhat.1se
+
+SEcv_new$Group_2$lamlist[10:14]
+#SEcv_new$Group_2$lamhat
+#SEcv_new$Group_2$lamhat.1se
+
+SEcv_new2$Group_3$lamlist[8:21]
+#SEcv_new2$Group_3$lamhat
+#SEcv_new2$Group_3$lamhat.1se
+
+SEcv_new2$Group_4$lamlist[14:20]
+#SEcv_new2$Group_4$lamhat
+#SEcv_new2$Group_4$lamhat.1se
+
+#get test fit for other lambdas
+test_lambda <- SEcv_new2$Group_3$lamlist[15]
+
+i <- 3
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit3_lam <- hierNet(X_1, y_1, lam = test_lambda, strong = TRUE, diagonal = TRUE)
+```
+
+```{r}
+i <- 1
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit1_min <- hierNet(X_1, y_1, lam = SEcv_new$Group_1$lamhat, strong = TRUE, diagonal = TRUE)
+
+i <- 2
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit2_min <- hierNet(X_1, y_1, lam = SEcv_new$Group_2$lamhat, strong = TRUE, diagonal = TRUE)
+
+i <- 3
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit3_min <- hierNet(X_1, y_1, lam = SEcv_new2$Group_3$lamhat, strong = TRUE, diagonal = TRUE)
+
+i <- 4
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit4_min <- hierNet(X_1, y_1, lam = SEcv_new2$Group_4$lamhat, strong = TRUE, diagonal = TRUE)
+```
+
+
+
+```{r coef_fit}
+#repeat for SE Aus group 1,2 (Group 1)
+#SEfit_new  #group 1
+#SEfit2_new #group 2
+
+#se aus fits
+j <- 3
+y = as.numeric(SE_resp[[j]])
+X = cbind(as.matrix(SE_preds[[j]][ ,1:260]),
+             as.matrix(SE_preds_q75[[j]][ ,1:104])  )
+coef_namesSE <- c(colnames(SE_preds[[j]]), paste0( "IND_", colnames(SE_preds_q75[[j]][ ,1:104]) ) )
+colnames(X) <- coef_namesSE
+
+#temp_fit <- SEfit3_new #lamhat.1se fit
+temp_fit <- SEfit3_lam #lamha min
+
+main_effect <- temp_fit$bp - temp_fit$bn
+main_terms <- which(main_effect != 0, arr.ind = TRUE)
+
+main_effect[main_terms]
+
+mains <- colnames(X)[main_terms]
+#mains
+
+interact_effect <- temp_fit$th
+interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
+interact_effect[interact_terms]
+
+interact_names <- matrix(coef_namesSE[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
+#interact_names
+#TODO: create an elif for square and interaction terms.
+interactions <-  paste0(interact_names[,2], ":", interact_names[,1])
+for (i in 1:nrow(interact_names)) {
+  interact_subterms <- interact_names[i, ]
+  if (interact_subterms[1] != interact_subterms[2]) {
+    #condition for interactions
+    this_term <- paste(interact_subterms, collapse = ":")
+  } else {
+    #condition for squared terms
+    this_term <- paste0("I(", interact_subterms[1], "^2)")
+  }
+  
+  interactions[i] <- this_term
+}
+#interactions
+
+
+#set up model string to use for refit (LOO)
+model_string <- paste( paste(mains, collapse = " + "),
+                               paste(interactions, collapse = " + "),
+                               sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+
+data_df <- as.data.frame(cbind(y,X))
+test_fit <- lm(formula(model_string), data = data_df)
+summary(test_fit)
+#coef(test_fit) #TODO: remove NAs
+
+sqrt( mean( test_fit$residuals^2))
+```
+
+
+```{r}
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+
+X_new <- model.matrix(f, X_df)
+
+set.seed(300)
+test_ridge <- cv.glmnet(X_new, y, alpha = 0.01, nfolds = 5)
+plot(test_ridge)
+
+
+test_model <- glmnet(X_new, y, alpha = 0.01)
+
+plot(test_model, xvar = "lambda")
+abline(v= log(test_ridge$lambda.1se), lty = 2)
+
+#test_pred <- predict(test_model, s = test_ridge$lambda.min, type = "coefficients")
+test_pred <- predict(test_model, s = test_ridge$lambda.1se, type = "coefficients")
+par_vec <- test_pred@i + 1
+test_pred[par_vec, ]
+```
+
+
+Perform out-of-sample predictions to get constant structure RMSE.
+
+```{r}
+#hold out year
+k <- 1
+
+#full model
+NEpreds_train <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(k))
+NEresp_train <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(k))
+
+SEpreds_train <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(k))
+SEresp_train <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(k))
+
+#quantile 75 indicator
+NEpreds_q75_train <- NElag_grouping(NE_laglist = NE_laglist_q75, j = -c(k))
+SEpreds_q75_train <- SElag_grouping(SE_laglist = SE_laglist_q75, j = -c(k))
+```
+
+
+
+
+
+## Indicator Functions
+Compare models with and without Indicator Functions
+
+
+# Prediction Plots
+
+```{r pred_function}
+
+## parameters needed:
+#resp_mat (previous: NEAus_mat/SEAus_mat) response matrix
+#pred_std (NE_laglist_std/SE_laglist_std) predictor list of lag matrices (std)
+#pred_quant (NE_laglist_q75/SE_laglist_q75) predictor list of lag matrices for quantile data
+#model_fit (NE_fit1/SE_fit1) fitted hierNet model 
+
+full_prediction <- function(model_fit, resp_mat, pred_std, pred_quant, NEAus = TRUE) {
+
+  out_season <- list()
+  
+  for (k in 1:19) {
+      
+    if (NEAus == TRUE) {
+      temp_resp <- NEresp_grouping(NEAus_mat = resp_mat, j = k)
+      temp_pred <- NElag_grouping(NE_laglist = pred_std, j = k)
+      #quantile indicator
+      temp_predqaunt <- NElag_grouping(NE_laglist = pred_quant, j = k)
+    } else{
+      temp_resp <- SEresp_grouping(SEAus_mat = resp_mat, j = k)
+      temp_pred <- SElag_grouping(SE_laglist = pred_std, j = k)
+      #quantile indicator
+      temp_predqaunt <- SElag_grouping(SE_laglist = pred_quant, j = k)
+    }
+    
+    yhat <- list()
+    resp_new <- c()
+    n <- length(temp_resp)
+    for (i in 1:n) {
+      y_1 <- as.numeric(temp_resp[[i]])
+      neresp_new <- c(neresp_new, y_1)
+      
+      X_1 <- cbind(as.matrix(temp_pred[[i]][ ,1:260]),
+                 as.matrix(temp_predqaunt[[i]][ ,1:104])  )
+      
+      yhat[[paste0("Group_", i)]] <- predict(model_fit[[i]], X_1)
+    }
+    
+    out_season[[paste0("Season_", seasons[k])]] <- c(yhat[[1]], yhat[[2]], yhat[[3]], yhat[[4]]) 
+  
+  } 
+  
+  return(out_season)
+
+}
+```
+
+
+Comparing Weak/Strong in 4 response partitions.
+
+```{r}
+
+SEfit_strong <- list(SEfit1_min, SEfit2_min, SEfit3_min, SEfit4_min)
+
+test_out <- full_prediction(SEfit_strong, SEAus_mat, SE_laglist_std, SE_laglist_q75, NEAus = FALSE)
+
+
+#extract seasons
+new_resp <- bounded_resp_df[which(bounded_resp_df$week %in% season_weeks, arr.ind = TRUE), ]
+new_resp <- new_resp[-c(1:14), ]
+
+#setup vertical year lines
+unique_yr <- unique(year(new_resp$time))
+year_lines <- c(unique_yr[1:length(unique_yr)])
+year_lines <- paste0(year_lines, "0101")
+year_lines <- as_date(year_lines)
+
+#year_text <- year_lines
+#year_text <- as_date(year_text) + months(6)
+year_text <- year_lines + months(6)
+
+xlim_val <- ymd(c("20010829", "20200401"))
+
+temp_SE <- scale(new_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(new_resp$time)
+
+#prediction data:
+SE_hat <- c()
+for (i in 1:19) {
+  SE_hat <- c(SE_hat, test_out[[i]])
+}
+
+#region DFs
+SEAUS_df <- data.frame(time = temp_time, true = temp_SE, pred = SE_hat)
+
+par(mar = c(3,5,4,1))
+plot(x = SEAUS_df$time, y = SEAUS_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "SE Aus : Predictions")
+points(x = SEAUS_df$time, y = SEAUS_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+
+```
+
+
+
+Comparing 4/2 response partitions with Strong Hierarchy.
 
 # BIC/eBIC
 

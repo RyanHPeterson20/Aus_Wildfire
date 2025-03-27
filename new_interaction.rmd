@@ -264,6 +264,112 @@ save(SE1_logitfit1, SE1_logitfit2, SE1_logitcv, SE1_logitcv,
      NE1_logitfit1, NE1_logitfit2, NE1_logitcv, NE1_logitcv, file = "hiernet1_log.rda")
 ```
 
+## Strong Hierarchy
+
+```{r}
+#re-running 4 group models with strong hierarchy and increased 
+
+
+#SE--------------##
+SEpath_new <- list()
+SEcv_new <- list()
+#SE1_fit1 <- list() #lambdahat
+#SE1_fit2 <- list() #lambda1se
+
+
+n <- length(SE_resp) #setup for loop over list of groups
+for (i in 3:4) {
+  y_1 <- as.numeric(SE_resp[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+  #path -> cv -> fit
+  temp_path <- hierNet.path( X_1, y_1, strong = TRUE, diagonal = TRUE, nlam = 30)
+  temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+
+  
+  SEpath_new[[paste0("Group_", i)]] <- temp_path
+  SEcv_new[[paste0("Group_", i)]] <- temp_cv
+  #SE1_fit1[[paste0("Group_", i)]] <- temp_fit1
+  #SE1_fit2[[paste0("Group_", i)]] <- temp_fit2
+
+}
+
+#setwd("~/CO_AUS/Aus_CO-main/Interactions")
+#save(SEpath_new, SEcv_new, file = "SEAus_hiernet_temp.rda")
+
+SEpath_new2 <- SEpath_new
+SEcv_new2 <- SEcv_new
+save(SEpath_new2, SEcv_new2, file = "SEAus_hiernet_temp2.rda")
+
+plot(SEcv_new2[[1]])
+plot(SEcv_new2[[2]])
+
+
+
+```
+
+```{r}
+
+#NE--------------##
+NEpath_new <- list()
+NEcv_new <- list()
+#NE1_fit1 <- list() #lambdahat
+#NE1_fit2 <- list() #lambda1se
+
+
+n <- length(NE_resp) #setup for loop over list of groups
+for (i in 1:4) {
+  y_1 <- as.numeric(NE_resp[[i]])
+
+  #using only nino/dmi
+  X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
+                as.matrix(NE_preds_q75[[i]][ ,1:104]  ))
+
+  #path -> cv -> fit
+  temp_path <- hierNet.path( X_1, y_1, strong = TRUE, diagonal = TRUE, nlam = 30)
+  temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+
+  
+  NEpath_new[[paste0("Group_", i)]] <- temp_path
+  NEcv_new[[paste0("Group_", i)]] <- temp_cv
+  #SE1_fit1[[paste0("Group_", i)]] <- temp_fit1
+  #SE1_fit2[[paste0("Group_", i)]] <- temp_fit2
+
+}
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+#save(SEpath_new, SEcv_new, file = "SEAus_hiernet_temp.rda")
+
+save(NEpath_new, NEcv_new, file = "NEAus_hiernet_strong.rda")
+```
+
+
+
+```{r}
+#perform fits on SE Aus
+i <- 3
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit3_min <- hierNet(X_1, y_1, lam = SEcv_new2[[1]]$lamhat, strong = TRUE, diagonal = TRUE)
+```
+
+```{r}
+i <- 2
+y_1 <- as.numeric(SE_resp[[i]])
+X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
+                as.matrix(SE_preds_q75[[i]][ ,1:104]  ))
+
+SEfit2_new <- hierNet(X_1, y_1, lam = SEcv_new[[i]]$lamhat.1se, strong = TRUE, diagonal = TRUE)
+```
+
+
+
+
 
 ```{r cv_lambda}
 set.panel(2,2)
