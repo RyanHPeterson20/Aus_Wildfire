@@ -39,11 +39,120 @@ load( "SEAus_hiernet_temp.rda") #strong/se/4group
 
 Testing some additional material/methods
 
-# Out-of-sample
+# Refit Methods
+
+```{r function}
+
+#set up function to refit models and provide coefficients for other methods
+#TODO: do we need to add in a way to output other summary information
+j <- 3
+#test parameters (for hierNet fits)
+SEAus3_lambda <- SEcv_new2$Group_3$lamlist[8:21]
+#model_fit <- SEfit3_lam #lamhat.1se fit
+resp = SE_resp[[j]]
+preds = SE_preds[[j]]
+preds_quant = SE_preds_q75[[j]]
+
+#parameters:
+#resp (previous: NE_resp/SE_resp) response vector
+#preds (NE_preds/SE_preds) predictor list of lag matrices (std)
+#preds_quant (NE_preds_q75/SE_preds_q75) predictor list of lag matrices for quantile data
+#model_fit (NE_fit1/SE_fit1) fitted hierNet model 
+#ridge regression (TRUE/FALSE)
+
+SE3_fit <- list() #hierNet fit
+SE3_refit1 <- list() #refit lm
+SE3_refit2 <- list() #refit ridge
+BIC_matrix <- matrix(NA, ncol = 3)
+colnames(BIC_matrix) <- c("lambda", "lm.BIC", "ridge.BIC")
+
+for (k in 1:length(SEAus3_lambda)) {
+    
+  y = as.numeric(resp)
+  X = cbind(as.matrix(preds[ ,1:260]),
+               as.matrix(preds_quant[ ,1:104])  )
+  
+  model_fit <- hierNet(X, y, lam = SEAus3_lambda[k], strong = TRUE, diagonal = TRUE)
+  
+  coef_names <- c(colnames(preds), paste0( "IND_", colnames(preds_quant[ ,1:104]) ) )
+  colnames(X) <- coef_names
+  
+  #TODO: add in method for looping through different lambda
+  
+  #main effects
+  main_effect <- model_fit$bp - model_fit$bn
+  main_terms <- which(main_effect != 0, arr.ind = TRUE)
+  mains <- colnames(X)[main_terms]
+  
+  #length(main_terms)
+  #length(interactions)
+  
+  #interaction effects
+  interact_effect <- model_fit$th
+  interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
+  interact_names <- matrix(coef_namesSE[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
+  
+  interactions <-  paste0(interact_names[,2], ":", interact_names[,1])
+  for (i in 1:nrow(interact_names)) {
+    interact_subterms <- interact_names[i, ]
+    if (interact_subterms[1] != interact_subterms[2]) {
+      #condition for interactions
+      this_term <- paste(interact_subterms, collapse = ":")
+    } else {
+      #condition for squared terms
+      this_term <- paste0("I(", interact_subterms[1], "^2)")
+    }
+    
+    interactions[i] <- this_term
+  }
+  
+  #setup model for other fits
+  model_string <- paste( paste(mains, collapse = " + "),
+                                 paste(interactions, collapse = " + "),
+                                 sep = " + ")
+  
+  model_string <- paste0("y ~ ", model_string)
+  
+  
+  #elif
+  #linear model
+  data_df <- as.data.frame(cbind(y,X))
+  lm_fit <- lm(formula(model_string), data = data_df)
+  lm_coef <- coef(lm_fit)
+  
+  #ridge model
+  X_df <- as.data.frame(X)
+  f <- as.formula(model_string)
+  X_new <- model.matrix(f, X_df)
+  
+  set.seed(300)
+  ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+  ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+  coef_pred <- predict(ridge_fit, s = ridge_cv$lambda.1se, type = "coefficients")
+  par_vec <- coef_pred@i + 1 
+  ridge_coef <- coef_pred[par_vec, ] #coefs from ridge
+  
+  lm_resid <- y - predict(lm_fit, X_df)
+  ridge_resid <- y - predict(ridge_fit, X_new, s = ridge_cv$lambda.1se, type = "response")
+  
+  lm_BIC <- length(y)*log(mean(lm_resid^2)) + log(length(y))*length(lm_coef[-1])
+  ridge_BIC <- length(y)*log(mean(ridge_resid^2)) + log(length(y))*length(ridge_coef[-1])
+  
+  SE3_fit[[paste0("LamIndex_", k)]] <- model_fit
+  SE3_refit1[[paste0("LamIndex_", k)]] <- lm_fit
+  SE3_refit2[[paste0("LamIndex_", k)]] <- ridge_fit
+  
+  BIC_matrix <- rbind(BIC_matrix, c(SEAus3_lambda[k], lm_BIC, ridge_BIC))
+}
+
+```
+
 
 Using split response seasons.
 
 ```{r}
+#keep here for reference
+
 #se aus fits
 j <- 1
 y = as.numeric(SE_resp1[[j]])
@@ -78,7 +187,7 @@ for (i in 1:nrow(interact_names)) {
   
   interactions[i] <- this_term
 }
-interactions
+length(interactions)
 
 
 #set up model string to use for refit (LOO)
@@ -101,6 +210,8 @@ model_string <- paste0("y ~ ", model_string)
 data_df <- as.data.frame(cbind(y,X))
 test_fit <- lm(formula(model_string), data = data_df)
 summary(test_fit)
+coef(test_fit)
+length(coef(test_fit))
 
 sqrt( mean( test_fit$residuals^2))
 ```
@@ -122,6 +233,8 @@ test_model <- glmnet(X_new, y, alpha = 0.00)
 test_pred <- predict(test_model, s = test_ridge$lambda.1se, type = "coefficients")
 par_vec <- test_pred@i + 1
 test_pred[par_vec, ]
+
+length(test_pred[par_vec, ])
 ```
 
 # Comparisons
@@ -149,7 +262,7 @@ SEcv_new2$Group_4$lamlist[14:20]
 #SEcv_new2$Group_4$lamhat.1se
 
 #get test fit for other lambdas
-test_lambda <- SEcv_new2$Group_3$lamlist[15]
+test_lambda <- SEcv_new2$Group_3$lamlist[10]
 
 i <- 3
 y_1 <- as.numeric(SE_resp[[i]])
@@ -278,6 +391,43 @@ test_pred[par_vec, ]
 ```
 
 
+
+```{r Neaus_fits}
+#min mse from k-fold 
+i <- 1
+y_1 <- as.numeric(NE_resp[[i]])
+X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
+                as.matrix(NE_preds_q75[[i]][ ,1:104]  ))
+
+NEfit1_min <- hierNet(X_1, y_1, lam = NEcv_new$Group_1$lamhat, strong = TRUE, diagonal = TRUE)
+NEfit1_se <- hierNet(X_1, y_1, lam = NEcv_new$Group_1$lamhat.1se, strong = TRUE, diagonal = TRUE)
+
+i <- 2
+y_1 <- as.numeric(NE_resp[[i]])
+X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
+                as.matrix(NE_preds_q75[[i]][ ,1:104]  ))
+
+NEfit2_min <- hierNet(X_1, y_1, lam = NEcv_new$Group_2$lamhat, strong = TRUE, diagonal = TRUE)
+NEfit2_se <- hierNet(X_1, y_1, lam = NEcv_new$Group_2$lamhat.1se, strong = TRUE, diagonal = TRUE)
+
+i <- 3
+y_1 <- as.numeric(NE_resp[[i]])
+X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
+                as.matrix(NE_preds_q75[[i]][ ,1:104]  ))
+
+NEfit3_min <- hierNet(X_1, y_1, lam = NEcv_new$Group_3$lamhat, strong = TRUE, diagonal = TRUE)
+NEfit3_se <- hierNet(X_1, y_1, lam = NEcv_new$Group_3$lamhat.1se, strong = TRUE, diagonal = TRUE)
+
+i <- 4
+y_1 <- as.numeric(NE_resp[[i]])
+X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
+                as.matrix(NE_preds_q75[[i]][ ,1:104]  ))
+
+NEfit4_min <- hierNet(X_1, y_1, lam = NEcv_new$Group_4$lamhat, strong = TRUE, diagonal = TRUE)
+NEfit4_se <- hierNet(X_1, y_1, lam = NEcv_new$Group_4$lamhat.1se, strong = TRUE, diagonal = TRUE)
+```
+
+
 Perform out-of-sample predictions to get constant structure RMSE.
 
 ```{r}
@@ -359,10 +509,12 @@ Comparing Weak/Strong in 4 response partitions.
 
 ```{r}
 
-SEfit_strong <- list(SEfit1_min, SEfit2_min, SEfit3_min, SEfit4_min)
+SEfit_strong <- list(SEfit1_min, SEfit2_min, SEfit3_lam, SEfit4_min)
+NEfit_strong <- list(NEfit1_se, NEfit2_se, NEfit3_se, NEfit4_se)
 
-test_out <- full_prediction(SEfit_strong, SEAus_mat, SE_laglist_std, SE_laglist_q75, NEAus = FALSE)
 
+SE_out <- full_prediction(SEfit_strong, SEAus_mat, SE_laglist_std, SE_laglist_q75, NEAus = FALSE)
+NE_out <- full_prediction(NEfit_strong, NEAus_mat, NE_laglist_std, NE_laglist_q75, NEAus = TRUE)
 
 #extract seasons
 new_resp <- bounded_resp_df[which(bounded_resp_df$week %in% season_weeks, arr.ind = TRUE), ]
@@ -381,16 +533,40 @@ year_text <- year_lines + months(6)
 xlim_val <- ymd(c("20010829", "20200401"))
 
 temp_SE <- scale(new_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_NE <- scale(new_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+
 temp_time <- as.Date(new_resp$time)
 
 #prediction data:
 SE_hat <- c()
+NE_hat <- c()
 for (i in 1:19) {
-  SE_hat <- c(SE_hat, test_out[[i]])
+  SE_hat <- c(SE_hat, SE_out[[i]])
+  NE_hat <- c(NE_hat, NE_out[[i]])
 }
 
+
 #region DFs
+NEAUS_df <- data.frame(time = temp_time, true = temp_NE, pred = NE_hat)
 SEAUS_df <- data.frame(time = temp_time, true = temp_SE, pred = SE_hat)
+
+par(mar = c(3,5,4,1))
+plot(x = NEAUS_df$time, y = NEAUS_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "NE Aus : Predictions")
+points(x = NEAUS_df$time, y = NEAUS_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+
 
 par(mar = c(3,5,4,1))
 plot(x = SEAUS_df$time, y = SEAUS_df$true, pch = 18, 
@@ -448,6 +624,12 @@ Things to explore:
 -compare k-fold full fit or coef refit (via glm()) 
 -check formal BIC:
 $$BIC = k ln(n) - 2 ln(\hat{L})$$
+
+```{r new_bic}
+#updated work on finding bic/ebic with new strong hierNet fits
+```
+
+
   
 ```{r}
 #testing hierNet.cv (with BIC/eBIC)
