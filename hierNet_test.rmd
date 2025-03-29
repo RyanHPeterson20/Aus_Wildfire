@@ -53,6 +53,8 @@ resp = SE_resp[[j]]
 preds = SE_preds[[j]]
 preds_quant = SE_preds_q75[[j]]
 
+ebic.gamma <- 0.5 #testing gamma values in eBIC
+
 #parameters:
 #resp (previous: NE_resp/SE_resp) response vector
 #preds (NE_preds/SE_preds) predictor list of lag matrices (std)
@@ -63,10 +65,10 @@ preds_quant = SE_preds_q75[[j]]
 SE3_fit <- list() #hierNet fit
 SE3_refit1 <- list() #refit lm
 SE3_refit2 <- list() #refit ridge
-BIC_matrix <- matrix(NA, ncol = 3)
-colnames(BIC_matrix) <- c("lambda", "lm.BIC", "ridge.BIC")
+BIC_matrix <- matrix(NA, ncol = 5)
+colnames(BIC_matrix) <- c("lambda", "lm.BIC", "ridge.BIC", "lm.eBIC", "ridge.eBIC")
 
-for (k in 1:length(SEAus3_lambda)) {
+for (k in 1:10) {
     
   y = as.numeric(resp)
   X = cbind(as.matrix(preds[ ,1:260]),
@@ -135,14 +137,24 @@ for (k in 1:length(SEAus3_lambda)) {
   lm_resid <- y - predict(lm_fit, X_df)
   ridge_resid <- y - predict(ridge_fit, X_new, s = ridge_cv$lambda.1se, type = "response")
   
+  #BIC
   lm_BIC <- length(y)*log(mean(lm_resid^2)) + log(length(y))*length(lm_coef[-1])
   ridge_BIC <- length(y)*log(mean(ridge_resid^2)) + log(length(y))*length(ridge_coef[-1])
+  
+  #eBIC 
+  #get p effective.
+  p <- dim(X)[2]
+  df.main <- length(main_terms)
+  p_eff <- p + df.main *(df.main + 1)/2
+  
+  lm_eBIC <- lm_BIC + 2 * ebic.gamma * log(choose(p_eff, length(lm_coef[-1])))
+  ridge_eBIC <- ridge_BIC +  2 * ebic.gamma * log(choose(p_eff, length(ridge_coef[-1])))
   
   SE3_fit[[paste0("LamIndex_", k)]] <- model_fit
   SE3_refit1[[paste0("LamIndex_", k)]] <- lm_fit
   SE3_refit2[[paste0("LamIndex_", k)]] <- ridge_fit
   
-  BIC_matrix <- rbind(BIC_matrix, c(SEAus3_lambda[k], lm_BIC, ridge_BIC))
+  BIC_matrix <- rbind(BIC_matrix, c(SEAus3_lambda[k], lm_BIC, ridge_BIC, lm_eBIC, ridge_eBIC))
 }
 
 ```
