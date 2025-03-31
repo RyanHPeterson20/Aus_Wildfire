@@ -114,6 +114,7 @@ NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4)
 SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4)
 
 rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
+
 ```
 
 ```{r model_data}
@@ -346,6 +347,18 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions")
 save(NEpath_new, NEcv_new, file = "NEAus_hiernet_strong.rda")
 ```
 
+```{r}
+
+plot(SEcv_new[[1]])
+plot(SEcv_new[[2]])
+plot(SEcv_new2[[1]])
+plot(SEcv_new2[[2]])
+
+plot(NEcv_new[[1]])
+plot(NEcv_new[[2]])
+plot(NEcv_new[[3]])
+plot(NEcv_new[[4]])
+```
 
 
 ```{r}
