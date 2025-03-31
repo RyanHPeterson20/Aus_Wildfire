@@ -181,13 +181,13 @@ NE1_logitfit2 <- list() #lambda1se
 n <- length(NE_resp) #setup for loop over list of groups
 for (i in 1:n) {
   y_1 <- as.numeric(NE_resp[[i]])
-  y_logit <- NElogitresp[[i]]
+  #y_logit <- NElogitresp[[i]]
 
   #using only nino/dmi
   X_1 <- cbind(as.matrix(NE_preds[[i]][ ,1:260]),
              as.matrix(NE_preds_q75[[i]][ ,1:104])  )
 
-  logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
+  #logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
   #path -> cv -> fit
   temp_path <- hierNet.path( X_1, y_1, strong = FALSE, diagonal = TRUE)
   temp_cv <- hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
@@ -201,15 +201,15 @@ for (i in 1:n) {
   NE1_fit2[[paste0("Group_", i)]] <- temp_fit2
   
 
-  logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
+  #logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
 
-  logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
-  logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+  #logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  #logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
-  NE1_logitpath[[paste0("Group_", i)]] <- logit_path
-  NE1_logitcv[[paste0("Group_", i)]] <- logit_cv
-  NE1_logitfit1[[paste0("Group_", i)]] <- logit_fit1
-  NE1_logitfit2[[paste0("Group_", i)]] <- logit_fit2
+  #NE1_logitpath[[paste0("Group_", i)]] <- logit_path
+  #NE1_logitcv[[paste0("Group_", i)]] <- logit_cv
+  #NE1_logitfit1[[paste0("Group_", i)]] <- logit_fit1
+  #NE1_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
 
@@ -227,7 +227,7 @@ SE1_logitfit2 <- list() #lambda1se
 n <- length(SE_resp) #setup for loop over list of groups
 for (i in 1:n) {
   y_1 <- as.numeric(SE_resp[[i]])
-  y_logit <- SElogitresp[[i]]
+  #y_logit <- SElogitresp[[i]]
   
   #using only nino/dmi
   X_1 <- cbind(as.matrix(SE_preds[[i]][ ,1:260]),
@@ -245,24 +245,24 @@ for (i in 1:n) {
   SE1_fit1[[paste0("Group_", i)]] <- temp_fit1
   SE1_fit2[[paste0("Group_", i)]] <- temp_fit2
   
-  logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
-  logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
+  #logit_path <- hierNet.logistic.path(X_1, y_logit, strong = FALSE, diagonal = TRUE)
+  #logit_cv <- hierNet.cv(temp_path, X_1, y_logit, nfolds = 5)
 
-  logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
-  logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
+  #logit_fit1 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat, strong = FALSE, diagonal = TRUE)
+  #logit_fit2 <- hierNet.logistic(X_1, y_logit, lam = logit_cv$lamhat.1se, strong = FALSE, diagonal = TRUE)
   
-  SE1_logitpath[[paste0("Group_", i)]] <- logit_path
-  SE1_logitcv[[paste0("Group_", i)]] <- logit_cv
-  SE1_logitfit1[[paste0("Group_", i)]] <- logit_fit1
-  SE1_logitfit2[[paste0("Group_", i)]] <- logit_fit2
+  #SE1_logitpath[[paste0("Group_", i)]] <- logit_path
+  #SE1_logitcv[[paste0("Group_", i)]] <- logit_cv
+  #SE1_logitfit1[[paste0("Group_", i)]] <- logit_fit1
+  #SE1_logitfit2[[paste0("Group_", i)]] <- logit_fit2
 }
 
 
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 save(SE1_fit1, SE1_fit2, SE1_cv, SE1_path, NE1_fit1, NE1_fit2, NE1_cv, NE1_path, file = "hiernet1_group.rda")
-save(SE1_logitfit1, SE1_logitfit2, SE1_logitcv, SE1_logitcv, 
-     NE1_logitfit1, NE1_logitfit2, NE1_logitcv, NE1_logitcv, file = "hiernet1_log.rda")
+#save(SE1_logitfit1, SE1_logitfit2, SE1_logitcv, SE1_logitcv, 
+#     NE1_logitfit1, NE1_logitfit2, NE1_logitcv, NE1_logitcv, file = "hiernet1_log.rda")
 ```
 
 ## Strong Hierarchy

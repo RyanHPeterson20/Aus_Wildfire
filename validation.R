@@ -105,6 +105,7 @@ y_1 <- as.numeric(SE_resp[[j]])
 X_1 <- cbind(as.matrix(SE_preds[[j]][ ,1:260]),
              as.matrix(SE_preds_q75[[j]][ ,1:104])  )
 cv_group <- SEcv_new2$Group_3
+SE_group3_test <- hierNet(X_1, y_1, lam = cv_group$lamlist[9], strong = TRUE, diagonal = TRUE) #testing for BIC min
 SE_group3_1se <- hierNet(X_1, y_1, lam = cv_group$lamhat.1se, strong = TRUE, diagonal = TRUE)
 SE_group3_min <- hierNet(X_1, y_1, lam = cv_group$lamhat, strong = TRUE, diagonal = TRUE)
 
@@ -121,6 +122,7 @@ SE_group4_min <- hierNet(X_1, y_1, lam = cv_group$lamhat, strong = TRUE, diagona
 SE_fit1_strong <- list(SE_group1_min, SE_group2_min, SE_group3_min, SE_group4_min)
 SE_fit2_strong <- list(SE_group1_1se, SE_group2_1se, SE_group3_1se, SE_group4_1se)
 
+SE_fit_test <- list(SE_group1_1se, SE_group2_1se, SE_group3_test, SE_group4_1se)
 
 #TODO: finish up NE Aus
 
@@ -128,14 +130,19 @@ SE_fit2_strong <- list(SE_group1_1se, SE_group2_1se, SE_group3_1se, SE_group4_1s
 #TODO: finalize the below work (eg. refit, bic, ebic)
 plot(SEcv_new2[[1]])
 
-SEcv_new$Group_1$lamlist
+SEcv_new2$Group_3$lamlist
 
-path_group <- SEpath_new$Group_1
-cv_group <- SEcv_new$Group_1
+path_group <- SEpath_new2$Group_3
+cv_group <- SEcv_new2$Group_3
+
+cv_group$lamhat.1se
+cv_group$lamhat
 
 lambda_mse <- which(cv_group$lamlist == cv_group$lamhat)
+lambda_1se <- which(cv_group$lamlist == cv_group$lamhat.1se)
 
-for (k in 1:lambda_mse) {
+#for (k in 1:lambda_mse) {
+  k <- 9
   cv_group$lamlist[k]
   
   temp_bp <- path_group$bp[,k]
@@ -193,9 +200,12 @@ for (k in 1:lambda_mse) {
     interactions
   }
   mains
-}
+#}
 
 rm(k)
+
+#TODO: compare these later
+
 
 
 # predictions
@@ -223,7 +233,7 @@ for (i in 1:n) {
   yhat <- predict(SE_fit1_strong[[i]], X_temp) #strong,lambda min
   yhat_2 <- predict(SE_fit2_strong[[i]], X_temp) #strong,lambda 1se
   
-  yhat_3 <- predict(SE1_fit1[[i]], X_temp) #weak,lambda 1se
+  yhat_3 <- predict(SE_fit_test[[i]], X_temp) #weak,lambda 1se
   
   se_yhat[[paste0("Group_", i)]] <- yhat
   se_yhat2[[paste0("Group_", i)]] <- yhat_2
@@ -246,6 +256,6 @@ box()
 axis(2)
 axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks)),
      las = 3, cex.axis = 1.6)
-lines(1:32, y_sehat, col = "magenta3", lwd = 2, lty = 2)
-lines(1:32, y_sehat2, col = "magenta2", lwd = 2, lty = 1)
+lines(1:32, y_sehat2, col = "magenta3", lwd = 2, lty = 2)
+lines(1:32, y_sehat3, col = "magenta2", lwd = 2, lty = 1)
 
