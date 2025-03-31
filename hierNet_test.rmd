@@ -68,7 +68,7 @@ SE3_refit2 <- list() #refit ridge
 BIC_matrix <- matrix(NA, ncol = 5)
 colnames(BIC_matrix) <- c("lambda", "lm.BIC", "ridge.BIC", "lm.eBIC", "ridge.eBIC")
 
-for (k in 1:10) {
+for (k in 1:8) {
     
   y = as.numeric(resp)
   X = cbind(as.matrix(preds[ ,1:260]),
@@ -92,7 +92,7 @@ for (k in 1:10) {
   #interaction effects
   interact_effect <- model_fit$th
   interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
-  interact_names <- matrix(coef_namesSE[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
+  interact_names <- matrix(coef_names[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
   
   interactions <-  paste0(interact_names[,2], ":", interact_names[,1])
   for (i in 1:nrow(interact_names)) {
@@ -156,6 +156,8 @@ for (k in 1:10) {
   
   BIC_matrix <- rbind(BIC_matrix, c(SEAus3_lambda[k], lm_BIC, ridge_BIC, lm_eBIC, ridge_eBIC))
 }
+
+summary(SE3_refit1$LamIndex_2)
 
 ```
 
