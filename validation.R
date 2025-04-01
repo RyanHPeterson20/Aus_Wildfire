@@ -8,6 +8,9 @@ suppressMessages(library(glmnet)) #test ridge regression for coefs
 suppressMessages( library(lubridate))
 suppressMessages( library(fields)) #for some viz and other functions
 
+suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
+
 #data 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 
@@ -174,9 +177,14 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions")
 save(SE_fit2_strong, NE_fit2_strong, file = "hiernet_strongfits.rda")
 
 #TODO: finalize the below work (eg. refit, bic, ebic)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "group3_lambda.png", width = 2000, height = 1800, res = 200)
 set.panel(2,1)
 plot(NEcv_new[[3]])
 plot(SEcv_new2[[1]])
+dev.off()
 
 #temp work:
 
@@ -199,8 +207,8 @@ colnames(BIC_matrix) <- c("lambda", "lm.BIC", "ridge.BIC", "lm.eBIC", "ridge.eBI
 
 
 
-for (k in 1:lambda_mse) {
-  #k <- 11
+for (k in 1:8) {
+  #k <- 8
   temp_bp <- path_group$bp[,k]
   temp_bn <- path_group$bn[,k]
   
@@ -315,10 +323,149 @@ for (k in 1:lambda_mse) {
 }
 
 BIC_matrix <- BIC_matrix[-1, ]
+ridge_ne <- ridge_coef
+lmFit_ne <-NE3_refit1[[8]] 
+summary(lmFit_ne)
+lmFit_ne$coefficients[1:12]
+lmFit_ne$coefficients[13:15]
 
-lmFit_new <-NE3_refit1[[8]] 
-summary(lmFit_new)
+#for se aus group 3
+path_group <- SEpath_new2$Group_3
+cv_group <- SEcv_new2$Group_3
 
+cv_group$lamlist
+cv_group$lamhat.1se
+cv_group$lamhat
+
+lambda_mse <- which(cv_group$lamlist == cv_group$lamhat)
+lambda_1se <- which(cv_group$lamlist == cv_group$lamhat.1se)
+
+ebic.gamma <- 0.5 #testing gamma values in eBIC
+
+SE3_refit1 <- list() #refit lm
+SE3_refit2 <- list() #refit ridge
+BIC_matrix2 <- matrix(NA, ncol = 5)
+colnames(BIC_matrix2) <- c("lambda", "lm.BIC", "ridge.BIC", "lm.eBIC", "ridge.eBIC")
+
+for (k in 1:9) {
+  #k <- 9
+  temp_bp <- path_group$bp[,k]
+  temp_bn <- path_group$bn[,k]
+  
+  temp_th <- path_group$th[,,k]
+  
+  j <- 3 #group 1
+  #SE Aus data
+  resp = SE_resp[[j]]
+  preds = SE_preds[[j]]
+  preds_quant = SE_preds_q75[[j]]
+
+  #internals
+  
+  y = as.numeric(resp)
+  X = cbind(as.matrix(preds[ ,1:260]),
+            as.matrix(preds_quant[ ,1:104])  )
+  
+  
+  coef_names <- c(colnames(preds), paste0( "IND_", colnames(preds_quant[ ,1:104]) ) )
+  colnames(X) <- coef_names
+  
+  #TODO: add in method for looping through different lambda
+  
+  #main effects
+  main_effect <- temp_bp - temp_bn
+  main_terms <- which(main_effect != 0, arr.ind = TRUE)
+  mains <- colnames(X)[main_terms]
+  
+  mains
+  main_effect[main_terms]
+  
+  #length(main_terms)
+  #length(interactions)
+  
+  #interaction effects
+  interact_effect <- temp_th
+  interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
+  
+  interact_effect[interact_terms]
+  
+  #TODO: add elif for interactions
+  if (nrow(interact_terms) != 0) {
+    interact_names <- matrix(coef_names[interact_terms], nrow = nrow(interact_terms), ncol = ncol(interact_terms))
+    
+    interactions <-  paste0(interact_names[,2], ":", interact_names[,1])
+    for (i in 1:nrow(interact_names)) {
+      interact_subterms <- interact_names[i, ]
+      if (interact_subterms[1] != interact_subterms[2]) {
+        #condition for interactions
+        this_term <- paste(interact_subterms, collapse = ":")
+      } else {
+        #condition for squared terms
+        this_term <- paste0("I(", interact_subterms[1], "^2)")
+      }
+      
+      interactions[i] <- this_term
+    }
+    interactions
+  }
+  mains
+  #setup model for other fits
+  model_string <- paste( paste(mains, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+  
+  model_string <- paste0("y ~ ", model_string)
+  
+  
+  #elif
+  #linear model
+  data_df <- as.data.frame(cbind(y,X))
+  lm_fit <- lm(formula(model_string), data = data_df)
+  lm_coef <- coef(lm_fit)
+  
+  #ridge model
+  X_df <- as.data.frame(X)
+  f <- as.formula(model_string)
+  X_new <- model.matrix(f, X_df)
+  
+  set.seed(300)
+  ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+  ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+  coef_pred <- predict(ridge_fit, s = ridge_cv$lambda.1se, type = "coefficients")
+  par_vec <- coef_pred@i + 1 
+  ridge_coef <- coef_pred[par_vec, ] #coefs from ridge
+  
+  lm_resid <- y - predict(lm_fit, X_df)
+  ridge_resid <- y - predict(ridge_fit, X_new, s = ridge_cv$lambda.1se, type = "response")
+  
+  #BIC
+  lm_BIC <- length(y)*log(mean(lm_resid^2)) + log(length(y))*length(lm_coef[-1])
+  ridge_BIC <- length(y)*log(mean(ridge_resid^2)) + log(length(y))*length(ridge_coef[-1])
+  
+  #eBIC 
+  #get p effective.
+  p <- dim(X)[2]
+  df.main <- length(main_terms)
+  p_eff <- p + df.main *(df.main + 1)/2
+  
+  lm_eBIC <- lm_BIC + 2 * ebic.gamma * log(choose(p_eff, length(lm_coef[-1])))
+  ridge_eBIC <- ridge_BIC +  2 * ebic.gamma * log(choose(p_eff, length(ridge_coef[-1])))
+  
+  SE3_refit1[[paste0("LamIndex_", k)]] <- lm_fit
+  SE3_refit2[[paste0("LamIndex_", k)]] <- ridge_fit
+  
+  BIC_matrix2 <- rbind(BIC_matrix2, c(cv_group$lamlist[k], lm_BIC, ridge_BIC, lm_eBIC, ridge_eBIC))
+}
+
+BIC_matrix2 <- BIC_matrix2[-1, ]
+
+ridge_se <- ridge_coef
+ridge_se
+#13 or 9
+lmFit_se <-SE3_refit1[[13]] 
+summary(lmFit_se)
+lmFit_ne$coefficients[1:12]
+lmFit_ne$coefficients[13:15]
   
 rm(k)
 
@@ -326,16 +473,20 @@ rm(k)
 
 #for SE Aus Group 3
 #SE_group3_1se
-temp_bp <- SE_group3_1se$bp
-temp_bn <- SE_group3_1se$bn
+temp_bp <- NE_group3_1se$bp
+temp_bn <- NE_group3_1se$bn
 
-temp_th <- SE_group3_1se$th
+temp_th <- NE_group3_1se$th
 
 j <- 3 #group 1
 #SE Aus data
-resp = SE_resp[[j]]
-preds = SE_preds[[j]]
-preds_quant = SE_preds_q75[[j]]
+#resp = SE_resp[[j]]
+#preds = SE_preds[[j]]
+#preds_quant = SE_preds_q75[[j]]
+
+resp = NE_resp[[j]]
+preds = NE_preds[[j]]
+preds_quant = NE_preds_q75[[j]]  
 
 #internals
 
@@ -353,9 +504,6 @@ colnames(X) <- coef_names
 main_effect <- temp_bp - temp_bn
 main_terms <- which(main_effect != 0, arr.ind = TRUE)
 mains <- colnames(X)[main_terms]
-
-mains
-main_effect[main_terms]
 
 interact_effect <- temp_th
 interact_terms <- which(interact_effect != 0, arr.ind = TRUE)
@@ -378,12 +526,56 @@ if (nrow(interact_terms) != 0) {
     
     interactions[i] <- this_term
   }
-  interactions
-  
-  interact_effect[interact_terms]
+
 }
 
+mains
+main_effect[main_terms]
 
+interactions
+interact_effect[interact_terms]
+
+#ploting coefs
+ridge_se
+ridge_ne
+
+main_df <- as.data.frame(ridge_se[1:7])
+interaction_df <- as.data.frame(ridge_se[8:9])
+
+main_df <- as.data.frame(ridge_ne[1:13])
+interaction_df <- as.data.frame(ridge_ne[14:16])
+
+main_df <- data.frame(mains, round(main_effect[main_terms],6))
+
+interact_df <- data.frame(interactions, round(interact_effect[interact_terms],6))
+
+main_df[,2] <- main_df[,1]
+main_df[,1] <- rownames(main_df)
+main_df
+
+interaction_df[,2] <- interaction_df[,1]
+interaction_df[,1] <- rownames(interaction_df)
+interaction_df
+
+rownames(main_df) <- NULL
+rownames(interaction_df) <- NULL
+
+colnames(main_df) <- c("Main Effect", "Coef")
+colnames(interaction_df) <- c("Interaction", "Coef")
+
+# Convert data frames to table plots
+table_theme <- ttheme(
+  tbody.style = tbody_style(
+    hjust = 0, x = 0.1))
+
+#in sample
+table1 <- ggtexttable(main_df, rows = NULL, theme =table_theme)
+table2 <- ggtexttable(interaction_df, rows = NULL, theme = table_theme)
+
+table_plot <- ggarrange(table1, table2, ncol = 2)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+ggsave("NE_bic3.png", plot = table_plot, width = 5, height = 5, dpi = 300)
 
 #TODO: compare these later
 
@@ -498,11 +690,11 @@ SEAUS_df <- data.frame(time = temp_time, true = temp_SE, pred = SE_hat)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
 
-png(filename = "allSeasons_preds.png", width = 2200, height = 1800, res = 200)
+png(filename = "allSeasons_preds.png", width = 2600, height = 1800, res = 200)
 #par(mar = c(3,5,4,1))
 set.panel(2,1)
 plot(x = NEAUS_df$time, y = NEAUS_df$true, pch = 18, ylim = c(min(NEAUS_df$true)-5, max(NEAUS_df$true)),
-     col = "black", xlim = xlim_val, cex = 1.33, cex.main = 1.5,
+     col = "black", xlim = xlim_val, cex = 1.33, cex.main = 2.0,
      xaxt = "n",  xlab = "Year",
      ylab = "Atmospheric CO", 
      main = "NE Aus : Predictions")
@@ -518,7 +710,7 @@ legend("bottomleft", inset = c(0.00, 0),
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
 
 plot(x = SEAUS_df$time, y = SEAUS_df$true, pch = 18, ylim = c(min(SEAUS_df$true)-5, max(SEAUS_df$true)),
-     col = "black", xlim = xlim_val, cex = 1.33, cex.main = 1.5,
+     col = "black", xlim = xlim_val, cex = 1.33, cex.main = 2.0,
      xaxt = "n",  xlab = "Year",
      ylab = "Atmospheric CO", 
      main = "SE Aus : Predictions")
@@ -541,12 +733,12 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
 x_vals <- 1:32
 y_lim <- range(neresp_new, seresp_new)
 
-png(filename = "NewSeason.png", width = 2200, height = 1800, res = 200)
+png(filename = "NewSeason.png",  width = 2600, height = 1800, res = 200)
 set.panel(2,1)
 plot(x_vals, neresp_new, type = "l", lwd = 2, ylim = y_lim, 
      ylab = "Atmospheric CO",
      xlab = "Week",  main = paste0("NE Aus: ", seasons[k]), axes = FALSE, 
-     cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+     cex.main = 2.0, cex.lab = 1.5, cex.axis = 1.5)
 box()
 axis(2)
 axis(1, at = 1:32, labels = c(season_weeks),
@@ -568,7 +760,7 @@ text(24.5, -13, "Group 4", col = "red", cex = 1)
 plot(x_vals, seresp_new, type = "l", lwd = 2, ylim = y_lim, 
      ylab = "Atmospheric CO",
      xlab = "Week",  main = paste0("SE Aus: ", seasons[k]), axes = FALSE, 
-     cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+     cex.main = 2.0, cex.lab = 1.5, cex.axis = 1.5)
 box()
 axis(2)
 axis(1, at = 1:32, labels = c(season_weeks),
@@ -605,11 +797,11 @@ SE_resids <- SE_resids[-1, ]
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
 
-png(filename = "fullresids.png", width = 2200, height = 1800, res = 200)
+png(filename = "fullresids.png", width = 2600, height = 1800, res = 200)
 set.panel(2,1)
 boxplot(NE_resids, ylim = c(-20,20), ylab = "Residuals", xlab = "Week",
         main = "NE Aus : Model Residuals",axes = FALSE, pch = 20, 
-        cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+        cex.main = 2.0, cex.lab = 1.5, cex.axis = 1.5)
 box()
 axis(2)
 axis(1, at = 1:32, labels = c(season_weeks),
@@ -623,7 +815,7 @@ text(27, -15, "Group 4", col = "red", cex = 1)
 
 boxplot(SE_resids, ylim = c(-20,20), ylab = "Residuals", xlab = "Week",
         main = "SE Aus : Model Residuals",axes = FALSE, pch = 20, 
-        cex.main = 2.25, cex.lab = 1.5, cex.axis = 1.5)
+        cex.main = 2.0, cex.lab = 1.5, cex.axis = 1.5)
 box()
 axis(2)
 axis(1, at = 1:32, labels = c(season_weeks),
