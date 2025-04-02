@@ -12,14 +12,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r library}
 suppressMessages( library(hierNet)) #yes
-suppressMessages( library(glinternet)) #no
+suppressMessages( library(glmnet)) #test ridge regression for coefs
 suppressMessages( library(RAMP)) #maybe
+
+suppressMessages( library(foreach)) #parallelization setup
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
 
 suppressMessages( library( lubridate)) #you know why
 suppressMessages( library( colorspace)) #for some color alternatives
 suppressMessages( library( fields)) #for set.panel() and others 
 suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
-
 
 suppressMessages( library( caret)) #for confusion matrix
 ```
@@ -156,6 +159,58 @@ rm(NEAus1, NEAus2, NEAus3, NEAus4, SEAus1, SEAus2, SEAus3, SEAus4)
 NElogitresp <- NEresp_grouping(NEAus_mat = NEAusmat, j = 1:18)
 SElogitresp <- SEresp_grouping(SEAus_mat = SEAusmat, j = 1:18)
 ```
+
+
+## Interactions via hierNet
+
+Work to develop correct interactions. 
+-first test: remove indicator function interactions.
+
+```{r test_run}
+#test runs for specific interactions
+y_1 <- as.numeric(SE_resp[[3]])
+
+dum_mat <- as.matrix(SE_preds_q75[[3]][ ,1:104]) 
+dum_mat[,] <- 0
+X_int <- cbind(as.matrix(SE_preds[[3]][ ,1:104]), dum_mat)
+X_1 <- cbind(as.matrix(SE_preds[[3]][ ,1:104]),
+                as.matrix(SE_preds_q75[[3]][ ,1:104]  )) #adjust this as needed for testing
+
+
+
+zz_new <- compute.interactions.c(X_int, diagonal=TRUE)
+#to adjust this we remove 
+
+#TODO: set up zz matrix before 
+#from hierNet()
+  if (is.null(zz)) {
+    if (trace > 0) cat("Computing zz...", fill=TRUE)
+    zz <- compute.interactions.c(x, diagonal=diagonal)
+  }
+
+#path -> cv -> fit
+temp_path <- hierNet.path( X_1, y_1, strong = TRUE, diagonal = TRUE, nlam = 10, zz = zz_new)
+print(temp_path)
+```
+
+
+```{r test_parallel}
+#test runs for including 
+n.cores <- cores
+  
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
+
+
+
+parallel::stopCluster(cl = my.cluster)  
+  
+```
+
 
 
 ### Testing (Building-up Model) 
