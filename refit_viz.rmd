@@ -119,9 +119,9 @@ which(NEcv1$lamlist == NEcv1$lamhat)
 NEcv1$lamhat.1se
 1-NEcv1$cv.err/var( NE_resp[[1]])
 
-NEcoefs1[[26]][[1]]
+NEcoefs1[[9]][[1]]
 
-NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, 
+NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, lambda.min = TRUE,
                       resp = NE_resp[[1]], preds = NE_preds[[1]], preds_quant = NE_preds_q75[[1]])
 NErefit1[[5]]
 
@@ -130,17 +130,34 @@ i <- 9
 ridge_coef <- NErefit1[[4]][[i]][-1]
 NEridge_1 <- ridge_coef
 ridge_coef
+length(ridge_coef)
 
 NEridge_cv <- NErefit1[[6]]
 lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+lmhat <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.min)
 NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[1]])
 NEr2[lm1se]
+NEr2[lmhat]
 
-length(ridge_coef)
 
 #fit model
-##summary(NErefit1[[1]][[i]])
+lm_coef <- coef(NErefit1[[1]][[i]])[-1]
 ```
+
+```{r temp_coeftest}
+#NEridge_1min <- NEridge_1
+nino_coefs <- NEridge_1[c(1:6, 29:32)]
+nino_coefsmin <- NEridge_1min[c(1:6, 29:32)]
+nino_coeflasso <- c(NEcoefs1[[9]][[1]][c(1:6, 29:31),2], NEcoefs1[[9]][[2]][4,2])
+
+coef_lim <- range(nino_coefs, nino_coefsmin, nino_coeflasso, lm_coef[c(1:6, 29:32)])
+
+plot(1:length(nino_coefs), nino_coefs, pch =15, ylim = coef_lim)
+points(1:length(nino_coefs), nino_coefsmin, pch =17, col = "magenta3")
+points(1:length(nino_coefs), nino_coeflasso, pch =18, col = "green4")
+points(1:length(nino_coefs), lm_coef[c(1:6, 29:32)], pch =16, col = "blue3")
+```
+
 
 ## Group 2
 
@@ -160,7 +177,7 @@ which(NEcv2$lamlist == NEcv2$lamhat)
 NEcv2$lamhat.1se
 1-NEcv2$cv.err/var( NE_resp[[2]])
 
-NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.15, 
+NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.15, lambda.min = TRUE,
                       resp = NE_resp[[2]], preds = NE_preds[[2]], preds_quant = NE_preds_q75[[2]])
 NErefit2[[5]]
 
@@ -172,8 +189,10 @@ ridge_coef
 
 NEridge_cv <- NErefit2[[6]]
 lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+lmhat <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.min)
 NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[2]])
 NEr2[lm1se]
+NEr2[lmhat]
 
 length(ridge_coef)
 
@@ -198,7 +217,7 @@ NEcv3$lamhat.1se
 1-NEcv3$cv.err/var( NE_resp[[3]])
 
 
-NErefit3 <- refit_bic(NEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, 
+NErefit3 <- refit_bic(NEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, lambda.min = TRUE,
                       resp = NE_resp[[3]], preds = NE_preds[[3]], preds_quant = NE_preds_q75[[3]])
 NErefit3[[5]]
 
@@ -211,9 +230,10 @@ length(ridge_coef)
 
 NEridge_cv <- NErefit3[[6]]
 lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+lmhat <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.min)
 NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[3]])
 NEr2[lm1se]
-
+NEr2[lmhat]
 
 ```
 
@@ -236,15 +256,15 @@ NEcv4$lamhat.1se
 1-NEcv4$cv.err/var( NE_resp[[4]])
 
 
-NErefit4 <- refit_bic(NEAus4$hierpath, max_index = 50, ebic.gamma = 0.25, 
+NErefit4 <- refit_bic(NEAus4$hierpath, max_index = 50, ebic.gamma = 0.25, lambda.min = TRUE,
                       resp = NE_resp[[4]], preds = NE_preds[[4]], preds_quant = NE_preds_q75[[4]])
 NErefit4[[5]]
 
 #plot(1:26, NErefit4[[5]][1:26,3], pch = 16)
 
 
-#from bic, 5,6,14 seem good
-i <- 14
+#from bic, 5,6,14 seem good (maybe 17, use this one since BIC 17 < BIC 14)
+i <- 17
 ridge_coef <- NErefit4[[4]][[i]][-1]
 NEridge_4 <- ridge_coef
 ridge_coef
@@ -252,8 +272,10 @@ length(ridge_coef)
 
 NEridge_cv <- NErefit4[[6]]
 lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+lmhat <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.min)
 NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[4]])
 NEr2[lm1se]
+NEr2[lmhat]
 
 
 ```
@@ -280,7 +302,7 @@ SEcv1$lamhat.1se
 
 SEAus1$hierpath$bp[1,1] <- 0.1 #dummy coef
 
-SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, 
+SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, lambda.min = TRUE,
                       resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
 
 #ignore row 1
@@ -289,13 +311,16 @@ SErefit1[[5]]
 #from bic, 5 is optimal (6,7,8,10 good) 
 i <- 10
 ridge_coef <- SErefit1[[4]][[i]][-1]
+SEridge_1 <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
 SEridge_cv <- SErefit1[[6]]
 lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+lmhat <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.min)
 SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[1]])
 SEr2[lm1se]
+SEr2[lmhat]
 
 ```
 
@@ -318,7 +343,7 @@ SEcv2$lamhat.1se
 1-SEcv2$cv.err/var( SE_resp[[2]])
 
 
-SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.50, 
+SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.50, lambda.min = TRUE,
                       resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
 
 SErefit2[[5]]
@@ -326,15 +351,18 @@ SErefit2[[5]]
 #bic min 8 (5-10, 14 good, 15 ok), ebic 0.25/0.5 min 5
 i <- 14
 ridge_coef <- SErefit2[[4]][[i]][-1]
+SEridge_2 <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
 SEridge_cv <- SErefit2[[6]]
 lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+lmhat <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.min)
 SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[2]])
 SEr2[lm1se]
+SEr2[lmhat]
 
-summary(SErefit2[[1]][[i]])
+#summary(SErefit2[[1]][[i]])
 ```
 
 ## Group 3
@@ -355,7 +383,7 @@ which(SEcv3$lamlist == SEcv3$lamhat)
 SEcv3$lamhat.1se
 1-SEcv3$cv.err/var( SE_resp[[3]])
 
-SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.50, 
+SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.50, lambda.min = TRUE,
                       resp = SE_resp[[3]], preds = SE_preds[[3]], preds_quant = SE_preds_q75[[3]])
 
 SErefit3[[5]]
@@ -363,14 +391,16 @@ SErefit3[[5]]
 #bic min 15, ebic 0.25 min 15,ebic 0.50: 14,15
 i <- 15
 ridge_coef <- SErefit3[[4]][[i]][-1]
+SEridge_3 <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
 SEridge_cv <- SErefit1[[6]]
 lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+lmhat <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.min)
 SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[3]])
 SEr2[lm1se]
-
+SEr2[lmhat]
 ```
 
 ## Group 4
@@ -392,7 +422,7 @@ SEcv4$lamhat.1se
 1-SEcv4$cv.err/var( SE_resp[[4]])
 
 
-SErefit4 <- refit_bic(SEAus4$hierpath, max_index = 50, ebic.gamma = 0.25, 
+SErefit4 <- refit_bic(SEAus4$hierpath, max_index = 50, ebic.gamma = 0.25, lambda.min = TRUE,
                       resp = SE_resp[[4]], preds = SE_preds[[4]], preds_quant = SE_preds_q75[[4]])
 
 SErefit4[[5]]
@@ -400,16 +430,19 @@ SErefit4[[5]]
 #bic best 3 ( very good: 14 (3rd best bic)), ebic = 0.25: 3
 i <- 14
 ridge_coef <- SErefit4[[4]][[i]][-1]
+SEridge_4 <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
 SEridge_cv <- SErefit4[[6]]
 lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+lmhat <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.min)
 SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[4]])
 SEr2[lm1se]
+SEr2[lmhat]
 
 #lm bic min i=14 (not even close to other indices)
-summary(SErefit4[[1]][[i]])
+#summary(SErefit4[[1]][[i]])
 
 ```
 
@@ -419,14 +452,25 @@ summary(SErefit4[[1]][[i]])
 ## NE Aus
 Create plot for coefficients of each model (plotted climate mode)
 (currently mostly manual)
+
+TODO: update NE Aus gorup 4
+
+See if we can do this all in R (use the stacked TS plots as a guide)
+
 ```{r nino}
 #NEridge_1
 NE1_ninolag <- c(9,10,12,13,28,33)
 NE1_ninocoef <- NEridge_1[1:6]
 
+NE1_ninoind <- c(5,8,12)
+NE1_ninocoefind <- NEridge_1[29:31]
+
 #NEridge_2
 NE2_ninolag <- c(25)
 NE2_ninocoef <- NEridge_2[1]
+
+NE2_ninoind <- c(11, 12)
+NE2_ninocoefind <- NEridge_2[14:15]
 
 #NEridge_3 #not included
 
@@ -434,13 +478,941 @@ NE2_ninocoef <- NEridge_2[1]
 NE4_ninolag <- c(25, 26)
 NE4_ninocoef <- NEridge_4[1:2]
 
-coef_range <- range(NE1_ninocoef, NE2_ninocoef, NE4_ninocoef)
+coef_range <- range(NE1_ninocoef, NE1_ninocoefind, NE2_ninocoef, NE2_ninocoefind, NE4_ninocoef)
 
-plot(NE1_ninolag, NE1_ninocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = coef_range)
-points(NE2_ninolag, NE2_ninocoef, pch = 17, col = "green3")
+plot(NE1_ninolag, NE1_ninocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = coef_range,
+     xlab = "lag", ylab = "Coefficients")
+points(NE1_ninoind, NE1_ninocoefind, pch = 0, col = "blue2")
+points(NE2_ninolag, NE2_ninocoef, pch = 16, col = "green3")
+points(NE2_ninoind, NE2_ninocoefind, pch = 1, col = "green4", cex = 1.52)
 points(NE4_ninolag, NE4_ninocoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+```
+
+```{r dmi}
+#TODO update for dmi
+#NEridge_1
+NE1_dmilag <- c(52)
+NE1_dmicoef <- NEridge_1[7]
+
+#NEridge_2
+NE2_dmilag <- c(7,12,41)
+NE2_dmicoef <- NEridge_2[2:4]
+
+NE2_dmiind <- c(6)
+NE2_dmicoefind <- NEridge_2[16]
+
+#NEridge_3
+NE3_dmilag <- c(8,26)
+NE3_dmicoef <- NEridge_3[1:2]
+
+#NEridge_4
+NE4_dmilag <- c(19,20,21,31)
+NE4_dmicoef <- NEridge_4[3:6]
+
+dmi_range <- range(NE1_dmicoef, NE2_dmicoef, NE2_dmicoefind, NE3_dmicoef, NE4_dmicoef)
+
+plot(NE1_dmilag, NE1_dmicoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = dmi_range,
+     xlab = "lag", ylab = "Coefficients")
+points(NE2_dmilag, NE2_dmicoef, pch = 16, col = "green3")
+points(NE2_dmiind, NE2_dmicoefind, pch = 1, col = "green4", cex = 1.52)
+points(NE3_dmilag, NE3_dmicoef, pch = 17, col = "orange3")
+points(NE4_dmilag, NE4_dmicoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
 
 ```
 
+```{r tsa}
+#NEridge_1
+NE1_tsalag <- c(1,14,15,18,19,31,32,34:39)
+NE1_tsacoef <- NEridge_1[8:20]
+
+#NEridge_2
+NE2_tsalag <- c(31,47,48,49)
+NE2_tsacoef <- NEridge_2[5:8]
+
+#NEridge_3
+NE3_tsalag <- c(2,17,29)
+NE3_tsacoef <- NEridge_3[3:5]
+
+#NEridge_4
+NE4_tsalag <- c(22,28,29,49,51, 52)
+NE4_tsacoef <- NEridge_4[7:12]
+
+tsa_range <- range(NE1_tsacoef, NE2_tsacoef, NE3_tsacoef, NE4_tsacoef)
+
+plot(NE1_tsalag, NE1_tsacoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = tsa_range,
+     xlab = "lag", ylab = "Coefficients")
+points(NE2_tsalag, NE2_tsacoef, pch = 16, col = "green3")
+points(NE3_tsalag, NE3_tsacoef, pch = 17, col = "orange3")
+points(NE4_tsalag, NE4_tsacoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+```
+
+```{r aao}
+NE1_aaolag <- c(2,7,15,24,27,35)
+NE1_aaocoef <- NEridge_1[21:26]
+
+NE3_aaolag <- c(43,44)
+NE3_aaocoef <- NEridge_3[6:7]
+
+NE4_aaolag <- c(44)
+NE4_aaocoef <- NEridge_4[13]
+
+aao_range <- range(NE1_aaocoef, NE3_aaocoef, NE4_aaocoef)
+
+plot(NE1_aaolag, NE1_aaocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = aao_range,
+     xlab = "lag", ylab = "Coefficients")
+points(NE3_aaolag, NE3_aaocoef, pch = 17, col = "orange3")
+points(NE4_aaolag, NE4_aaocoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+```
+
+
+```{r olr}
+
+NE1_olrlag <- c(47, 51)
+NE1_olrcoef <- NEridge_1[27:28]
+
+NE2_olrlag <- c(1,2,30,32,52)
+NE2_olrcoef <- NEridge_2[9:13]
+
+NE3_olrlag <- c(1)
+NE3_olrcoef <- NEridge_3[8]
+
+NE4_olrlag <- c(19,20)
+NE4_olrcoef <- NEridge_4[14:15]
+
+olr_range <- range(NE1_olrcoef, NE2_olrcoef, NE3_olrcoef, NE4_olrcoef)
+
+plot(NE1_olrlag, NE1_olrcoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = olr_range,
+     xlab = "lag", ylab = "Coefficients")
+points(NE2_olrlag, NE2_olrcoef, pch = 16, col = "green3")
+points(NE3_olrlag, NE3_olrcoef, pch = 17, col = "orange3")
+points(NE4_olrlag, NE4_olrcoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+```
+
+## SE Aus
+
+
+
+```{r nino}
+#SEridge_2
+SE2_ninolag <- c(11)
+SE2_ninocoef <- SEridge_2[1]
+
+SE2_ninoind <- c(10:12)
+SE2_ninocoefind <- SEridge_2[18:20]
+
+#SEridge_4
+SE4_ninolag <- c(25,34,47)
+SE4_ninocoef <- SEridge_4[1:3]
+
+SE4_ninoind <- c(13)
+SE4_ninocoefind <- SEridge_4[21]
+
+
+nino_range <- range(SE2_ninocoef, SE2_ninocoefind, SE4_ninocoef, SE4_ninocoefind)
+
+plot(SE2_ninolag, SE2_ninocoef, pch = 16, col = "green3", xlim = c(1,52), ylim = nino_range,
+     xlab = "lag", ylab = "Coefficients")
+points(SE2_ninoind, SE2_ninocoefind, pch = 1, col = "green4", cex = 1.25)
+points(SE4_ninolag, SE4_ninocoef, pch = 18, col = "red3", cex = 1.5)
+points(SE4_ninoind, SE4_ninocoefind, pch = 5, col = "red3")
+abline(h=0, lty = 2)
+
+```
+
+
+```{r dmi}
+#SEridge_1
+SE1_dmilag <- c(31,37,42:44)
+SE1_dmicoef <- SEridge_1[1:5]
+
+SE1_dmiind <- c(43)
+SE1_dmicoefind <- SEridge_1[16]
+
+SE2_dmilag <- c(6,34)
+SE2_dmicoef <- SEridge_2[2:3]
+
+SE2_dmiind <- c(5,6)
+SE2_dmicoefind <- SEridge_2[21:22]
+
+#SEridge_3
+SE3_dmilag <- c(7,8)
+SE3_dmicoef <- SEridge_3[1:2]
+
+SE4_dmilag <- c(12,14:16,24,40)
+SE4_dmicoef <- SEridge_4[4:9]
+
+SE4_dmiind <- c(14)
+SE4_dmicoefind <- SEridge_4[22]
+
+dmi_range <- range(SE1_dmicoef, SE1_dmicoefind, SE2_dmicoef, SE2_dmicoefind, SE3_dmicoef, SE4_dmicoef, SE4_dmicoefind)
+
+plot(SE1_dmilag, SE1_dmicoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = dmi_range,
+     xlab = "lag", ylab = "Coefficients")
+points(SE1_dmiind, SE1_dmicoefind, pch = 0, col = "blue2")
+points(SE2_dmilag, SE2_dmicoef, pch = 16, col = "green3")
+points(SE2_dmiind, SE2_dmicoefind, pch = 1, col = "green4", cex = 1.25)
+points(SE3_dmilag, SE3_dmicoef, pch = 17, col = "orange3")
+points(SE4_dmilag, SE4_dmicoef, pch = 18, col = "red3", cex = 1.5)
+points(SE4_dmiind, SE4_dmicoefind, pch = 5, col = "red3")
+abline(h=0, lty = 2)
+
+
+```
+
+
+```{r tsa}
+SE1_tsalag <- c(12:15)
+SE1_tsacoef <- SEridge_1[6:9]
+
+SE2_tsalag <- c(14,15,17,44)
+SE2_tsacoef <- SEridge_2[4:7]
+
+SE3_tsalag <- c(27)
+SE3_tsacoef <- SEridge_3[3]
+
+SE4_tsalag <- c(21,22,52)
+SE4_tsacoef <- SEridge_4[10:12]
+
+tsa_range <- range(SE1_tsacoef, SE2_tsacoef, SE3_tsacoef, SE4_tsacoef)
+
+plot(SE1_tsalag, SE1_tsacoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = tsa_range,
+     xlab = "lag", ylab = "Coefficients")
+points(SE2_tsalag, SE2_tsacoef, pch = 16, col = "green3")
+points(SE3_tsalag, SE3_tsacoef, pch = 17, col = "orange3")
+points(SE4_tsalag, SE4_tsacoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+
+```
+
+
+
+```{r aao}
+SE1_aaolag <- c(17,18,23,27,29,35)
+SE1_aaocoef <- SEridge_1[10:15]
+
+SE2_aaolag <- c(7,15,24,25,39,51)
+SE2_aaocoef <- SEridge_2[8:13]
+
+SE3_aaolag <- c(9)
+SE3_aaocoef <- SEridge_3[4]
+
+SE4_aaolag <- c(36,37,47)
+SE4_aaocoef <- SEridge_4[13:15]
+
+aao_range <- range(SE1_aaocoef, SE2_aaocoef, SE3_aaocoef, SE4_aaocoef)
+
+plot(SE1_aaolag, SE1_aaocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = aao_range,
+     xlab = "lag", ylab = "Coefficients")
+points(SE2_aaolag, SE2_aaocoef, pch = 16, col = "green3")
+points(SE3_aaolag, SE3_aaocoef, pch = 17, col = "orange3")
+points(SE4_aaolag, SE4_aaocoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+
+
+```
+
+
+```{r olr}
+SE2_olrlag <- c(1,15,23,28)
+SE2_olrcoef <- SEridge_2[14:17] 
+
+SE4_olrlag <- c(1,28,35,38,49)
+SE4_olrcoef <- SEridge_4[16:20] 
+
+olr_range <- range(SE2_olrcoef, SE4_olrcoef)
+
+plot(SE2_olrlag, SE2_olrcoef, pch = 16, col = "green3", xlim = c(1,52), ylim = olr_range,
+     xlab = "lag", ylab = "Coefficients")
+points(SE4_olrlag, SE4_olrcoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+```
+
+
+
+
+# Predictions
+
+## NE Aus
+
+```{r NEAus1_pred}
+i <- 9 #lambda choice
+
+NEaus_main <- NEcoefs1[[i]][[1]] #main effects
+NEaus_int <- NEcoefs1[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(NEaus_main$Main_Effect, collapse = " + "),
+                       paste(NEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+#testing for each year:
+#TODO: delete later after everything is working
+k <- 1:19
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = k)
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = k)
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = k)
+
+y = as.numeric(NE_resp[[1]])
+X = cbind(as.matrix(NE_preds[[1]][ ,1:260]),
+          as.matrix(NE_preds_q75[[1]][ ,1:104])  )
+
+coef_names <- c(colnames(NE_preds[[1]]), paste0( "IND_", colnames(NE_preds_q75[[1]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- NErefit1[[3]][[i]] #ridge fit
+refit_cv <- NErefit1[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+NEAus1_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+NE1_yhat <- c()
+for (j in 1:19) {
+  NE1_yhat <- c(NE1_yhat, NEAus1_pred[seq(j, 228, by = 19)])
+}
+
+```
+
+```{r NEAus2_pred}
+i <- 14 #lambda choice
+
+NEaus_main <- NEcoefs2[[i]][[1]] #main effects
+NEaus_int <- NEcoefs2[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(NEaus_main$Main_Effect, collapse = " + "),
+                       paste(NEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(NE_resp[[2]])
+X = cbind(as.matrix(NE_preds[[2]][ ,1:260]),
+          as.matrix(NE_preds_q75[[2]][ ,1:104])  )
+
+coef_names <- c(colnames(NE_preds[[2]]), paste0( "IND_", colnames(NE_preds_q75[[2]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- NErefit2[[3]][[i]] #ridge fit
+refit_cv <- NErefit2[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+NEAus2_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+NE2_yhat <- c()
+for (j in 1:19) {
+  NE2_yhat <- c(NE2_yhat, NEAus2_pred[seq(j, 95, by = 19)])
+}
+
+```
+
+```{r NEAus3_pred}
+i <- 14 #lambda choice
+
+NEaus_main <- NEcoefs3[[i]][[1]] #main effects
+NEaus_int <- NEcoefs3[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(NEaus_main$Main_Effect, collapse = " + "),
+                       paste(NEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(NE_resp[[3]])
+X = cbind(as.matrix(NE_preds[[3]][ ,1:260]),
+          as.matrix(NE_preds_q75[[3]][ ,1:104])  )
+
+coef_names <- c(colnames(NE_preds[[3]]), paste0( "IND_", colnames(NE_preds_q75[[3]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- NErefit3[[3]][[i]] #ridge fit
+refit_cv <- NErefit3[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+NEAus3_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+NE3_yhat <- c()
+for (j in 1:19) {
+  NE3_yhat <- c(NE3_yhat, NEAus3_pred[seq(j, 76, by = 19)])
+}
+
+
+```
+
+```{r NEAus4_pred}
+i <- 17 #lambda choice
+
+NEaus_main <- NEcoefs4[[i]][[1]] #main effects
+NEaus_int <- NEcoefs4[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(NEaus_main$Main_Effect, collapse = " + "),
+                       paste(NEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(NE_resp[[4]])
+X = cbind(as.matrix(NE_preds[[4]][ ,1:260]),
+          as.matrix(NE_preds_q75[[4]][ ,1:104])  )
+
+coef_names <- c(colnames(NE_preds[[4]]), paste0( "IND_", colnames(NE_preds_q75[[4]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- NErefit4[[3]][[i]] #ridge fit
+refit_cv <- NErefit4[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+NEAus4_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+NE4_yhat <- c()
+for (j in 1:19) {
+  NE4_yhat <- c(NE4_yhat, NEAus4_pred[seq(j, 209, by = 19)])
+}
+
+```
+
+## SE Aus
+
+```{r SEAus1_pred}
+i <- 10 #lambda choice
+
+SEaus_main <- SEcoefs1[[i]][[1]] #main effects
+SEaus_int <- SEcoefs1[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(SEaus_main$Main_Effect, collapse = " + "),
+                       paste(SEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(SE_resp[[1]])
+X = cbind(as.matrix(SE_preds[[1]][ ,1:260]),
+          as.matrix(SE_preds_q75[[1]][ ,1:104])  )
+
+coef_names <- c(colnames(SE_preds[[1]]), paste0( "IND_", colnames(SE_preds_q75[[1]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- SErefit1[[3]][[i]] #ridge fit
+refit_cv <- SErefit1[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+SEAus1_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+SE1_yhat <- c()
+for (j in 1:19) {
+  SE1_yhat <- c(SE1_yhat, SEAus1_pred[seq(j, 133, by = 19)])
+}
+
+
+```
+
+```{r SEAus2_pred}
+i <- 14 #lambda choice
+
+SEaus_main <- SEcoefs2[[i]][[1]] #main effects
+SEaus_int <- SEcoefs2[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(SEaus_main$Main_Effect, collapse = " + "),
+                       paste(SEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(SE_resp[[2]])
+X = cbind(as.matrix(SE_preds[[2]][ ,1:260]),
+          as.matrix(SE_preds_q75[[2]][ ,1:104])  )
+
+coef_names <- c(colnames(SE_preds[[2]]), paste0( "IND_", colnames(SE_preds_q75[[2]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- SErefit2[[3]][[i]] #ridge fit
+refit_cv <- SErefit2[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+SEAus2_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+
+#sort by year
+SE2_yhat <- c()
+for (j in 1:19) {
+  SE2_yhat <- c(SE2_yhat, SEAus2_pred[seq(j, 171, by = 19)])
+}
+
+```
+
+```{r SEAus3_pred}
+i <- 15 #lambda choice
+
+SEaus_main <- SEcoefs3[[i]][[1]] #main effects
+SEaus_int <- SEcoefs3[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(SEaus_main$Main_Effect, collapse = " + "),
+                       paste(SEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(SE_resp[[3]])
+X = cbind(as.matrix(SE_preds[[3]][ ,1:260]),
+          as.matrix(SE_preds_q75[[3]][ ,1:104])  )
+
+coef_names <- c(colnames(SE_preds[[3]]), paste0( "IND_", colnames(SE_preds_q75[[3]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- SErefit3[[3]][[i]] #ridge fit
+refit_cv <- SErefit3[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+SEAus3_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+SE3_yhat <- c()
+for (j in 1:19) {
+  SE3_yhat <- c(SE3_yhat, SEAus3_pred[seq(j, 76, by = 19)])
+}
+
+```
+
+```{r SEAus4_pred}
+i <- 14 #lambda choice
+
+SEaus_main <- SEcoefs4[[i]][[1]] #main effects
+SEaus_int <- SEcoefs4[[i]][[2]] #interaction effects
+
+model_string <- paste( paste(SEaus_main$Main_Effect, collapse = " + "),
+                       paste(SEaus_int$Interact_Effect, collapse = " + "),
+                       sep = " + ")
+
+model_string <- paste0("y ~ ", model_string)
+
+y = as.numeric(SE_resp[[4]])
+X = cbind(as.matrix(SE_preds[[4]][ ,1:260]),
+          as.matrix(SE_preds_q75[[4]][ ,1:104])  )
+
+coef_names <- c(colnames(SE_preds[[4]]), paste0( "IND_", colnames(SE_preds_q75[[4]][ ,1:104]) ) )
+colnames(X) <- coef_names
+
+#ridge model
+X_df <- as.data.frame(X)
+f <- as.formula(model_string)
+X_new <- model.matrix(f, X_df)
+
+#from refits
+ridge_refit <- SErefit4[[3]][[i]] #ridge fit
+refit_cv <- SErefit4[[6]][[i]] #ridge cv
+
+refit_cv$lambda.1se
+refit_cv$lambda.min
+
+set.seed(300)
+#ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
+#ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+
+#save this for later
+plot(refit_cv)
+plot(ridge_refit, xvar = "dev")
+
+#TODO: also test predictions with: refit_cv$lambda.min
+SEAus4_pred <- predict(ridge_refit, X_new, s = refit_cv$lambda.min, type = "response")
+
+#sort by year
+SE4_yhat <- c()
+for (j in 1:19) {
+  SE4_yhat <- c(SE4_yhat, SEAus4_pred[seq(j, 228, by = 19)])
+}
+
+```
+
+# Prediction Plot
+
+TODO: clean up the density of some of these plots, it's a bit much
+
+```{r setup}
+#extract seasons
+#TODO: adjust so that we can assign values outside of season (For ploting)
+new_resp <- bounded_resp_df[which(bounded_resp_df$week %in% season_weeks, arr.ind = TRUE), ]
+new_resp <- new_resp[-c(1:14), ]
+
+#setup vertical year lines
+unique_yr <- unique(year(new_resp$time))
+year_lines <- c(unique_yr[1:length(unique_yr)])
+year_lines <- paste0(year_lines, "0101")
+year_lines <- as_date(year_lines)
+
+#year_text <- year_lines
+#year_text <- as_date(year_text) + months(6)
+year_text <- year_lines + months(6)
+
+xlim_val <- ymd(c("20010829", "20200401"))
+
+temp_SE <- scale(new_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_NE <- scale(new_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+
+temp_time <- as.Date(new_resp$time)
+
+```
+
+## NE Aus
+
+```{r NEAus1_viz}
+NEAus1_resp <- new_resp[new_resp$week %in% season_weeks[1:12],]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[1:12]) + rep(0:11, 19), ]
+
+temp_NE <- scale(NEAus1_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+
+temp_time <- as.Date(time_shift$time)
+
+NEAus1_df <- data.frame(time = temp_time, true = temp_NE, pred = NE1_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = NEAus1_df$time, y = NEAus1_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "NE Aus : Predictions")
+points(x = NEAus1_df$time, y = NEAus1_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+```{r NEAus2_viz}
+NEAus2_resp <- new_resp[new_resp$week %in% season_weeks[13:17],]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[13:17]) + rep(-2:2, 19), ]
+
+temp_NE <- scale(NEAus2_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+
+temp_time <- as.Date(time_shift$time)
+
+NEAus2_df <- data.frame(time = temp_time, true = temp_NE, pred = NE2_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = NEAus2_df$time, y = NEAus2_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "NE Aus : Predictions")
+points(x = NEAus2_df$time, y = NEAus2_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+```{r NEAus3_viz}
+NEAus3_resp <- new_resp[new_resp$week %in% season_weeks[18:21],]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[18:21]) + rep(-1:2, 19), ]
+
+temp_NE <- scale(NEAus3_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+
+temp_time <- as.Date(time_shift$time)
+
+NEAus3_df <- data.frame(time = temp_time, true = temp_NE, pred = NE3_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = NEAus3_df$time, y = NEAus3_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "NE Aus : Predictions")
+points(x = NEAus3_df$time, y = NEAus3_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+```{r NEAus4_viz}
+NEAus4_resp <- new_resp[new_resp$week %in% season_weeks[22:32],]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[22:32]) + rep(-10:0, 19), ]
+
+temp_NE <- scale(NEAus4_resp$NE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+
+temp_time <- as.Date(time_shift$time)
+
+NEAus4_df <- data.frame(time = temp_time, true = temp_NE, pred = NE4_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = NEAus4_df$time, y = NEAus4_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "NE Aus : Predictions")
+points(x = NEAus4_df$time, y = NEAus4_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+
+## SE Aus
+
+Group 1 has nice spacing, make adjustments to setup for this to work
+
+```{r SEAus1_viz}
+SEAus1_resp <- new_resp[new_resp$week %in% season_weeks[1:7], ]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[1:7]) + rep(0:6, 19)*2, ]
+
+temp_SE <- scale(SEAus1_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(time_shift$time)
+
+SEAus1_df <- data.frame(time = temp_time, true = temp_SE, pred = SE1_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = SEAus1_df$time, y = SEAus1_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "SE Aus : Predictions")
+points(x = SEAus1_df$time, y = SEAus1_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+```{r SEAus2_viz}
+SEAus2_resp <- new_resp[new_resp$week %in% season_weeks[8:16], ]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[8:16]) + rep(-5:3, 19), ]
+
+temp_SE <- scale(SEAus2_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(time_shift$time)
+
+SEAus2_df <- data.frame(time = temp_time, true = temp_SE, pred = SE2_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = SEAus2_df$time, y = SEAus2_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "SE Aus : Predictions")
+points(x = SEAus2_df$time, y = SEAus2_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+```{r SEAus3_viz}
+SEAus3_resp <- new_resp[new_resp$week %in% season_weeks[17:20], ]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[17:20]) + rep(-2:1, 19), ]
+
+temp_SE <- scale(SEAus3_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(time_shift$time)
+
+SEAus3_df <- data.frame(time = temp_time, true = temp_SE, pred = SE3_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = SEAus3_df$time, y = SEAus3_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "SE Aus : Predictions")
+points(x = SEAus3_df$time, y = SEAus3_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
+
+```{r SEAus4_viz}
+SEAus4_resp <- new_resp[new_resp$week %in% season_weeks[21:32], ]
+
+time_shift <- new_resp[which(new_resp$week %in% season_weeks[21:32]) + rep(-11:0, 19), ]
+
+temp_SE <- scale(SEAus4_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE) 
+temp_time <- as.Date(time_shift$time)
+
+SEAus4_df <- data.frame(time = temp_time, true = temp_SE, pred = SE4_yhat)
+
+par(mar = c(3,5,4,1))
+plot(x = SEAus4_df$time, y = SEAus4_df$true, pch = 18, 
+     col = "black", xlim = xlim_val, cex = 1.33,
+     xaxt = "n",  xlab = "",
+     ylab = "CO Anomaly", 
+     main = "SE Aus : Predictions")
+points(x = SEAus4_df$time, y = SEAus4_df$pred, pch = 17, 
+     col = "magenta3", cex = 1)
+abline(v = year_lines[-1], lty = 2)
+abline(h = 0, lty = 2)
+legend("bottomleft", inset = c(0.00, 0),
+       legend = c("True", "Pred"),
+       col = c("black", "magenta3"),
+       pch = c(18,17),
+       pt.cex = c(1.33,1))
+axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+```
 
 
