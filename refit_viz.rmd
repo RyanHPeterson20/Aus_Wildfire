@@ -1,0 +1,446 @@
+---
+title: "refit_viz"
+author: "Ryan Peterson"
+date: "2025-04-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+suppressMessages( library(hierNet)) #yes
+
+suppressMessages( library(RAMP)) #maybe
+suppressMessages(library(glmnet)) #test ridge regression for coefs
+
+suppressMessages( library( lubridate)) #you know why
+```
+
+
+```{r data_functions}
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+source("group_functions.R") #grouping/clustering
+
+#fit models
+load( "hiernet1_group.rda") #weak/4group
+
+load( "SEAus_hiernet_temp2.rda") #strong/se/4group
+load( "SEAus_hiernet_temp.rda") #strong/se/4group
+load( "NEAus_hiernet_strong.rda") #strong/ne/4group
+
+load( "full_strong.rda") #full strong models #output models
+
+```
+
+
+```{r setup}
+#set up 
+
+#season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#group response matrices
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:12] #early season
+NEAus_2 <- NEbase_matrix[ ,13:17] #primary NE fire season
+NEAus_3 <- NEbase_matrix[ ,18:21] #feedback from SE
+NEAus_4 <- NEbase_matrix[ ,22:32] #late season
+
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:7] #early season
+SEAus_2 <- SEbase_matrix[ ,8:16] #feedback from NE
+SEAus_3 <- SEbase_matrix[ ,17:20] #primary SE fire season
+SEAus_4 <- SEbase_matrix[ ,21:32] #late season
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3, NEAus_4)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3, SEAus_4)
+
+rm(NEAus_1, NEAus_2, NEAus_3, NEAus_4, SEAus_1, SEAus_2, SEAus_3, SEAus_4)
+```
+
+
+```{r model_data}
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
+
+#quantile 75 indicator
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
+
+full_resp <- c(NE_resp, SE_resp)
+full_preds <- c(NE_preds, SE_preds)
+full_preds_q75 <- c(NE_preds_q75, SE_preds_q75)
+```
+
+
+# NE Aus - Refits
+
+## Group 1
+
+```{r refits}
+NEAus1 <- output[[1]]
+
+#NEpath_new$Group_1
+  
+NEcoefs1 <- get_coefs(NEAus1$hierpath, max_index = 50, 
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], preds_quant = NE_preds_q75[[1]])
+plot(NEAus1$hiercv)
+#plot(NEcv_new$Group_1)
+
+NEcv1 <- NEAus1$hiercv
+which(NEcv1$lamlist == NEcv1$lamhat.1se)
+which(NEcv1$lamlist == NEcv1$lamhat)
+NEcv1$lamhat.1se
+1-NEcv1$cv.err/var( NE_resp[[1]])
+
+NEcoefs1[[26]][[1]]
+
+NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], preds_quant = NE_preds_q75[[1]])
+NErefit1[[5]]
+
+#use either 9 or 12 (ebic: 0.15 for 9, 0.25 for 12)
+i <- 9
+ridge_coef <- NErefit1[[4]][[i]][-1]
+NEridge_1 <- ridge_coef
+ridge_coef
+
+NEridge_cv <- NErefit1[[6]]
+lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[1]])
+NEr2[lm1se]
+
+length(ridge_coef)
+
+#fit model
+##summary(NErefit1[[1]][[i]])
+```
+
+## Group 2
+
+```{r refits}
+NEAus2 <- output[[2]]
+
+#NEpath_new$Group_2 #(strong w/ indicator interactions)
+  
+NEcoefs2 <- get_coefs(NEAus2$hierpath, max_index = 50, 
+                      resp = NE_resp[[2]], preds = NE_preds[[2]], preds_quant = NE_preds_q75[[2]])
+
+plot(NEAus2$hiercv)
+
+NEcv2 <- NEAus2$hiercv
+which(NEcv2$lamlist == NEcv2$lamhat.1se)
+which(NEcv2$lamlist == NEcv2$lamhat)
+NEcv2$lamhat.1se
+1-NEcv2$cv.err/var( NE_resp[[2]])
+
+NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.15, 
+                      resp = NE_resp[[2]], preds = NE_preds[[2]], preds_quant = NE_preds_q75[[2]])
+NErefit2[[5]]
+
+# i = 14 seems to be optimal wrt BIC (15,16 ok)
+i <- 14
+ridge_coef <- NErefit2[[4]][[i]][-1]
+NEridge_2 <- ridge_coef
+ridge_coef
+
+NEridge_cv <- NErefit2[[6]]
+lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[2]])
+NEr2[lm1se]
+
+length(ridge_coef)
+
+```
+
+## Group 3
+
+```{r refits}
+NEAus3 <- output[[3]]
+
+#NEpath_new$Group_3 #(strong w/ indicator interactions)
+  
+NEcoefs3 <- get_coefs(NEAus3$hierpath, max_index = 50, 
+                      resp = NE_resp[[3]], preds = NE_preds[[3]], preds_quant = NE_preds_q75[[3]])
+
+plot(NEAus3$hiercv)
+
+NEcv3 <- NEAus3$hiercv
+which(NEcv3$lamlist == NEcv3$lamhat.1se)
+which(NEcv3$lamlist == NEcv3$lamhat)
+NEcv3$lamhat.1se
+1-NEcv3$cv.err/var( NE_resp[[3]])
+
+
+NErefit3 <- refit_bic(NEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      resp = NE_resp[[3]], preds = NE_preds[[3]], preds_quant = NE_preds_q75[[3]])
+NErefit3[[5]]
+
+# ebic = 0.25: 12-14 work the same, ebic = 0.5: 5-7
+i <- 14
+ridge_coef <- NErefit3[[4]][[i]][-1]
+NEridge_3 <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+NEridge_cv <- NErefit3[[6]]
+lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[3]])
+NEr2[lm1se]
+
+
+```
+
+## Group 4
+
+```{r refit}
+NEAus4 <- output[[4]]
+
+#NEpath_new$Group_4 #(strong w/ indicator interactions)
+  
+NEcoefs4 <- get_coefs(NEAus4$hierpath, max_index = 50, 
+                      resp = NE_resp[[4]], preds = NE_preds[[4]], preds_quant = NE_preds_q75[[4]])
+
+plot(NEAus4$hiercv)
+
+NEcv4 <- NEAus4$hiercv
+which(NEcv4$lamlist == NEcv4$lamhat.1se)
+which(NEcv4$lamlist == NEcv4$lamhat)
+NEcv4$lamhat.1se
+1-NEcv4$cv.err/var( NE_resp[[4]])
+
+
+NErefit4 <- refit_bic(NEAus4$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      resp = NE_resp[[4]], preds = NE_preds[[4]], preds_quant = NE_preds_q75[[4]])
+NErefit4[[5]]
+
+#plot(1:26, NErefit4[[5]][1:26,3], pch = 16)
+
+
+#from bic, 5,6,14 seem good
+i <- 14
+ridge_coef <- NErefit4[[4]][[i]][-1]
+NEridge_4 <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+NEridge_cv <- NErefit4[[6]]
+lm1se <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.1se)
+NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[4]])
+NEr2[lm1se]
+
+
+```
+
+# SE Aus - Refits
+
+## Group 1
+
+```{r refits}
+SEAus1 <- output[[5]]
+
+#SEpath_new$Group_1 #(strong w/ indicator interactions)
+  
+SEcoefs1 <- get_coefs(SEAus1$hierpath, max_index = 50, 
+                      resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
+
+plot(SEAus1$hiercv)
+
+SEcv1 <- SEAus1$hiercv
+which(SEcv1$lamlist == SEcv1$lamhat.1se)
+which(SEcv1$lamlist == SEcv1$lamhat)
+SEcv1$lamhat.1se
+1-SEcv1$cv.err/var( SE_resp[[1]])
+
+SEAus1$hierpath$bp[1,1] <- 0.1 #dummy coef
+
+SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
+
+#ignore row 1
+SErefit1[[5]]
+
+#from bic, 5 is optimal (6,7,8,10 good) 
+i <- 10
+ridge_coef <- SErefit1[[4]][[i]][-1]
+ridge_coef
+length(ridge_coef)
+
+SEridge_cv <- SErefit1[[6]]
+lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[1]])
+SEr2[lm1se]
+
+```
+
+## Group 2
+
+```{r refits}
+SEAus2 <- output[[6]]
+
+#SEpath_new$Group_2 #(strong w/ indicator interactions)
+  
+SEcoefs2 <- get_coefs(SEAus2$hierpath, max_index = 50, 
+                      resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
+
+plot(SEAus2$hiercv)
+
+SEcv2 <- SEAus2$hiercv
+which(SEcv2$lamlist == SEcv2$lamhat.1se)
+which(SEcv2$lamlist == SEcv2$lamhat)
+SEcv2$lamhat.1se
+1-SEcv2$cv.err/var( SE_resp[[2]])
+
+
+SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.50, 
+                      resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
+
+SErefit2[[5]]
+
+#bic min 8 (5-10, 14 good, 15 ok), ebic 0.25/0.5 min 5
+i <- 14
+ridge_coef <- SErefit2[[4]][[i]][-1]
+ridge_coef
+length(ridge_coef)
+
+SEridge_cv <- SErefit2[[6]]
+lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[2]])
+SEr2[lm1se]
+
+summary(SErefit2[[1]][[i]])
+```
+
+## Group 3
+
+```{r refits}
+SEAus3 <- output[[7]]
+
+#SEpath_new2$Group_3 #(strong w/ indicator interactions)
+  
+SEcoefs3 <- get_coefs(SEAus3$hierpath, max_index = 50, 
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], preds_quant = SE_preds_q75[[3]])
+
+plot(SEAus3$hiercv)
+
+SEcv3 <- SEAus3$hiercv
+which(SEcv3$lamlist == SEcv3$lamhat.1se)
+which(SEcv3$lamlist == SEcv3$lamhat)
+SEcv3$lamhat.1se
+1-SEcv3$cv.err/var( SE_resp[[3]])
+
+SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.50, 
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], preds_quant = SE_preds_q75[[3]])
+
+SErefit3[[5]]
+
+#bic min 15, ebic 0.25 min 15,ebic 0.50: 14,15
+i <- 15
+ridge_coef <- SErefit3[[4]][[i]][-1]
+ridge_coef
+length(ridge_coef)
+
+SEridge_cv <- SErefit1[[6]]
+lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[3]])
+SEr2[lm1se]
+
+```
+
+## Group 4
+
+```{r refits}
+SEAus4 <- output[[8]]
+
+#SEpath_new2$Group_4 #(strong w/ indicator interactions)
+  
+SEcoefs4 <- get_coefs(SEAus4$hierpath, max_index = 50, 
+                      resp = SE_resp[[4]], preds = SE_preds[[4]], preds_quant = SE_preds_q75[[4]])
+
+plot(SEAus4$hiercv)
+
+SEcv4 <- SEAus4$hiercv
+which(SEcv4$lamlist == SEcv4$lamhat.1se)
+which(SEcv4$lamlist == SEcv4$lamhat)
+SEcv4$lamhat.1se
+1-SEcv4$cv.err/var( SE_resp[[4]])
+
+
+SErefit4 <- refit_bic(SEAus4$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      resp = SE_resp[[4]], preds = SE_preds[[4]], preds_quant = SE_preds_q75[[4]])
+
+SErefit4[[5]]
+
+#bic best 3 ( very good: 14 (3rd best bic)), ebic = 0.25: 3
+i <- 14
+ridge_coef <- SErefit4[[4]][[i]][-1]
+ridge_coef
+length(ridge_coef)
+
+SEridge_cv <- SErefit4[[6]]
+lm1se <- which( SEridge_cv[[i]]$lambda == SEridge_cv[[i]]$lambda.1se)
+SEr2 <- 1-SEridge_cv[[i]]$cvm/var( SE_resp[[4]])
+SEr2[lm1se]
+
+#lm bic min i=14 (not even close to other indices)
+summary(SErefit4[[1]][[i]])
+
+```
+
+
+# Coefficient Plot
+
+## NE Aus
+Create plot for coefficients of each model (plotted climate mode)
+(currently mostly manual)
+```{r nino}
+#NEridge_1
+NE1_ninolag <- c(9,10,12,13,28,33)
+NE1_ninocoef <- NEridge_1[1:6]
+
+#NEridge_2
+NE2_ninolag <- c(25)
+NE2_ninocoef <- NEridge_2[1]
+
+#NEridge_3 #not included
+
+#NEridge_4
+NE4_ninolag <- c(25, 26)
+NE4_ninocoef <- NEridge_4[1:2]
+
+coef_range <- range(NE1_ninocoef, NE2_ninocoef, NE4_ninocoef)
+
+plot(NE1_ninolag, NE1_ninocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = coef_range)
+points(NE2_ninolag, NE2_ninocoef, pch = 17, col = "green3")
+points(NE4_ninolag, NE4_ninocoef, pch = 18, col = "red3", cex = 1.5)
+
+```
+
+
+

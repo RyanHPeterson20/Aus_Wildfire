@@ -73,11 +73,6 @@ get_coefs <- function(path_group, max_index, resp, preds, preds_quant){
 
 
 
-path_group <- NEpath_new$Group_3
-cv_group <- NEcv_new$Group_3
-
-ebic.gamma <- 0.25 #testing gamma values in eBIC
-
 #assign max lambda index at the start
 #refit with BIC function
 refit_bic <- function(path_group, max_index, ebic.gamma, resp, preds, preds_quant){
