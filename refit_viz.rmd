@@ -16,6 +16,8 @@ suppressMessages( library(RAMP)) #maybe
 suppressMessages(library(glmnet)) #test ridge regression for coefs
 
 suppressMessages( library( lubridate)) #you know why
+
+library(grid)
 ```
 
 
@@ -119,7 +121,8 @@ which(NEcv1$lamlist == NEcv1$lamhat)
 NEcv1$lamhat.1se
 1-NEcv1$cv.err/var( NE_resp[[1]])
 
-NEcoefs1[[9]][[1]]
+length(NEcoefs1[[9]][[1]]$Main_Effect)
+length(NEcoefs1[[9]][[2]]$Interact_Effect)
 
 NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, lambda.min = TRUE,
                       resp = NE_resp[[1]], preds = NE_preds[[1]], preds_quant = NE_preds_q75[[1]])
@@ -138,6 +141,9 @@ lmhat <- which( NEridge_cv[[i]]$lambda == NEridge_cv[[i]]$lambda.min)
 NEr2 <- 1-NEridge_cv[[i]]$cvm/var( NE_resp[[1]])
 NEr2[lm1se]
 NEr2[lmhat]
+
+sqrt(NEridge_cv[[i]]$cvm[lmhat])
+NEAus1_r2 <- NEr2[lmhat]
 
 
 #fit model
@@ -176,6 +182,9 @@ which(NEcv2$lamlist == NEcv2$lamhat.1se)
 which(NEcv2$lamlist == NEcv2$lamhat)
 NEcv2$lamhat.1se
 1-NEcv2$cv.err/var( NE_resp[[2]])
+
+length(NEcoefs2[[14]][[1]]$Main_Effect)
+length(NEcoefs2[[14]][[2]]$Interact_Effect)
 
 NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.15, lambda.min = TRUE,
                       resp = NE_resp[[2]], preds = NE_preds[[2]], preds_quant = NE_preds_q75[[2]])
@@ -475,10 +484,13 @@ NE2_ninocoefind <- NEridge_2[14:15]
 #NEridge_3 #not included
 
 #NEridge_4
-NE4_ninolag <- c(25, 26)
-NE4_ninocoef <- NEridge_4[1:2]
+NE4_ninolag <- c(4, 13, 25, 26)
+NE4_ninocoef <- NEridge_4[1:4]
 
-coef_range <- range(NE1_ninocoef, NE1_ninocoefind, NE2_ninocoef, NE2_ninocoefind, NE4_ninocoef)
+NE4_ninoind <- c(20)
+NE4_ninocoefind <- NEridge_4[27]
+
+coef_range <- range(NE1_ninocoef, NE1_ninocoefind, NE2_ninocoef, NE2_ninocoefind, NE4_ninocoef, NE4_ninocoefind)
 
 plot(NE1_ninolag, NE1_ninocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = coef_range,
      xlab = "lag", ylab = "Coefficients")
@@ -486,6 +498,7 @@ points(NE1_ninoind, NE1_ninocoefind, pch = 0, col = "blue2")
 points(NE2_ninolag, NE2_ninocoef, pch = 16, col = "green3")
 points(NE2_ninoind, NE2_ninocoefind, pch = 1, col = "green4", cex = 1.52)
 points(NE4_ninolag, NE4_ninocoef, pch = 18, col = "red3", cex = 1.5)
+points(NE4_ninoind, NE4_ninocoefind, pch = 5, col = "red3")
 abline(h=0, lty = 2)
 ```
 
@@ -506,9 +519,9 @@ NE2_dmicoefind <- NEridge_2[16]
 NE3_dmilag <- c(8,26)
 NE3_dmicoef <- NEridge_3[1:2]
 
-#NEridge_4
-NE4_dmilag <- c(19,20,21,31)
-NE4_dmicoef <- NEridge_4[3:6]
+NEridge_4
+NE4_dmilag <- c(15,16,19:21,29:31,52)
+NE4_dmicoef <- NEridge_4[5:13]
 
 dmi_range <- range(NE1_dmicoef, NE2_dmicoef, NE2_dmicoefind, NE3_dmicoef, NE4_dmicoef)
 
@@ -535,9 +548,9 @@ NE2_tsacoef <- NEridge_2[5:8]
 NE3_tsalag <- c(2,17,29)
 NE3_tsacoef <- NEridge_3[3:5]
 
-#NEridge_4
-NE4_tsalag <- c(22,28,29,49,51, 52)
-NE4_tsacoef <- NEridge_4[7:12]
+NEridge_4
+NE4_tsalag <- c(22,28,29,49, 52)
+NE4_tsacoef <- NEridge_4[14:18]
 
 tsa_range <- range(NE1_tsacoef, NE2_tsacoef, NE3_tsacoef, NE4_tsacoef)
 
@@ -556,8 +569,9 @@ NE1_aaocoef <- NEridge_1[21:26]
 NE3_aaolag <- c(43,44)
 NE3_aaocoef <- NEridge_3[6:7]
 
-NE4_aaolag <- c(44)
-NE4_aaocoef <- NEridge_4[13]
+NEridge_4
+NE4_aaolag <- c(5,18,20,34,44)
+NE4_aaocoef <- NEridge_4[19:23]
 
 aao_range <- range(NE1_aaocoef, NE3_aaocoef, NE4_aaocoef)
 
@@ -567,7 +581,6 @@ points(NE3_aaolag, NE3_aaocoef, pch = 17, col = "orange3")
 points(NE4_aaolag, NE4_aaocoef, pch = 18, col = "red3", cex = 1.5)
 abline(h=0, lty = 2)
 ```
-
 
 ```{r olr}
 
@@ -580,8 +593,8 @@ NE2_olrcoef <- NEridge_2[9:13]
 NE3_olrlag <- c(1)
 NE3_olrcoef <- NEridge_3[8]
 
-NE4_olrlag <- c(19,20)
-NE4_olrcoef <- NEridge_4[14:15]
+NE4_olrlag <- c(10,19,20)
+NE4_olrcoef <- NEridge_4[24:26]
 
 olr_range <- range(NE1_olrcoef, NE2_olrcoef, NE3_olrcoef, NE4_olrcoef)
 
@@ -594,8 +607,6 @@ abline(h=0, lty = 2)
 ```
 
 ## SE Aus
-
-
 
 ```{r nino}
 #SEridge_2
@@ -623,7 +634,6 @@ points(SE4_ninoind, SE4_ninocoefind, pch = 5, col = "red3")
 abline(h=0, lty = 2)
 
 ```
-
 
 ```{r dmi}
 #SEridge_1
@@ -664,7 +674,6 @@ abline(h=0, lty = 2)
 
 ```
 
-
 ```{r tsa}
 SE1_tsalag <- c(12:15)
 SE1_tsacoef <- SEridge_1[6:9]
@@ -688,8 +697,6 @@ points(SE4_tsalag, SE4_tsacoef, pch = 18, col = "red3", cex = 1.5)
 abline(h=0, lty = 2)
 
 ```
-
-
 
 ```{r aao}
 SE1_aaolag <- c(17,18,23,27,29,35)
@@ -716,7 +723,6 @@ abline(h=0, lty = 2)
 
 ```
 
-
 ```{r olr}
 SE2_olrlag <- c(1,15,23,28)
 SE2_olrcoef <- SEridge_2[14:17] 
@@ -733,6 +739,685 @@ abline(h=0, lty = 2)
 ```
 
 
+## Big Plots
+
+
+```{r test_plot}
+
+NEridge_1
+NE1_quad <- NEridge_1[32:39]
+NE1_quad
+
+NEridge_2
+NE2_quad <- NEridge_2[17:25]
+NE2_quad
+
+NEridge_3
+NE3_quad <- NEridge_3[9:11]
+NE3_quad
+
+NEridge_4
+NE4_quad <- NEridge_4[28:40]
+NE4_quad
+
+
+```
+
+
+```{r test_plots}
+
+# Define the layout matrix
+layout_matrix <- matrix(c(1, 4,
+                          2, 4,
+                          3, 4), ncol = 2, byrow = TRUE)
+
+# Set the layout
+layout(layout_matrix, widths = c(2, 1), heights = c(1, 1, 1))
+
+# Optional: Add some margin control
+par(mar = c(4, 4, 2, 1))  # Bottom, left, top, right
+
+# Plot 1 (top left)
+plot(1:10, main = "Top Left")
+
+# Plot 2 (middle left)
+plot(rnorm(10), main = "Middle Left")
+
+# Plot 3 (bottom left)
+plot(runif(10), main = "Bottom Left")
+
+# Plot 4 (right column, tall plot)
+par(mar = c(4, 2, 2, 2))  # Adjust margins for the tall plot
+plot(1:100, sin(1:100/10), type = "l", main = "Tall Right Plot")
+
+```
+
+
+```{r}
+
+
+# Define the layout
+layout(matrix(c(1,4,
+                2,4,
+                3,4), ncol = 2, byrow = TRUE),
+       widths = c(1, 1), heights = c(1,1,1))
+
+# Set up a list to store coordinates
+coords <- list()
+
+# --- Plot 1: Top Left ---
+par(mar = c(4, 4, 2, 1))
+plot(1:10, main = "Top Left")
+
+# --- Plot 2: Middle Left ---
+par(mar = c(4, 4, 2, 1))
+y_vals <- rnorm(10)
+plot(y_vals, main = "Middle Left")
+
+# Choose a point to connect FROM (e.g., 5th point)
+coords$from_x <- grconvertX(5,         from = "user", to = "ndc")
+coords$from_y <- grconvertY(y_vals[5], from = "user", to = "ndc")
+
+# --- Plot 3: Bottom Left ---
+par(mar = c(4, 4, 2, 1))
+plot(runif(10), main = "Bottom Left")
+
+# --- Plot 4: Tall Right ---
+par(mar = c(4, 4, 2, 2))
+x_vals <- 1:100
+y_vals_right <- sin(x_vals / 10)
+plot(x_vals, y_vals_right, type = "l", main = "Tall Right Plot")
+
+# Choose a point to connect TO (e.g., x = 50)
+coords$to_x <- grconvertX(50,       from = "user", to = "ndc")
+coords$to_y <- grconvertY(sin(5),   from = "user", to = "ndc")
+
+# --- Draw a line between the two points (on the same device) ---
+# VERY IMPORTANT: Enable drawing outside the plot regions
+par(xpd = NA)
+
+# Now use grid to draw the line *on top of the plots*, without clearing
+grid.lines(
+  x = unit(c(coords$from_x, coords$to_x), "npc"),
+  y = unit(c(coords$from_y, coords$to_y), "npc"),
+  gp = gpar(col = "red", lwd = 2)
+)
+
+```
+
+
+
+```{r}
+#TODO: begin by developing with NE Aus (group 3, ....,group 4 )
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "test_coeff.png", width = 3000, height = 3000, res = 300)
+# Set layout
+layout(matrix(c(1, 6,
+                2, 6,
+                3, 6,
+                4, 6,
+                5, 6), ncol = 2, byrow = TRUE),
+       widths = c(1.5, 1), heights = c(1, 1, 1, 1, 1))
+
+# Store info for linking
+links <- list()
+
+# --- Plot 1: Nino ---
+par(mar = c(4, 4, 2, 1))
+#NE 1
+NE1_ninolag <- c(9,10,12,13,28,33)
+NE1_ninocoef <- NEridge_1[1:6]
+NE1_ninoind <- c(5,8,12)
+NE1_ninocoefind <- NEridge_1[29:31]
+#NE Aus group 2
+NE2_ninolag <- c(25)
+NE2_ninocoef <- NEridge_2[1]
+NE2_ninoind <- c(11, 12)
+NE2_ninocoefind <- NEridge_2[14:15]
+#NE 4
+NE4_ninolag <- c(4, 13, 25, 26)
+NE4_ninocoef <- NEridge_4[1:4]
+NE4_ninoind <- c(20)
+NE4_ninocoefind <- NEridge_4[27]
+
+nino_range <- range(NE1_ninocoef, NE1_ninocoefind, NE2_ninocoef, NE2_ninocoefind, NE4_ninocoef, NE4_ninocoefind)
+
+plot(NE2_ninolag, NE2_ninocoef, pch = 16, col = "green4", xlim = c(1,52), cex = 1.4,
+     ylim = nino_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("Nino", adj = 0)
+points(NE2_ninoind, NE2_ninocoefind, pch = 1, col = "green4", cex = 1.52)
+points(NE1_ninolag, NE1_ninocoef, pch = 15, col = "blue2", cex = 1)
+points(NE1_ninoind, NE1_ninocoefind, pch = 0, col = "blue2", cex = 1.5)
+points(NE4_ninolag, NE4_ninocoef, pch = 18, col = "red3", cex = 1.5)
+points(NE4_ninoind, NE4_ninocoefind, pch = 5, col = "red3", cex = 1.5)
+abline(h = 0, lty = 2)
+
+
+#NE Aus group 1:
+#I(nino_lag33^2)  
+links[[15]] <- list(
+  y_val = NE1_ninocoef[6],
+  from_x = grconvertX(NE1_ninolag[6], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[6], from = "user", to = "ndc")
+)
+#nino_lag9:nino_lag28
+links[[19]] <- list(
+  y_val = NE1_ninocoef[1],
+  from_x = grconvertX(NE1_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[1], from = "user", to = "ndc")
+)
+#nino_lag9:nino_lag28
+links[[20]] <- list(
+  y_val = NE1_ninocoef[5],
+  from_x = grconvertX(NE1_ninolag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[5], from = "user", to = "ndc")
+)
+#nino_lag10:aao_lag15
+links[[21]] <- list(
+  y_val = NE1_ninocoef[2],
+  from_x = grconvertX(NE1_ninolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[2], from = "user", to = "ndc")
+)
+
+#NE Aus group 4
+# nino_lag4:aao_lag5 
+links[[32]] <- list(
+  y_val = NE4_ninocoef[1],
+  from_x = grconvertX(NE4_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_ninocoef[1], from = "user", to = "ndc")
+)
+#nino_lag13:dmi_lag52
+links[[34]] <- list(
+  y_val = NE4_ninocoef[2],
+  from_x = grconvertX(NE4_ninolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_ninocoef[2], from = "user", to = "ndc")
+)
+
+
+# --- Plot 2: DMI ---
+par(mar = c(4, 4, 2, 1))
+#NE 1
+NE1_dmilag <- c(52)
+NE1_dmicoef <- NEridge_1[7]
+#NEridge_2
+NE2_dmilag <- c(7,12,41)
+NE2_dmicoef <- NEridge_2[2:4]
+NE2_dmiind <- c(6)
+NE2_dmicoefind <- NEridge_2[16]
+#NE 3
+NE3_dmilag <- c(8,26)
+NE3_dmicoef <- NEridge_3[1:2]
+#NE 4
+NE4_dmilag <- c(15,16,19:21,29:31,52)
+NE4_dmicoef <- NEridge_4[5:13]
+
+dmi_range <- range(NE1_dmicoef, NE2_dmicoef, NE2_dmicoefind, NE3_dmicoef, NE4_dmicoef)
+
+plot(NE3_dmilag, NE3_dmicoef, pch = 17, col = "orange3", cex = 1.5, 
+     xlim = c(1,52), ylim = dmi_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("DMI", adj = 0)
+points(NE1_dmilag, NE1_dmicoef, pch = 15, col = "blue2", cex = 1)
+points(NE2_dmilag, NE2_dmicoef, pch = 16, col = "green4", cex = 1.5)
+points(NE2_dmiind, NE2_dmicoefind, pch = 1, col = "green4", cex = 1.52)
+points(NE4_dmilag, NE4_dmicoef, pch = 18, col = "red3", cex = 1.5)
+abline(h = 0, lty = 2)
+
+
+#NE AUS group 3
+links[[1]] <- list(
+  y_val = NE3_dmicoef[1],
+  from_x = grconvertX(NE3_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_dmicoef[1], from = "user", to = "ndc")
+)
+
+#NE AUS group 2 I(dmi_lag7^2) 
+links[[4]] <- list(
+  y_val = NE2_dmicoef[1],
+  from_x = grconvertX(NE2_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_dmicoef[1], from = "user", to = "ndc")
+)
+#I(dmi_lag41^2)
+links[[5]] <- list(
+  y_val = NE2_dmicoef[3],
+  from_x = grconvertX(NE2_dmilag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_dmicoef[3], from = "user", to = "ndc")
+)
+#dmi_lag12:NEolr_lag1 
+links[[11]] <- list(
+  y_val = NE2_dmicoef[2],
+  from_x = grconvertX(NE2_dmilag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_dmicoef[2], from = "user", to = "ndc")
+)
+#dmi_lag41:NEolr_lag1 
+links[[12]] <- list(
+  y_val = NE2_dmicoef[3],
+  from_x = grconvertX(NE2_dmilag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_dmicoef[3], from = "user", to = "ndc")
+)
+
+#NE group 4
+#I(dmi_lag15^2) 
+links[[27]] <- list(
+  y_val = NE4_dmicoef[1],
+  from_x = grconvertX(NE4_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[1], from = "user", to = "ndc")
+)
+#I(dmi_lag16^2) 
+links[[28]] <- list(
+  y_val = NE4_dmicoef[2],
+  from_x = grconvertX(NE4_dmilag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[2], from = "user", to = "ndc")
+)
+#nino_lag13:dmi_lag52 
+links[[35]] <- list(
+  y_val = NE4_dmicoef[9],
+  from_x = grconvertX(NE4_dmilag[9], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[9], from = "user", to = "ndc")
+)
+#dmi_lag19:tsa_lag52 
+links[[36]] <- list(
+  y_val = NE4_dmicoef[3],
+  from_x = grconvertX(NE4_dmilag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[3], from = "user", to = "ndc")
+)
+#dmi_lag20:tsa_lag49 
+links[[38]] <- list(
+  y_val = NE4_dmicoef[4],
+  from_x = grconvertX(NE4_dmilag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[4], from = "user", to = "ndc")
+)
+#dmi_lag21:tsa_lag52
+links[[40]] <- list(
+  y_val = NE4_dmicoef[5],
+  from_x = grconvertX(NE4_dmilag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[5], from = "user", to = "ndc")
+)
+#dmi_lag29:tsa_lag52  
+links[[42]] <- list(
+  y_val = NE4_dmicoef[6],
+  from_x = grconvertX(NE4_dmilag[6], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[6], from = "user", to = "ndc")
+)
+#dmi_lag30:tsa_lag52
+links[[44]] <- list(
+  y_val = NE4_dmicoef[7],
+  from_x = grconvertX(NE4_dmilag[7], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[7], from = "user", to = "ndc")
+)
+#dmi_lag31:tsa_lag52
+links[[46]] <- list(
+  y_val = NE4_dmicoef[8],
+  from_x = grconvertX(NE4_dmilag[8], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_dmicoef[8], from = "user", to = "ndc")
+)
+
+# --- Plot 3: TSA ---
+par(mar = c(4, 4, 2, 1))
+
+#NE 1
+NE1_tsalag <- c(1,14,15,18,19,31,32,34:39)
+NE1_tsacoef <- NEridge_1[8:20]
+#NE 2
+NE2_tsalag <- c(31,47,48,49)
+NE2_tsacoef <- NEridge_2[5:8]
+#NE 3
+NE3_tsalag <- c(2,17,29)
+NE3_tsacoef <- NEridge_3[3:5]
+#NE 4
+NE4_tsalag <- c(22,28,29,49, 52)
+NE4_tsacoef <- NEridge_4[14:18]
+
+tsa_range <- range(NE1_tsacoef, NE2_tsacoef, NE3_tsacoef, NE4_tsacoef)
+
+plot(NE3_tsalag, NE3_tsacoef, pch = 17, col = "orange3", cex = 1.5, 
+     xlim = c(1,52), ylim = tsa_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("TSA", adj = 0)
+points(NE1_tsalag, NE1_tsacoef, pch = 15, col = "blue2", cex = 1)
+points(NE2_tsalag, NE2_tsacoef, pch = 16, col = "green4", cex = 1.5)
+points(NE4_tsalag, NE4_tsacoef, pch = 18, col = "red3", cex = 1.5)
+abline(h = 0, lty = 2)
+
+
+#NE AUS group 3
+links[[2]] <- list(
+  y_val = NE3_tsacoef[1],
+  from_x = grconvertX(NE3_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[1], from = "user", to = "ndc")
+)
+
+links[[3]] <- list(
+  y_val = NE3_tsacoef[2],
+  from_x = grconvertX(NE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[2], from = "user", to = "ndc")
+)
+
+#NE AUS group 2
+#I(tsa_lag47^2)       
+links[[6]] <- list(
+  y_val = NE2_tsacoef[2],
+  from_x = grconvertX(NE2_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_tsacoef[2], from = "user", to = "ndc")
+)
+#I(tsa_lag49^2) 
+links[[7]] <- list(
+  y_val = NE2_tsacoef[4],
+  from_x = grconvertX(NE2_tsalag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_tsacoef[4], from = "user", to = "ndc")
+)
+
+#NE Aus group 1 
+#I(tsa_lag19^2)
+links[[16]] <- list(
+  y_val = NE1_tsacoef[5],
+  from_x = grconvertX(NE1_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_tsacoef[5], from = "user", to = "ndc")
+)
+
+#NE group 4
+#dmi_lag19:tsa_lag52 
+links[[37]] <- list(
+  y_val = NE4_tsacoef[5],
+  from_x = grconvertX(NE4_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_tsacoef[5], from = "user", to = "ndc")
+)
+#dmi_lag20:tsa_lag49 
+links[[39]] <- list(
+  y_val = NE4_tsacoef[4],
+  from_x = grconvertX(NE4_tsalag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_tsacoef[4], from = "user", to = "ndc")
+)
+#dmi_lag21:tsa_lag52 
+links[[41]] <- list(
+  y_val = NE4_tsacoef[5],
+  from_x = grconvertX(NE4_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_tsacoef[5], from = "user", to = "ndc")
+)
+#dmi_lag29:tsa_lag52  
+links[[43]] <- list(
+  y_val = NE4_tsacoef[5],
+  from_x = grconvertX(NE4_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_tsacoef[5], from = "user", to = "ndc")
+)
+#dmi_lag30:tsa_lag52
+links[[45]] <- list(
+  y_val = NE4_tsacoef[5],
+  from_x = grconvertX(NE4_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_tsacoef[5], from = "user", to = "ndc")
+)
+#dmi_lag31:tsa_lag52 
+links[[47]] <- list(
+  y_val = NE4_tsacoef[5],
+  from_x = grconvertX(NE4_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_tsacoef[5], from = "user", to = "ndc")
+)
+
+
+# --- Plot 4 AAO :
+par(mar = c(4, 4, 2, 1))
+
+#NE 1
+NE1_aaolag <- c(2,7,15,24,27,35)
+NE1_aaocoef <- NEridge_1[21:26]
+#NE 3
+NE3_aaolag <- c(43,44)
+NE3_aaocoef <- NEridge_3[6:7]
+#NE 4
+NE4_aaolag <- c(5,18,20,34,44)
+NE4_aaocoef <- NEridge_4[19:23]
+
+aao_range <- range(NE1_aaocoef, NE3_aaocoef, NE4_aaocoef)
+
+plot(NE3_aaolag, NE3_aaocoef, pch = 17, col = "orange3", cex = 1.5, 
+     xlim = c(1,52), ylim = aao_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("SAM (AAO)", adj = 0)
+points(NE1_aaolag, NE1_aaocoef, pch = 15, col = "blue2", cex = 1)
+points(NE4_aaolag, NE4_aaocoef, pch = 18, col = "red3", cex = 1.5)
+abline(h = 0, lty = 2)
+
+#NE Aus group 1 
+#I(aao_lag24^2)
+links[[17]] <- list(
+  y_val = NE1_aaocoef[4],
+  from_x = grconvertX(NE1_aaolag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_aaocoef[4], from = "user", to = "ndc")
+)
+#nino_lag10:aao_lag15
+links[[22]] <- list(
+  y_val = NE1_aaocoef[3],
+  from_x = grconvertX(NE1_aaolag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_aaocoef[3], from = "user", to = "ndc")
+)
+#aao_lag24:aao_lag35
+links[[23]] <- list(
+  y_val = NE1_aaocoef[5],
+  from_x = grconvertX(NE1_aaolag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_aaocoef[5], from = "user", to = "ndc")
+)
+#aao_lag24:aao_lag35
+links[[24]] <- list(
+  y_val = NE1_aaocoef[5],
+  from_x = grconvertX(NE1_aaolag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_aaocoef[5], from = "user", to = "ndc")
+)
+
+#NE group 4
+#I(aao_lag34^2)
+links[[29]] <- list(
+  y_val = NE4_aaocoef[4],
+  from_x = grconvertX(NE4_aaolag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_aaocoef[4], from = "user", to = "ndc")
+)
+#I(aao_lag44^2) 
+links[[30]] <- list(
+  y_val = NE4_aaocoef[5],
+  from_x = grconvertX(NE4_aaolag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_aaocoef[5], from = "user", to = "ndc")
+)
+#nino_lag4:aao_lag5
+links[[33]] <- list(
+  y_val = NE4_aaocoef[1],
+  from_x = grconvertX(NE4_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_aaocoef[1], from = "user", to = "ndc")
+)
+
+
+
+# --- Plot 5 OLR:
+par(mar = c(4, 4, 2, 1))
+
+#NE 1
+NE1_olrlag <- c(47, 51)
+NE1_olrcoef <- NEridge_1[27:28]
+#NE 2
+NE2_olrlag <- c(1,2,30,32,52)
+NE2_olrcoef <- NEridge_2[9:13]
+#NE 3
+NE3_olrlag <- c(1)
+NE3_olrcoef <- NEridge_3[8]
+#NE 4
+NE4_olrlag <- c(10,19,20)
+NE4_olrcoef <- NEridge_4[24:26]
+
+olr_range <- range(NE1_olrcoef, NE2_olrcoef, NE3_olrcoef, NE4_olrcoef)
+
+plot(NE3_olrlag, NE3_olrcoef, pch = 17, col = "orange3", cex = 1.5, 
+     xlim = c(1,52), ylim = olr_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("OLR", adj = 0)
+points(NE1_olrlag, NE1_olrcoef, pch = 15, col = "blue2", cex = 1)
+points(NE2_olrlag, NE2_olrcoef, pch = 16, col = "green4", cex = 1.5)
+points(NE4_olrlag, NE4_olrcoef, pch = 18, col = "red3", cex = 1.5)
+abline(h = 0, lty = 2)
+
+#NE AUS group 2
+#I(NEolr_lag30^2)        
+links[[8]] <- list(
+  y_val = NE2_olrcoef[3],
+  from_x = grconvertX(NE2_olrlag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[3], from = "user", to = "ndc")
+)
+#I(NEolr_lag32^2) 
+links[[9]] <- list(
+  y_val = NE2_olrcoef[4],
+  from_x = grconvertX(NE2_olrlag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[4], from = "user", to = "ndc")
+)
+#I(NEolr_lag52^2) 
+links[[10]] <- list(
+  y_val = NE2_olrcoef[5],
+  from_x = grconvertX(NE2_olrlag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[5], from = "user", to = "ndc")
+)
+#dmi_lag12:NEolr_lag1 
+links[[13]] <- list(
+  y_val = NE2_olrcoef[1],
+  from_x = grconvertX(NE2_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[1], from = "user", to = "ndc")
+)
+#dmi_lag41:NEolr_lag1 
+links[[14]] <- list(
+  y_val = NE2_olrcoef[1],
+  from_x = grconvertX(NE2_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[1], from = "user", to = "ndc")
+)
+
+#NE Aus group 1 
+#I(NEolr_lag47^2) 
+links[[18]] <- list(
+  y_val = NE1_olrcoef[1],
+  from_x = grconvertX(NE1_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_olrcoef[1], from = "user", to = "ndc")
+)
+#NEolr_lag47:NEolr_lag51 
+links[[25]] <- list(
+  y_val = NE1_olrcoef[1],
+  from_x = grconvertX(NE1_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_olrcoef[1], from = "user", to = "ndc")
+)
+#NEolr_lag47:NEolr_lag51 
+links[[26]] <- list(
+  y_val = NE1_olrcoef[1],
+  from_x = grconvertX(NE1_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_olrcoef[1], from = "user", to = "ndc")
+)
+
+#NE Group 4
+#I(NEolr_lag19^2) 
+links[[31]] <- list(
+  y_val = NE4_olrcoef[2],
+  from_x = grconvertX(NE4_olrlag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE4_olrcoef[2], from = "user", to = "ndc")
+)
+
+
+# --- Plot 6: Interaction Effects ---
+
+y_range <- c(0,1)
+
+#TODO: finalize y locations at the end
+#approx locations
+
+NE2_loc <- c(0.728, 0.72, 0.448, 0.505, 0.002, -0.002, -0.05)
+NE3_loc <- c(0.778, 0.485, 0.438) #NE Aus 3
+
+int_range <- range(NE1_quad, NE2_quad, NE3_quad, NE4_quad)
+
+par(mar = c(4, 4, 2, 2))
+plot(NE3_quad, NE3_loc, pch = 17, col = "orange3", cex = 1.5, main = "Interactions", 
+     ylim = y_range, xlim = int_range,
+     xlab = "Coefficients")
+     #yaxt = "n",  ylab = "")
+points(NE2_quad[1:7], NE2_loc, pch = 16, col = "green4", cex = 1.5)
+abline(v=0, lty = 2)
+
+
+# For each link, match the left-side y-value with fixed x on right
+#manual x locations
+#NE group 3
+links[[1]]$to_x <- grconvertX(NE3_quad[1], from = "user", to = "ndc")
+links[[2]]$to_x <- grconvertX(NE3_quad[2], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(NE3_quad[3], from = "user", to = "ndc")
+
+#NE group 2
+links[[4]]$to_x <- grconvertX(NE2_quad[1], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(NE2_quad[2], from = "user", to = "ndc")
+links[[6]]$to_x <- grconvertX(NE2_quad[3], from = "user", to = "ndc")
+links[[7]]$to_x <- grconvertX(NE2_quad[4], from = "user", to = "ndc")
+links[[8]]$to_x <- grconvertX(NE2_quad[5], from = "user", to = "ndc")
+links[[9]]$to_x <- grconvertX(NE2_quad[6], from = "user", to = "ndc")
+links[[10]]$to_x <- grconvertX(NE2_quad[7], from = "user", to = "ndc")
+
+links[[11]]$to_x <- grconvertX(NE2_quad[8], from = "user", to = "ndc")
+links[[13]]$to_x <- grconvertX(NE2_quad[8], from = "user", to = "ndc")
+segments(NE2_quad[8], 0.1, NE2_quad[8], 0.77, col = "green4", lwd = 2, lty = 3)
+links[[12]]$to_x <- grconvertX(NE2_quad[9], from = "user", to = "ndc")
+links[[14]]$to_x <- grconvertX(NE2_quad[9], from = "user", to = "ndc")
+
+#NE group 1
+links[[15]]$to_x <- grconvertX(NE1_quad[1], from = "user", to = "ndc")
+links[[16]]$to_x <- grconvertX(NE1_quad[2], from = "user", to = "ndc")
+links[[17]]$to_x <- grconvertX(NE1_quad[3], from = "user", to = "ndc")
+links[[18]]$to_x <- grconvertX(NE1_quad[4], from = "user", to = "ndc")
+
+links[[19]]$to_x <- grconvertX(NE1_quad[5], from = "user", to = "ndc")
+links[[20]]$to_x <- grconvertX(NE1_quad[5], from = "user", to = "ndc")
+links[[21]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
+links[[22]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
+links[[23]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
+links[[24]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
+links[[25]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
+links[[26]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
+
+#NE group 4
+links[[27]]$to_x <- grconvertX(NE1_quad[1], from = "user", to = "ndc")
+links[[28]]$to_x <- grconvertX(NE1_quad[2], from = "user", to = "ndc")
+links[[29]]$to_x <- grconvertX(NE1_quad[3], from = "user", to = "ndc")
+links[[30]]$to_x <- grconvertX(NE1_quad[4], from = "user", to = "ndc")
+links[[31]]$to_x <- grconvertX(NE1_quad[5], from = "user", to = "ndc")
+
+links[[32]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
+links[[33]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
+links[[34]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
+links[[35]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
+links[[36]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
+links[[37]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
+links[[38]]$to_x <- grconvertX(NE1_quad[9], from = "user", to = "ndc")
+links[[39]]$to_x <- grconvertX(NE1_quad[9], from = "user", to = "ndc")
+links[[40]]$to_x <- grconvertX(NE1_quad[10], from = "user", to = "ndc")
+links[[41]]$to_x <- grconvertX(NE1_quad[10], from = "user", to = "ndc")
+links[[42]]$to_x <- grconvertX(NE1_quad[11], from = "user", to = "ndc")
+links[[43]]$to_x <- grconvertX(NE1_quad[11], from = "user", to = "ndc")
+links[[44]]$to_x <- grconvertX(NE1_quad[12], from = "user", to = "ndc")
+links[[45]]$to_x <- grconvertX(NE1_quad[12], from = "user", to = "ndc")
+links[[46]]$to_x <- grconvertX(NE1_quad[13], from = "user", to = "ndc")
+links[[47]]$to_x <- grconvertX(NE1_quad[13], from = "user", to = "ndc")
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c(rep("orange3", 3), rep("green4", 11), rep("blue2", 12), rep("red3", 21))
+linetypes <- c(rep(2, 10), rep(3,4), rep(2, 4), rep(3, 8), rep(2, 5), rep(3, 16))
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
+
+dev.off()
+
+```
 
 
 # Predictions
@@ -1193,12 +1878,17 @@ temp_time <- as.Date(time_shift$time)
 
 NEAus1_df <- data.frame(time = temp_time, true = temp_NE, pred = NE1_yhat)
 
+sqrt(mean((NEAus1_df$true - NEAus1_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NE1_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = NEAus1_df$time, y = NEAus1_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "NE Aus : Predictions")
+     main = "NE Aus Group 1 : Predictions")
 points(x = NEAus1_df$time, y = NEAus1_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1208,7 +1898,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2019-01-01")),
+     y=c(30,27.5),
+     labels = c("RMSE = 6.124", "cv R^2 = 0.674"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 ```{r NEAus2_viz}
@@ -1222,12 +1917,17 @@ temp_time <- as.Date(time_shift$time)
 
 NEAus2_df <- data.frame(time = temp_time, true = temp_NE, pred = NE2_yhat)
 
+sqrt(mean((NEAus2_df$true - NEAus2_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NE2_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = NEAus2_df$time, y = NEAus2_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "NE Aus : Predictions")
+     main = "NE Aus Group 2 : Predictions")
 points(x = NEAus2_df$time, y = NEAus2_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1237,7 +1937,13 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2019-01-01")),
+     y=c(23, 21),
+     labels = c("RMSE = 3.571", "cv R^2 = 0.743"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
+
 ```
 
 ```{r NEAus3_viz}
@@ -1251,12 +1957,17 @@ temp_time <- as.Date(time_shift$time)
 
 NEAus3_df <- data.frame(time = temp_time, true = temp_NE, pred = NE3_yhat)
 
+sqrt(mean((NEAus3_df$true - NEAus3_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NE3_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = NEAus3_df$time, y = NEAus3_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "NE Aus : Predictions")
+     main = "NE Aus Group 3 : Predictions")
 points(x = NEAus3_df$time, y = NEAus3_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1266,7 +1977,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2018-04-01")),
+     y=c(30, 27),
+     labels = c("RMSE = 3.434", "cv R^2 = 0.737"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 ```{r NEAus4_viz}
@@ -1280,12 +1996,17 @@ temp_time <- as.Date(time_shift$time)
 
 NEAus4_df <- data.frame(time = temp_time, true = temp_NE, pred = NE4_yhat)
 
+sqrt(mean((NEAus4_df$true - NEAus4_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "NE4_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = NEAus4_df$time, y = NEAus4_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "NE Aus : Predictions")
+     main = "NE Aus Group 4 : Predictions")
 points(x = NEAus4_df$time, y = NEAus4_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1295,7 +2016,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2019-01-01")),
+     y=c(19, 17),
+     labels = c("RMSE = 2.613", "cv R^2 = 0.674"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 
@@ -1313,12 +2039,17 @@ temp_time <- as.Date(time_shift$time)
 
 SEAus1_df <- data.frame(time = temp_time, true = temp_SE, pred = SE1_yhat)
 
+sqrt(mean((SEAus1_df$true - SEAus1_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "SE1_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = SEAus1_df$time, y = SEAus1_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "SE Aus : Predictions")
+     main = "SE Aus Group 1 : Predictions")
 points(x = SEAus1_df$time, y = SEAus1_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1328,7 +2059,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2019-01-01")),
+     y=c(22, 20),
+     labels = c("RMSE = 5.666", "cv R^2 = 0.487"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 ```{r SEAus2_viz}
@@ -1341,12 +2077,17 @@ temp_time <- as.Date(time_shift$time)
 
 SEAus2_df <- data.frame(time = temp_time, true = temp_SE, pred = SE2_yhat)
 
+sqrt(mean((SEAus2_df$true - SEAus2_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "SE2_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = SEAus2_df$time, y = SEAus2_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "SE Aus : Predictions")
+     main = "SE Aus Group 2 : Predictions")
 points(x = SEAus2_df$time, y = SEAus2_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1356,7 +2097,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2019-01-01")),
+     y=c(29, 26.5),
+     labels = c("RMSE = 4.532", "cv R^2 = 0.601"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 ```{r SEAus3_viz}
@@ -1369,12 +2115,17 @@ temp_time <- as.Date(time_shift$time)
 
 SEAus3_df <- data.frame(time = temp_time, true = temp_SE, pred = SE3_yhat)
 
+sqrt(mean((SEAus3_df$true - SEAus3_df$pred)^2))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "SE3_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = SEAus3_df$time, y = SEAus3_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "SE Aus : Predictions")
+     main = "SE Aus Group 3 : Predictions")
 points(x = SEAus3_df$time, y = SEAus3_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1384,7 +2135,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2018-01-01")),
+     y=c(43, 40),
+     labels = c("RMSE = 4.315", "cv R^2 = 0.804"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 ```{r SEAus4_viz}
@@ -1396,13 +2152,17 @@ temp_SE <- scale(SEAus4_resp$SE_Aus_anomaly_co, center = TRUE, scale = FALSE)
 temp_time <- as.Date(time_shift$time)
 
 SEAus4_df <- data.frame(time = temp_time, true = temp_SE, pred = SE4_yhat)
+sqrt(mean((SEAus4_df$true - SEAus4_df$pred)^2))
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "SE4_preds.png", width = 2500, height = 1000, res = 200)
 par(mar = c(3,5,4,1))
 plot(x = SEAus4_df$time, y = SEAus4_df$true, pch = 18, 
      col = "black", xlim = xlim_val, cex = 1.33,
      xaxt = "n",  xlab = "",
      ylab = "CO Anomaly", 
-     main = "SE Aus : Predictions")
+     main = "SE Aus Group 4 : Predictions")
 points(x = SEAus4_df$time, y = SEAus4_df$pred, pch = 17, 
      col = "magenta3", cex = 1)
 abline(v = year_lines[-1], lty = 2)
@@ -1412,7 +2172,12 @@ legend("bottomleft", inset = c(0.00, 0),
        col = c("black", "magenta3"),
        pch = c(18,17),
        pt.cex = c(1.33,1))
+text(x = c(ymd("2019-01-01")),
+     y=c(21, 19),
+     labels = c("RMSE = 2.689", "cv R^2 = 0.562"),
+     col = "grey40")
 axis(side = 1, at = year_text, labels = unique_yr, tick = FALSE, cex.axis = 1)
+dev.off()
 ```
 
 
