@@ -1201,9 +1201,9 @@ links[[23]] <- list(
 )
 #aao_lag24:aao_lag35
 links[[24]] <- list(
-  y_val = NE1_aaocoef[5],
-  from_x = grconvertX(NE1_aaolag[5], from = "user", to = "ndc"),
-  from_y = grconvertY(NE1_aaocoef[5], from = "user", to = "ndc")
+  y_val = NE1_aaocoef[6],
+  from_x = grconvertX(NE1_aaolag[6], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_aaocoef[6], from = "user", to = "ndc")
 )
 
 #NE group 4
@@ -1302,9 +1302,9 @@ links[[25]] <- list(
 )
 #NEolr_lag47:NEolr_lag51 
 links[[26]] <- list(
-  y_val = NE1_olrcoef[1],
-  from_x = grconvertX(NE1_olrlag[1], from = "user", to = "ndc"),
-  from_y = grconvertY(NE1_olrcoef[1], from = "user", to = "ndc")
+  y_val = NE1_olrcoef[2],
+  from_x = grconvertX(NE1_olrlag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_olrcoef[2], from = "user", to = "ndc")
 )
 
 #NE Group 4
@@ -1322,18 +1322,28 @@ y_range <- c(0,1)
 
 #TODO: finalize y locations at the end
 #approx locations
-
-NE2_loc <- c(0.728, 0.72, 0.448, 0.505, 0.002, -0.002, -0.05)
+NE1_loc <- c(0.952, 0.448, 0.255, -0.036)
+NE2_loc <- c(0.728, 0.717, 0.445, 0.505, 0.002, -0.0221, -0.02)
 NE3_loc <- c(0.778, 0.485, 0.438) #NE Aus 3
+NE4_loc <- c(0.754, 0.751, 0.31, 0.282, 0.016)
+
+NE1_int <- c(0.9305, 0.601, 0.22, -0.023)
+NE2_int <- c(0.43, 0.272)
+NE4_int <- c(0.624, 0.8375, 0.6215, 0.62, 0.622, 0.613, 0.613, 0.613)
 
 int_range <- range(NE1_quad, NE2_quad, NE3_quad, NE4_quad)
 
 par(mar = c(4, 4, 2, 2))
 plot(NE3_quad, NE3_loc, pch = 17, col = "orange3", cex = 1.5, main = "Interactions", 
      ylim = y_range, xlim = int_range,
-     xlab = "Coefficients")
-     #yaxt = "n",  ylab = "")
+     xlab = "Coefficients",
+     yaxt = "n",  ylab = "")
+points(NE1_quad[1:4], NE1_loc, pch = 15, col = "blue2", cex = 1)
+points(NE1_quad[5:8], NE1_int, pch = 22, bg = "blue2", col = "black", cex = 1.5)
 points(NE2_quad[1:7], NE2_loc, pch = 16, col = "green4", cex = 1.5)
+points(NE2_quad[8:9], NE2_int, pch = 21, bg = "green4", col = "black", cex = 1.65)
+points(NE4_quad[1:5], NE4_loc, pch = 18, col = "red3", cex = 1.5)
+points(NE4_quad[6:13], NE4_int, pch = 23, bg = "red3", col = "black", cex = 1.65)
 abline(v=0, lty = 2)
 
 
@@ -1355,9 +1365,10 @@ links[[10]]$to_x <- grconvertX(NE2_quad[7], from = "user", to = "ndc")
 
 links[[11]]$to_x <- grconvertX(NE2_quad[8], from = "user", to = "ndc")
 links[[13]]$to_x <- grconvertX(NE2_quad[8], from = "user", to = "ndc")
-segments(NE2_quad[8], 0.1, NE2_quad[8], 0.77, col = "green4", lwd = 2, lty = 3)
+segments(NE2_quad[8], 0.098, NE2_quad[8], 0.77, col = "green4", lwd = 1.5, lty = 3)
 links[[12]]$to_x <- grconvertX(NE2_quad[9], from = "user", to = "ndc")
 links[[14]]$to_x <- grconvertX(NE2_quad[9], from = "user", to = "ndc")
+segments(NE2_quad[9], 0.098, NE2_quad[9], 0.446, col = "green4", lwd = 1.5, lty = 3)
 
 #NE group 1
 links[[15]]$to_x <- grconvertX(NE1_quad[1], from = "user", to = "ndc")
@@ -1367,36 +1378,48 @@ links[[18]]$to_x <- grconvertX(NE1_quad[4], from = "user", to = "ndc")
 
 links[[19]]$to_x <- grconvertX(NE1_quad[5], from = "user", to = "ndc")
 links[[20]]$to_x <- grconvertX(NE1_quad[5], from = "user", to = "ndc")
+segments(NE1_quad[5], 0.915, NE1_quad[5], 0.946, col = "blue2", lwd = 1.5, lty = 3)
 links[[21]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
 links[[22]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
+segments(NE1_quad[6], 0.29, NE1_quad[6], 0.912, col = "blue2", lwd = 1.5, lty = 3)
 links[[23]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
 links[[24]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
+segments(NE1_quad[7], 0.2, NE1_quad[7], 0.24, col = "blue2", lwd = 1.5, lty = 3)
 links[[25]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
 links[[26]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
+segments(NE1_quad[8], -0.036, NE1_quad[8], -0.01, col = "blue2", lwd = 1.5, lty = 3)
 
 #NE group 4
-links[[27]]$to_x <- grconvertX(NE1_quad[1], from = "user", to = "ndc")
-links[[28]]$to_x <- grconvertX(NE1_quad[2], from = "user", to = "ndc")
-links[[29]]$to_x <- grconvertX(NE1_quad[3], from = "user", to = "ndc")
-links[[30]]$to_x <- grconvertX(NE1_quad[4], from = "user", to = "ndc")
-links[[31]]$to_x <- grconvertX(NE1_quad[5], from = "user", to = "ndc")
+links[[27]]$to_x <- grconvertX(NE4_quad[1], from = "user", to = "ndc")
+links[[28]]$to_x <- grconvertX(NE4_quad[2], from = "user", to = "ndc")
+links[[29]]$to_x <- grconvertX(NE4_quad[3], from = "user", to = "ndc")
+links[[30]]$to_x <- grconvertX(NE4_quad[4], from = "user", to = "ndc")
+links[[31]]$to_x <- grconvertX(NE4_quad[5], from = "user", to = "ndc")
 
-links[[32]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
-links[[33]]$to_x <- grconvertX(NE1_quad[6], from = "user", to = "ndc")
-links[[34]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
-links[[35]]$to_x <- grconvertX(NE1_quad[7], from = "user", to = "ndc")
-links[[36]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
-links[[37]]$to_x <- grconvertX(NE1_quad[8], from = "user", to = "ndc")
-links[[38]]$to_x <- grconvertX(NE1_quad[9], from = "user", to = "ndc")
-links[[39]]$to_x <- grconvertX(NE1_quad[9], from = "user", to = "ndc")
-links[[40]]$to_x <- grconvertX(NE1_quad[10], from = "user", to = "ndc")
-links[[41]]$to_x <- grconvertX(NE1_quad[10], from = "user", to = "ndc")
-links[[42]]$to_x <- grconvertX(NE1_quad[11], from = "user", to = "ndc")
-links[[43]]$to_x <- grconvertX(NE1_quad[11], from = "user", to = "ndc")
-links[[44]]$to_x <- grconvertX(NE1_quad[12], from = "user", to = "ndc")
-links[[45]]$to_x <- grconvertX(NE1_quad[12], from = "user", to = "ndc")
-links[[46]]$to_x <- grconvertX(NE1_quad[13], from = "user", to = "ndc")
-links[[47]]$to_x <- grconvertX(NE1_quad[13], from = "user", to = "ndc")
+links[[32]]$to_x <- grconvertX(NE4_quad[6], from = "user", to = "ndc")
+links[[33]]$to_x <- grconvertX(NE4_quad[6], from = "user", to = "ndc")
+segments(NE4_quad[6], 0.32, NE4_quad[6], 0.928 , col = "red3", lwd = 1.5, lty = 3)
+links[[34]]$to_x <- grconvertX(NE4_quad[7], from = "user", to = "ndc")
+links[[35]]$to_x <- grconvertX(NE4_quad[7], from = "user", to = "ndc")
+segments(NE4_quad[7], 0.747, NE4_quad[7], 0.928 , col = "red3", lwd = 1.5, lty = 3)
+links[[36]]$to_x <- grconvertX(NE4_quad[8], from = "user", to = "ndc")
+links[[37]]$to_x <- grconvertX(NE4_quad[8], from = "user", to = "ndc")
+segments(NE4_quad[8], 0.488, NE4_quad[8], 0.755 , col = "red3", lwd = 1.5, lty = 3)
+links[[38]]$to_x <- grconvertX(NE4_quad[9], from = "user", to = "ndc")
+links[[39]]$to_x <- grconvertX(NE4_quad[9], from = "user", to = "ndc")
+segments(NE4_quad[9], 0.49, NE4_quad[9], 0.750 , col = "red3", lwd = 1.5, lty = 3)
+links[[40]]$to_x <- grconvertX(NE4_quad[10], from = "user", to = "ndc")
+links[[41]]$to_x <- grconvertX(NE4_quad[10], from = "user", to = "ndc")
+segments(NE4_quad[10], 0.488, NE4_quad[10], 0.756 , col = "red3", lwd = 1.5, lty = 3)
+links[[42]]$to_x <- grconvertX(NE4_quad[11], from = "user", to = "ndc")
+links[[43]]$to_x <- grconvertX(NE4_quad[11], from = "user", to = "ndc")
+segments(NE4_quad[11], 0.488, NE4_quad[11], 0.738 , col = "red3", lwd = 1.5, lty = 3)
+links[[44]]$to_x <- grconvertX(NE4_quad[12], from = "user", to = "ndc")
+links[[45]]$to_x <- grconvertX(NE4_quad[12], from = "user", to = "ndc")
+segments(NE4_quad[12], 0.488, NE4_quad[12], 0.738 , col = "red3", lwd = 1.5, lty = 3)
+links[[46]]$to_x <- grconvertX(NE4_quad[13], from = "user", to = "ndc")
+links[[47]]$to_x <- grconvertX(NE4_quad[13], from = "user", to = "ndc")
+segments(NE4_quad[13], 0.488, NE4_quad[13], 0.738 , col = "red3", lwd = 1.5, lty = 3)
 
 for (i in 1:length(links)) {
   links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
