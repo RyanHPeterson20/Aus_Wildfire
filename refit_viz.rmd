@@ -462,7 +462,7 @@ SEr2[lmhat]
 Create plot for coefficients of each model (plotted climate mode)
 (currently mostly manual)
 
-TODO: update NE Aus gorup 4
+TODO: update NE Aus group 4
 
 See if we can do this all in R (use the stacked TS plots as a guide)
 
@@ -733,13 +733,179 @@ SE4_olrcoef <- SEridge_4[16:20]
 olr_range <- range(SE2_olrcoef, SE4_olrcoef)
 
 plot(SE2_olrlag, SE2_olrcoef, pch = 16, col = "green3", xlim = c(1,52), ylim = olr_range,
-     xlab = "lag", ylab = "Coefficients")
+     xlab = "Lag", ylab = "Coefficients")
+title("OLR", adj = 0)
 points(SE4_olrlag, SE4_olrcoef, pch = 18, col = "red3", cex = 1.5)
 abline(h=0, lty = 2)
 ```
 
 
 ## Big Plots
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+  
+png(filename = "seaus_coeff.png", width = 3000, height = 3000, res = 300)
+layout(matrix(c(1, 2,
+                3, 4,
+                5, 6), ncol = 2, byrow = TRUE),
+       widths = c(1, 1), heights = c(1, 1))
+
+#NINO
+par(mar = c(4, 4, 2, 1))
+SE2_ninolag <- c(11)
+SE2_ninocoef <- SEridge_2[1]
+
+SE2_ninoind <- c(10:12)
+SE2_ninocoefind <- SEridge_2[18:20]
+
+#SEridge_4
+SE4_ninolag <- c(25,34,47)
+SE4_ninocoef <- SEridge_4[1:3]
+
+SE4_ninoind <- c(13)
+SE4_ninocoefind <- SEridge_4[21]
+
+
+nino_range <- range(SE2_ninocoef, SE2_ninocoefind, SE4_ninocoef, SE4_ninocoefind)
+
+newnino_range <- c(-nino_range[2], nino_range[2])
+
+plot(SE2_ninolag, SE2_ninocoef, pch = 16, col = "green4", xlim = c(1,52), ylim = newnino_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("Nino", adj = 0)
+points(SE2_ninoind, SE2_ninocoefind, pch = 1, col = "green4", cex = 1.25)
+points(SE4_ninolag, SE4_ninocoef, pch = 18, col = "red3", cex = 1.5)
+points(SE4_ninoind, SE4_ninocoefind, pch = 5, col = "red3")
+abline(h=0, lty = 2)
+
+#DMI
+par(mar = c(4, 4, 2, 1))
+SE1_dmilag <- c(31,37,42:44)
+SE1_dmicoef <- SEridge_1[1:5]
+
+SE1_dmiind <- c(43)
+SE1_dmicoefind <- SEridge_1[16]
+
+SE2_dmilag <- c(6,34)
+SE2_dmicoef <- SEridge_2[2:3]
+
+SE2_dmiind <- c(5,6)
+SE2_dmicoefind <- SEridge_2[21:22]
+
+#SEridge_3
+SE3_dmilag <- c(7,8)
+SE3_dmicoef <- SEridge_3[1:2]
+
+SE4_dmilag <- c(12,14:16,24,40)
+SE4_dmicoef <- SEridge_4[4:9]
+
+SE4_dmiind <- c(14)
+SE4_dmicoefind <- SEridge_4[22]
+
+dmi_range <- range(SE1_dmicoef, SE1_dmicoefind, SE2_dmicoef, SE2_dmicoefind, SE3_dmicoef, SE4_dmicoef, SE4_dmicoefind)
+
+newdmi_range <- c()
+
+plot(SE1_dmilag, SE1_dmicoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = dmi_range,
+     xlab = "lag", ylab = "Coefficients")
+title("DMI", adj = 0)
+points(SE1_dmiind, SE1_dmicoefind, pch = 0, col = "blue2")
+points(SE2_dmilag, SE2_dmicoef, pch = 16, col = "green4")
+points(SE2_dmiind, SE2_dmicoefind, pch = 1, col = "green4", cex = 1.25)
+points(SE3_dmilag, SE3_dmicoef, pch = 17, col = "orange3")
+points(SE4_dmilag, SE4_dmicoef, pch = 18, col = "red3", cex = 1.5)
+points(SE4_dmiind, SE4_dmicoefind, pch = 5, col = "red3")
+abline(h=0, lty = 2)
+
+
+#TSA
+par(mar = c(4, 4, 2, 1))
+SE1_tsalag <- c(12:15)
+SE1_tsacoef <- SEridge_1[6:9]
+
+SE2_tsalag <- c(14,15,17,44)
+SE2_tsacoef <- SEridge_2[4:7]
+
+SE3_tsalag <- c(27)
+SE3_tsacoef <- SEridge_3[3]
+
+SE4_tsalag <- c(21,22,52)
+SE4_tsacoef <- SEridge_4[10:12]
+
+tsa_range <- range(SE1_tsacoef, SE2_tsacoef, SE3_tsacoef, SE4_tsacoef)
+
+newtsa_range <- c(tsa_range[1], -tsa_range[2])
+
+plot(SE1_tsalag, SE1_tsacoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = newtsa_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("TSA", adj = 0)
+points(SE2_tsalag, SE2_tsacoef, pch = 16, col = "green4")
+points(SE3_tsalag, SE3_tsacoef, pch = 17, col = "orange3")
+points(SE4_tsalag, SE4_tsacoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+
+#AAO
+par(mar = c(4, 4, 2, 1))
+SE1_aaolag <- c(17,18,23,27,29,35)
+SE1_aaocoef <- SEridge_1[10:15]
+
+SE2_aaolag <- c(7,15,24,25,39,51)
+SE2_aaocoef <- SEridge_2[8:13]
+
+SE3_aaolag <- c(9)
+SE3_aaocoef <- SEridge_3[4]
+
+SE4_aaolag <- c(36,37,47)
+SE4_aaocoef <- SEridge_4[13:15]
+
+aao_range <- range(SE1_aaocoef, SE2_aaocoef, SE3_aaocoef, SE4_aaocoef)
+
+newaao_range <- c(aao_range[1], -aao_range[1])
+
+plot(SE1_aaolag, SE1_aaocoef, pch = 15, col = "blue2", xlim = c(1,52), ylim = newaao_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("SAM (OLR)", adj = 0)
+points(SE2_aaolag, SE2_aaocoef, pch = 16, col = "green4")
+points(SE3_aaolag, SE3_aaocoef, pch = 17, col = "orange3")
+points(SE4_aaolag, SE4_aaocoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+
+#OLR
+par(mar = c(4, 4, 2, 1))
+SE2_olrlag <- c(1,15,23,28)
+SE2_olrcoef <- SEridge_2[14:17] 
+
+SE4_olrlag <- c(1,28,35,38,49)
+SE4_olrcoef <- SEridge_4[16:20] 
+
+olr_range <- range(SE2_olrcoef, SE4_olrcoef)
+
+newolr_range <- c(-olr_range[1], olr_range[2])
+
+plot(SE2_olrlag, SE2_olrcoef, pch = 16, col = "green4", xlim = c(1,52), ylim = newolr_range,
+     xlab = "Lag", ylab = "Coefficients")
+title("OLR", adj = 0)
+points(SE4_olrlag, SE4_olrcoef, pch = 18, col = "red3", cex = 1.5)
+abline(h=0, lty = 2)
+#add legend here
+par(xpd = NA)
+legend("bottomright", inset = c(-.25, 0),
+       legend = c("Group 1", "Ind - Group 1", 
+                  "Group 2", "Ind - Group 2",
+                  "Group 3", "Ind - Group 3",
+                  "Group 4", "Ind - Group 4"),
+       col = c("blue2", "blue2",
+               "green4", "green4",
+               "orange3", "orange3",
+               "red3", "red3"),
+       pch = c(15, 0, 16, 1, 17, 2, 18, 5),
+       pt.cex = 1)
+
+
+dev.off()
+```
+
 
 
 ```{r test_plot}
@@ -760,35 +926,6 @@ NEridge_4
 NE4_quad <- NEridge_4[28:40]
 NE4_quad
 
-
-```
-
-
-```{r test_plots}
-
-# Define the layout matrix
-layout_matrix <- matrix(c(1, 4,
-                          2, 4,
-                          3, 4), ncol = 2, byrow = TRUE)
-
-# Set the layout
-layout(layout_matrix, widths = c(2, 1), heights = c(1, 1, 1))
-
-# Optional: Add some margin control
-par(mar = c(4, 4, 2, 1))  # Bottom, left, top, right
-
-# Plot 1 (top left)
-plot(1:10, main = "Top Left")
-
-# Plot 2 (middle left)
-plot(rnorm(10), main = "Middle Left")
-
-# Plot 3 (bottom left)
-plot(runif(10), main = "Bottom Left")
-
-# Plot 4 (right column, tall plot)
-par(mar = c(4, 2, 2, 2))  # Adjust margins for the tall plot
-plot(1:100, sin(1:100/10), type = "l", main = "Tall Right Plot")
 
 ```
 
@@ -1420,6 +1557,21 @@ segments(NE4_quad[12], 0.488, NE4_quad[12], 0.738 , col = "red3", lwd = 1.5, lty
 links[[46]]$to_x <- grconvertX(NE4_quad[13], from = "user", to = "ndc")
 links[[47]]$to_x <- grconvertX(NE4_quad[13], from = "user", to = "ndc")
 segments(NE4_quad[13], 0.488, NE4_quad[13], 0.738 , col = "red3", lwd = 1.5, lty = 3)
+
+
+par(xpd = NA)
+legend("bottomright", inset = c(-0.05, 0.1),
+       legend = c("Group 1", "Ind - Group 1", 
+                  "Group 2", "Ind - Group 2",
+                  "Group 3", "Ind - Group 3",
+                  "Group 4", "Ind - Group 4"),
+       col = c("blue2", "blue2",
+               "green4", "green4",
+               "orange3", "orange3",
+               "red3", "red3"),
+       pch = c(15, 0, 16, 1, 17, 2, 18, 5),
+       pt.cex = 1)
+
 
 for (i in 1:length(links)) {
   links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
