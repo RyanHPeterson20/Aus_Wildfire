@@ -26,6 +26,8 @@ suppressMessages( library( fields)) #for set.panel() and others
 suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
 
 suppressMessages( library( caret)) #for confusion matrix
+
+suppressMessages( library( tictoc)) #some timing
 ```
 
 ```{r data_functions}
@@ -136,6 +138,10 @@ SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
 #quantile 75 indicator
 NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
 SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
+
+full_resp <- c(NE_resp, SE_resp)
+full_preds <- c(NE_preds, SE_preds)
+full_preds_q75 <- c(NE_preds_q75, SE_preds_q75)
 ```
 
 ```{r logit}
@@ -320,7 +326,6 @@ set.seed(300)
 ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
 ridge_fit <- glmnet(X_new, y, alpha = 0.00)
 
-predict(ridge_cv)
 plot(ridge_cv)
 plot(ridge_fit, xvar = "dev")
 
@@ -471,12 +476,8 @@ abline(h = 0, lty = 2)
 
 ```{r test_parallel}
 
-system.time(
-  
-)
-
 #test runs for including 
-n.cores <- cores
+n.cores <- 8
   
 my.cluster <- parallel::makeCluster(
   n.cores, 
@@ -485,10 +486,77 @@ my.cluster <- parallel::makeCluster(
 
 doParallel::registerDoParallel(cl = my.cluster)
 
+output <- foreach(j = 1:length(full_resp)) %dopar% {
+  y_1 <- as.numeric(full_resp[[j]])
 
+  dum_mat <- as.matrix(full_preds_q75[[j]][ ,1:104]) 
+  dum_mat[,] <- 0
+  
+  X_int <- cbind(as.matrix(full_preds[[j]][ ,1:260]), dum_mat)
+  X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]),
+                  as.matrix(full_preds_q75[[j]][ ,1:104]  )) 
+  
+  zz_new <- hierNet::compute.interactions.c(X_int, diagonal=TRUE)
+  
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, 
+                             diagonal = TRUE, nlam = 50, 
+                             zz = zz_new, trace = 0) 
+  temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+  
+  list(hierpath = temp_path, hiercv = temp_cv)  
+}
 
 parallel::stopCluster(cl = my.cluster)  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(output, file = "full_strong.rda")
+```
+
+
+
+
+```{r main_parallel}
+#run without indicator terms
+#test runs for including 
+n.cores <- 8
   
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
+
+output <- foreach(j = 1:length(full_resp)) %dopar% {
+  y_1 <- as.numeric(full_resp[[j]])
+
+
+  X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
+  
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, 
+                             diagonal = TRUE, nlam = 50, trace = 0) 
+  temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+  
+  list(hierpath = temp_path, hiercv = temp_cv)  
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(output, file = "main_strong.rda")
+```
+
+
+```{r sans_2019}
+#full model
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = -c(19))
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = -c(19))
+
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = -c(19))
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = -c(19))
+
+part_resp <- c(NE_resp, SE_resp)
+part_preds <- c(NE_preds, SE_preds)
 ```
 
 
