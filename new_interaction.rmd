@@ -560,6 +560,69 @@ part_preds <- c(NE_preds, SE_preds)
 ```
 
 
+```{r base_parallel}
+# 'baseline' (that is: w/o 2019/2020 season)
+n.cores <- 8
+  
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
+
+output <- foreach(j = 1:length(part_resp)) %dopar% {
+  y_1 <- as.numeric(part_resp[[j]])
+
+
+  X_1 <- cbind(as.matrix(part_preds[[j]][ ,1:260]))
+  
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, 
+                             diagonal = TRUE, nlam = 50, trace = 0) 
+  temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+  
+  list(hierpath = temp_path, hiercv = temp_cv)  
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(output, file = "base_strong.rda")
+```
+
+
+
+
+Quick test for elastic net
+(all of this is meh, not great)
+```{r}
+tic()
+j <- 2 #NE aus group 2
+y_1 <- as.numeric(full_resp[[j]])
+
+X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
+  
+temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.05,
+                             diagonal = TRUE, nlam = 10, trace = 0) 
+toc()
+
+#temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 10)
+
+refit_test <- refit_bic(temp_path, max_index = 10, ebic.gamma = 0.25, lambda.min = TRUE,
+                      resp = y_1, preds = X_1, preds_quant = NE_preds_q75[[2]])
+
+refit_test[[5]]
+
+which.min(refit_test[[5]][,2])
+which.min(refit_test[[5]][,6])
+which.min(refit_test[[5]][,9])
+
+i <- 4
+ridge_coef <- refit_test[[4]][[i]][-1]
+ridge_coef
+length(ridge_coef)
+```
+
 
 ### Testing (Building-up Model) 
 

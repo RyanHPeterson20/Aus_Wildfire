@@ -65,6 +65,8 @@ get_coefs <- function(path_group, max_index, resp, preds, preds_quant){
       #only main effects update
       term_list[[k]] <- list(main_df)
     }
+    
+    #bic can be moved here if needed/preferred.
   }
   return(term_list)
 }
@@ -84,8 +86,9 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
   refit_ridge <- list() #refit ridge
   refit_ridgecoef <- list() #ridge coefs
   refit_ridgecv <- list() #ridge cv (for R^2)
-  BIC_matrix <- matrix(NA, ncol = 5)
-  colnames(BIC_matrix) <- c("lambda", "lm.BIC", "ridge.BIC", "lm.eBIC", "ridge.eBIC")
+  BIC_matrix <- matrix(NA, ncol = 9)
+  colnames(BIC_matrix) <- c("lambda", "lasso.AIC", "ridge.AIC", "lm.BIC", 
+                            "ridge.BIC", "lasso.BIC", "lm.eBIC", "ridge.eBIC", "lasso.eBIC")
   
   
   for (k in 1:max_index) {
@@ -95,8 +98,6 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
     temp_bn <- path_group$bn[,k]
     
     temp_th <- path_group$th[,,k]
-    
-  
     
     #internals
     y = as.numeric(resp)
@@ -159,7 +160,7 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
     #elif
     #linear model
     data_df <- as.data.frame(cbind(y,X))
-    lm_fit <- lm(formula(model_string), data = data_df)
+    lm_fit <- glm(formula(model_string), data = data_df)
     lm_coef <- coef(lm_fit)
     
     #ridge model
@@ -181,8 +182,12 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
     par_vec <- coef_pred@i + 1 
     ridge_coef <- coef_pred[par_vec, ] #coefs from ridge
     
+    
     lm_resid <- y - predict(lm_fit, X_df)
     ridge_resid <- y - predict(ridge_fit, X_new, s = set_lambda, type = "response")
+    
+    #AIC (ridge)
+    ridge_AIC <- length(y)*log(mean(ridge_resid^2)) + 2*length(ridge_coef[-1])
     
     #BIC
     lm_BIC <- length(y)*log(mean(lm_resid^2)) + log(length(y))*length(lm_coef[-1])
@@ -197,14 +202,31 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
     lm_eBIC <- lm_BIC + 2 * ebic.gamma * log(choose(p_eff, length(lm_coef[-1])))
     ridge_eBIC <- ridge_BIC +  2 * ebic.gamma * log(choose(p_eff, length(ridge_coef[-1])))
     
+    #lasso bic/ebic
+    Xint = cbind(as.matrix(preds[ ,1:260]))
+    zz_new <- hierNet::compute.interactions.c(Xint, diagonal=TRUE)
+    lasso_resid <- y - predict(path_group, newx = Xint, newzz = zz_new)
+    lasso_resid <- lasso_resid[,k]
+    
+    p_length <- length(main_terms) + (length(interact_terms)/2)
+    
+    # lasso IC
+    lasso_AIC <- length(y)*log(mean(lasso_resid^2)) + 2*p_length
+    
+    lasso_BIC <- length(y)*log(mean(lasso_resid^2)) + log(length(y))*p_length
+    lasso_eBIC <- lasso_BIC +  2 * ebic.gamma * log(choose(p_eff, p_length))
+        
     refit_lm[[paste0("LamIndex_", k)]] <- lm_fit
     refit_lmcoef[[paste0("LamIndex_", k)]] <- lm_coef
     refit_ridge[[paste0("LamIndex_", k)]] <- ridge_fit
     refit_ridgecoef[[paste0("LamIndex_", k)]] <- ridge_coef
     refit_ridgecv[[paste0("LamIndex_", k)]] <- ridge_cv
     
-    BIC_matrix <- rbind(BIC_matrix, c(path_group$lamlist[k], lm_BIC, ridge_BIC, lm_eBIC, ridge_eBIC))
+    BIC_matrix <- rbind(BIC_matrix, c(path_group$lamlist[k], lasso_AIC, ridge_AIC, lm_BIC, ridge_BIC, 
+                                      lasso_BIC, lm_eBIC, ridge_eBIC, lasso_eBIC))
   }
+  
+  
   
   BIC_matrix <- BIC_matrix[-1, ]
   
@@ -212,5 +234,8 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
   
   return(return_list)
 }
+
+
+
 
 
