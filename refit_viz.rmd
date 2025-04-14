@@ -649,7 +649,7 @@ SE2_dmicoef <- SEridge_2[2:3]
 SE2_dmiind <- c(5,6)
 SE2_dmicoefind <- SEridge_2[21:22]
 
-#SEridge_3
+SEridge_3
 SE3_dmilag <- c(7,8)
 SE3_dmicoef <- SEridge_3[1:2]
 

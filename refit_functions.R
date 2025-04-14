@@ -75,7 +75,8 @@ get_coefs <- function(path_group, max_index, resp, preds, preds_quant){
 
 #assign max lambda index at the start
 #refit with BIC function
-refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp, preds, preds_quant){
+refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, AIC.c = FALSE,
+                      resp, preds, preds_quant){
 
 
   #lambda_mse <- which(cv_group$lamlist == cv_group$lamhat)
@@ -186,8 +187,7 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
     lm_resid <- y - predict(lm_fit, X_df)
     ridge_resid <- y - predict(ridge_fit, X_new, s = set_lambda, type = "response")
     
-    #AIC (ridge)
-    ridge_AIC <- length(y)*log(mean(ridge_resid^2)) + 2*length(ridge_coef[-1])
+
     
     #BIC
     lm_BIC <- length(y)*log(mean(lm_resid^2)) + log(length(y))*length(lm_coef[-1])
@@ -209,9 +209,22 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, resp
     lasso_resid <- lasso_resid[,k]
     
     p_length <- length(main_terms) + (length(interact_terms)/2)
+    p_ridge <- length(ridge_coef[-1])
     
     # lasso IC
-    lasso_AIC <- length(y)*log(mean(lasso_resid^2)) + 2*p_length
+    #elif AICc (corrected AIC)
+    if (AIC.c) {
+      ridge_AIC <- length(y)*log(mean(ridge_resid^2)) + 2*p_ridge
+      ridge_AIC <- ridge_AIC + ((2*p_ridge^2+2*p_ridge)/(length(y) - p_ridge - 1))
+      
+      lasso_AIC <- length(y)*log(mean(lasso_resid^2)) + 2*p_length
+      lasso_AIC <- lasso_AIC + ((2*p_length^2+2*p_length)/(length(y) - p_length - 1))
+        
+    } else{ #normal AIC
+      ridge_AIC <- length(y)*log(mean(ridge_resid^2)) + 2*p_ridge
+      lasso_AIC <- length(y)*log(mean(lasso_resid^2)) + 2*p_length
+    }
+
     
     lasso_BIC <- length(y)*log(mean(lasso_resid^2)) + log(length(y))*p_length
     lasso_eBIC <- lasso_BIC +  2 * ebic.gamma * log(choose(p_eff, p_length))
