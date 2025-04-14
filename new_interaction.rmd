@@ -131,10 +131,6 @@ NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
 SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
 
-#quantile 90 indicator
-NE_preds_q90 <- NElag_grouping(NE_laglist = NE_laglist_q90, j = -c(19))
-SE_preds_q90 <- SElag_grouping(SE_laglist = SE_laglist_q90, j = -c(19))
-
 #quantile 75 indicator
 NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
 SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
@@ -591,6 +587,36 @@ save(output, file = "base_strong.rda")
 ```
 
 
+```{r enet_parallel}
+#run without indicator terms
+#test runs for including 
+n.cores <- 8
+  
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
+
+output <- foreach(j = 1:length(full_resp)) %dopar% {
+  y_1 <- as.numeric(full_resp[[j]])
+
+
+  X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
+  
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.05,
+                             diagonal = TRUE, nlam = 50, trace = 0) 
+  temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+  
+  list(hierpath = temp_path, hiercv = temp_cv)  
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(output, file = "enet_strong.rda")
+```
 
 
 Quick test for elastic net
