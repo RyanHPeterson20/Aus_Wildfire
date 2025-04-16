@@ -43,6 +43,8 @@ load( "Data/data_quantile.rda")
 
 #functions:
 source("group_functions.R") #grouping/clustering
+source("refit_functions.R") #coef/refit functions
+
 ```
 
 Goal of this is to include interaction terms into our methodology.
@@ -605,7 +607,7 @@ output <- foreach(j = 1:length(full_resp)) %dopar% {
 
   X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
   
-  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.05,
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.1,
                              diagonal = TRUE, nlam = 50, trace = 0) 
   temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
   
@@ -619,6 +621,39 @@ save(output, file = "enet_strong.rda")
 ```
 
 
+```{r enet_parallel}
+#run without indicator terms
+#test runs for including 
+n.cores <- 8
+  
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
+
+output <- foreach(j = 1:length(full_resp)) %dopar% {
+  y_1 <- as.numeric(full_resp[[j]])
+
+
+  X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
+  
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.25,
+                             diagonal = TRUE, nlam = 50, trace = 0) 
+  temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+  
+  list(hierpath = temp_path, hiercv = temp_cv)  
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(output, file = "enet25_strong.rda")
+```
+
+
+
 Quick test for elastic net
 (all of this is meh, not great)
 ```{r}
@@ -629,12 +664,12 @@ y_1 <- as.numeric(full_resp[[j]])
 X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
   
 temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.05,
-                             diagonal = TRUE, nlam = 10, trace = 0) 
+                             diagonal = TRUE, nlam = 25, trace = 0) 
 toc()
 
 #temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 10)
 
-refit_test <- refit_bic(temp_path, max_index = 10, ebic.gamma = 0.25, lambda.min = TRUE,
+refit_test <- refit_bic(temp_path, max_index = 25, ebic.gamma = 0.25, lambda.min = TRUE, AIC.c = FALSE,
                       resp = y_1, preds = X_1, preds_quant = NE_preds_q75[[2]])
 
 refit_test[[5]]
@@ -643,10 +678,45 @@ which.min(refit_test[[5]][,2])
 which.min(refit_test[[5]][,6])
 which.min(refit_test[[5]][,9])
 
-i <- 4
+i <- 3
 ridge_coef <- refit_test[[4]][[i]][-1]
 ridge_coef
 length(ridge_coef)
+```
+
+
+
+```{r}
+tic()
+j <- 3 #NE aus group 3
+y_1 <- as.numeric(full_resp[[j]])
+
+X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
+  
+temp_path3 <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, delta = 0.15,
+                             diagonal = TRUE, nlam = 25, trace = 0) 
+toc()
+
+temp_cv <- hierNet::hierNet.cv(temp_path3, X_1, y_1, nfolds = 5)
+
+plot(temp_cv)
+
+which(temp_cv$lamlist == temp_cv$lamhat.1se) 
+
+refit_test3 <- refit_bic(temp_path3, max_index = 25, ebic.gamma = 0.25, lambda.min = FALSE, AIC.c = FALSE,
+                      resp = y_1, preds = X_1, preds_quant = NE_preds_q75[[3]])
+
+refit_test3[[5]]
+
+which.min(refit_test3[[5]][,2])
+which.min(refit_test3[[5]][,6])
+which.min(refit_test3[[5]][,9])
+
+i <- 9
+ridge_coef <- refit_test3[[4]][[i]][-1]
+ridge_coef
+length(ridge_coef)
+
 ```
 
 
