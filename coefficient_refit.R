@@ -1,5 +1,8 @@
 ## ridge refit and model selection ##
 
+#TODO: this will be the finalized refit coefficients,
+## previous analysis work for final model selection is done elsewhere.
+
 #libraries
 suppressMessages( library(hierNet)) 
 suppressMessages(library(glmnet)) 
@@ -856,6 +859,10 @@ SErefit4[[5]]
 which.min(SErefit4[[5]][,2])
 which.min(SErefit4[[5]][,6])
 
-
+i <- 4
+ridge_coef <- SErefit4[[4]][[i]][-1]
+SEridge4_base <- ridge_coef
+ridge_coef
+length(ridge_coef)
 
 

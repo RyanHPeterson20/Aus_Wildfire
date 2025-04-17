@@ -654,6 +654,79 @@ save(output, file = "enet25_strong.rda")
 
 
 
+```{r two_group_Setup}
+
+#updated lists 
+##predictors
+NE_group1 <- NE_preds[[1]]
+NE_group2 <- rbind(NE_preds[[2]], NE_preds[[3]], NE_preds[[4]])
+NE_preds1 <- list(NE_group1, NE_group2)
+
+SE_group1 <- rbind(SE_preds[[1]], SE_preds[[2]])
+SE_group2 <- rbind(SE_preds[[3]], SE_preds[[4]])
+SE_preds1 <- list(SE_group1, SE_group2)
+
+##response
+NEresp1 <- NE_resp[[1]]
+NEresp2 <- c(NE_resp[[2]], NE_resp[[3]], NE_resp[[4]])
+NE_resp1 <- list(NEresp1, NEresp2)
+
+SEresp1 <- c(SE_resp[[1]], SE_resp[[2]])
+SEresp2 <- c(SE_resp[[3]], SE_resp[[4]])
+SE_resp1 <- list(SEresp1, SEresp2)
+
+##indicator preds (q75)
+
+NEq75_pred1 <- NE_preds_q75[[1]]
+NEq75_pred2 <- rbind(NE_preds_q75[[2]], NE_preds_q75[[3]], NE_preds_q75[[4]])
+NE_preds1_q75 <- list(NEq75_pred1, NEq75_pred2)
+
+SEq75_pred1 <- rbind(SE_preds_q75[[1]], SE_preds_q75[[2]])
+SEq75_pred2 <- rbind(SE_preds_q75[[3]], SE_preds_q75[[4]])
+SE_preds1_q75 <- list(SEq75_pred1, SEq75_pred2)
+
+
+full_resp <- c(NE_resp1, SE_resp1)
+full_preds <- c(NE_preds1, SE_preds1)
+full_preds_q75 <- c(NE_preds1_q75, SE_preds1_q75)
+```
+
+
+```{r twogroup_parallel}
+#run without indicator terms
+#test runs for including 
+n.cores <- 4
+  
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
+
+output <- foreach(j = 1:length(full_resp)) %dopar% {
+  y_1 <- as.numeric(full_resp[[j]])
+
+
+  X_1 <- cbind(as.matrix(full_preds[[j]][ ,1:260]))
+  
+  temp_path <- hierNet::hierNet.path( X_1, y_1, strong = TRUE, 
+                             diagonal = TRUE, nlam = 50, trace = 0) 
+  temp_cv <- hierNet::hierNet.cv(temp_path, X_1, y_1, nfolds = 5)
+  
+  list(hierpath = temp_path, hiercv = temp_cv)  
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+save(output, file = "group_strong.rda")
+```
+
+
+
+
+
 Quick test for elastic net
 (all of this is meh, not great)
 ```{r}

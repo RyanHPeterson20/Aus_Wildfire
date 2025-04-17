@@ -1,0 +1,59 @@
+---
+title: "refit_test"
+author: "Ryan Peterson"
+date: "2025-04-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#libraries
+suppressMessages( library(hierNet)) 
+suppressMessages(library(glmnet)) 
+suppressMessages( library( lubridate))
+suppressMessages(library(grid))
+
+suppressMessages( library(scales)) #for adjusting opacity
+```
+
+```{r dat_functions}
+# data and functions
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+source("group_functions.R") #grouping/clustering
+source("refit_functions.R") #coef/refit functions
+
+```
+
+File for exploring the different model fits and how they compare wrt 2019/2020 wildfire season.
+
+(Add more notes here as we progress)
+
+
+```{r model_fits}
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+#model fits
+load( "full_strong.rda") #include indicator functions
+output_ind <- output
+
+load( "main_strong.rda") #full strong models #output models
+output_main <- output
+
+load( "base_strong.rda") #strong models without 2019/2020
+output_base <- output
+```
+
+
+
