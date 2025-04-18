@@ -455,7 +455,6 @@ title("OLR", adj = 0)
 dev.off()
 
 
-
 # NE Aus Group 3
 #full model data set-up
 NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)

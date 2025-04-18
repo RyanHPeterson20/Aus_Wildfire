@@ -75,7 +75,8 @@ get_coefs <- function(path_group, max_index, resp, preds, preds_quant){
 
 #assign max lambda index at the start
 #refit with BIC function
-refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, AIC.c = FALSE,
+refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, 
+                      AIC.c = FALSE, intercept = TRUE,
                       resp, preds, preds_quant){
 
 
@@ -171,7 +172,7 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, AIC.
     
     set.seed(300)
     ridge_cv <- cv.glmnet(X_new, y, alpha = 0.00, nfolds = 5)
-    ridge_fit <- glmnet(X_new, y, alpha = 0.00)
+    ridge_fit <- glmnet(X_new, y, alpha = 0.00, intercept = intercept)
     
     if (lambda.min) {
       set_lambda <- ridge_cv$lambda.min
