@@ -182,6 +182,7 @@ length(ridge_coef)
 
 
 ```{r SEAus}
+
 SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
 SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
@@ -267,6 +268,55 @@ SEcoefs2[[i]][[1]]$Coef
 
 SEcoefs2[[i]][[2]]$Interact_Effect
 SEcoefs2[[i]][[2]]$Coef
+
+
+
+
+#SE Aus Group 3
+SEAus3 <- output_main[[7]]
+
+SEcoefs3 <- get_coefs(SEAus3$hierpath, max_index = 50, 
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], 
+                      preds_quant = SE_preds_q75[[3]])
+
+plot(SEAus3$hiercv)
+
+SEcv2 <- SEAus3$hiercv
+which(SEcv2$lamlist == SEcv2$lamhat.1se)
+which(SEcv2$lamlist == SEcv2$lamhat)
+SEcv2$lamhat.1se
+1-SEcv2$cv.err/var( SE_resp[[2]])
+
+
+SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], 
+                      preds_quant = SE_preds_q75[[3]])
+
+SErefit3[[5]]
+
+which.min(SErefit3[[5]][,2]) #AIC
+which.min(SErefit3[[5]][,6]) #BIC
+
+i <- 17
+#ridge coefs
+#ridge_coef <- SErefit2[[4]][[i]][-1]
+ridge_coef <- SErefit3[[4]][[i]]
+SEridge3_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+#glm coefs
+summary(SErefit3[[1]][[i]])
+
+SEcoefs3[[i]][[1]]$Main_Effect
+SEcoefs3[[i]][[1]]$Coef
+
+SEcoefs3[[i]][[2]]$Interact_Effect
+SEcoefs3[[i]][[2]]$Coef
+
 ```
 
 ### Model Fits excluding 2019/2020
@@ -350,6 +400,51 @@ length(ridge_coef)
 #glm coefs
 summary(SErefit2[[1]][[i]])
 
+
+#SE Aus Group 3
+SEAus3 <- output_main[[7]]
+
+SEcoefs3 <- get_coefs(SEAus3$hierpath, max_index = 50, 
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], 
+                      preds_quant = SE_preds_q75[[3]])
+
+plot(SEAus3$hiercv)
+
+SEcv2 <- SEAus3$hiercv
+which(SEcv2$lamlist == SEcv2$lamhat.1se)
+which(SEcv2$lamlist == SEcv2$lamhat)
+SEcv2$lamhat.1se
+1-SEcv2$cv.err/var( SE_resp[[2]])
+
+
+SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], 
+                      preds_quant = SE_preds_q75[[3]])
+
+SErefit3[[5]]
+
+which.min(SErefit3[[5]][,2]) #AIC
+which.min(SErefit3[[5]][,6]) #BIC
+
+i <- 17
+#ridge coefs
+#ridge_coef <- SErefit2[[4]][[i]][-1]
+ridge_coef <- SErefit3[[4]][[i]]
+SEridge3_main1 <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+#glm coefs
+summary(SErefit3[[1]][[i]])
+
+SEcoefs3[[i]][[1]]$Main_Effect
+SEcoefs3[[i]][[1]]$Coef
+
+SEcoefs3[[i]][[2]]$Interact_Effect
+SEcoefs3[[i]][[2]]$Coef
 ```
 
 
@@ -433,6 +528,53 @@ length(ridge_coef)
 #glm coefs
 summary(SErefit2[[1]][[i]])
 
+
+#
+
+#SE Aus Group 3
+SEAus3 <- output_base[[7]]
+
+SEcoefs3 <- get_coefs(SEAus3$hierpath, max_index = 50, 
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], 
+                      preds_quant = SE_preds_q75[[3]])
+
+plot(SEAus3$hiercv)
+
+SEcv2 <- SEAus3$hiercv
+which(SEcv2$lamlist == SEcv2$lamhat.1se)
+which(SEcv2$lamlist == SEcv2$lamhat)
+SEcv2$lamhat.1se
+1-SEcv2$cv.err/var( SE_resp[[2]])
+
+
+SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, 
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[3]], preds = SE_preds[[3]], 
+                      preds_quant = SE_preds_q75[[3]])
+
+SErefit3[[5]]
+
+which.min(SErefit3[[5]][,2]) #AIC
+which.min(SErefit3[[5]][,6]) #BIC
+
+i <- 4
+#ridge coefs
+#ridge_coef <- SErefit2[[4]][[i]][-1]
+ridge_coef <- SErefit3[[4]][[i]]
+SEridge3_base <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+#glm coefs
+summary(SErefit3[[1]][[i]])
+
+SEcoefs3[[i]][[1]]$Main_Effect
+SEcoefs3[[i]][[1]]$Coef
+
+SEcoefs3[[i]][[2]]$Interact_Effect
+SEcoefs3[[i]][[2]]$Coef
 ```
 
 
@@ -609,6 +751,20 @@ NEcoefs1[[i]][[2]]$Coef
 
 ## Comparisons (by Region/Group)
 
+### NE Aus
+
+```{r}
+
+```
+
+
+### SE Aus 
+
+```{r SEAus_group1}
+
+```
+
+
 ```{r SEAus_group2}
 setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
 
@@ -673,6 +829,38 @@ points(SE22_ninolag, SE22_ninocoef, pch = 24, col = "black",
 abline(h = 0, lty = 2)
 title("Nino", adj = 0)
 
+#TODO: change the interaction code to be more compact
+## Nino Interactions
+# I(nino_lag11^2):
+## main
+links[[1]] <- list(
+  y_val = SE2_ninocoef[1],
+  from_x = grconvertX(SE2_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE2_ninocoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[2]] <- list(
+  y_val = SE21_ninocoef[1],
+  from_x = grconvertX(SE21_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE21_ninocoef[1], from = "user", to = "ndc")
+)
+## base sans
+links[[3]] <- list(
+  y_val = SE22_ninocoef[1],
+  from_x = grconvertX(SE22_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE22_ninocoef[1], from = "user", to = "ndc")
+)
+
+# I(nino_lag12^2):
+## base sans
+links[[4]] <- list(
+  y_val = SE22_ninocoef[2],
+  from_x = grconvertX(SE22_ninolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE22_ninocoef[2], from = "user", to = "ndc")
+)
+
+
+
 # --- Plot 2: DMI ---
 par(mar = c(4, 4, 2, 1))
 plot(SE2_dmilag, SE2_dmicoef, pch = 22,
@@ -691,7 +879,7 @@ title("DMI", adj = 0)
 # --- Plot 3: TSA ---
 par(mar = c(4, 4, 2, 1))
 plot(SE22_tsalag, SE22_tsacoef, pch = 24, col = "black",
-       bg =  alpha("darkgoldenrod4", 0.95), xlim = c(1,52), cex = 1.4,
+       bg =  alpha("darkgoldenrod3", 0.95), xlim = c(1,52), cex = 1.4,
      ylim = SEAus2_range,
      xlab = "", ylab = "Coefficients")
 abline(h = 0, lty = 2)
@@ -712,6 +900,27 @@ points(SE22_aaolag, SE22_aaocoef, pch = 24, col = "black",
 abline(h = 0, lty = 2)
 title("SAM (AAO)", adj = 0)
 
+## AAO Interactions
+# I(aao_lag24^2):
+links[[5]] <- list(
+  y_val = SE2_aaocoef[1],
+  from_x = grconvertX(SE2_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE2_aaocoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[6]] <- list(
+  y_val = SE21_aaocoef[1],
+  from_x = grconvertX(SE21_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE21_aaocoef[1], from = "user", to = "ndc")
+)
+## base sans
+links[[7]] <- list(
+  y_val = SE22_aaocoef[1],
+  from_x = grconvertX(SE22_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE22_aaocoef[1], from = "user", to = "ndc")
+)
+
+
 # --- Plot 5: OLR ---
 par(mar = c(4, 4, 2, 1))
 plot(SE2_aaolag, SE2_aaocoef, type = "n", xlim = c(1,52), 
@@ -721,19 +930,62 @@ abline(h = 0, lty = 2)
 title("OLR", adj = 0)
 
 # --- Plot 6: Interaction Effects ---
-#TODO: get the line method working 
 par(mar = c(4, 4, 2, 2))
-y_range <- c(0,1)
-nino_loc <- c(0.98)
-int_range <- range(SEridge2_main[5:6])
 
-plot(SEridge2_main[5], nino_loc, pch = 22, 
-     col = "grey4", bg =  alpha("green4",.95), cex = 1.5, main = "Interactions", 
-     ylim = y_range, xlim = int_range,
+int_range <- range(SEridge2_main[5:6], SEridge2_main1[5:6], SEridge2_base[10:12])
+
+plot(SEridge2_main[5], 1.5, type = "n", main = "Interactions", 
+     ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients",
      yaxt = "n",  ylab = "")
 #for correct points set-up empty plot then assign points after (maybe? test this out)
+#TODO: turn this into a single call, format $from_y with unlist()
+int_1 <- grconvertY(links[[1]]$from_y, from = "ndc", to = "user")
+int_2 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user")
+int_3 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user")
+int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user")
+int_5 <- grconvertY(links[[5]]$from_y, from = "ndc", to = "user")
+int_6 <- grconvertY(links[[6]]$from_y, from = "ndc", to = "user")
+int_7 <- grconvertY(links[[7]]$from_y, from = "ndc", to = "user")
 
+points(SEridge2_main[5], int_1,  pch = 22, col = "grey4", 
+       bg =  alpha("green4",.95), cex = 1.5) 
+points(SEridge2_main1[5], int_2, pch = 22, col = "black",
+       bg =  alpha("chartreuse3",.65) , cex = 1.5) 
+points(SEridge2_base[10:11], c(int_3, int_4), pch = 24, col = "black",
+       bg =  alpha("chartreuse3",.95), cex = 1.4) 
+points(SEridge2_main[6], int_5, pch = 22, col = "grey4",
+        bg =  alpha("red3",.95), cex = 1.5)
+points(SEridge2_main1[6], int_6, pch = 22, col = "black",
+       bg =  alpha("coral2",.65) , cex = 1.5)
+points(SEridge2_base[12], int_7, pch = 24, col = "black",
+       bg =  alpha("coral2",.95), cex = 1.4)
+
+#link to x 
+links[[1]]$to_x <- grconvertX(SEridge2_main[5], from = "user", to = "ndc")
+links[[2]]$to_x <- grconvertX(SEridge2_main1[5], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(SEridge2_base[10], from = "user", to = "ndc")
+links[[4]]$to_x <- grconvertX(SEridge2_base[11], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(SEridge2_main[6], from = "user", to = "ndc")
+links[[6]]$to_x <- grconvertX(SEridge2_main1[6], from = "user", to = "ndc")
+links[[7]]$to_x <- grconvertX(SEridge2_base[12], from = "user", to = "ndc")
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c("green4", rep("chartreuse3", 3), "red3", rep("coral2",2))
+linetypes <- c(rep(2,7))
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
 
 #outer text and legends
 par(xpd = NA)
@@ -744,9 +996,356 @@ legend("topright", inset = c(-0.52, 0.00),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("green4", "chartreuse3", "chartreuse3"),
        pt.cex = c(1.5, 1.5, 1.4))
+legend("bottomright", inset = c(-0.52, 0.27),
+       title = "SAM (AAO)",
+       legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "black", "grey4"),
+       pt.bg = c("red3", "coral2", "coral2"),
+       pt.cex = c(1.5, 1.5, 1.4))
 
-mtext("SE Aus Group 2 ()", outer = TRUE, cex = 1.5, font = 1)
+mtext("SE Aus Group 2 (Mid-October to Mid-December)", outer = TRUE, cex = 1.5, font = 1)
 
 dev.off()
 ```
+
+
+```{r SEAus_group3}
+SEridge3_main
+SEridge3_main1
+SEridge3_base
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SE3_coeff.png", width = 3000, height = 3000, res = 300)
+
+# Set layout
+layout(matrix(c(1, 6,
+                2, 6,
+                3, 6,
+                4, 6,
+                5, 6), ncol = 2, byrow = TRUE),
+       widths = c(1.5, 1), heights = c(1, 1, 1, 1, 1))
+
+par(oma = c(1, 1, 3, 9))
+
+# Store info for linking
+links <- list()
+
+# --- Data Set-up --- 
+#nino
+SE32_ninolag <- c(12,27)
+SE32_ninocoef <- SEridge3_base[1:2]
+#dmi
+SE3_dmilag <- c(7,8)
+SE3_dmicoef <- SEridge3_main[1:2]
+SE31_dmilag <- c(7,8)
+SE31_dmicoef <- SEridge3_main1[1:2]
+SE32_dmilag <- c(8,47)
+SE32_dmicoef <- SEridge3_base[3:4]
+#tsa
+SE3_tsalag <- c(6,17,27,28)
+SE3_tsacoef <- SEridge3_main[3:6]
+SE31_tsalag <- c(6,17,27,28)
+SE31_tsacoef <- SEridge3_main1[3:6]
+SE32_tsalag <- c(17,28)
+SE32_tsacoef <- SEridge3_base[5:6]
+#aao
+SE3_aaolag <- c(9)
+SE3_aaocoef <- SEridge3_main[7]
+SE31_aaolag <- c(9)
+SE31_aaocoef <- SEridge3_main1[7]
+SE32_aaolag <- c(42)
+SE32_aaocoef <- SEridge3_base[7]
+
+# --- Range ---
+SEAus3_range <- range(SE32_ninocoef, 
+                      SE3_dmicoef, SE31_dmicoef, SE32_dmicoef,
+                      SE3_tsacoef, SE31_tsacoef, SE32_tsacoef,
+                      SE3_aaocoef, SE31_aaocoef, SE32_aaocoef)
+
+# --- Plot 1: Nino ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE32_ninolag, SE32_ninocoef, pch = 24, col = "black",
+       bg =  alpha("chartreuse3",.95), cex = 1.4,
+     xlim = c(1,52), 
+     ylim = SEAus3_range,
+     xlab = "", ylab = "Coefficients")
+abline(h = 0, lty = 2)
+title("Nino", adj = 0)
+
+#interactions
+#nino_lag27:dmi_lag47
+## base sans
+links[[1]] <- list(
+  y_val = SE32_ninocoef[2],
+  from_x = grconvertX(SE32_ninolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE32_ninocoef[2], from = "user", to = "ndc")
+)
+
+# --- Plot 2: DMI ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE3_dmilag, SE3_dmicoef, pch = 22,
+     col = "grey4",
+     bg =  alpha("magenta4",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = SEAus3_range,
+     xlab = "", ylab = "Coefficients")
+points(SE31_dmilag, SE31_dmicoef, pch = 22, col = "black",
+       bg =  alpha("darkorchid2",.65) , cex = 1.5)
+points(SE32_dmilag, SE32_dmicoef, pch = 24, col = "black",
+       bg =  alpha("darkorchid2",.95), cex = 1.4)
+abline(h = 0, lty = 2)
+title("DMI", adj = 0)
+
+#interactions
+#I(dmi_lag7^2)
+#main
+links[[2]] <- list(
+  y_val = SE3_dmicoef[1],
+  from_x = grconvertX(SE3_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE3_dmicoef[1], from = "user", to = "ndc")
+)
+#main sans
+links[[3]] <- list(
+  y_val = SE31_dmicoef[1],
+  from_x = grconvertX(SE31_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE31_dmicoef[1], from = "user", to = "ndc")
+)
+
+#I(dmi_lag8^2) 
+#main
+links[[4]] <- list(
+  y_val = SE3_dmicoef[2],
+  from_x = grconvertX(SE3_dmilag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE3_dmicoef[2], from = "user", to = "ndc")
+)
+#main sans
+links[[5]] <- list(
+  y_val = SE31_dmicoef[2],
+  from_x = grconvertX(SE31_dmilag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE31_dmicoef[2], from = "user", to = "ndc")
+)
+#base sans
+links[[6]] <- list(
+  y_val = SE32_dmicoef[1],
+  from_x = grconvertX(SE32_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE32_dmicoef[1], from = "user", to = "ndc")
+)
+
+#interactions
+#dmi_lag47:nino_lag27
+#base sans
+links[[7]] <- list(
+  y_val = SE32_dmicoef[2],
+  from_x = grconvertX(SE32_dmilag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE32_dmicoef[2], from = "user", to = "ndc")
+)
+
+
+
+# --- Plot 3: TSA ---
+par(mar = c(4, 4, 2, 1))
+plot(SE3_tsalag, SE3_tsacoef, pch = 22, col = "black",
+       bg =  alpha("darkorange2", 0.95), xlim = c(1,52), cex = 1.4,
+     ylim = SEAus3_range,
+     xlab = "", ylab = "Coefficients")
+points(SE31_tsalag, SE31_tsacoef, pch = 22, col = "black",
+       bg =  alpha("darkgoldenrod3",.65) , cex = 1.5)
+points(SE32_tsalag, SE32_tsacoef, pch = 24, col = "black",
+       bg =  alpha("darkgoldenrod3",.95), cex = 1.4)
+abline(h = 0, lty = 2)
+title("TSA", adj = 0)
+
+#Interactions
+#I(tsa_lag6^2)
+#main
+links[[8]] <- list(
+  y_val = SE3_tsacoef[1],
+  from_x = grconvertX(SE3_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE3_tsacoef[1], from = "user", to = "ndc")
+)
+#main sans
+links[[9]] <- list(
+  y_val = SE31_tsacoef[1],
+  from_x = grconvertX(SE31_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE31_tsacoef[1], from = "user", to = "ndc")
+)
+
+#I(tsa_lag17^2)
+#main
+links[[10]] <- list(
+  y_val = SE3_tsacoef[2],
+  from_x = grconvertX(SE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE3_tsacoef[2], from = "user", to = "ndc")
+)
+#main sans
+links[[11]] <- list(
+  y_val = SE31_tsacoef[2],
+  from_x = grconvertX(SE31_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(SE31_tsacoef[2], from = "user", to = "ndc")
+)
+#base sans
+links[[12]] <- list(
+  y_val = SE32_tsacoef[1],
+  from_x = grconvertX(SE32_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE32_tsacoef[1], from = "user", to = "ndc")
+)
+
+# --- Plot 4: SAM/AAO ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE3_aaolag, SE3_aaocoef, pch = 22,
+     col = "grey4",
+     bg =  alpha("red3",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = SEAus3_range,
+     xlab = "", ylab = "Coefficients")
+points(SE31_aaolag, SE31_aaocoef, pch = 22, col = "black",
+       bg =  alpha("coral2",.65) , cex = 1.5)
+points(SE32_aaolag, SE32_aaocoef, pch = 24, col = "black",
+       bg =  alpha("coral2",.95), cex = 1.4)
+abline(h = 0, lty = 2)
+title("SAM (AAO)", adj = 0)
+
+# --- Plot 5: OLR ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE3_aaolag, SE3_aaocoef, type = "n", xlim = c(1,52), 
+     ylim = SEAus2_range,
+     xlab = "Lag", ylab = "Coefficients")
+abline(h = 0, lty = 2)
+title("OLR", adj = 0)
+
+# --- Plot 6: Interaction Effects ---
+par(mar = c(4, 4, 2, 2))
+
+int_range <- range(SEridge3_main[8:11], SEridge3_main1[8:11], SEridge3_base[8:10])
+
+plot(SEridge3_main[8], 1.5, type = "n", main = "Interactions", 
+     ylim = c(0,1), xlim = int_range,
+     xlab = "Coefficients",
+     yaxt = "n",  ylab = "")
+abline(v= 0, lty = 2)
+
+#dmi squared
+int_2 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user")
+int_3 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user")
+int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user")
+int_5 <- grconvertY(links[[5]]$from_y, from = "ndc", to = "user")
+int_6 <- grconvertY(links[[6]]$from_y, from = "ndc", to = "user")
+
+points(SEridge3_main[8:9], c(int_2,int_4),  pch = 22, col = "grey4", 
+       bg =  alpha("magenta4",.95), cex = 1.5) 
+points(SEridge3_main1[8:9], c(int_3, int_5), pch = 22, col = "black",
+       bg =  alpha("darkorchid2",.65) , cex = 1.5) 
+points(SEridge3_base[8], int_6, pch = 24, col = "black",
+       bg =  alpha("darkorchid2",.95), cex = 1.4) 
+
+#link to x
+#from nino
+links[[1]]$to_x <- grconvertX(SEridge3_base[10], from = "user", to = "ndc") #int
+#from dmi
+links[[2]]$to_x <- grconvertX(SEridge3_main[8], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(SEridge3_main1[8], from = "user", to = "ndc")
+links[[4]]$to_x <- grconvertX(SEridge3_main[9], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(SEridge3_main1[9], from = "user", to = "ndc")
+links[[6]]$to_x <- grconvertX(SEridge3_base[8], from = "user", to = "ndc")
+links[[7]]$to_x <- grconvertX(SEridge3_base[10], from = "user", to = "ndc") #int
+#from tsa
+links[[8]]$to_x <- grconvertX(SEridge3_main[10], from = "user", to = "ndc")
+links[[9]]$to_x <- grconvertX(SEridge3_main1[10], from = "user", to = "ndc")
+links[[10]]$to_x <- grconvertX(SEridge3_main[11], from = "user", to = "ndc")
+links[[11]]$to_x <- grconvertX(SEridge3_main1[11], from = "user", to = "ndc")
+links[[12]]$to_x <- grconvertX(SEridge3_base[9], from = "user", to = "ndc")
+
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c("chartreuse3", "magenta4", "darkorchid2",
+            "magenta4", rep("darkorchid2",3),
+            "darkorange2", "darkgoldenrod3","darkorange2", rep("darkgoldenrod3",2))
+linetypes <- c(3, rep(2,5), 3, rep(2,5) )
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
+
+#outer text and legends
+par(xpd = NA)
+legend("topright", inset = c(-0.52, 0.25),
+       title = "DMI",
+       legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "black", "grey4"),
+       pt.bg = c("magenta4", "darkorchid2", "darkorchid2"),
+       pt.cex = c(1.5, 1.5, 1.4))
+
+mtext("SE Aus Group 3 (Mid-December to ...)", outer = TRUE, cex = 1.5, font = 1)
+
+dev.off()
+```
+
+
+## Coef Differences
+
+Finalize these plots (with correct index colors)
+
+$\frac{1}{n}\sum(\beta_j - \beta_j^*)$
+
+```{r}
+#SE Aus Group 2
+SEridge2_main
+SEridge2_main1
+SEridge2_base
+#Nino differences
+#coef main/main
+coef_dif <- SEridge2_main - SEridge2_main1
+nino_avg <- mean(coef_dif[1:2])
+dmi_avg <- coef_dif[3]
+tsa_avg <- 0
+aao_avg <- coef_dif[4]
+olr_avg <- 0
+
+var_dif <- SEridge2_main[c(1,2,4)] - SEridge2_base[c(1,4,9)]
+var_nino <- rep(0,2) - SEridge2_base[c(2,3)]
+nino_avg1 <- mean(c(var_dif[c(1,2)], var_nino)) #nino
+dmi_avg1 <- mean(c(SEridge2_main[3], -SEridge2_base[5])) #dmi
+tsa_avg1 <- mean(-SEridge2_base[6:8]) #tsa
+aao_avg1 <- var_dif[3] #aao
+olr_avg1 <- 0
+
+coef_avg <- c(nino_avg, dmi_avg, tsa_avg, aao_avg, olr_avg)
+var_avg <- c(nino_avg1, dmi_avg1, tsa_avg1, aao_avg1, olr_avg1)
+
+
+#TODO: finalize this plot
+coef_range <- range(coef_avg, var_avg)
+
+par(mar = c(4, 4, 4, 6) + 0.2)
+plot(1:5, coef_avg, pch = 22, ylim = coef_range, 
+     ylab= "Avg. Coef Diff", xlab = "Climate Index", main = "Main Effect Differences (w/ 2019/2020 minus w/o 2019/2020)",
+     axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:5, labels = c("Nino", "DMI", "TSA", "SAM", "OLR"),
+     las = 1, cex.axis = 1)
+points(1:5, var_avg, pch = 24)
+abline(h = 0, lty = 2)
+
+legend("topright", inset = c(-0.12, 0.00),
+       legend = c("Coef. Refit", "Var. Select Refit"),
+       pch = c(22, 24), xpd = NA)
+```
+
 
