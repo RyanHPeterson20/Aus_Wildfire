@@ -34,6 +34,44 @@ season_weeks <- c(35:52, 1:14)
 ```
 
 
+```{r histograms}
+#creating histograms
+NE_resp <- resp_matrix[,1:32]
+SE_resp <- resp_matrix[,33:64]
+
+NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+
+#NE Aus hist
+hist(NEbase_matrix, breaks = 25, main = "NE Aus Group 1")
+hist(NEbase_matrix[,1:12], col = rgb(1, 0, 0, 0.2), breaks = 20, add=TRUE)
+
+hist(NEbase_matrix, breaks = 20, main = "NE Aus Group 2")
+hist(NEbase_matrix[,13:17], col = rgb(0, 1, 0, 0.2), breaks = 20, add=TRUE)
+
+hist(NEbase_matrix, breaks = 20, main = "NE Aus Group 3")
+hist(NEbase_matrix[,18:21], col = rgb(0, 0, 1, 0.2), breaks = 20, add=TRUE)
+
+hist(NEbase_matrix, breaks = 20, main = "NE Aus Group 4")
+hist(NEbase_matrix[,22:32], col = rgb(1, 0.5, 0, 0.2), breaks = 18, add=TRUE)
+
+
+#SE Aus hist
+hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 1")
+hist(SEbase_matrix[,1:7], col = rgb(1, 0, 0, 0.2), breaks = 20, add=TRUE)
+
+hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 2")
+hist(SEbase_matrix[,8:16], col = rgb(0, 1, 0, 0.2), breaks = 20, add=TRUE)
+
+hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 3")
+hist(SEbase_matrix[,17:20], col = rgb(0, 0, 1, 0.2), breaks = 24, add=TRUE)
+
+hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 4")
+hist(SEbase_matrix[,21:32], col = rgb(1, 0.5, 0, 0.2), breaks = 18, add=TRUE)
+```
+
+
+
 
 ```{r test_block}
 neresp_test <- resp_matrix[, 1:32]
@@ -110,16 +148,17 @@ bounded_resp_df[which(bounded_resp_df$week == 36), ]
 ```{r constr.hclust_test}
 
 #setwd("~/CO_AUS/Aus_CO-main/Figures_Lasso")
-setwd("~/CO_AUS/Aus_CO-main/Interactions")
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
 
 #plot(dend, k = 5) #either, k = 5 or 6
-png("NEcluster.png", width = 2250, height = 1250, res = 200)
-#par(mar = c(5, 4, 4, 5) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
-par(mgp = c(3, -0.75, 0))
+png("NEcluster2.png", width = 2600, height = 1200, res = 200)
+par(mar = c(5, 4, 4, 5) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+#par(mgp = c(3, -0.75, 0), xpd = TRUE)
 stats:::plot.hclust(NEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
-                    xlab = "", main = "NE Aus : Response Clustering", axes = FALSE, cex.main = 2.25)
+                    xlab = "Week", main = "NE Aus : Response Clustering", axes = FALSE, cex.main = 2.0,
+                    cex.lab = 1.5)
 #axis(2)
-axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks[1:32])), 
+axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
      las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
 rect(xleft = 0.5, xright = 12.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2), border = NA)
 #rect(xleft = 3.5, xright = 8.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
@@ -127,23 +166,31 @@ rect(xleft = 0.5, xright = 12.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2)
 rect(xleft = 12.5, xright = 17.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
 rect(xleft = 17.5, xright = 21.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
 rect(xleft = 21.5, xright = 32.5, ybottom = 0, ytop = 50, col = rgb(1, 0.5, 0, 0.2), border = NA)
+text(6.5, -5, "Group 1", col = "black", cex = 1.5, xpd = TRUE)
+text(14.5, -5, "Group 2", col = "black", cex = 1.5, xpd = TRUE)
+text(19.5, -5, "Group 3", col = "black", cex = 1.5, xpd = TRUE)
+text(26.5, -5, "Group 4", col = "black", cex = 1.5, xpd = TRUE)
 dev.off()
 
 
 #plot(SEconst_clust, k = 5) #either, k = 4 or 5
-png("SEcluster.png", width = 2250, height = 1250, res = 200)
-#par(mar = c(5, 4, 4, 5) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
-par(mgp = c(3, -0.75, 0))
+png("SEcluster2.png", width = 2600, height = 1200, res = 200)
+par(mar = c(5, 4, 4, 5) + 0.2, xpd = TRUE)  # Increase the right margin (fourth value) to make space for the legend
+#par(mgp = c(3, -0.75, 0))
 stats:::plot.hclust(SEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
-                    xlab = "", main = "SE Aus : Response Clustering", axes = FALSE, cex.main = 2.25)
-#axis(2)
-axis(1, at = 1:32, labels = c(paste0("Week ", season_weeks[1:32])), 
+                    xlab = "Week", main = "SE Aus : Response Clustering", axes = FALSE, cex.main = 2.0,
+                    cex.lab = 1.5)
+axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
      las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
 rect(xleft = 0.5, xright = 7.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2), border = NA)
 #rect(xleft = 3.5, xright = 7.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
 rect(xleft = 7.5, xright = 16.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
 rect(xleft = 16.5, xright = 20.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
 rect(xleft = 20.5, xright = 32.5, ybottom = 0, ytop = 50, col = rgb(1, 0.5, 0, 0.2), border = NA)
+text(4, -5, "Group 1", col = "black", cex = 1.5)
+text(12, -5, "Group 2", col = "black", cex = 1.5)
+text(18.5, -5, "Group 3", col = "black", cex = 1.5)
+text(26.5, -5, "Group 4", col = "black", cex = 1.5)
 dev.off()
 
 ```
