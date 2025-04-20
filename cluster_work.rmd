@@ -31,6 +31,8 @@ load( "lag_list.rda")
 
 ```{r setup}
 season_weeks <- c(35:52, 1:14)
+
+season_weeks[17]
 ```
 
 
@@ -70,6 +72,29 @@ hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 4")
 hist(SEbase_matrix[,21:32], col = rgb(1, 0.5, 0, 0.2), breaks = 18, add=TRUE)
 ```
 
+```{r boxplots}
+
+boxplot(SEbase_matrix, pch = 16)
+boxplot(NEbase_matrix, pch = 16)
+
+SE_group1 <- as.vector(SEbase_matrix[,1:7])
+SE_group2 <- as.vector(SEbase_matrix[,8:16])
+SE_group3 <- as.vector(SEbase_matrix[,17:20])
+SE_group4 <- as.vector(SEbase_matrix[,21:32])
+
+SEgroup_list <- list(SE_group1, SE_group2, SE_group3, SE_group4)
+boxplot(SEgroup_list, pch = 16)
+
+
+NE_group1 <- as.vector(NEbase_matrix[,1:12])
+NE_group2 <- as.vector(NEbase_matrix[,13:17])
+NE_group3 <- as.vector(NEbase_matrix[,18:21])
+NE_group4 <- as.vector(NEbase_matrix[,22:32])
+
+NEgroup_list <- list(NE_group1, NE_group2, NE_group3, NE_group4)
+boxplot(NEgroup_list, pch = 16)
+
+```
 
 
 
