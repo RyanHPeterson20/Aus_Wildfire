@@ -32,7 +32,54 @@ load( "lag_list.rda")
 ```{r setup}
 season_weeks <- c(35:52, 1:14)
 
-season_weeks[17]
+season_weeks[21]
+```
+
+
+```{r 2019/2020_plots}
+#plot for 2019/2020 wildfire season
+neresp_new <- NEbase_matrix[19,]
+seresp_new <- SEbase_matrix[19,]
+
+#single season (2019/2020)
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+x_vals <- 1:32
+y_lim <- range(neresp_new, seresp_new)
+
+png(filename = "20192020Season.png",  width = 2600, height = 1800, res = 200)
+set.panel(2,1)
+plot(x_vals, neresp_new, type = "l", lwd = 2, ylim = y_lim, 
+     ylab = "Atmospheric CO",
+     xlab = "Week",  main = "NE Aus 2019/2020 Wildfire Season", axes = FALSE, 
+     cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks),
+     las = 3, cex.axis = 1.5)
+abline(h = 0, lty = 2)
+abline(v = c(12.5, 17.5, 21.5), lty = 2, col = "red" )
+text(5.5, -13, "Group 1", col = "red", cex = 1)
+text(15, -13, "Group 2", col = "red", cex = 1)
+text(19.5, -13, "Group 3", col = "red", cex = 1)
+text(24.5, -13, "Group 4", col = "red", cex = 1)
+
+plot(x_vals, seresp_new, type = "l", lwd = 2, ylim = y_lim, 
+     ylab = "Atmospheric CO",
+     xlab = "Week",  main = "SE Aus 2019/2020 Wildfire Season", axes = FALSE, 
+     cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks),
+     las = 3, cex.axis = 1.5)
+abline(h = 0, lty = 2)
+abline(v = c(7.5, 16.5, 20.5), lty = 2, col = "red" )
+text(3.5, -13, "Group 1", col = "red", cex = 1)
+text(12, -13, "Group 2", col = "red", cex = 1)
+text(18.5, -13, "Group 3", col = "red", cex = 1)
+text(24.5, -13, "Group 4", col = "red", cex = 1)
+dev.off()
+
 ```
 
 
@@ -44,35 +91,107 @@ SE_resp <- resp_matrix[,33:64]
 NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
 SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+
 #NE Aus hist
-hist(NEbase_matrix, breaks = 25, main = "NE Aus Group 1")
+png(filename = "nehist.png",  width = 2600, height = 1800, res = 200)
+set.panel(2,2)
+hist(NEbase_matrix, breaks = 25, xlab = "Atmospheric CO", main = "")
 hist(NEbase_matrix[,1:12], col = rgb(1, 0, 0, 0.2), breaks = 20, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 1"),
+       fill = c(gray(0.9),  rgb(1, 0, 0, 0.3)))
+title("NE Aus", adj = 0, cex.main = 1.5)
 
-hist(NEbase_matrix, breaks = 20, main = "NE Aus Group 2")
+hist(NEbase_matrix, breaks = 20, xlab = "Atmospheric CO", main = "")
 hist(NEbase_matrix[,13:17], col = rgb(0, 1, 0, 0.2), breaks = 20, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 2"),
+       fill = c(gray(0.9),  rgb(0, 1, 0, 0.3)))
 
-hist(NEbase_matrix, breaks = 20, main = "NE Aus Group 3")
+hist(NEbase_matrix, breaks = 20, xlab = "Atmospheric CO", main = "")
 hist(NEbase_matrix[,18:21], col = rgb(0, 0, 1, 0.2), breaks = 20, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 3"),
+       fill = c(gray(0.9),  rgb(0, 0, 1, 0.3)))
 
-hist(NEbase_matrix, breaks = 20, main = "NE Aus Group 4")
+hist(NEbase_matrix, breaks = 20, xlab = "Atmospheric CO", main = "")
 hist(NEbase_matrix[,22:32], col = rgb(1, 0.5, 0, 0.2), breaks = 18, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 4"),
+       fill = c(gray(0.9),  rgb(1, 0.5, 0, 0.3)))
+dev.off()
 
 
 #SE Aus hist
-hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 1")
+png(filename = "sehist.png",  width = 2600, height = 1800, res = 200)
+set.panel(2,2)
+hist(SEbase_matrix, breaks = 24, xlab = "Atmospheric CO", main = "")
 hist(SEbase_matrix[,1:7], col = rgb(1, 0, 0, 0.2), breaks = 20, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 1"),
+       fill = c(gray(0.9),  rgb(1, 0, 0, 0.3)))
+title("SE Aus", adj = 0, cex.main = 1.5)
 
-hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 2")
+hist(SEbase_matrix, breaks = 24, xlab = "Atmospheric CO", main = "")
 hist(SEbase_matrix[,8:16], col = rgb(0, 1, 0, 0.2), breaks = 20, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 2"),
+       fill = c(gray(0.9),  rgb(0, 1, 0, 0.3)))
 
-hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 3")
+hist(SEbase_matrix, breaks = 24, xlab = "Atmospheric CO", main = "")
 hist(SEbase_matrix[,17:20], col = rgb(0, 0, 1, 0.2), breaks = 24, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 3"),
+       fill = c(gray(0.9),  rgb(0, 0, 1, 0.3)))
 
-hist(SEbase_matrix, breaks = 24, main = "SE Aus Group 4")
+hist(SEbase_matrix, breaks = 24, xlab = "Atmospheric CO", main = "")
 hist(SEbase_matrix[,21:32], col = rgb(1, 0.5, 0, 0.2), breaks = 18, add=TRUE)
+legend("topright", legend = c("Full Response", "Group 4"),
+       fill = c(gray(0.9),  rgb(1, 0.5, 0, 0.3)))
+dev.off()
+```
+
+
+```{r}
+
+y_lim <- c(-25, max(NEbase_matrix, SEbase_matrix))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "fulldata.png", width = 2600, height = 1800, res = 200)
+set.panel(2,1)
+boxplot(NEbase_matrix, ylim = y_lim, ylab = "Atmospheric CO", xlab = "Week",
+        axes = FALSE, pch = 20, 
+        cex.main = 1.5, cex.lab = 1.25, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+title("NE Aus", adj = 0, cex.main = 1.5)
+abline(v = c(12.5, 17.5, 21.5), lty =2, col = "red")
+text(7, -22, "Group 1", col = "red", cex =1)
+text(15, -22, "Group 2", col = "red", cex = 1)
+text(19.5, -22, "Group 3", col = "red", cex = 1)
+text(27, -22, "Group 4", col = "red", cex = 1)
+
+boxplot(SEbase_matrix, ylim = y_lim, ylab = "Atmospheric CO", xlab = "Week",
+        axes = FALSE, pch = 20, 
+        cex.main = 1.5, cex.lab = 1.25, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+abline(v = c(7.5, 16.5, 20.5), lty =2, col = "red")
+title("SE Aus", adj = 0, cex.main = 1.5)
+text(4, -22, "Group 1", col = "red", cex =1)
+text(12, -22, "Group 2", col = "red", cex = 1)
+text(18.5, -22, "Group 3", col = "red", cex = 1)
+text(26, -22, "Group 4", col = "red", cex = 1)
+
+dev.off()
 ```
 
 ```{r boxplots}
+
+x_vals <- 1:32
+y_lim <- range(neresp_new, seresp_new)
 
 boxplot(SEbase_matrix, pch = 16)
 boxplot(NEbase_matrix, pch = 16)

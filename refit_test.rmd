@@ -1261,7 +1261,7 @@ par(mar = c(4, 4, 2, 1))
 plot(NE2_tsalag, NE2_tsacoef, pch = 22, col = "black",
        bg =  alpha("darkorange3", 0.95), xlim = c(1,52), cex = 1.4,
      ylim = NEAus2_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
 points(NE21_tsalag, NE21_tsacoef, pch = 22, col = "black",
        bg =  alpha("darkgoldenrod2",.65) , cex = 1.5)
 points(NE22_tsalag, NE22_tsacoef, pch = 24, col = "black",
@@ -1337,7 +1337,7 @@ par(mar = c(4, 4, 2, 1))
 plot(NE2_olrlag, NE2_olrcoef, pch = 22, col = "black",
        bg =  alpha("turquoise4", 0.95), xlim = c(1,52), cex = 1.4,
      ylim = NEAus2_range,
-     xlab = "Lag", ylab = "")
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
 points(NE21_olrlag, NE21_olrcoef, pch = 22, col = "black",
        bg =  alpha("paleturquoise3",.65) , cex = 1.5)
 points(NE22_olrlag, NE22_olrcoef, pch = 24, col = "black",
@@ -1445,7 +1445,7 @@ int_range <- range(NEridge2_main[25:36], NEridge2_main1[25:36], NEridge2_base[7:
 
 plot(NEridge2_base[8], 1.5, type = "n", main = "Interactions", 
      ylim = c(0,1), xlim = int_range,
-     xlab = "Coefficients",
+     xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
 abline(v= 0, lty = 2)
 
@@ -1503,32 +1503,32 @@ points(NEridge2_main1[36], (int_pt[20]+int_pt[36])/2, pch = 22, col = "black",
 
 #segments
 #nino_lag30:aao_lag40  main
-segments(NEridge2_main[32], int_pt[3], NEridge2_main[32], (int_pt[3]+int_pt[21])/2, col = "green4", lty = 3, lwd = 1)
-segments(NEridge2_main[32], int_pt[21], NEridge2_main[32], (int_pt[3]+int_pt[21])/2, col = "red3", lty = 3, lwd = 1)
+segments(NEridge2_main[32], int_pt[3], NEridge2_main[32], (int_pt[3]+int_pt[21])/2, col = "green4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[32], int_pt[21], NEridge2_main[32], (int_pt[3]+int_pt[21])/2, col = "red3", lty = 3, lwd = 1.5)
 #nino_lag30:aao_lag40  sans
-segments(NEridge2_main1[32], int_pt[4], NEridge2_main1[32], (int_pt[4]+int_pt[22])/2, col = "chartreuse2", lty = 3, lwd = 1)
-segments(NEridge2_main1[32], int_pt[22], NEridge2_main1[32], (int_pt[4]+int_pt[22])/2, col = "coral2", lty = 3, lwd = 1)
+segments(NEridge2_main1[32], int_pt[4], NEridge2_main1[32], (int_pt[4]+int_pt[22])/2, col = "chartreuse3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[32], int_pt[22], NEridge2_main1[32], (int_pt[4]+int_pt[22])/2, col = "coral2", lty = 3, lwd = 1.5)
 #dmi_lag12:NEolr_lag1 main
-segments(NEridge2_main[33], int_pt[10], NEridge2_main[33], (int_pt[10]+int_pt[29])/2, col = "magenta4", lty = 3, lwd = 1)
-segments(NEridge2_main[33], int_pt[29], NEridge2_main[33], (int_pt[10]+int_pt[29])/2, col = "turquoise4", lty = 3, lwd = 1)
+segments(NEridge2_main[33], int_pt[10], NEridge2_main[33], (int_pt[10]+int_pt[29])/2, col = "magenta4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[33], int_pt[29], NEridge2_main[33], (int_pt[10]+int_pt[29])/2, col = "turquoise4", lty = 3, lwd = 1.5)
 #dmi_lag12:NEolr_lag1 sans
-segments(NEridge2_main1[33], int_pt[11], NEridge2_main1[33], (int_pt[11]+int_pt[30])/2, col = "plum2", lty = 3, lwd = 1)
-segments(NEridge2_main1[33], int_pt[30], NEridge2_main1[33], (int_pt[11]+int_pt[30])/2, col = "paleturquoise3", lty = 3, lwd = 1)
+segments(NEridge2_main1[33], int_pt[11], NEridge2_main1[33], (int_pt[11]+int_pt[30])/2, col = "orchid2", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[33], int_pt[30], NEridge2_main1[33], (int_pt[11]+int_pt[30])/2, col = "paleturquoise3", lty = 3, lwd = 1.5)
 #dmi_lag41:NEolr_lag1 main
-segments(NEridge2_main[34], int_pt[12], NEridge2_main[34], (int_pt[12]+int_pt[31])/2, col = "magenta4", lty = 3, lwd = 1)
-segments(NEridge2_main[34], int_pt[31], NEridge2_main[34], (int_pt[12]+int_pt[31])/2, col = "turquoise4", lty = 3, lwd = 1)
+segments(NEridge2_main[34], int_pt[12], NEridge2_main[34], (int_pt[12]+int_pt[31])/2, col = "magenta4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[34], int_pt[31], NEridge2_main[34], (int_pt[12]+int_pt[31])/2, col = "turquoise4", lty = 3, lwd = 1.5)
 #dmi_lag41:NEolr_lag1 sans
-segments(NEridge2_main1[34], int_pt[13], NEridge2_main1[34], (int_pt[13]+int_pt[32])/2, col = "plum2", lty = 3, lwd = 1)
-segments(NEridge2_main1[34], int_pt[32], NEridge2_main1[34], (int_pt[13]+int_pt[32])/2, col = "paleturquoise3", lty = 3, lwd = 1)
+segments(NEridge2_main1[34], int_pt[13], NEridge2_main1[34], (int_pt[13]+int_pt[32])/2, col = "orchid2", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[34], int_pt[32], NEridge2_main1[34], (int_pt[13]+int_pt[32])/2, col = "paleturquoise3", lty = 3, lwd = 1.5)
 #dmi_lag50:NEolr_lag2 main
-segments(NEridge2_main[35], int_pt[14], NEridge2_main[35], (int_pt[14]+int_pt[33])/2, col = "magenta4", lty = 3, lwd = 1)
-segments(NEridge2_main[35], int_pt[33], NEridge2_main[35], (int_pt[14]+int_pt[33])/2, col = "turquoise4", lty = 3, lwd = 1)
+segments(NEridge2_main[35], int_pt[14], NEridge2_main[35], (int_pt[14]+int_pt[33])/2, col = "magenta4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[35], int_pt[33], NEridge2_main[35], (int_pt[14]+int_pt[33])/2, col = "turquoise4", lty = 3, lwd = 1.5)
 #dmi_lag50:NEolr_lag2 sans
-segments(NEridge2_main1[35], int_pt[15], NEridge2_main1[35], (int_pt[15]+int_pt[34])/2, col = "plum2", lty = 3, lwd = 1)
-segments(NEridge2_main1[35], int_pt[34], NEridge2_main1[35], (int_pt[15]+int_pt[34])/2, col = "paleturquoise3", lty = 3, lwd = 1)
+segments(NEridge2_main1[35], int_pt[15], NEridge2_main1[35], (int_pt[15]+int_pt[34])/2, col = "orchid2", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[35], int_pt[34], NEridge2_main1[35], (int_pt[15]+int_pt[34])/2, col = "paleturquoise3", lty = 3, lwd = 1.5)
 #tsa_lag44:NEolr_lag52 main
-segments(NEridge2_main[36], int_pt[19], NEridge2_main[36], (int_pt[19]+int_pt[35])/2, col = "darkorange3", lty = 3, lwd = 1)
-segments(NEridge2_main[36], int_pt[35], NEridge2_main[36], (int_pt[19]+int_pt[35])/2, col = "turquoise4", lty = 3, lwd = 1)
+segments(NEridge2_main[36], int_pt[19], NEridge2_main[36], (int_pt[19]+int_pt[35])/2, col = "darkorange3", lty = 3, lwd = 1.5)
+segments(NEridge2_main[36], int_pt[35], NEridge2_main[36], (int_pt[19]+int_pt[35])/2, col = "turquoise4", lty = 3, lwd = 1.5)
 #tsa_lag44:NEolr_lag52 sans
 segments(NEridge2_main1[36], int_pt[20], NEridge2_main1[36], (int_pt[20]+int_pt[36])/2, col = "darkgoldenrod2", lty = 3, lwd = 1)
 segments(NEridge2_main1[36], int_pt[36], NEridge2_main1[36], (int_pt[20]+int_pt[36])/2, col = "paleturquoise3", lty = 3, lwd = 1)
@@ -1585,10 +1585,11 @@ for (i in 1:length(links)) {
 
 # --- Draw horizontal linking lines ---
 par(xpd = NA)  # allow drawing outside plot regions
-colors <- c( rep(c("green4","chartreuse3"), 2), "plum2", rep(c("magenta4", "plum2"), 5),
+colors <- c( rep(c("green4","chartreuse3"), 2), "orchid2", rep(c("magenta4", "orchid2"), 5),
              "darkorange3", "darkgoldenrod2", "darkgoldenrod2", "darkorange3", "darkgoldenrod2",
              "red3", "coral2", rep(c("turquoise4", "paleturquoise3"), 7))
 linetypes <- c(rep(2,2), rep(3,2), rep(2,5), rep(3,6), rep(2,3), rep(3,2), rep(3,2), rep(2,6), rep(3,8))
+linewidths <- c(rep(1,2), rep(1.5,2), rep(2,5), rep(1.5,6), rep(2,3), rep(1.5,2), rep(1.5,2), rep(2,6), rep(1.5,8))
 
 for (i in 1:length(links)) {
   grid.lines(
@@ -1606,30 +1607,30 @@ legend("topright", inset = c(-0.52, 0.00),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("green4", "chartreuse2", "chartreuse2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 legend("topright", inset = c(-0.52, 0.23),
        title = "DMI",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("magenta4", "plum2", "plum2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
-legend("right", inset = c(-0.52, 0.05),
+legend("right", inset = c(-0.52, 0.00),
        title = "TSA",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("darkorange3", "darkgoldenrod2", "darkgoldenrod2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
-legend("bottomright", inset = c(-0.52, 0.27),
+legend("bottomright", inset = c(-0.52, 0.26),
        title = "SAM (AAO)",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("red3", "coral2", "coral2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
 legend("bottomright", inset = c(-0.52, 0.05),
        title = "OLR",
@@ -1637,7 +1638,8 @@ legend("bottomright", inset = c(-0.52, 0.05),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("turquoise4", "paleturquoise3", "paleturquoise3"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
+
 
 mtext("NE Aus Group 2 (Mid-November to Mid-December)", outer = TRUE, cex = 1.5, font = 1)
 
@@ -1733,13 +1735,28 @@ points(NE32_dmilag, NE32_dmicoef, pch = 24, col = "black",
 abline(h = 0, lty = 2)
 title("DMI", adj = 0)
 
+# --- DMI interactions
+#I(dmi_lag8^2) 
+## main
+links[[1]] <- list(
+  y_val = NE3_dmicoef[1],
+  from_x = grconvertX(NE3_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_dmicoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[2]] <- list(
+  y_val = NE31_dmicoef[1],
+  from_x = grconvertX(NE31_dmilag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE31_dmicoef[1], from = "user", to = "ndc")
+)
+
 
 # --- Plot 3: TSA ---
 par(mar = c(4, 4, 2, 1))
 plot(NE3_tsalag, NE3_tsacoef, pch = 22, col = "black",
        bg =  alpha("darkorange3", 0.95), xlim = c(1,52), cex = 1.4,
      ylim = NEAus3_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
 points(NE31_tsalag, NE31_tsacoef, pch = 22, col = "black",
        bg =  alpha("darkgoldenrod2",.65) , cex = 1.5)
 points(NE32_tsalag, NE32_tsacoef, pch = 24, col = "black",
@@ -1747,6 +1764,34 @@ points(NE32_tsalag, NE32_tsacoef, pch = 24, col = "black",
 abline(h = 0, lty = 2)
 title("TSA", adj = 0)
 
+
+# --- TSA interactions
+#I(tsa_lag2^2) 
+## main
+links[[3]] <- list(
+  y_val = NE3_tsacoef[1],
+  from_x = grconvertX(NE3_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[4]] <- list(
+  y_val = NE31_tsacoef[1],
+  from_x = grconvertX(NE31_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE31_tsacoef[1], from = "user", to = "ndc")
+)
+#I(tsa_lag17^2) 
+## main
+links[[5]] <- list(
+  y_val = NE3_tsacoef[2],
+  from_x = grconvertX(NE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[2], from = "user", to = "ndc")
+)
+## main sans
+links[[6]] <- list(
+  y_val = NE31_tsacoef[2],
+  from_x = grconvertX(NE31_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE31_tsacoef[2], from = "user", to = "ndc")
+)
 
 # --- Plot 4: SAM/AAO ---
 par(mar = c(4, 4, 2, 1))
@@ -1768,7 +1813,7 @@ par(mar = c(4, 4, 2, 1))
 plot(NE3_olrlag, NE3_olrcoef, pch = 22, col = "black",
        bg =  alpha("turquoise4", 0.95), xlim = c(1,52), cex = 1.4,
      ylim = NEAus3_range,
-     xlab = "Lag", ylab = "")
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
 points(NE31_olrlag, NE31_olrcoef, pch = 22, col = "black",
        bg =  alpha("paleturquoise3",.65) , cex = 1.5)
 points(NE32_olrlag, NE32_olrcoef, pch = 24, col = "black",
@@ -1785,11 +1830,50 @@ int_range <- range(NEridge3_main[10:12], NEridge3_main1[10:12])
 
 plot(NEridge3_main[10], 1.5, type = "n", main = "Interactions", 
      ylim = c(0,1), xlim = int_range,
-     xlab = "Coefficients",
+     xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
 abline(v= 0, lty = 2)
 
+int_pt <- NULL
+for (i in 1:length(links)) {
+  int_pt <- c(int_pt, grconvertY(links[[i]]$from_y, from = "ndc", to = "user"))
+}
 
+points(NEridge3_main[10], int_pt[1], pch = 22, col = "grey4",
+     bg =  alpha("magenta4",.95), cex = 1.5)
+points(NEridge3_main1[10], int_pt[2], pch = 22, col = "black",
+       bg =  alpha("plum2",.65) , cex = 1.5)
+points(NEridge3_main[11:12], int_pt[c(3,5)], pch = 22, col = "black",
+       bg =  alpha("darkorange3", 0.95), cex = 1.5)
+points(NEridge3_main1[11:12], int_pt[c(4,6)], pch = 22, col = "black",
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.5)
+
+#link to x 
+links[[1]]$to_x <- grconvertX(NEridge3_main[10], from = "user", to = "ndc") 
+links[[2]]$to_x <- grconvertX(NEridge3_main1[10], from = "user", to = "ndc") 
+links[[3]]$to_x <- grconvertX(NEridge3_main[11], from = "user", to = "ndc") 
+links[[4]]$to_x <- grconvertX(NEridge3_main1[11], from = "user", to = "ndc") 
+links[[5]]$to_x <- grconvertX(NEridge3_main[12], from = "user", to = "ndc") 
+links[[6]]$to_x <- grconvertX(NEridge3_main1[12], from = "user", to = "ndc") 
+
+
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c( "magenta4", "orchid2",rep(c("darkorange3", "darkgoldenrod2"),2))
+linetypes <- c(rep(2,6))
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
 
 #outer text and legends
 par(xpd = NA)
@@ -1799,30 +1883,30 @@ legend("topright", inset = c(-0.52, 0.00),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("green4", "chartreuse2", "chartreuse2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 legend("topright", inset = c(-0.52, 0.23),
        title = "DMI",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("magenta4", "plum2", "plum2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
-legend("right", inset = c(-0.52, 0.02),
+legend("right", inset = c(-0.52, 0.00),
        title = "TSA",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("darkorange3", "darkgoldenrod2", "darkgoldenrod2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
-legend("bottomright", inset = c(-0.52, 0.27),
+legend("bottomright", inset = c(-0.52, 0.26),
        title = "SAM (AAO)",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("red3", "coral2", "coral2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
 legend("bottomright", inset = c(-0.52, 0.05),
        title = "OLR",
@@ -1830,7 +1914,7 @@ legend("bottomright", inset = c(-0.52, 0.05),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("turquoise4", "paleturquoise3", "paleturquoise3"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
 
 mtext("NE Aus Group 3 (Mid-December to Mid-January)", outer = TRUE, cex = 1.5, font = 1)
 
@@ -1901,11 +1985,11 @@ plot(SE2_ninolag, SE2_ninocoef, pch = 22,
      col = "grey4", bg =  alpha("green4",.95), cex = 1.5,
      xlim = c(1,52), 
      ylim = SEAus2_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "")
 points(SE21_ninolag, SE21_ninocoef, pch = 22, col = "black",
-       bg =  alpha("chartreuse3",.65) , cex = 1.5)
+       bg =  alpha("chartreuse2",.65) , cex = 1.5)
 points(SE22_ninolag, SE22_ninocoef, pch = 24, col = "black",
-       bg =  alpha("chartreuse3",.95), cex = 1.4)
+       bg =  alpha("chartreuse2",.65), cex = 1.33)
 abline(h = 0, lty = 2)
 title("Nino", adj = 0)
 
@@ -1948,20 +2032,20 @@ plot(SE2_dmilag, SE2_dmicoef, pch = 22,
      bg =  alpha("magenta4",.95), cex = 1.5,
      xlim = c(1,52), 
      ylim = SEAus2_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "")
 points(SE21_dmilag, SE21_dmicoef, pch = 22, col = "black",
-       bg =  alpha("darkorchid2",.65) , cex = 1.5)
+       bg =  alpha("plum2",.65) , cex = 1.5)
 points(SE22_dmilag, SE22_dmicoef, pch = 24, col = "black",
-       bg =  alpha("darkorchid2",.95), cex = 1.4)
+       bg =  alpha("plum2",.65), cex = 1.33)
 abline(h = 0, lty = 2)
 title("DMI", adj = 0)
 
 # --- Plot 3: TSA ---
 par(mar = c(4, 4, 2, 1))
 plot(SE22_tsalag, SE22_tsacoef, pch = 24, col = "black",
-       bg =  alpha("darkgoldenrod3", 0.95), xlim = c(1,52), cex = 1.4,
+       bg =  alpha("darkgoldenrod2", 0.65), xlim = c(1,52), cex = 1.33,
      ylim = SEAus2_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
 abline(h = 0, lty = 2)
 title("TSA", adj = 0)
 
@@ -1972,11 +2056,11 @@ plot(SE2_aaolag, SE2_aaocoef, pch = 22,
      bg =  alpha("red3",.95), cex = 1.5,
      xlim = c(1,52), 
      ylim = SEAus2_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "")
 points(SE21_aaolag, SE21_aaocoef, pch = 22, col = "black",
        bg =  alpha("coral2",.65) , cex = 1.5)
 points(SE22_aaolag, SE22_aaocoef, pch = 24, col = "black",
-       bg =  alpha("coral2",.95), cex = 1.4)
+       bg =  alpha("coral2",.65), cex = 1.33)
 abline(h = 0, lty = 2)
 title("SAM (AAO)", adj = 0)
 
@@ -2005,7 +2089,7 @@ links[[7]] <- list(
 par(mar = c(4, 4, 2, 1))
 plot(SE2_aaolag, SE2_aaocoef, type = "n", xlim = c(1,52), 
      ylim = SEAus2_range,
-     xlab = "Lag", ylab = "Coefficients")
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
 abline(h = 0, lty = 2)
 title("OLR", adj = 0)
 
@@ -2016,7 +2100,7 @@ int_range <- range(SEridge2_main[5:6], SEridge2_main1[5:6], SEridge2_base[10:12]
 
 plot(SEridge2_main[5], 1.5, type = "n", main = "Interactions", 
      ylim = c(0,1), xlim = int_range,
-     xlab = "Coefficients",
+     xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
 #for correct points set-up empty plot then assign points after (maybe? test this out)
 #TODO: turn this into a single call, format $from_y with unlist()
@@ -2031,15 +2115,15 @@ int_7 <- grconvertY(links[[7]]$from_y, from = "ndc", to = "user")
 points(SEridge2_main[5], int_1,  pch = 22, col = "grey4", 
        bg =  alpha("green4",.95), cex = 1.5) 
 points(SEridge2_main1[5], int_2, pch = 22, col = "black",
-       bg =  alpha("chartreuse3",.65) , cex = 1.5) 
+       bg =  alpha("chartreuse2",.65) , cex = 1.5) 
 points(SEridge2_base[10:11], c(int_3, int_4), pch = 24, col = "black",
-       bg =  alpha("chartreuse3",.95), cex = 1.4) 
+       bg =  alpha("chartreuse2",.65), cex = 1.33) 
 points(SEridge2_main[6], int_5, pch = 22, col = "grey4",
         bg =  alpha("red3",.95), cex = 1.5)
 points(SEridge2_main1[6], int_6, pch = 22, col = "black",
        bg =  alpha("coral2",.65) , cex = 1.5)
 points(SEridge2_base[12], int_7, pch = 24, col = "black",
-       bg =  alpha("coral2",.95), cex = 1.4)
+       bg =  alpha("coral2",.65), cex = 1.33)
 
 #link to x 
 links[[1]]$to_x <- grconvertX(SEridge2_main[5], from = "user", to = "ndc")
@@ -2056,7 +2140,7 @@ for (i in 1:length(links)) {
 
 # --- Draw horizontal linking lines ---
 par(xpd = NA)  # allow drawing outside plot regions
-colors <- c("green4", rep("chartreuse3", 3), "red3", rep("coral2",2))
+colors <- c("green4", rep("chartreuse2", 3), "red3", rep("coral2",2))
 linetypes <- c(rep(2,7))
 
 for (i in 1:length(links)) {
@@ -2074,15 +2158,39 @@ legend("topright", inset = c(-0.52, 0.00),
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
-       pt.bg = c("green4", "chartreuse3", "chartreuse3"),
-       pt.cex = c(1.5, 1.5, 1.4))
-legend("bottomright", inset = c(-0.52, 0.27),
+       pt.bg = c("green4", "chartreuse2", "chartreuse2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.52, 0.23),
+       title = "DMI",
+       legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "black", "grey4"),
+       pt.bg = c("magenta4", "plum2", "plum2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("right", inset = c(-0.52, 0.00),
+       title = "TSA",
+       legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "black", "grey4"),
+       pt.bg = c("darkorange3", "darkgoldenrod2", "darkgoldenrod2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.52, 0.26),
        title = "SAM (AAO)",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("red3", "coral2", "coral2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.52, 0.05),
+       title = "OLR",
+       legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "black", "grey4"),
+       pt.bg = c("turquoise4", "paleturquoise3", "paleturquoise3"),
+       pt.cex = c(1.5, 1.5, 1.33))
 
 mtext("SE Aus Group 2 (Mid-October to Mid-December)", outer = TRUE, cex = 1.5, font = 1)
 
@@ -2148,10 +2256,10 @@ SEAus3_range <- range(SE32_ninocoef,
 par(mar = c(4, 4, 2, 1))
 
 plot(SE32_ninolag, SE32_ninocoef, pch = 24, col = "black",
-       bg =  alpha("chartreuse3",.65), cex = 1.4,
+       bg =  alpha("chartreuse2",.65), cex = 1.33,
      xlim = c(1,52), 
      ylim = SEAus3_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "")
 abline(h = 0, lty = 2)
 title("Nino", adj = 0)
 
@@ -2172,11 +2280,11 @@ plot(SE3_dmilag, SE3_dmicoef, pch = 22,
      bg =  alpha("magenta4",.95), cex = 1.5,
      xlim = c(1,52), 
      ylim = SEAus3_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "")
 points(SE31_dmilag, SE31_dmicoef, pch = 22, col = "black",
-       bg =  alpha("darkorchid2",.65) , cex = 1.5)
+       bg =  alpha("plum2",.65) , cex = 1.5)
 points(SE32_dmilag, SE32_dmicoef, pch = 24, col = "black",
-       bg =  alpha("darkorchid2",.65), cex = 1.4)
+       bg =  alpha("plum2",.65), cex = 1.33)
 abline(h = 0, lty = 2)
 title("DMI", adj = 0)
 
@@ -2229,13 +2337,13 @@ links[[7]] <- list(
 # --- Plot 3: TSA ---
 par(mar = c(4, 4, 2, 1))
 plot(SE3_tsalag, SE3_tsacoef, pch = 22, col = "black",
-       bg =  alpha("darkorange2", 0.95), xlim = c(1,52), cex = 1.4,
+       bg =  alpha("darkorange2", 0.95), xlim = c(1,52), cex = 1.5,
      ylim = SEAus3_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
 points(SE31_tsalag, SE31_tsacoef, pch = 22, col = "black",
-       bg =  alpha("darkgoldenrod3",.65) , cex = 1.5)
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.5)
 points(SE32_tsalag, SE32_tsacoef, pch = 24, col = "black",
-       bg =  alpha("darkgoldenrod3",.65), cex = 1.4)
+       bg =  alpha("darkgoldenrod2",.65), cex = 1.33)
 abline(h = 0, lty = 2)
 title("TSA", adj = 0)
 
@@ -2282,11 +2390,11 @@ plot(SE3_aaolag, SE3_aaocoef, pch = 22,
      bg =  alpha("red3",.95), cex = 1.5,
      xlim = c(1,52), 
      ylim = SEAus3_range,
-     xlab = "", ylab = "Coefficients")
+     xlab = "", ylab = "")
 points(SE31_aaolag, SE31_aaocoef, pch = 22, col = "black",
        bg =  alpha("coral2",.65) , cex = 1.5)
 points(SE32_aaolag, SE32_aaocoef, pch = 24, col = "black",
-       bg =  alpha("coral2",.65), cex = 1.4)
+       bg =  alpha("coral2",.65), cex = 1.33)
 abline(h = 0, lty = 2)
 title("SAM (AAO)", adj = 0)
 
@@ -2295,7 +2403,7 @@ par(mar = c(4, 4, 2, 1))
 
 plot(SE3_aaolag, SE3_aaocoef, type = "n", xlim = c(1,52), 
      ylim = SEAus2_range,
-     xlab = "Lag", ylab = "Coefficients")
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
 abline(h = 0, lty = 2)
 title("OLR", adj = 0)
 
@@ -2306,7 +2414,7 @@ int_range <- range(SEridge3_main[8:11], SEridge3_main1[8:11], SEridge3_base[8:10
 
 plot(SEridge3_main[8], 1.5, type = "n", main = "Interactions", 
      ylim = c(0,1), xlim = int_range,
-     xlab = "Coefficients",
+     xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
 abline(v= 0, lty = 2)
 
@@ -2329,22 +2437,22 @@ int_7 <- grconvertY(links[[7]]$from_y, from = "ndc", to = "user")
 int_point <- (int_1 + int_7)/2
 
 #segments
-segments(SEridge3_base[10], int_1, SEridge3_base[10], int_point, col = "chartreuse4", lty = 3, lwd = 1.5)
-segments(SEridge3_base[10], int_7, SEridge3_base[10], int_point, col = "darkorchid2", lty = 3, lwd = 1.5)
+segments(SEridge3_base[10], int_1, SEridge3_base[10], int_point, col = "chartreuse3", lty = 3, lwd = 1.5)
+segments(SEridge3_base[10], int_7, SEridge3_base[10], int_point, col = "orchid2", lty = 3, lwd = 1.5)
 
 points(SEridge3_main[8:9], c(int_2,int_4),  pch = 22, col = "grey4", 
        bg =  alpha("magenta4",.95), cex = 1.5) 
 points(SEridge3_main1[8:9], c(int_3, int_5), pch = 22, col = "black",
-       bg =  alpha("darkorchid2",.65) , cex = 1.5) 
+       bg =  alpha("plum2",.65) , cex = 1.5) 
 points(SEridge3_base[8], int_6, pch = 24, col = "black",
-       bg =  alpha("darkorchid2",.65), cex = 1.4) 
+       bg =  alpha("plum2",.65), cex = 1.33) 
 points(SEridge3_main[10:11], c(int_8,int_10),  pch = 22, col = "grey4", 
-       bg =  alpha("darkorange2",.95), cex = 1.5) 
+       bg =  alpha("darkorange3",.95), cex = 1.5) 
 points(SEridge3_main1[10:11], c(int_9, int_11), pch = 22, col = "black",
-       bg =  alpha("darkgoldenrod3",.65) , cex = 1.5) 
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.5) 
 points(SEridge3_base[9], int_12, pch = 24, col = "black",
-       bg =  alpha("darkgoldenrod3",.65), cex = 1.4) 
-points(SEridge3_base[10], int_point, pch = 17, col = "black", cex = 1.4) 
+       bg =  alpha("darkgoldenrod2",.65), cex = 1.33) 
+points(SEridge3_base[10], int_point, pch = 24, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
 
 #link to x
 #from nino
@@ -2370,9 +2478,9 @@ for (i in 1:length(links)) {
 
 # --- Draw horizontal linking lines ---
 par(xpd = NA)  # allow drawing outside plot regions
-colors <- c("chartreuse4", "magenta4", "darkorchid2",
-            "magenta4", rep("darkorchid2",3),
-            "darkorange2", "darkgoldenrod3","darkorange2", rep("darkgoldenrod3",2))
+colors <- c("chartreuse3", "magenta4", "orchid2",
+            "magenta4", rep("orchid2",3),
+            "darkorange3", "darkgoldenrod2","darkorange3", rep("darkgoldenrod2",2))
 linetypes <- c(3, rep(2,5), 3, rep(2,5) )
 linewidths <- c(1.5, rep(1,5), 1.5, rep(1,5) )
 
@@ -2384,6 +2492,7 @@ for (i in 1:length(links)) {
   )
 }
 
+
 #outer text and legends
 par(xpd = NA)
 legend("topright", inset = c(-0.52, 0.00),
@@ -2391,35 +2500,42 @@ legend("topright", inset = c(-0.52, 0.00),
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
-       pt.bg = c("green4", "chartreuse3", "chartreuse3"),
-       pt.cex = c(1.5, 1.5, 1.4))
-
+       pt.bg = c("green4", "chartreuse2", "chartreuse2"),
+       pt.cex = c(1.5, 1.5, 1.33))
 legend("topright", inset = c(-0.52, 0.23),
        title = "DMI",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
-       pt.bg = c("magenta4", "darkorchid2", "darkorchid2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.bg = c("magenta4", "plum2", "plum2"),
+       pt.cex = c(1.5, 1.5, 1.33))
 
-legend("right", inset = c(-0.52, -0.02),
+legend("right", inset = c(-0.52, 0.00),
        title = "TSA",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
-       pt.bg = c("darkorange2", "darkgoldenrod3", "darkgoldenrod3"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.bg = c("darkorange3", "darkgoldenrod2", "darkgoldenrod2"),
+       pt.cex = c(1.5, 1.5, 1.33))
 
-legend("bottomright", inset = c(-0.52, 0.27),
+legend("bottomright", inset = c(-0.52, 0.26),
        title = "SAM (AAO)",
        legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
        pch = c(22, 22, 24),
        col = c("grey4", "black", "grey4"),
        pt.bg = c("red3", "coral2", "coral2"),
-       pt.cex = c(1.5, 1.5, 1.4))
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.52, 0.05),
+       title = "OLR",
+       legend = c("Coef w/ 2019/2020", "Coef w/o 2019/2020", "Variable w/o 2019/2020"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "black", "grey4"),
+       pt.bg = c("turquoise4", "paleturquoise3", "paleturquoise3"),
+       pt.cex = c(1.5, 1.5, 1.33))
 
 
-mtext("SE Aus Group 3 (Mid-December to ...)", outer = TRUE, cex = 1.5, font = 1)
+mtext("SE Aus Group 3 (Mid-December to Mid-January)", outer = TRUE, cex = 1.5, font = 1)
 
 dev.off()
 ```
