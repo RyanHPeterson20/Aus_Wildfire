@@ -1,0 +1,288 @@
+---
+title: "cluster_new"
+author: "Ryan Peterson"
+date: "2025-04-25"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+#libraries
+suppressMessages(library(adespatial)) #for constr.hclust
+suppressMessages( library(cluster)) #for general cluster/diana
+suppressMessages(library(dendextend)) 
+
+suppressMessages(library(scales))
+```
+
+```{r data_import}
+# data and functions
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+
+```
+
+```{r setup}
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+```
+
+
+# All Years Clustering
+
+```{r baseline_cluster}
+#using default values 
+NEconst_clust <- constr.hclust(dist(t(NEbase_matrix)), chron = TRUE) #default with ward.d2 method
+SEconst_clust <- constr.hclust(dist(t(SEbase_matrix)), chron = TRUE) #default with ward.d2 method
+
+cutree(NEconst_clust, k =2)
+cutree(SEconst_clust, k =2)
+
+SEconst_clust$order <- 1:32
+NEconst_clust$order <- 1:32
+
+stats:::plot.hclust(NEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : Response Clustering", axes = FALSE, cex.main = 2.0,
+                    cex.lab = 1.5)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
+
+
+stats:::plot.hclust(SEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "SE Aus : Response Clustering", axes = FALSE, cex.main = 2.0,
+                    cex.lab = 1.5)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
+
+#TODO: change from manual to something else later
+NE_splits <- list(c(46,47))
+SE_splits <- list(c(50,51))
+```
+
+
+```{r function}
+
+#we can replace this with dendlist()
+
+cluster_matrix <- function(NEbase_matrix, SEbase_matrix, temporal = TRUE){
+
+  NEclust_matrix <- matrix(NA, ncol = 32)
+  SEclust_matrix <- matrix(NA, ncol = 32)
+  
+  NE_clust <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal) #default with ward.d2 method
+  SE_clust <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal) #default with ward.d2 method
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust, k =2))
+  
+  #ward.D
+  NE_clust1 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "ward.D") # ward.D method
+  SE_clust1 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "ward.D") # ward.D method
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust1, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust1, k =2))
+  
+  #single linkage
+  NE_clust2 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "single")
+  SE_clust2 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "single") 
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust2, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust2, k =2))
+  
+  #complete linkage
+  NE_clust3 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "complete") 
+  SE_clust3 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "complete")
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust3, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust3, k =2))
+  
+  #flexible w/  beta = -0.25
+  NE_clust4 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "flexible", beta = -0.5) 
+  SE_clust4 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "flexible", beta = -0.5) 
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust4, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust4, k =2))
+  
+  #"average" (UPGMA)
+  NE_clust5 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "average")
+  SE_clust5 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "average")
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust5, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust5, k =2))
+  
+  #"mcquitty" (WPGMA)
+  NE_clust6 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "mcquitty")
+  SE_clust6 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "mcquitty")
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust6, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust6, k =2))
+  
+  #"centroid" (UPGMC)a
+  NE_clust7 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "centroid")
+  SE_clust7 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "centroid")
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust7, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust7, k =2))
+  
+  #"median" (WPGMC)
+  NE_clust8 <- constr.hclust(dist(t(NEbase_matrix)), chron = temporal, method = "median")
+  SE_clust8 <- constr.hclust(dist(t(SEbase_matrix)), chron = temporal, method = "median")
+  
+  NEclust_matrix <- rbind(NEclust_matrix, cutree(NE_clust8, k =2))
+  SEclust_matrix <- rbind(SEclust_matrix, cutree(SE_clust8, k =2))
+  
+  method_names <- c("ward.d2", "ward.D", "single", "complete", "flexible", 
+                    "average", "mcquitty", "centroid", "median")
+  
+  NEclust_matrix <- NEclust_matrix[-1, ]
+  SEclust_matrix <- SEclust_matrix[-1, ]
+  
+  rownames(NEclust_matrix) <- method_names
+  rownames(SEclust_matrix) <- method_names
+
+  return(list(NEclust_matrix, SEclust_matrix))
+}
+```
+
+
+```{r}
+full_cluster <- cluster_matrix(NEbase_matrix, SEbase_matrix, temporal = TRUE)
+
+NEcluster_list <- list()
+SEcluster_list <- list()
+for (j in 1:19) {
+  NEmatrix_new <- scale(resp_matrix[-c(j), 1:32], center = TRUE, scale = FALSE)
+  SEmatrix_new <- scale(resp_matrix[-c(j), 33:64], center = TRUE, scale = FALSE)
+  
+  part_cluster <- cluster_matrix(NEmatrix_new, SEmatrix_new, temporal = FALSE)
+  
+  NEcluster_list[[paste0("without:", seasons[j])]] <- part_cluster[[1]]
+  SEcluster_list[[paste0("without:", seasons[j])]] <- part_cluster[[2]]
+}
+
+
+
+#cluster_matrix(NEbase_matrix, SEbase_matrix, temporal = FALSE)
+```
+
+```{r}
+Reduce("+", NEcluster_list) / length(NEcluster_list)
+
+Reduce("+", SEcluster_list) / length(SEcluster_list)
+```
+
+
+Repeat all of this with the dendextend package 
+
+
+```{r diana}
+#top-down clustering
+NEyear_div <- diana(NEbase_matrix,  metric = "manhattan")
+plot(NEyear_div)
+SEyear_div <- diana(SEbase_matrix,  metric = "manhattan")
+plot(SEyear_div)
+
+
+NEweek_div <- diana(t(NEbase_matrix))
+plot(NEweek_div)
+
+SEweek_div <- diana(t(SEbase_matrix))
+plot(SEweek_div)
+
+NEweek_agg <- agnes(t(NEbase_matrix))
+plot(NEweek_agg)
+
+SEweek_agg <- agnes(t(SEbase_matrix))
+plot(SEweek_agg)
+summary(SEweek_agg)
+
+clusplot(t(SEbase_matrix), )
+```
+
+
+
+
+
+
+
+
+```{r}
+
+#using default values 
+NEconst_clust <- constr.hclust(dist(t(NEbase_matrix)), chron = FALSE) #default with ward.d2 method
+SEconst_clust <- constr.hclust(dist(t(SEbase_matrix)), chron = FALSE) #default with ward.d2 method
+
+cutree(NEconst_clust, k =2)
+cutree(SEconst_clust, k =2)
+#SEconst_clust$order <- 1:32
+#NEconst_clust$order <- 1:32
+
+stats:::plot.hclust(NEconst_clust, hang = -1, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : Response Clustering")
+
+stats:::plot.hclust(NEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : Response Clustering", axes = FALSE, cex.main = 2.0,
+                    cex.lab = 1.5)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
+
+
+stats:::plot.hclust(SEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "SE Aus : Response Clustering", axes = FALSE, cex.main = 2.0,
+                    cex.lab = 1.5)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
+
+```
+
+
+```{r}
+#try pam from cluster
+test_pam <- pam(t(SEbase_matrix), k =3, diss = TRUE)
+clusplot(t(SEbase_matrix), test_pam$clustering, labels = 3)
+
+summary(test_pam)
+```
+
+
+
+```{r test_fpd}
+suppressMessages( library(FPDclustering))
+
+temp_pdc <- PDC(data = t(NEbase_matrix), k = 2)
+summary(temp_pdc)
+temp_pdc$centers
+temp_pdc$probability
+
+temp_pdc$label
+
+plot(temp_pdc)
+```
+
+
+
