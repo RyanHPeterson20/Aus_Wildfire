@@ -197,6 +197,168 @@ Reduce("+", SEcluster_list) / length(SEcluster_list)
 
 Repeat all of this with the dendextend package 
 
+# Agg/Time Analysis
+
+```{r}
+hclust_methods <- c("ward.D", "single", "complete", "average", "mcquitty", 
+        "median", "centroid", "ward.D2")
+
+NE_dendlist <- dendlist()
+SE_dendlist <- dendlist()
+
+for(i in seq_along(hclust_methods)) {
+   hc_NEAus <- constr.hclust(dist(t(NEbase_matrix)), method = hclust_methods[i],  chron = TRUE)
+   hc_SEAus <- constr.hclust(dist(t(SEbase_matrix)), method = hclust_methods[i],  chron = TRUE)
+   
+   NE_dendlist <- dendlist(NE_dendlist, as.dendrogram(hc_NEAus))
+   SE_dendlist <- dendlist(SE_dendlist, as.dendrogram(hc_SEAus))
+}
+
+names(NE_dendlist) <- hclust_methods
+names(SE_dendlist) <- hclust_methods
+
+NE_dendlist
+SE_dendlist
+```
+
+```{r}
+NE_dendlist_cor <- cor.dendlist(NE_dendlist)
+
+corrplot::corrplot(NE_dendlist_cor, "pie", "lower")
+```
+
+```{r}
+NE_dendlist %>% dendlist(which = c(2,7)) %>% ladderize %>% 
+   set("branches_k_color", k=2) %>% 
+   # untangle(method = "step1side", k_seq = 3:20) %>%
+   tanglegram(faster = TRUE)
+```
+
+
+```{r}
+get_ordered_2_clusters <- function(dend) {
+   cutree(dend, k = 2)[order.dendrogram(dend)]
+}
+
+compare_clusters_to <- function(clus) {FM_index(clus, rep(1:2, each = 16), assume_sorted_vectors = TRUE)}
+
+dend_2_clusters <- lapply(NE_dendlist, get_ordered_2_clusters)
+
+clusters_performance <- sapply(dend_2_clusters, compare_clusters_to)
+clusters_performance
+dotchart(sort(clusters_performance), xlim = c(0.6, 1),
+         xlab = "Fowlkes-Mallows Index (from 0 to 1)",
+         main = "Perormance of clustering algorithms \n in detecting the 2 species",
+         pch = 19)
+
+dend_2_clusters <- lapply(SE_dendlist, get_ordered_2_clusters)
+
+clusters_performance <- sapply(dend_2_clusters, compare_clusters_to)
+clusters_performance
+dotchart(sort(clusters_performance), xlim = c(0.6, 1),
+         xlab = "Fowlkes-Mallows Index (from 0 to 1)",
+         main = "Perormance of clustering algorithms \n in detecting the 2 species",
+         pch = 19)
+
+```
+
+```{r}
+cutree(NE_dendlist$complete, k = 2)
+cutree(SE_dendlist$complete, k = 2)
+```
+
+## Train/Test 2019
+
+TODO: build in hclust with chron = TRUE, then do some work to comparison between methods.
+
+```{r}
+#train data
+NEtrain_matrix <- scale(resp_matrix[-c(17:19) ,1:32], center = TRUE, scale = FALSE)
+SEtrain_matrix <- scale(resp_matrix[-c(17:19) ,33:64], center = TRUE, scale = FALSE)
+
+#test data
+NEtest_matrix <- scale(resp_matrix[17:19 ,1:32], center = TRUE, scale = FALSE)
+SEtest_matrix <- scale(resp_matrix[17:19 ,33:64], center = TRUE, scale = FALSE)
+
+NE_train <- dist(t(NEtrain_matrix))
+SE_train <- dist(t(SEtrain_matrix))
+
+NE_test <- dist(t(NEtest_matrix))
+SE_test <- dist(t(SEtest_matrix))
+
+
+NEd_train <- NE_train %>% hclust %>% as.dendrogram
+NEd_test <- NE_test %>% hclust %>% as.dendrogram
+NEd_train_test <- dendlist(train = NEd_train, test = NEd_test)
+
+SEd_train <- SE_train %>% hclust %>% as.dendrogram
+SEd_test <- SE_test %>% hclust %>% as.dendrogram
+SEd_train_test <- dendlist(train = SEd_train, test = SEd_test)
+```
+
+```{r}
+Bk_plot(NEd_train, NEd_test, k = 2:16, xlim = c(2,16))
+Bk_plot(SEd_train, SEd_test, k = 2:16, xlim = c(2,16))
+```
+
+```{r}
+pre_tang_d_train_test <- SEd_train_test %>% ladderize %>% # untangle %>%
+   set("branches_k_color", k = 7)
+train_branches_colors <- get_leaves_branches_col(pre_tang_d_train_test$train)
+pre_tang_d_train_test %>% tanglegram(fast = TRUE, color_lines = train_branches_colors)
+```
+
+
+
+```{r}
+#center response data
+NEbase_matrix <- scale(resp_matrix[-c(17) ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[-c(17) ,33:64], center = TRUE, scale = FALSE)
+
+hclust_methods <- c("ward.D", "single", "complete", "average", "mcquitty", 
+        "median", "centroid", "ward.D2")
+
+NE_dendlist <- dendlist()
+SE_dendlist <- dendlist()
+
+for(i in seq_along(hclust_methods)) {
+   hc_NEAus <- constr.hclust(dist(t(NEbase_matrix)), method = hclust_methods[i],  chron = FALSE)
+   hc_SEAus <- constr.hclust(dist(t(SEbase_matrix)), method = hclust_methods[i],  chron = FALSE)
+   
+   NE_dendlist <- dendlist(NE_dendlist, as.dendrogram(hc_NEAus))
+   SE_dendlist <- dendlist(SE_dendlist, as.dendrogram(hc_SEAus))
+}
+
+names(NE_dendlist) <- hclust_methods
+names(SE_dendlist) <- hclust_methods
+
+get_ordered_2_clusters <- function(dend) {
+   cutree(dend, k = 2)[order.dendrogram(dend)]
+}
+
+compare_clusters_to <- function(clus) {FM_index(clus, rep(1:2, each = 16), assume_sorted_vectors = TRUE)}
+
+dend_2_clusters <- lapply(NE_dendlist, get_ordered_2_clusters)
+
+clusters_performance <- sapply(dend_2_clusters, compare_clusters_to)
+which.max( clusters_performance)
+dotchart(sort(clusters_performance), xlim = c(0.6, 1),
+         xlab = "Fowlkes-Mallows Index (from 0 to 1)",
+         main = "Perormance of clustering algorithms \n in detecting the 2 species",
+         pch = 19)
+
+dend_2_clusters <- lapply(SE_dendlist, get_ordered_2_clusters)
+
+clusters_performance <- sapply(dend_2_clusters, compare_clusters_to)
+which.max( clusters_performance)
+dotchart(sort(clusters_performance), xlim = c(0.6, 1),
+         xlab = "Fowlkes-Mallows Index (from 0 to 1)",
+         main = "Perormance of clustering algorithms \n in detecting the 2 species",
+         pch = 19)
+```
+
+
+
 
 ```{r diana}
 #top-down clustering
@@ -221,13 +383,6 @@ summary(SEweek_agg)
 
 clusplot(t(SEbase_matrix), )
 ```
-
-
-
-
-
-
-
 
 ```{r}
 
