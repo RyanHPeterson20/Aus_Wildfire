@@ -273,12 +273,12 @@ TODO: build in hclust with chron = TRUE, then do some work to comparison between
 
 ```{r}
 #train data
-NEtrain_matrix <- scale(resp_matrix[-c(17:19) ,1:32], center = TRUE, scale = FALSE)
-SEtrain_matrix <- scale(resp_matrix[-c(17:19) ,33:64], center = TRUE, scale = FALSE)
+NEtrain_matrix <- scale(resp_matrix[-c(16:19) ,1:32], center = TRUE, scale = FALSE)
+SEtrain_matrix <- scale(resp_matrix[-c(16:19) ,33:64], center = TRUE, scale = FALSE)
 
 #test data
-NEtest_matrix <- scale(resp_matrix[17:19 ,1:32], center = TRUE, scale = FALSE)
-SEtest_matrix <- scale(resp_matrix[17:19 ,33:64], center = TRUE, scale = FALSE)
+NEtest_matrix <- scale(resp_matrix[16:19 ,1:32], center = TRUE, scale = FALSE)
+SEtest_matrix <- scale(resp_matrix[16:19 ,33:64], center = TRUE, scale = FALSE)
 
 NE_train <- dist(t(NEtrain_matrix))
 SE_train <- dist(t(SEtrain_matrix))
@@ -287,12 +287,22 @@ NE_test <- dist(t(NEtest_matrix))
 SE_test <- dist(t(SEtest_matrix))
 
 
-NEd_train <- NE_train %>% hclust %>% as.dendrogram
-NEd_test <- NE_test %>% hclust %>% as.dendrogram
+hclust_methods <- c("ward.D", "single", "complete", "average", "mcquitty", 
+        "median", "centroid", "ward.D2")
+
+i <- 3
+NEhc_train <- constr.hclust(NE_train, method = hclust_methods[i],  chron = FALSE)
+NEhc_test  <- constr.hclust(NE_test, method = hclust_methods[i],  chron = FALSE)
+
+NEd_train <- as.dendrogram(NEhc_train)
+NEd_test <-  as.dendrogram(NEhc_test)
 NEd_train_test <- dendlist(train = NEd_train, test = NEd_test)
 
-SEd_train <- SE_train %>% hclust %>% as.dendrogram
-SEd_test <- SE_test %>% hclust %>% as.dendrogram
+SEhc_train <- constr.hclust(SE_train, method = hclust_methods[i],  chron = FALSE)
+SEhc_test  <- constr.hclust(SE_test, method = hclust_methods[i],  chron = FALSE)
+
+SEd_train <- as.dendrogram(SEhc_train)
+SEd_test <- as.dendrogram(SEhc_test)
 SEd_train_test <- dendlist(train = SEd_train, test = SEd_test)
 ```
 
