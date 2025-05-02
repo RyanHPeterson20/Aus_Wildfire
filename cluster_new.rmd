@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(library(adespatial)) #for constr.hclust
 suppressMessages( library(cluster)) #for general cluster/diana
 suppressMessages(library(dendextend)) 
+suppressMessages( library(factoextra))
 
 suppressMessages(library(scales))
 ```
@@ -290,7 +291,7 @@ SE_test <- dist(t(SEtest_matrix))
 hclust_methods <- c("ward.D", "single", "complete", "average", "mcquitty", 
         "median", "centroid", "ward.D2")
 
-i <- 3
+i <- 2
 NEhc_train <- constr.hclust(NE_train, method = hclust_methods[i],  chron = FALSE)
 NEhc_test  <- constr.hclust(NE_test, method = hclust_methods[i],  chron = FALSE)
 
@@ -307,8 +308,8 @@ SEd_train_test <- dendlist(train = SEd_train, test = SEd_test)
 ```
 
 ```{r}
-Bk_plot(NEd_train, NEd_test, k = 2:16, xlim = c(2,16))
-Bk_plot(SEd_train, SEd_test, k = 2:16, xlim = c(2,16))
+Bk_plot(NEd_test, NEd_train, k = 2:16, xlim = c(2,16))
+Bk_plot(SEd_test, SEd_train, k = 2:16, xlim = c(2,16))
 ```
 
 ```{r}
@@ -379,7 +380,7 @@ plot(SEyear_div)
 
 
 NEweek_div <- diana(t(NEbase_matrix))
-plot(NEweek_div)
+plot(NEweek_div, adj = 0)
 
 SEweek_div <- diana(t(SEbase_matrix))
 plot(SEweek_div)
@@ -389,10 +390,85 @@ plot(NEweek_agg)
 
 SEweek_agg <- agnes(t(SEbase_matrix))
 plot(SEweek_agg)
+
 summary(SEweek_agg)
 
 clusplot(t(SEbase_matrix), )
 ```
+
+```{r}
+NEtest_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEtest_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+NE_test <- dist(t(NEtest_matrix))
+SE_test <- dist(t(SEtest_matrix))
+
+
+hclust_methods <- c("ward.D", "single", "complete", "average", "mcquitty", 
+        "median", "centroid", "ward.D2")
+
+i <- 1
+NEhc <- constr.hclust(NE_test, method = hclust_methods[i],  chron = TRUE)
+coefHier(NEhc)
+
+fviz_nbclust(t(NEtest_matrix), FUN = hcut, method = "wss")
+fviz_nbclust(t(SEtest_matrix), FUN = hcut, method = "wss")
+
+
+#note use this
+fviz_nbclust(t(NEtest_matrix), FUN = hcut, method = "gap_stat")
+fviz_nbclust(t(SEtest_matrix), FUN = hcut, method = "gap_stat")
+
+dend_plot <- fviz_dend(NEhc)
+dend_data <- attr(dend_plot, "dendrogram")
+```
+
+```{r method_checks}
+NEtest_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEtest_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+NE_test <- dist(t(NEtest_matrix), method = "manhattan")
+SE_test <- dist(t(SEtest_matrix), method = "manhattan")
+
+hclust_methods <- c("ward.D", "single", "complete", "average")
+
+i <- 1
+NEhc1 <- constr.hclust(NE_test, method = hclust_methods[i],  chron = FALSE)
+SEhc1 <- constr.hclust(SE_test, method = hclust_methods[i],  chron = FALSE)
+
+cutree(NEhc1, k =2)
+cutree(SEhc1, k =2)
+
+#TODO: when chron false include a circular plot with ordered hclust
+#NEhc1$order <- 1:32
+#SEhc1$order <- 1:32
+
+stats:::plot.hclust(NEhc1,  bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : ward.D")
+rect.hclust(NEhc1, k = 2, border = 2:3)
+
+stats:::plot.hclust(SEhc1, hang = -1, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "SE Aus : ward.D")
+rect.hclust(SEhc1, k = 2, border = 2:3)
+```
+
+```{r}
+dend_plot <- fviz_dend(NEhc1)                # create full dendogram
+dend_data <- attr(dend_plot, "dendrogram") # extract plot info
+dend_cuts <- cut(dend_data, h = 400) 
+
+fviz_dend(dend_cuts$lower[[1]], type = 'circular')
+```
+
+
+```{r agg_coeffs}
+#agglomerative coefs to compare methods
+
+
+
+```
+
+
 
 ```{r}
 
