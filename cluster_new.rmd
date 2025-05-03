@@ -507,7 +507,6 @@ rect.hclust(SEhc1, k = 2, border = 2:3)
 hc_coord <- NEhc1[["coords"]]
 test_old <- cell2nb(32, 1, type="rook", torus=TRUE)
 test_test <- cell2nb(32, 1, type="rook", torus=FALSE)
-test_old[[1]]
 test_test[[1]] <- as.integer(c(2,32))
 test_test[[32]] <- as.integer(c(31, 1))
 
@@ -671,10 +670,10 @@ for (j in 1:19) {
   SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
   
   NEcut_agg <- cutree(NEhc_agg, k = 2)
-  SEcut_agg <- cutree(SEhc_agg, k = 2)
+  SEcut_agg <- cutree(SEhc_agg, k = 3)
   
   NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
-  SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
+  SEcut_agg2 <- cutree(SEhc_agg2, k = 3)
   
   NE_agg <- rbind(NE_agg, NEcut_agg)
   SE_agg <- rbind(SE_agg, SEcut_agg)
@@ -741,12 +740,19 @@ SEhc_agg <- constr.hclust(SE_test, method ="ward.D", chron = FALSE)
 NEhc_agg2 <- constr.hclust(NE_test, method ="ward.D", week_neighbor, hc_coord)
 SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
 
+NEhc_agg3 <- constr.hclust(NE_test, method ="ward.D", chron = TRUE)
+SEhc_agg3 <- constr.hclust(SE_test, method ="ward.D", chron = TRUE)
+
 NEcut_agg <- cutree(NEhc_agg, k = 2)
 SEcut_agg <- cutree(SEhc_agg, k = 2)
 
 NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
 SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
 
+NEcut_agg3 <- cutree(NEhc_agg3, k = 2)
+SEcut_agg3 <- cutree(SEhc_agg3, k = 2)
+
+plot(1:32, SEcut_agg3)
 
 set.panel(2,2)
 plot(1:32, NEcut_agg, pch = 16, ylim = c(0,3), main = "NE Aus - Base Agg Cluster")
@@ -784,6 +790,7 @@ abline(h = c(1,2), lty =2)
 
 
 ```{r compare_sil}
+#TODO: relable the xlab so that it gives the weeks and not index
 NEdiv_sil <- silhouette(NEcut_div, NE_test)
 fviz_silhouette(NEdiv_sil, label = TRUE, print.summary = FALSE)
 
@@ -794,19 +801,45 @@ fviz_silhouette(SEdiv_sil, label = TRUE, print.summary = FALSE)
 NEagg_sil <- silhouette(NEcut_agg, NE_test)
 fviz_silhouette(NEagg_sil, label = TRUE, print.summary = FALSE)
 
+SEcut_agg <- cutree(SEhc_agg, k = 3)
+
 SEagg_sil <- silhouette(SEcut_agg, SE_test)
 fviz_silhouette(SEagg_sil, label = TRUE, print.summary = FALSE)
+
+#Optimal 2 clusters is here
+NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
 
 NEagg2_sil <- silhouette(NEcut_agg2, NE_test)
 fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
 
-SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
+SEcut_agg2 <- cutree(SEhc_agg2, k = 3) #k=3 is better than 2 (run this if we have time)
 
 SEagg2_sil <- silhouette(SEcut_agg2, SE_test)
 fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
 
+#old version of time constrained
+NEcut_agg3 <- cutree(NEhc_agg3, k = 4)
+
+NEagg3_sil <- silhouette(NEcut_agg3, NE_test)
+fviz_silhouette(NEagg3_sil, label = TRUE, print.summary = FALSE)
+
+SEcut_agg3 <- cutree(SEhc_agg3, k = 4)
+
+SEagg3_sil <- silhouette(SEcut_agg3, SE_test)
+fviz_silhouette(SEagg3_sil, label = TRUE, print.summary = FALSE)
+
 ```
 
+```{r}
+#TODO: adjust ordering so that it kinda makes sense
+stats:::plot.hclust(NEhc_agg2, hang = -1, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : ")
+rect.hclust(NEhc_agg2, k = 2, border = 2:3)
+
+stats:::plot.hclust(SEhc_agg2, hang = -1, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "SE Aus : ")
+rect.hclust(SEhc_agg2, k = 2, border = 2:4)
+```
 
 
 ```{r}
