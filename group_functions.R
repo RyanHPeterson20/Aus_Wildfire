@@ -8,6 +8,9 @@
 #group response matrices
 #TODO: add below to the response functions, along with the base_matrix as a parameter.
 
+#Newest groups
+
+
 #below code is not used in this script
 #NEAus
 #  NEAus_1 <- NEbase_matrix[ ,1:3]

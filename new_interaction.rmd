@@ -72,6 +72,16 @@ Using different response groupings:
 2. Split response groups (2 groups; early/late)
 (3. Full response for each region)
 
+## Newest Response Groups
+NE Groups
+1. Weeks 35-37;47-52;1-14
+2. Weeks 38-46
+
+SE Groups
+1. Weeks 35-37; 51-52; 1-14
+2. Weeks 38-50
+
+
 ## Base Response Groups
 
 NE Groups:
@@ -104,6 +114,8 @@ rm(i, temp_season)
 #center response data
 NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#TODO: create new setup section for new groups and adjust the group_function.R
 
 #group response matrices
 #NEAus
