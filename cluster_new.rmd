@@ -18,6 +18,12 @@ suppressMessages(library(dendextend))
 suppressMessages( library(factoextra))
 
 suppressMessages(library(scales))
+
+#for constr.hclust example and correct linkages
+library(spData) 
+library(spdep)
+
+suppressMessages( library(fields))
 ```
 
 ```{r data_import}
@@ -423,6 +429,32 @@ dend_plot <- fviz_dend(NEhc)
 dend_data <- attr(dend_plot, "dendrogram")
 ```
 
+
+```{r test_links}
+dat <- c(41,42,25,38,50,30,41,43,43,41,30,50,38,25,42,41)
+coord.dat <- matrix(c(1,3,5,7,2,4,6,8,1,3,5,7,2,4,6,8,
+4.4,4.4,4.4,4.4,3.3,3.3,3.3,3.3,
+2.2,2.2,2.2,2.2,1.1,1.1,1.1,1.1),16,2)
+
+listW <- nb2listw(tri2nb(coord.dat), style="B")
+links.mat.dat <- listw2mat(listW)
+neighbors <- listw2sn(listW)[,1:2]
+
+plot(coord.dat, type='n',asp=1)
+text(coord.dat, labels=as.character(as.matrix(dat)), pos=3)
+for(i in 1:nrow(neighbors))
+  lines(rbind(coord.dat[neighbors[i,1],],
+  coord.dat[neighbors[i,2],]))
+
+D.dat <- dist(dat)
+
+grpWD2cst_constr_hclust <- constr.hclust(
+  D.dat, method="ward.D2",
+  neighbors, coord.dat)
+
+grpWD2cst_constr_hclust$coords
+```
+
 ```{r method_checks}
 NEtest_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 SEtest_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
@@ -430,20 +462,37 @@ SEtest_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 NE_test <- dist(t(NEtest_matrix), method = "manhattan")
 SE_test <- dist(t(SEtest_matrix), method = "manhattan")
 
-hclust_methods <- c("ward.D", "single", "complete", "average")
+hclust_methods <- c("ward.D", "centroid", "complete", "average")
 
-i <- 1
-NEhc1 <- constr.hclust(NE_test, method = hclust_methods[i],  chron = FALSE)
-SEhc1 <- constr.hclust(SE_test, method = hclust_methods[i],  chron = FALSE)
+i <- 3
+NEhc1 <- constr.hclust(NE_test, method = hclust_methods[i],  chron = TRUE)
+SEhc1 <- constr.hclust(SE_test, method = hclust_methods[i],  chron = TRUE)
 
-cutree(NEhc1, k =2)
-cutree(SEhc1, k =2)
+
+
+NEhc_test <- constr.hclust(NE_test, method = hclust_methods[i],  coords = hc_links)
+
+NE_cut <- cutree(NEhc1, k =2)
+NEcut_test <- cutree(NEhc_test, k =2)
+
+SE_cut <- cutree(SEhc1, k =2)
+
+sil_NE <- silhouette(NE_cut, NE_test)
+fviz_silhouette(sil_NE, label = TRUE, print.summary = FALSE)
+
+sil_SE <- silhouette(SE_cut, SE_test)
+fviz_silhouette(sil_SE, label = TRUE, print.summary = FALSE)
+
+which(sil_NE[, "sil_width"] < 0)
+which(sil_SE[, "sil_width"] < 0)
 
 #TODO: when chron false include a circular plot with ordered hclust
 #NEhc1$order <- 1:32
 #SEhc1$order <- 1:32
 
-stats:::plot.hclust(NEhc1,  bty = "n", sub = "", ylab = "",
+coef.hclust(NEhc1)
+
+stats:::plot.hclust(NEhc1, hang = -1, bty = "n", sub = "", ylab = "",
                     xlab = "Week", main = "NE Aus : ward.D")
 rect.hclust(NEhc1, k = 2, border = 2:3)
 
@@ -452,19 +501,309 @@ stats:::plot.hclust(SEhc1, hang = -1, bty = "n", sub = "", ylab = "",
 rect.hclust(SEhc1, k = 2, border = 2:3)
 ```
 
-```{r}
-dend_plot <- fviz_dend(NEhc1)                # create full dendogram
-dend_data <- attr(dend_plot, "dendrogram") # extract plot info
-dend_cuts <- cut(dend_data, h = 400) 
 
-fviz_dend(dend_cuts$lower[[1]], type = 'circular')
+```{r messy_neighbors}
+#very messy 
+hc_coord <- NEhc1[["coords"]]
+test_old <- cell2nb(32, 1, type="rook", torus=TRUE)
+test_test <- cell2nb(32, 1, type="rook", torus=FALSE)
+test_old[[1]]
+test_test[[1]] <- as.integer(c(2,32))
+test_test[[32]] <- as.integer(c(31, 1))
+
+testL <-  nb2listw(test_test, style = "B")
+week_neighbor <- listw2sn(testL)[,1:2]
+
+NE_hclust <- constr.hclust(
+  NE_test, method ="ward.D",
+  week_neighbor, hc_coord)
+
+
+NE_cut <- cutree(NE_hclust, k =3)
+
+sil_NE <- silhouette(NE_cut, NE_test)
+fviz_silhouette(sil_NE, label = TRUE, print.summary = FALSE)
+
+
+SE_hclust <- constr.hclust(
+  SE_test, method ="ward.D",
+  week_neighbor, hc_coord)
+
+SE_cut <- cutree(SE_hclust, k =3)
+
+sil_SE <- silhouette(SE_cut, SE_test)
+fviz_silhouette(sil_SE, label = TRUE, print.summary = FALSE)
+
 ```
 
 
-```{r agg_coeffs}
+```{r diana}
+NE_test <- dist(t(NEtest_matrix), method = "manhattan")
+SE_test <- dist(t(SEtest_matrix), method = "manhattan")
+
+NEyear_div <- diana(t(NEbase_matrix),  metric = "manhattan")
+SEyear_div <- diana(t(SEbase_matrix),  metric = "manhattan")
+
+NEcut_div <- cutree(NEyear_div, k = 2)
+SEcut_div <- cutree(SEyear_div, k = 2)
+
+
+NEsil_div <- silhouette(NEcut_div, NE_test)
+fviz_silhouette(NEsil_div, label = TRUE, print.summary = FALSE)
+
+SEsil_div <- silhouette(SEcut_div, SE_test)
+fviz_silhouette(SEsil_div, label = TRUE, print.summary = FALSE)
+
+```
+
+
+```{r coeffs}
+#div coefs
+NEyear_divM <- diana(t(NEbase_matrix),  metric = "manhattan")
+SEyear_divM <- diana(t(SEbase_matrix),  metric = "manhattan")
+
+NEyear_divM$dc
+SEyear_divM$dc
+
+NEyear_div <- diana(t(NEbase_matrix),  metric = "euclidian")
+SEyear_div <- diana(t(SEbase_matrix),  metric = "euclidian")
+
+NEyear_div$dc
+SEyear_div$dc
+
+
 #agglomerative coefs to compare methods
+NE_test <- dist(t(NEtest_matrix), method = "manhattan")
+SE_test <- dist(t(SEtest_matrix), method = "manhattan")
+
+hclust_methods <- c("ward.D", "single", "complete", "average")
+
+#chron FALSE
+
+agg_coefM <- matrix(NA, nrow = 2)
+for (i in 1:4) {
+  NEhc_test <- constr.hclust(NE_test, method = hclust_methods[i],  chron = FALSE)
+  SEhc_test <- constr.hclust(SE_test, method = hclust_methods[i],  chron = FALSE)
+  agg_coefM <- cbind(agg_coefM, c(coef.hclust(NEhc_test), coef.hclust(SEhc_test)))
+}
+
+agg_coefM <- agg_coefM[,-1]
+colnames(agg_coefM) <- hclust_methods
 
 
+#chron "TRUE" (using torus)
+#NOTE: agg coef does not work for the other method
+
+
+#chron TRUE
+
+agg_chronM <- matrix(NA, nrow = 2)
+for (i in 1:4) {
+  NEhc_test <- constr.hclust(NE_test, method = hclust_methods[i],  chron = TRUE)
+  SEhc_test <- constr.hclust(SE_test, method = hclust_methods[i],  chron = TRUE)
+  agg_chronM <- cbind(agg_chronM, c(coef.hclust(NEhc_test), coef.hclust(SEhc_test)))
+}
+
+agg_chronM <- agg_chronM[,-1]
+colnames(agg_chronM) <- hclust_methods
+
+```
+
+# LOO Testing
+
+```{r diana_loo}
+NE_diana <- matrix(NA, ncol = 32) 
+SE_diana <- matrix(NA, ncol = 32) 
+  
+for (j in 1:19) {
+  NEtest_matrix <- scale(resp_matrix[-c(j) ,1:32], center = TRUE, scale = FALSE)
+  SEtest_matrix <- scale(resp_matrix[-c(j) ,33:64], center = TRUE, scale = FALSE)
+
+  NE_test <- dist(t(NEtest_matrix), method = "manhattan")
+  SE_test <- dist(t(SEtest_matrix), method = "manhattan")
+  
+  NEyear_div <- diana(t(NEtest_matrix),  metric = "manhattan")
+  SEyear_div <- diana(t(SEtest_matrix),  metric = "manhattan")
+  
+  NEcut_div <- cutree(NEyear_div, k = 2)
+  SEcut_div <- cutree(SEyear_div, k = 2)
+  
+  NE_diana <- rbind(NE_diana, NEcut_div)
+  SE_diana <- rbind(SE_diana, SEcut_div)
+}
+
+NE_diana <- NE_diana[-1, ]
+SE_diana <- SE_diana[-1, ]
+
+NE_means <- colMeans(NE_diana)
+SE_means <- colMeans(SE_diana)
+
+
+plot(1:32, NE_means, pch = 16, ylim = c(0,3), main = "NE Aus - LOO Diana Cluster")
+abline(h = c(1,2), lty =2)
+
+
+plot(1:32, SE_means, pch = 16, ylim = c(0,3), main = "SE Aus - LOO Diana Cluster")
+abline(h = c(1,2), lty =2)
+```
+
+```{r agg_loo}
+#agg chron FALSE
+#using Manhattan/ward.D (based on agg coefs)
+
+NE_agg <- matrix(NA, ncol = 32) 
+SE_agg <- matrix(NA, ncol = 32) 
+
+NE_agg2 <- matrix(NA, ncol = 32) 
+SE_agg2 <- matrix(NA, ncol = 32) 
+  
+for (j in 1:19) {
+  NEtest_matrix <- scale(resp_matrix[-c(j) ,1:32], center = TRUE, scale = FALSE)
+  SEtest_matrix <- scale(resp_matrix[-c(j) ,33:64], center = TRUE, scale = FALSE)
+
+  NE_test <- dist(t(NEtest_matrix), method = "manhattan")
+  SE_test <- dist(t(SEtest_matrix), method = "manhattan")
+
+  NEhc_agg <- constr.hclust(NE_test, method ="ward.D", chron = FALSE)
+  SEhc_agg <- constr.hclust(SE_test, method ="ward.D", chron = FALSE)
+  
+  NEhc_agg2 <- constr.hclust(NE_test, method ="ward.D", week_neighbor, hc_coord)
+  SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
+  
+  NEcut_agg <- cutree(NEhc_agg, k = 2)
+  SEcut_agg <- cutree(SEhc_agg, k = 2)
+  
+  NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
+  SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
+  
+  NE_agg <- rbind(NE_agg, NEcut_agg)
+  SE_agg <- rbind(SE_agg, SEcut_agg)
+  
+  NE_agg2 <- rbind(NE_agg2, NEcut_agg2)
+  SE_agg2 <- rbind(SE_agg2, SEcut_agg2)
+}
+
+NE_agg <- NE_agg[-1, ]
+SE_agg <- SE_agg[-1, ]
+
+NE_agg2 <- NE_agg2[-1, ]
+SE_agg2 <- SE_agg2[-1, ]
+
+NE_agg[16,]
+NE_agg2[16,]
+
+SE_agg[19,]
+SE_agg2[19,]
+
+plot(1:32, SE_agg[19,])
+
+NEagg_means <- colMeans(NE_agg)
+SEagg_means <- colMeans(SE_agg)
+
+NEagg2_means <- colMeans(NE_agg2)
+SEagg2_means <- colMeans(SE_agg2)
+
+set.panel(1,2)
+plot(1:32, NEagg_means, pch = 16, ylim = c(0,3), main = "NE Aus - LOO Agg Cluster")
+abline(h = c(1,2), lty =2)
+points(1:32, NEagg2_means, pch = 16, col = "red3")
+
+plot(1:32, NE_means, pch = 16, ylim = c(0,3), main = "NE Aus - LOO Diana Cluster")
+abline(h = c(1,2), lty =2)
+
+
+set.panel(1,2)
+plot(1:32, SEagg_means, pch = 16, ylim = c(0,3), main = "SE Aus - LOO Agg Cluster")
+abline(h = c(1,2), lty =2)
+points(1:32, SEagg2_means, pch = 16, col = "red3")
+
+plot(1:32, SE_means, pch = 16, ylim = c(0,3), main = "SE Aus - LOO Diana Cluster")
+abline(h = c(1,2), lty =2)
+```
+
+
+```{r full_loo_compare}
+NE_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SE_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+NE_test <- dist(t(NE_matrix), method = "manhattan")
+SE_test <- dist(t(SE_matrix), method = "manhattan")
+
+NEyear_div <- diana(t(NEtest_matrix),  metric = "manhattan")
+SEyear_div <- diana(t(SEtest_matrix),  metric = "manhattan")
+  
+NEcut_div <- cutree(NEyear_div, k = 2)
+SEcut_div <- cutree(SEyear_div, k = 2)
+
+NEhc_agg <- constr.hclust(NE_test, method ="ward.D", chron = FALSE)
+SEhc_agg <- constr.hclust(SE_test, method ="ward.D", chron = FALSE)
+
+NEhc_agg2 <- constr.hclust(NE_test, method ="ward.D", week_neighbor, hc_coord)
+SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
+
+NEcut_agg <- cutree(NEhc_agg, k = 2)
+SEcut_agg <- cutree(SEhc_agg, k = 2)
+
+NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
+SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
+
+
+set.panel(2,2)
+plot(1:32, NEcut_agg, pch = 16, ylim = c(0,3), main = "NE Aus - Base Agg Cluster")
+abline(h = c(1,2), lty =2)
+points(1:32, NEcut_agg2, pch = 16, col = "red3")
+
+plot(1:32, NEcut_div, pch = 16, ylim = c(0,3), main = "NE Aus - Base Diana Cluster")
+abline(h = c(1,2), lty =2)
+
+plot(1:32, NEagg_means, pch = 16, ylim = c(0,3), main = "NE Aus - LOO Agg Cluster")
+abline(h = c(1,2), lty =2)
+points(1:32, NEagg2_means, pch = 16, col = "red3")
+
+plot(1:32, NE_means, pch = 16, ylim = c(0,3), main = "NE Aus - LOO Diana Cluster")
+abline(h = c(1,2), lty =2)
+
+
+
+set.panel(2,2)
+plot(1:32, SEcut_agg, pch = 16, ylim = c(0,3), main = "SE Aus - Base Agg Cluster")
+abline(h = c(1,2), lty =2)
+points(1:32, SEcut_agg2, pch = 16, col = "red3")
+
+plot(1:32, SEcut_div, pch = 16, ylim = c(0,3), main = "SE Aus - Base Diana Cluster")
+abline(h = c(1,2), lty =2)
+
+plot(1:32, SEagg_means, pch = 16, ylim = c(0,3), main = "SE Aus - LOO Agg Cluster")
+abline(h = c(1,2), lty =2)
+points(1:32, SEagg2_means, pch = 16, col = "red3")
+
+plot(1:32, SE_means, pch = 16, ylim = c(0,3), main = "SE Aus - LOO Diana Cluster")
+abline(h = c(1,2), lty =2)
+
+```
+
+
+```{r compare_sil}
+NEdiv_sil <- silhouette(NEcut_div, NE_test)
+fviz_silhouette(NEdiv_sil, label = TRUE, print.summary = FALSE)
+
+SEdiv_sil <- silhouette(SEcut_div, SE_test)
+fviz_silhouette(SEdiv_sil, label = TRUE, print.summary = FALSE)
+
+
+NEagg_sil <- silhouette(NEcut_agg, NE_test)
+fviz_silhouette(NEagg_sil, label = TRUE, print.summary = FALSE)
+
+SEagg_sil <- silhouette(SEcut_agg, SE_test)
+fviz_silhouette(SEagg_sil, label = TRUE, print.summary = FALSE)
+
+NEagg2_sil <- silhouette(NEcut_agg2, NE_test)
+fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
+
+SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
+
+SEagg2_sil <- silhouette(SEcut_agg2, SE_test)
+fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
 
 ```
 
