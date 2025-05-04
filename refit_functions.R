@@ -88,9 +88,9 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE,
   refit_ridge <- list() #refit ridge
   refit_ridgecoef <- list() #ridge coefs
   refit_ridgecv <- list() #ridge cv (for R^2)
-  BIC_matrix <- matrix(NA, ncol = 9)
+  BIC_matrix <- matrix(NA, ncol = 10)
   colnames(BIC_matrix) <- c("lambda", "lasso.AIC", "ridge.AIC", "lm.BIC", 
-                            "ridge.BIC", "lasso.BIC", "lm.eBIC", "ridge.eBIC", "lasso.eBIC")
+                            "ridge.BIC", "lasso.BIC", "lm.eBIC", "ridge.eBIC", "lasso.eBIC", "lasso.GIC")
   
   
   for (k in 1:max_index) {
@@ -226,9 +226,13 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE,
       lasso_AIC <- length(y)*log(mean(lasso_resid^2)) + 2*p_length
     }
 
-    
+    #BIC, eBIC
     lasso_BIC <- length(y)*log(mean(lasso_resid^2)) + log(length(y))*p_length
     lasso_eBIC <- lasso_BIC +  2 * ebic.gamma * log(choose(p_eff, p_length))
+    
+    #GIC (fan & tang, 2013)
+    lasso_GIC <- length(y)*log(mean(lasso_resid^2)) + log(log(length(y)))*log(p_eff)*p_length
+    
         
     refit_lm[[paste0("LamIndex_", k)]] <- lm_fit
     refit_lmcoef[[paste0("LamIndex_", k)]] <- lm_coef
@@ -237,7 +241,7 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE,
     refit_ridgecv[[paste0("LamIndex_", k)]] <- ridge_cv
     
     BIC_matrix <- rbind(BIC_matrix, c(path_group$lamlist[k], lasso_AIC, ridge_AIC, lm_BIC, ridge_BIC, 
-                                      lasso_BIC, lm_eBIC, ridge_eBIC, lasso_eBIC))
+                                      lasso_BIC, lm_eBIC, ridge_eBIC, lasso_eBIC, lasso_GIC))
   }
   
   
