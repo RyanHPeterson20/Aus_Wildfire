@@ -1009,7 +1009,7 @@ dev.off()
 
 
 ```{r group_2}
-NEridge2_main
+#NEridge2_main
 #NEridge2_main1
 #NEridge2_main2
 
@@ -1421,28 +1421,195 @@ int_1 <- grconvertY(links[[1]]$from_y, from = "ndc", to = "user") # I(nino_lag7^
 int_2 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user")
 int_3 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user") # I(nino_lag33^2)
 int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user")
+
 # tsa_lag18:tsa_lag52
+int_5 <- grconvertY(links[[5]]$from_y, from = "ndc", to = "user") # tsa_lag18
+int_6 <- grconvertY(links[[6]]$from_y, from = "ndc", to = "user")
+int_9 <- grconvertY(links[[9]]$from_y, from = "ndc", to = "user") # tsa_lag52
+int_10 <- grconvertY(links[[10]]$from_y, from = "ndc", to = "user")
 
 # tsa_lag32:NEolr_lag19
+int_7 <- grconvertY(links[[7]]$from_y, from = "ndc", to = "user") # tsa_lag32
+int_8 <- grconvertY(links[[8]]$from_y, from = "ndc", to = "user")
+int_23 <- grconvertY(links[[23]]$from_y, from = "ndc", to = "user") # NEolr_lag19
+int_24 <- grconvertY(links[[24]]$from_y, from = "ndc", to = "user")
 
 # aao_lag2:aao_lag23      
+int_11 <- grconvertY(links[[11]]$from_y, from = "ndc", to = "user") # aao_lag2
+int_12 <- grconvertY(links[[12]]$from_y, from = "ndc", to = "user")
+int_17 <- grconvertY(links[[17]]$from_y, from = "ndc", to = "user") # aao_lag23
+int_18 <- grconvertY(links[[18]]$from_y, from = "ndc", to = "user")
 
 # aao_lag3:aao_lag27 
+int_13 <- grconvertY(links[[13]]$from_y, from = "ndc", to = "user") # aao_lag3
+int_14 <- grconvertY(links[[14]]$from_y, from = "ndc", to = "user")
+int_19 <- grconvertY(links[[19]]$from_y, from = "ndc", to = "user") # aao_lag27
+int_20 <- grconvertY(links[[20]]$from_y, from = "ndc", to = "user")
 
 # aao_lag4:aao_lag48 
+int_15 <- grconvertY(links[[15]]$from_y, from = "ndc", to = "user") # aao_lag4
+int_16 <- grconvertY(links[[16]]$from_y, from = "ndc", to = "user")
+int_21 <- grconvertY(links[[21]]$from_y, from = "ndc", to = "user") # aao_lag48
+int_22 <- grconvertY(links[[22]]$from_y, from = "ndc", to = "user")
 
 # NEolr_lag46:NEolr_lag51 
+int_25 <- grconvertY(links[[25]]$from_y, from = "ndc", to = "user") # NEolr_lag46
+int_26 <- grconvertY(links[[26]]$from_y, from = "ndc", to = "user")
+int_31 <- grconvertY(links[[31]]$from_y, from = "ndc", to = "user") # NEolr_lag51
+int_32 <- grconvertY(links[[32]]$from_y, from = "ndc", to = "user")
 
 # NEolr_lag47:NEolr_lag51 
+int_27 <- grconvertY(links[[27]]$from_y, from = "ndc", to = "user") # NEolr_lag47
+int_28 <- grconvertY(links[[28]]$from_y, from = "ndc", to = "user")
+int_33 <- grconvertY(links[[33]]$from_y, from = "ndc", to = "user") # NEolr_lag51
+int_34 <- grconvertY(links[[34]]$from_y, from = "ndc", to = "user")
 
 # NEolr_lag47:NEolr_lag52 
+int_29 <- grconvertY(links[[29]]$from_y, from = "ndc", to = "user") # NEolr_lag47
+int_30 <- grconvertY(links[[30]]$from_y, from = "ndc", to = "user")
+int_35 <- grconvertY(links[[35]]$from_y, from = "ndc", to = "user") # NEolr_lag52
+int_36 <- grconvertY(links[[36]]$from_y, from = "ndc", to = "user")
 
+# tsa_lag18:tsa_lag52
+int_pt1 <- (int_5 + int_9)/2
+int_pt2 <- (int_6 + int_10)/2
+# tsa_lag32:NEolr_lag19
+int_pt3 <- (int_7 + int_23)/2
+int_pt4 <- (int_8 + int_24)/2
+# aao_lag2:aao_lag23 
+int_pt5 <- (int_11 + int_17)/2
+int_pt6 <- (int_12 + int_18)/2
+# aao_lag3:aao_lag27 
+int_pt7 <- (int_13 + int_19)/2
+int_pt8 <- (int_14 + int_20)/2
+# aao_lag4:aao_lag48 
+int_pt9 <- (int_15 + int_21)/2
+int_pt10 <- (int_16 + int_22)/2
+# NEolr_lag46:NEolr_lag51 
+int_pt11 <- (int_25 + int_31)/2
+int_pt12 <- (int_26 + int_32)/2
+# NEolr_lag47:NEolr_lag51 
+int_pt13 <- (int_27 + int_33)/2
+int_pt14 <- (int_28 + int_34)/2
+# NEolr_lag47:NEolr_lag52 
+int_pt15 <- (int_29 + int_35)/2
+int_pt16 <- (int_30 + int_36)/2
+
+#segments
+segments(NEridge2_main[25], int_5, NEridge2_main[25], int_pt1, col = "darkorange3", lty = 3, lwd = 1.5)
+segments(NEridge2_main[25], int_9, NEridge2_main[25], int_pt1, col = "darkorange3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[25], int_6, NEridge2_main1[25], int_pt2, col = "darkgoldenrod3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[25], int_10, NEridge2_main1[25], int_pt2, col = "darkgoldenrod3", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[26], int_7, NEridge2_main[26], int_pt3, col = "darkorange3", lty = 3, lwd = 1.5)
+segments(NEridge2_main[26], int_23, NEridge2_main[26], int_pt3, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[26], int_8, NEridge2_main1[26], int_pt4, col = "darkgoldenrod3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[26], int_24, NEridge2_main1[26], int_pt4, col = "paleturquoise3", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[27], int_11, NEridge2_main[27], int_pt5, col = "red3", lty = 3, lwd = 1.5)
+segments(NEridge2_main[27], int_17, NEridge2_main[27], int_pt5, col = "red3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[27], int_12, NEridge2_main1[27], int_pt6, col = "coral2", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[27], int_18, NEridge2_main1[27], int_pt6, col = "coral2", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[28], int_13, NEridge2_main[28], int_pt7, col = "red3", lty = 3, lwd = 1.5)
+segments(NEridge2_main[28], int_19, NEridge2_main[28], int_pt7, col = "red3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[28], int_14, NEridge2_main1[28], int_pt8, col = "coral2", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[28], int_20, NEridge2_main1[28], int_pt8, col = "coral2", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[29], int_15, NEridge2_main[29], int_pt9, col = "red3", lty = 3, lwd = 1.5)
+segments(NEridge2_main[29], int_21, NEridge2_main[29], int_pt9, col = "red3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[29], int_16, NEridge2_main1[29], int_pt10, col = "coral2", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[29], int_22, NEridge2_main1[29], int_pt10, col = "coral2", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[30], int_25, NEridge2_main[30], int_pt11, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[30], int_31, NEridge2_main[30], int_pt11, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[30], int_26, NEridge2_main1[30], int_pt12, col = "paleturquoise3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[30], int_32, NEridge2_main1[30], int_pt12, col = "paleturquoise3", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[31], int_27, NEridge2_main[31], int_pt13, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[31], int_33, NEridge2_main[31], int_pt13, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[31], int_28, NEridge2_main1[31], int_pt14, col = "paleturquoise3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[31], int_34, NEridge2_main1[31], int_pt14, col = "paleturquoise3", lty = 3, lwd = 1.5)
+
+segments(NEridge2_main[32], int_29, NEridge2_main[32], int_pt15, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main[32], int_35, NEridge2_main[32], int_pt15, col = "turquoise4", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[32], int_30, NEridge2_main1[32], int_pt16, col = "paleturquoise3", lty = 3, lwd = 1.5)
+segments(NEridge2_main1[32], int_36, NEridge2_main1[32], int_pt16, col = "paleturquoise3", lty = 3, lwd = 1.5)
+
+points(NEridge2_main[23], int_1,  pch = 22, col = "grey4",
+        bg =  alpha("green4",.95), cex = 1.5,) 
+points(NEridge2_main1[23], int_2, pch = 22, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.5)
+points(NEridge2_main[24], int_3,  pch = 22, col = "grey4",
+        bg =  alpha("green4",.95), cex = 1.5,) 
+points(NEridge2_main1[24], int_4, pch = 22, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.5)
+points(NEridge2_main[25], int_pt1, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[25], int_pt2, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main[26], int_pt3, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[26], int_pt4, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main[27], int_pt5, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[27], int_pt6, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33)
+points(NEridge2_main[28], int_pt7, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[28], int_pt8, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main[29], int_pt9, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[29], int_pt10, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main[30], int_pt11, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[30], int_pt12, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main[31], int_pt13, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[31], int_pt14, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main[32], int_pt15, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+points(NEridge2_main1[32], int_pt16, pch = 22, col = "black", bg = alpha("gray", 0.65), cex = 1.33) 
+
+
+#link to x 
+links[[1]]$to_x <- grconvertX(NEridge2_main[23], from = "user", to = "ndc")
+links[[2]]$to_x <- grconvertX(NEridge2_main1[23], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(NEridge2_main[24], from = "user", to = "ndc")
+links[[4]]$to_x <- grconvertX(NEridge2_main1[24], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(NEridge2_main[28], from = "user", to = "ndc")
+links[[6]]$to_x <- grconvertX(NEridge2_main1[28], from = "user", to = "ndc")
+links[[7]]$to_x <- grconvertX(NEridge2_main[29], from = "user", to = "ndc")
+links[[8]]$to_x <- grconvertX(NEridge2_main1[29], from = "user", to = "ndc")
+links[[9]]$to_x <- grconvertX(NEridge2_main[30], from = "user", to = "ndc")
+links[[10]]$to_x <- grconvertX(NEridge2_main1[30], from = "user", to = "ndc")
+links[[11]]$to_x <- grconvertX(NEridge2_main[31], from = "user", to = "ndc")
+links[[12]]$to_x <- grconvertX(NEridge2_main1[31], from = "user", to = "ndc")
+links[[13]]$to_x <- grconvertX(NEridge2_main[31], from = "user", to = "ndc")
+links[[14]]$to_x <- grconvertX(NEridge2_main1[31], from = "user", to = "ndc")
+links[[15]]$to_x <- grconvertX(NEridge2_main[23], from = "user", to = "ndc")
+links[[16]]$to_x <- grconvertX(NEridge2_main1[23], from = "user", to = "ndc")
+links[[17]]$to_x <- grconvertX(NEridge2_main[24], from = "user", to = "ndc")
+links[[18]]$to_x <- grconvertX(NEridge2_main1[24], from = "user", to = "ndc")
+links[[19]]$to_x <- grconvertX(NEridge2_main[28], from = "user", to = "ndc")
+links[[20]]$to_x <- grconvertX(NEridge2_main1[28], from = "user", to = "ndc")
+links[[21]]$to_x <- grconvertX(NEridge2_main[29], from = "user", to = "ndc")
+links[[22]]$to_x <- grconvertX(NEridge2_main1[29], from = "user", to = "ndc")
+links[[23]]$to_x <- grconvertX(NEridge2_main[30], from = "user", to = "ndc")
+links[[24]]$to_x <- grconvertX(NEridge2_main1[30], from = "user", to = "ndc")
+links[[25]]$to_x <- grconvertX(NEridge2_main[31], from = "user", to = "ndc")
+links[[26]]$to_x <- grconvertX(NEridge2_main1[31], from = "user", to = "ndc")
+links[[27]]$to_x <- grconvertX(NEridge2_main[31], from = "user", to = "ndc")
+links[[28]]$to_x <- grconvertX(NEridge2_main1[31], from = "user", to = "ndc")
+links[[29]]$to_x <- grconvertX(NEridge2_main[23], from = "user", to = "ndc")
+links[[30]]$to_x <- grconvertX(NEridge2_main1[23], from = "user", to = "ndc")
+links[[31]]$to_x <- grconvertX(NEridge2_main[24], from = "user", to = "ndc")
+links[[32]]$to_x <- grconvertX(NEridge2_main1[24], from = "user", to = "ndc")
+links[[33]]$to_x <- grconvertX(NEridge2_main[28], from = "user", to = "ndc")
+links[[34]]$to_x <- grconvertX(NEridge2_main1[28], from = "user", to = "ndc")
+links[[35]]$to_x <- grconvertX(NEridge2_main[29], from = "user", to = "ndc")
+links[[36]]$to_x <- grconvertX(NEridge2_main1[29], from = "user", to = "ndc")
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
 
 
 # --- Draw horizontal linking lines ---
 par(xpd = NA)  # allow drawing outside plot regions
-colors <- c(rep(c("magenta4", "plum3"), 6), "green4", "chartreuse3")
-linetypes <- c(rep(2,10), rep(3,4))
+colors <- c(rep(c("green4", "chartreuse3"), 2), rep(c("darkorange3", "darkgoldenrod3"), 3),
+            rep(c("red3", "coral3"), 6), rep(c("turquoise4", "paleturquoise3"),7))
+linetypes <- c(rep(2,4), rep(3,32))
 
 for (i in 1:length(links)) {
   grid.lines(
@@ -1467,7 +1634,9 @@ dev.off()
 
 ```{r group_1}
 #SEridge1_main
-#SEridge1_main1
+SEridge1_main1
+SEridge1_main2
+
 setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
 
 png(filename = "SE1_new.png", width = 3000, height = 3000, res = 300)
@@ -1599,6 +1768,7 @@ dev.off()
 ```{r group_2}
 SEridge2_main
 SEridge2_main1
+SEridge2_main2
 
 # Set layout
 layout(matrix(c(1, 6,
