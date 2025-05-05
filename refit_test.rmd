@@ -1088,6 +1088,33 @@ abline(h = 0, lty = 2)
 title("Nino", adj = 0)
 
 ## -- Nino Interactions
+# I(nino_lag7^2)
+## main
+links[[1]] <- list(
+  y_val = NE2_ninocoef[1],
+  from_x = grconvertX(NE2_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_ninocoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[2]] <- list(
+  y_val = NE21_ninocoef[1],
+  from_x = grconvertX(NE21_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_ninocoef[1], from = "user", to = "ndc")
+)
+
+# I(nino_lag33^2)
+## main
+links[[3]] <- list(
+  y_val = NE2_ninocoef[2],
+  from_x = grconvertX(NE2_ninolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_ninocoef[2], from = "user", to = "ndc")
+)
+## main sans
+links[[4]] <- list(
+  y_val = NE21_ninocoef[2],
+  from_x = grconvertX(NE21_ninolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_ninocoef[2], from = "user", to = "ndc")
+)
 
 # --- Plot 2: DMI ---
 par(mar = c(4, 4, 2, 1))
@@ -1120,6 +1147,48 @@ abline(h = 0, lty = 2)
 title("TSA", adj = 0)
 
 ## -- TSA Interactions
+# tsa_lag18:tsa_lag52
+## main
+links[[5]] <- list(
+  y_val = NE2_tsacoef[3],
+  from_x = grconvertX(NE2_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_tsacoef[3], from = "user", to = "ndc")
+)
+## main sans
+links[[6]] <- list(
+  y_val = NE21_tsacoef[3],
+  from_x = grconvertX(NE21_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_tsacoef[3], from = "user", to = "ndc")
+)
+
+# tsa_lag32:NEolr_lag19 
+## main
+links[[7]] <- list(
+  y_val = NE2_tsacoef[5],
+  from_x = grconvertX(NE2_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_tsacoef[5], from = "user", to = "ndc")
+)
+## main sans
+links[[8]] <- list(
+  y_val = NE21_tsacoef[5],
+  from_x = grconvertX(NE21_tsalag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_tsacoef[5], from = "user", to = "ndc")
+)
+
+# tsa_lag18:tsa_lag52 
+## main
+links[[9]] <- list(
+  y_val = NE2_tsacoef[6],
+  from_x = grconvertX(NE2_tsalag[6], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_tsacoef[6], from = "user", to = "ndc")
+)
+## main sans
+links[[10]] <- list(
+  y_val = NE21_tsacoef[6],
+  from_x = grconvertX(NE21_tsalag[6], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_tsacoef[6], from = "user", to = "ndc")
+)
+
 
 # --- Plot 4: SAM/AAO ---
 #Placeholder
@@ -1135,6 +1204,93 @@ points(NE21_aaolag, NE21_aaocoef, pch = 22, col = "black",
 abline(h = 0, lty = 2)
 title("SAM (AAO)", adj = 0)
 
+## -- SAM (AAO) Interactions
+# aao_lag2:aao_lag23 
+## main
+links[[11]] <- list(
+  y_val = NE2_aaocoef[1],
+  from_x = grconvertX(NE2_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_aaocoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[12]] <- list(
+  y_val = NE21_aaocoef[1],
+  from_x = grconvertX(NE21_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_aaocoef[1], from = "user", to = "ndc")
+)
+
+# aao_lag3:aao_lag27
+## main
+links[[13]] <- list(
+  y_val = NE2_aaocoef[2],
+  from_x = grconvertX(NE2_aaolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_aaocoef[2], from = "user", to = "ndc")
+)
+## main sans
+links[[14]] <- list(
+  y_val = NE21_aaocoef[2],
+  from_x = grconvertX(NE21_aaolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_aaocoef[2], from = "user", to = "ndc")
+)
+
+# aao_lag4:aao_lag48
+## main
+links[[15]] <- list(
+  y_val = NE2_aaocoef[3],
+  from_x = grconvertX(NE2_aaolag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_aaocoef[3], from = "user", to = "ndc")
+)
+## main sans
+links[[16]] <- list(
+  y_val = NE21_aaocoef[3],
+  from_x = grconvertX(NE21_aaolag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_aaocoef[3], from = "user", to = "ndc")
+)
+
+# aao_lag2:aao_lag23 
+## main
+links[[17]] <- list(
+  y_val = NE2_aaocoef[4],
+  from_x = grconvertX(NE2_aaolag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_aaocoef[4], from = "user", to = "ndc")
+)
+## main sans
+links[[18]] <- list(
+  y_val = NE21_aaocoef[4],
+  from_x = grconvertX(NE21_aaolag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_aaocoef[4], from = "user", to = "ndc")
+)
+
+
+# aao_lag3:aao_lag27
+## main
+links[[19]] <- list(
+  y_val = NE2_aaocoef[5],
+  from_x = grconvertX(NE2_aaolag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_aaocoef[5], from = "user", to = "ndc")
+)
+## main sans
+links[[20]] <- list(
+  y_val = NE21_aaocoef[5],
+  from_x = grconvertX(NE21_aaolag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_aaocoef[5], from = "user", to = "ndc")
+)
+
+# aao_lag4:aao_lag48
+## main
+links[[21]] <- list(
+  y_val = NE2_aaocoef[7],
+  from_x = grconvertX(NE2_aaolag[7], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_aaocoef[7], from = "user", to = "ndc")
+)
+## main sans
+links[[22]] <- list(
+  y_val = NE21_aaocoef[7],
+  from_x = grconvertX(NE21_aaolag[7], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_aaocoef[7], from = "user", to = "ndc")
+)
+
+
 # --- Plot 5: OLR ---
 par(mar = c(4, 4, 2, 1))
 plot(NE2_olrlag, NE2_olrcoef, pch = 22, col = "black",
@@ -1146,8 +1302,156 @@ points(NE21_olrlag, NE21_olrcoef, pch = 22, col = "black",
 abline(h = 0, lty = 2)
 title("OLR", adj = 0)
 
+## -- OLR Interactions
+# tsa_lag32:NEolr_lag19
+## main
+links[[23]] <- list(
+  y_val = NE2_olrcoef[1],
+  from_x = grconvertX(NE2_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[1], from = "user", to = "ndc")
+)
+## main sans
+links[[24]] <- list(
+  y_val = NE21_olrcoef[1],
+  from_x = grconvertX(NE21_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[1], from = "user", to = "ndc")
+)
+
+# NEolr_lag46:NEolr_lag51
+## main
+links[[25]] <- list(
+  y_val = NE2_olrcoef[2],
+  from_x = grconvertX(NE2_olrlag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[2], from = "user", to = "ndc")
+)
+## main sans
+links[[26]] <- list(
+  y_val = NE21_olrcoef[2],
+  from_x = grconvertX(NE21_olrlag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[2], from = "user", to = "ndc")
+)
+
+# NEolr_lag47:NEolr_lag51
+## main
+links[[27]] <- list(
+  y_val = NE2_olrcoef[3],
+  from_x = grconvertX(NE2_olrlag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[3], from = "user", to = "ndc")
+)
+## main sans
+links[[28]] <- list(
+  y_val = NE21_olrcoef[3],
+  from_x = grconvertX(NE21_olrlag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[3], from = "user", to = "ndc")
+)
+
+
+# NEolr_lag47:NEolr_lag52 
+## main
+links[[29]] <- list(
+  y_val = NE2_olrcoef[3],
+  from_x = grconvertX(NE2_olrlag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[3], from = "user", to = "ndc")
+)
+## main sans
+links[[30]] <- list(
+  y_val = NE21_olrcoef[3],
+  from_x = grconvertX(NE21_olrlag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[3], from = "user", to = "ndc")
+)
+
+#NEolr_lag46:NEolr_lag51
+## main
+links[[31]] <- list(
+  y_val = NE2_olrcoef[4],
+  from_x = grconvertX(NE2_olrlag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[4], from = "user", to = "ndc")
+)
+## main sans
+links[[32]] <- list(
+  y_val = NE21_olrcoef[4],
+  from_x = grconvertX(NE21_olrlag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[4], from = "user", to = "ndc")
+)
+
+# NEolr_lag47:NEolr_lag51
+## main
+links[[33]] <- list(
+  y_val = NE2_olrcoef[4],
+  from_x = grconvertX(NE2_olrlag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[4], from = "user", to = "ndc")
+)
+## main sans
+links[[34]] <- list(
+  y_val = NE21_olrcoef[4],
+  from_x = grconvertX(NE21_olrlag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[4], from = "user", to = "ndc")
+)
+
+# Eolr_lag47:NEolr_lag52
+## main
+links[[35]] <- list(
+  y_val = NE2_olrcoef[5],
+  from_x = grconvertX(NE2_olrlag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE2_olrcoef[5], from = "user", to = "ndc")
+)
+## main sans
+links[[36]] <- list(
+  y_val = NE21_olrcoef[5],
+  from_x = grconvertX(NE21_olrlag[5], from = "user", to = "ndc"),
+  from_y = grconvertY(NE21_olrcoef[5], from = "user", to = "ndc")
+)
+
+
 # --- Plot 6: Interaction Effects ---
 par(mar = c(4, 4, 2, 2))
+
+int_range <- range(NEridge2_main,
+                      NEridge2_main1,
+                      NEridge2_main2)
+
+plot(NEridge2_main[30], 1.5, type = "n", main = "Interactions", 
+     ylim = c(0,1), xlim = int_range,
+     xlab = "Coefficients", cex.lab = 1.33,
+     yaxt = "n",  ylab = "")
+abline(v= 0, lty = 2)
+
+#nino squared
+int_1 <- grconvertY(links[[1]]$from_y, from = "ndc", to = "user") # I(nino_lag7^2)
+int_2 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user")
+int_3 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user") # I(nino_lag33^2)
+int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user")
+# tsa_lag18:tsa_lag52
+
+# tsa_lag32:NEolr_lag19
+
+# aao_lag2:aao_lag23      
+
+# aao_lag3:aao_lag27 
+
+# aao_lag4:aao_lag48 
+
+# NEolr_lag46:NEolr_lag51 
+
+# NEolr_lag47:NEolr_lag51 
+
+# NEolr_lag47:NEolr_lag52 
+
+
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c(rep(c("magenta4", "plum3"), 6), "green4", "chartreuse3")
+linetypes <- c(rep(2,10), rep(3,4))
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
+
 
 
 
