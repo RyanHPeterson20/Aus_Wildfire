@@ -456,8 +456,8 @@ grpWD2cst_constr_hclust$coords
 ```
 
 ```{r method_checks}
-NEtest_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
-SEtest_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+NEtest_matrix <- scale(resp_matrix[ ,4:32], center = TRUE, scale = FALSE)
+SEtest_matrix <- scale(resp_matrix[ ,36:64], center = TRUE, scale = FALSE)
 
 NE_test <- dist(t(NEtest_matrix), method = "manhattan")
 SE_test <- dist(t(SEtest_matrix), method = "manhattan")
@@ -670,10 +670,10 @@ for (j in 1:19) {
   SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
   
   NEcut_agg <- cutree(NEhc_agg, k = 2)
-  SEcut_agg <- cutree(SEhc_agg, k = 3)
+  SEcut_agg <- cutree(SEhc_agg, k = 2)
   
   NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
-  SEcut_agg2 <- cutree(SEhc_agg2, k = 3)
+  SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
   
   NE_agg <- rbind(NE_agg, NEcut_agg)
   SE_agg <- rbind(SE_agg, SEcut_agg)
@@ -725,8 +725,12 @@ abline(h = c(1,2), lty =2)
 NE_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 SE_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 
-NE_test <- dist(t(NE_matrix), method = "manhattan")
-SE_test <- dist(t(SE_matrix), method = "manhattan")
+NEtest_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEtest_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+
+NE_test <- dist(t(NE_matrix), method = "euclidian")
+SE_test <- dist(t(SE_matrix), method = "euclidian")
 
 NEyear_div <- diana(t(NEtest_matrix),  metric = "manhattan")
 SEyear_div <- diana(t(SEtest_matrix),  metric = "manhattan")
@@ -734,8 +738,8 @@ SEyear_div <- diana(t(SEtest_matrix),  metric = "manhattan")
 NEcut_div <- cutree(NEyear_div, k = 2)
 SEcut_div <- cutree(SEyear_div, k = 2)
 
-NEhc_agg <- constr.hclust(NE_test, method ="ward.D", chron = FALSE)
-SEhc_agg <- constr.hclust(SE_test, method ="ward.D", chron = FALSE)
+NEhc_agg <- constr.hclust(NE_test, method ="ward.D", chron = TRUE)
+SEhc_agg <- constr.hclust(SE_test, method ="ward.D", chron = TRUE)
 
 NEhc_agg2 <- constr.hclust(NE_test, method ="ward.D", week_neighbor, hc_coord)
 SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
@@ -743,8 +747,8 @@ SEhc_agg2 <- constr.hclust(SE_test, method ="ward.D", week_neighbor, hc_coord)
 NEhc_agg3 <- constr.hclust(NE_test, method ="ward.D", chron = TRUE)
 SEhc_agg3 <- constr.hclust(SE_test, method ="ward.D", chron = TRUE)
 
-NEcut_agg <- cutree(NEhc_agg, k = 2)
-SEcut_agg <- cutree(SEhc_agg, k = 2)
+NEcut_agg <- cutree(NEhc_agg, k = 3)
+SEcut_agg <- cutree(SEhc_agg, k = 3)
 
 NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
 SEcut_agg2 <- cutree(SEhc_agg2, k = 2)
@@ -791,17 +795,22 @@ abline(h = c(1,2), lty =2)
 
 ```{r compare_sil}
 #TODO: relable the xlab so that it gives the weeks and not index
+
+NEcut_div <- cutree(NEyear_div, k = 2)
+SEcut_div <- cutree(SEyear_div, k = 2)
+
 NEdiv_sil <- silhouette(NEcut_div, NE_test)
+plot(NEdiv_sil)
 fviz_silhouette(NEdiv_sil, label = TRUE, print.summary = FALSE)
 
 SEdiv_sil <- silhouette(SEcut_div, SE_test)
+plot(SEdiv_sil)
 fviz_silhouette(SEdiv_sil, label = TRUE, print.summary = FALSE)
 
 
 NEagg_sil <- silhouette(NEcut_agg, NE_test)
 fviz_silhouette(NEagg_sil, label = TRUE, print.summary = FALSE)
 
-SEcut_agg <- cutree(SEhc_agg, k = 3)
 
 SEagg_sil <- silhouette(SEcut_agg, SE_test)
 fviz_silhouette(SEagg_sil, label = TRUE, print.summary = FALSE)
@@ -810,35 +819,190 @@ fviz_silhouette(SEagg_sil, label = TRUE, print.summary = FALSE)
 NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
 
 NEagg2_sil <- silhouette(NEcut_agg2, NE_test)
+plot(NEagg2_sil, main = "")
 fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
 
 SEcut_agg2 <- cutree(SEhc_agg2, k = 3) #k=3 is better than 2 (run this if we have time)
 
 SEagg2_sil <- silhouette(SEcut_agg2, SE_test)
+plot(SEagg2_sil)
 fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
+
+#old version of time constrained
+NEcut_agg3 <- cutree(NEhc_agg3, k = 3)
+
+NEagg3_sil <- silhouette(NEcut_agg3, NE_test)
+fviz_silhouette(NEagg3_sil, label = TRUE, print.summary = FALSE)
+
+SEcut_agg3 <- cutree(SEhc_agg3, k = 3)
+
+SEagg3_sil <- silhouette(SEcut_agg3, SE_test)
+plot(SEagg3_sil)
+fviz_silhouette(SEagg3_sil, label = TRUE, print.summary = FALSE)
+
+```
+
+
+```{r groupings}
+#Optimal 2 clusters is here
+NEcut_agg2 <- cutree(NEhc_agg3, k = 3)
+
+NEagg2_sil <- silhouette(NEcut_agg2, NE_test)
+plot(NEagg2_sil, main = "")
+pNE <- fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
+
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+
+SEcut_agg2 <- cutree(SEhc_agg3, k = 3) #k=3 is better than 2 (run this if we have time)
+
+SEagg2_sil <- silhouette(SEcut_agg2, SE_test)
+plot(SEagg2_sil)
+pSE <- fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
+
+pSE + scale_x_discrete(
+      breaks = pSE$data$name,
+      labels = season_weeks[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+
+stats:::plot.hclust(NEhc_agg3, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_agg3, k = 3, border = 2:5)
+
+stats:::plot.hclust(SEhc_agg3, hang = -1, main = "SE Aus : Cluster Dendrogram")
+rect.hclust(SEhc_agg3, k = 3, border = 2:5)
+
+```
+
+
+
+```{r final_plots}
+#TODO: work on this later
+
+#Optimal 2 clusters is here
+NEcut_agg2 <- cutree(NEhc_agg2, k = 2)
+
+NEagg2_sil <- silhouette(NEcut_agg2, NE_test)
+
+plot(NEagg2_sil)
+
+p <- fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
+
+factor_names <- p$data$name
+season_weeks[as.integer(as.character(factor_names))]
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "NE_sil.png", width = 3000, height = 1500, res = 300)
+p + scale_x_discrete(
+      breaks = p$data$name,
+      labels = season_weeks[as.integer(as.character(factor_names))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks") +
+  labs(subtitle = "NE Aus")
+dev.off()
+
+
+
+SEcut_agg2 <- cutree(SEhc_agg2, k = 3) #k=3 is better than 2 (run this if we have time)
+
+SEagg2_sil <- silhouette(SEcut_agg2, SE_test, Ordered = TRUE)
+
+plot(SEagg2_sil)
+
+p2 <- fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "SE_sil2.png", width = 3000, height = 1500, res = 300)
+p2 + scale_x_discrete(
+      breaks = p2$data$name,
+      labels = season_weeks[as.integer(as.character(p2$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")+
+  labs(subtitle = "SE Aus")
+dev.off()
+
 
 #old version of time constrained
 NEcut_agg3 <- cutree(NEhc_agg3, k = 4)
 
 NEagg3_sil <- silhouette(NEcut_agg3, NE_test)
-fviz_silhouette(NEagg3_sil, label = TRUE, print.summary = FALSE)
+p3 <- fviz_silhouette(NEagg3_sil, label = TRUE, print.summary = FALSE)
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "NE_silold.png", width = 3000, height = 1500, res = 300)
+p3 + scale_x_discrete(
+      breaks = p3$data$name,
+      labels = season_weeks[as.integer(as.character(p3$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")+
+  labs(subtitle = "NE Aus")
+dev.off()
 
 SEcut_agg3 <- cutree(SEhc_agg3, k = 4)
 
 SEagg3_sil <- silhouette(SEcut_agg3, SE_test)
-fviz_silhouette(SEagg3_sil, label = TRUE, print.summary = FALSE)
+plot(SEagg3_sil)
 
+
+p4 <- fviz_silhouette(SEagg3_sil, label = TRUE, print.summary = FALSE)
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "SE_silold.png", width = 3000, height = 1500, res = 300)
+p4 + scale_x_discrete(
+      breaks = p4$data$name,
+      labels = season_weeks[as.integer(as.character(p4$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")+
+  labs(subtitle = "SE Aus")
+dev.off()
 ```
 
-```{r}
-#TODO: adjust ordering so that it kinda makes sense
-stats:::plot.hclust(NEhc_agg2, hang = -1, bty = "n", sub = "", ylab = "",
-                    xlab = "Week", main = "NE Aus : ")
-rect.hclust(NEhc_agg2, k = 2, border = 2:3)
 
-stats:::plot.hclust(SEhc_agg2, hang = -1, bty = "n", sub = "", ylab = "",
-                    xlab = "Week", main = "SE Aus : ")
-rect.hclust(SEhc_agg2, k = 2, border = 2:4)
+```{r}
+NEhc_agg2$order <- c(4:32, 1:3)
+SEhc_agg2$order <- c(4:32, 1:3)
+
+#TODO: adjust ordering so that it kinda makes sense
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "NE_dend.png", width = 3000, height = 1500, res = 300)
+stats:::plot.hclust(NEhc_agg2,  hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : Response Clustering", axes = FALSE, cex.main = 1.33,
+                    cex.lab = 1.33)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[c(4:32, 1:3)]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.33)
+rect(xleft = 0.5, xright = 9.5, ybottom = 0, ytop = 375, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 9.5, xright = 32.5, ybottom = 0, ytop = 375, col = rgb(0, 1, 0, 0.2), border = NA)
+text(5, -25, "Group 2", col = "black", cex = 1.3, xpd = TRUE)
+text(20.5, -25, "Group 1", col = "black", cex = 1.3, xpd = TRUE)
+#rect.hclust(NEhc_agg2, k = 2, border = 2:3)
+dev.off()
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "SE_dend.png", width = 3000, height = 1500, res = 300)
+stats:::plot.hclust(SEhc_agg2, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "SE Aus : Response Clustering", axes = FALSE, cex.main = 1.33,
+                    cex.lab = 1.33)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[c(4:32, 1:3)]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.33)
+rect(xleft = 0.5, xright = 13.5, ybottom = 0, ytop = 375, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 13.5, xright = 32.5, ybottom = 0, ytop = 375, col = rgb(0, 1, 0, 0.2), border = NA)
+text(6, -25, "Group 2", col = "black", cex = 1.3, xpd = TRUE)
+text(22.5, -25, "Group 1", col = "black", cex = 1.3, xpd = TRUE)
+#rect.hclust(SEhc_agg2, k = 2, border = 2:5)
+dev.off()
+
+
 ```
 
 

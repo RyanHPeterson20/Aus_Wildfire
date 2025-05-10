@@ -239,6 +239,7 @@ length(ridge_coef)
 ```{r SE_Aus}
 SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
 SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
+
 SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
 
 #SE Aus Group 1
@@ -262,7 +263,7 @@ SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, lambda
 
 SErefit1[[5]]
 
-which.min(SErefit1[[5]][,2])
+which.min(SErefit1[[5]][5:11,2])
 which.min(SErefit1[[5]][,6])
 
 i <- 11
@@ -298,7 +299,7 @@ which.min(SErefit2[[5]][1:18,3]) #ridge AIC
 which.min(SErefit2[[5]][,6]) #BIC
 which.min(SErefit2[[5]][,10]) #GIC
 
-i <- 7
+i <- 6
 ridge_coef <- SErefit2[[4]][[i]]
 SEridge2_main <- ridge_coef
 ridge_coef
@@ -497,6 +498,7 @@ NErefit1[[5]]
 which.min(NErefit1[[5]][ , 2]) #AIC (max lambda 1se)
 which.min(NErefit1[[5]][ , 6]) #BIC
 which.min(NErefit1[[5]][ , 9]) #eBIC
+which.min(NErefit1[[5]][ , 10]) #GIC
 
 i <- 10
 ridge_coef <- NErefit1[[4]][[i]]
@@ -871,7 +873,7 @@ int_range <- range(NEridge1_main,
                       NEridge1_main1,
                       NEridge1_main2)
 
-plot(NEridge1_main[26], 1.5, type = "n", main = "Interactions", 
+plot(NEridge1_main[26], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -1410,7 +1412,7 @@ int_range <- range(NEridge2_main,
                       NEridge2_main1,
                       NEridge2_main2)
 
-plot(NEridge2_main[30], 1.5, type = "n", main = "Interactions", 
+plot(NEridge2_main[30], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -1975,7 +1977,7 @@ int_range <- range(SEridge1_main,
                       SEridge1_main1,
                       SEridge1_main2)
 
-plot(SEridge1_main[20], 1.5, type = "n", main = "Interactions", 
+plot(SEridge1_main[20], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -2362,7 +2364,7 @@ int_range <- range(SEridge2_main,
                    SEridge2_main1,
                    SEridge2_main2)
 
-plot(SEridge2_main2[15], 1.5, type = "n", main = "Interactions", 
+plot(SEridge2_main2[15], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -2665,7 +2667,7 @@ par(mar = c(4, 4, 2, 2))
 int_range <- range(NEridge1_main,
                       NEridge1_main2)
 
-plot(NEridge1_main[26], 1.5, type = "n", main = "Interactions", 
+plot(NEridge1_main[26], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -3060,7 +3062,7 @@ par(mar = c(4, 4, 2, 2))
 int_range <- range(NEridge2_main,
                       NEridge2_main2)
 
-plot(NEridge2_main[30], 1.5, type = "n", main = "Interactions", 
+plot(NEridge2_main[30], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -3461,7 +3463,7 @@ par(mar = c(4, 4, 2, 2))
 int_range <- range(SEridge1_main,
                       SEridge1_main2)
 
-plot(SEridge1_main[20], 1.5, type = "n", main = "Interactions", 
+plot(SEridge1_main[20], 1.5, type = "n", main = " ", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
@@ -3783,7 +3785,7 @@ int_range <- range(SEridge2_main,
                    SEridge2_main1,
                    SEridge2_main2)
 
-plot(SEridge2_main2[15], 1.5, type = "n", main = "Interactions", 
+plot(SEridge2_main2[15], 1.5, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
      xlab = "Coefficients", cex.lab = 1.33,
      yaxt = "n",  ylab = "")
