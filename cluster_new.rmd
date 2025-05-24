@@ -56,6 +56,335 @@ SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 ```
 
 
+# New Clustering
+
+
+```{r clustering_setup}
+#brief test on removing 35-37
+## NEbase_matrix <- NEbase_matrix[ ,-c(1:3)]
+## SEbase_matrix <- SEbase_matrix[ ,-c(1:3)]
+## season_weeks <- c(38:52, 1:14)
+
+#manhattan distance
+NE_d1 <- dist(t(NEbase_matrix), method = "manhattan")
+SE_d1 <- dist(t(SEbase_matrix), method = "manhattan")
+
+#euclidean distance
+NE_d2 <- dist(t(NEbase_matrix), method = "euclidean")
+SE_d2 <- dist(t(SEbase_matrix), method = "euclidean")
+
+#squared euclidean
+NE_d22 <- NE_d2^2
+SE_d22 <- SE_d2^2
+
+#correlation
+NE_rho <- as.dist(1-cor(NEbase_matrix))
+SE_rho <- as.dist(1-cor(SEbase_matrix))
+#NE_rho <- cor(NEbase_matrix)
+#SE_rho <- cor(SEbase_matrix)
+
+hclust_methods <- c("single", "complete", "average", "ward.D2", "ward.D", "centroid")
+```
+
+
+```{r d1}
+
+NE_man2 <- c()
+NE_man3 <- c()
+NE_man4 <- c()
+SE_man2 <- c()
+SE_man3 <- c()
+SE_man4 <- c()
+
+for (i in 1:6) {
+  NEhc_man <- constr.hclust(NE_d1, method = hclust_methods[i], chron = TRUE)
+  NEsc_man2 <- mean(silhouette(cutree(NEhc_man, k = 2), NE_d1)[, 3])
+  NEsc_man3 <- mean(silhouette(cutree(NEhc_man, k = 3), NE_d1)[, 3])
+  NEsc_man4 <- mean(silhouette(cutree(NEhc_man, k = 4), NE_d1)[, 3])
+  NE_man2 <- c(NE_man2, NEsc_man2)
+  NE_man3 <- c(NE_man3, NEsc_man3)
+  NE_man4 <- c(NE_man4, NEsc_man4)
+  
+  SEhc_man <- constr.hclust(SE_d1, method = hclust_methods[i], chron = TRUE)
+  SEsc_man2 <- mean(silhouette(cutree(SEhc_man, k = 2), SE_d1)[, 3])
+  SE_man2 <- c(SE_man2, SEsc_man2)
+  SEsc_man3 <- mean(silhouette(cutree(SEhc_man, k = 3), SE_d1)[, 3])
+  SE_man3 <- c(SE_man3, SEsc_man3)  
+  SEsc_man4 <- mean(silhouette(cutree(SEhc_man, k = 4), SE_d1)[, 3])
+  SE_man4 <- c(SE_man4, SEsc_man4)  
+}
+
+
+man_df <- data.frame(linkage = hclust_methods, NE_k2 = NE_man2, SE_k2 = SE_man2,
+                     NE_k3 = NE_man3, SE_k3 = SE_man3,
+                     NE_k4 = NE_man4, SE_k4 = SE_man4)
+
+
+```
+
+```{r d2}
+NE_euc2 <- c()
+NE_euc3 <- c()
+NE_euc4 <- c()
+SE_euc2 <- c()
+SE_euc3 <- c()
+SE_euc4 <- c()
+
+for (i in 1:6) {
+  NEhc_euc <- constr.hclust(NE_d2, method = hclust_methods[i], chron = TRUE)
+  NEsc_euc2 <- mean(silhouette(cutree(NEhc_euc, k = 2), NE_d2)[, 3])
+  NEsc_euc3 <- mean(silhouette(cutree(NEhc_euc, k = 3), NE_d2)[, 3])
+  NEsc_euc4 <- mean(silhouette(cutree(NEhc_euc, k = 4), NE_d2)[, 3])
+  NE_euc2 <- c(NE_euc2, NEsc_euc2)
+  NE_euc3 <- c(NE_euc3, NEsc_euc3)
+  NE_euc4 <- c(NE_euc4, NEsc_euc4)
+  
+  SEhc_euc <- constr.hclust(SE_d2, method = hclust_methods[i], chron = TRUE)
+  SEsc_euc2 <- mean(silhouette(cutree(SEhc_euc, k = 2), SE_d2)[, 3])
+  SEsc_euc3 <- mean(silhouette(cutree(SEhc_euc, k = 3), SE_d2)[, 3])
+  SE_euc2 <- c(SE_euc2, SEsc_euc2)
+  SE_euc3 <- c(SE_euc3, SEsc_euc3) 
+  SEsc_euc4 <- mean(silhouette(cutree(SEhc_euc, k = 4), SE_d2)[, 3])
+  SE_euc4 <- c(SE_euc4, SEsc_euc4)
+}
+
+euc_df <- data.frame(linkage = hclust_methods, NE_k2 = NE_euc2, SE_k2 = SE_euc2,
+                     NE_k3 = NE_euc3, SE_k3 = SE_euc3,
+                     NE_k4 = NE_euc4, SE_k4 = SE_euc4)
+```
+
+
+```{r d22}
+NE_euc2 <- c()
+NE_euc3 <- c()
+NE_euc4 <- c()
+SE_euc2 <- c()
+SE_euc3 <- c()
+SE_euc4 <- c()
+
+for (i in 1:6) {
+  NEhc_euc <- constr.hclust(NE_d22, method = hclust_methods[i], chron = TRUE)
+  NEsc_euc2 <- mean(silhouette(cutree(NEhc_euc, k = 2), NE_d22)[, 3])
+  NEsc_euc3 <- mean(silhouette(cutree(NEhc_euc, k = 3), NE_d22)[, 3])
+  NEsc_euc4 <- mean(silhouette(cutree(NEhc_euc, k = 4), NE_d22)[, 3])
+  NE_euc2 <- c(NE_euc2, NEsc_euc2)
+  NE_euc3 <- c(NE_euc3, NEsc_euc3)
+  NE_euc4 <- c(NE_euc4, NEsc_euc4)
+  
+  SEhc_euc <- constr.hclust(SE_d22, method = hclust_methods[i], chron = TRUE)
+  SEsc_euc2 <- mean(silhouette(cutree(SEhc_euc, k = 2), SE_d22)[, 3])
+  SEsc_euc3 <- mean(silhouette(cutree(SEhc_euc, k = 3), SE_d22)[, 3])
+  SE_euc2 <- c(SE_euc2, SEsc_euc2)
+  SE_euc3 <- c(SE_euc3, SEsc_euc3) 
+  SEsc_euc4 <- mean(silhouette(cutree(SEhc_euc, k = 4), SE_d22)[, 3])
+  SE_euc4 <- c(SE_euc4, SEsc_euc4)
+}
+
+
+sqeuc_df <- data.frame(linkage = hclust_methods, NE_k2 = NE_euc2, SE_k2 = SE_euc2,
+                     NE_k3 = NE_euc3, SE_k3 = SE_euc3, 
+                     NE_k4 = NE_euc4, SE_k4 = SE_euc4)
+                    
+```
+
+
+```{r rho}
+NE_cor2 <- c()
+NE_cor3 <- c()
+NE_cor4 <- c()
+SE_cor2 <- c()
+SE_cor3 <- c()
+SE_cor4 <- c()
+
+for (i in 1:6) {
+  NEhc_cor <- constr.hclust(NE_rho, method = hclust_methods[i], chron = TRUE)
+  NEsc_cor2 <- mean(silhouette(cutree(NEhc_cor, k = 2), NE_rho)[, 3])
+  NEsc_cor3 <- mean(silhouette(cutree(NEhc_cor, k = 3), NE_rho)[, 3])
+  NEsc_cor4 <- mean(silhouette(cutree(NEhc_cor, k = 4), NE_rho)[, 3])
+  NE_cor2 <- c(NE_cor2, NEsc_cor2)
+  NE_cor3 <- c(NE_cor3, NEsc_cor3)
+  NE_cor4 <- c(NE_cor4, NEsc_cor4)
+  
+  SEhc_cor <- constr.hclust(SE_rho, method = hclust_methods[i], chron = TRUE)
+  SEsc_cor2 <- mean(silhouette(cutree(SEhc_cor, k = 2), SE_rho)[, 3])
+  SEsc_cor3 <- mean(silhouette(cutree(SEhc_cor, k = 3), SE_rho)[, 3])
+  SEsc_cor4 <- mean(silhouette(cutree(SEhc_cor, k = 4), SE_rho)[, 3])  
+  SE_cor2 <- c(SE_cor2, SEsc_cor2)
+  SE_cor3 <- c(SE_cor3, SEsc_cor3)  
+  SE_cor4 <- c(SE_cor4, SEsc_cor4)    
+}
+
+
+cor_df <- data.frame(linkage = hclust_methods, NE_k2 = NE_cor2, SE_k2 = SE_cor2,
+                     NE_k3 = NE_cor3, SE_k3 = SE_cor3,
+                     NE_k4 = NE_cor4, SE_k4 = SE_cor4)
+```
+
+
+```{r cophenetic}
+
+NE_coph <- c()
+SE_coph <- c()
+for (i in 1:6) {
+  NEhc_man <- constr.hclust(NE_d2, method = hclust_methods[i], chron = TRUE)
+  NE_ccc <- cor(NE_d2, cophenetic(NEhc_man))
+  NE_coph <- c(NE_coph, NE_ccc)
+  
+  SEhc_man <- constr.hclust(SE_d2, method = hclust_methods[i], chron = TRUE)
+  SE_ccc <- cor(SE_d2, cophenetic(SEhc_man))
+  SE_coph <- c(SE_coph, SE_ccc)
+}
+
+
+coph_df <- data.frame(linkage = hclust_methods, NEman_coph = NE_coph, SEman_coph = SE_coph)
+
+```
+
+
+## Further Work
+
+TODO: compare Ward.D and Ward.D2 for euclidean and squared euclidean (just to make sure)
+
+```{r wardD_compare}
+#ward.D2 with euclidean dist
+NEhc_test1 <- constr.hclust(NE_d2, method = "average", chron = TRUE)
+SEhc_test1 <- constr.hclust(SE_d2, method = "average", chron = TRUE)
+
+#ward.D with euclidean dist
+NEhc_test2 <- constr.hclust(NE_d2, method = "complete", chron = TRUE)
+SEhc_test2 <- constr.hclust(SE_d2, method = "complete", chron = TRUE)
+
+#ward.D2 with sq. euclidean dist
+NEhc_test3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
+SEhc_test3 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
+
+#ward.D2 with sq. euclidean dist
+NEhc_test4 <- constr.hclust(NE_d22, method = "complete", chron = TRUE)
+SEhc_test4 <- constr.hclust(SE_d22, method = "complete", chron = TRUE)
+
+
+
+NEhc_test3 <- constr.hclust(NE_d2, method = "average", chron = TRUE)
+SEhc_test4 <- constr.hclust(SE_d2, method = "average", chron = TRUE)
+
+NEhc_test1$order <- c(1:32)
+SEhc_test1$order <- c(1:32)
+
+NEhc_test2$order <- c(1:32)
+SEhc_test2$order <- c(1:32)
+
+NEhc_test3$order <- c(1:32)
+SEhc_test3$order <- c(1:32)
+
+NEhc_test4$order <- c(1:32)
+SEhc_test4$order <- c(1:32)
+
+
+set.panel(2,2)
+stats:::plot.hclust(NEhc_test1, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_test1, k = 3, border = 2:5)
+stats:::plot.hclust(NEhc_test2, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_test2, k = 3, border = 2:5)
+stats:::plot.hclust(NEhc_test3, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_test3, k = 3, border = 2:5)
+stats:::plot.hclust(NEhc_test4, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_test4, k = 3, border = 2:5)
+
+
+set.panel(2,2)
+stats:::plot.hclust(SEhc_test1, hang = -1, main = "SE Aus : Cluster Dendrogram")
+rect.hclust(SEhc_test1, k = 3, border = 2:5)
+stats:::plot.hclust(SEhc_test2, hang = -1, main = "SE Aus : Cluster Dendrogram")
+rect.hclust(SEhc_test2, k = 3, border = 2:5)
+stats:::plot.hclust(SEhc_test3, hang = -1, main = "SE Aus : Cluster Dendrogram")
+rect.hclust(SEhc_test3, k = 3, border = 2:5)
+stats:::plot.hclust(SEhc_test4, hang = -1, main = "SE Aus : Cluster Dendrogram")
+rect.hclust(SEhc_test4, k = 3, border = 2:5)
+
+set.panel(1,2)
+stats:::plot.hclust(NEhc_test3, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_test3, k = 2, border = 2:5)
+stats:::plot.hclust(SEhc_test4, hang = -1, main = "SE Aus : Cluster Dendrogram")
+rect.hclust(SEhc_test4, k = 2, border = 2:5)
+
+```
+
+
+```{r}
+NEhc_agg3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
+NEcut_agg2 <- cutree(NEhc_agg3, k = 3)
+
+NEagg2_sil <- silhouette(NEcut_agg2, NE_d22)
+plot(NEagg2_sil, main = "")
+pNE <- fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
+
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+
+
+SEhc_agg3 <- constr.hclust(SE_d22, method = "complete", chron = TRUE)
+SEcut_agg2 <- cutree(SEhc_agg3, k = 3) 
+
+SEagg2_sil <- silhouette(SEcut_agg2, SE_d22)
+plot(SEagg2_sil)
+pSE <- fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
+
+pSE + scale_x_discrete(
+      breaks = pSE$data$name,
+      labels = season_weeks[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+```
+
+
+```{r }
+
+```
+
+
+
+```{r}
+cor_base <- cor(NEbase_matrix)
+image(cor_base[,1:3])
+```
+
+```{r sil_coef}
+dist_1 <- dist(t(SEbase_matrix), method = "manhattan")
+dist_2 <- dist(t(SEbase_matrix), method = "euclidean")
+dist_cor <- as.dist(1-cor(SEbase_matrix))
+
+#iterate through k values
+complete_hc <- matrix(NA, nrow = 3)
+for (j in 2:7) {
+  hc_man <- hclust(dist_1)
+  sc_man <- mean(silhouette(cutree(hc_man, k = j), dist_1)[, 3])
+  
+  hc_euc <- hclust(dist_2)
+  sc_euc <- mean(silhouette(cutree(hc_euc, k = j), dist_2)[, 3])
+  
+  hc_cor <- hclust(dist_cor)
+  sc_cor <- mean(silhouette(cutree(hc_cor, k = j), dist_cor)[, 3])
+  
+  complete_hc <- cbind(complete_hc, c(sc_man, sc_euc, sc_cor))
+}
+
+complete_hc <- complete_hc[ ,-1]
+
+plot(1:6, complete_hc[1,], type = "b", ylim = range(complete_hc))
+points(1:6, complete_hc[2,], type = "b", col = "red")
+points(1:6, complete_hc[3,], type = "b", col = "blue")
+
+```
+
+
+
+
+
 # All Years Clustering
 
 ```{r baseline_cluster}
