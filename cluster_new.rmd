@@ -61,9 +61,9 @@ SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 
 ```{r clustering_setup}
 #brief test on removing 35-37
-## NEbase_matrix <- NEbase_matrix[ ,-c(1:3)]
-## SEbase_matrix <- SEbase_matrix[ ,-c(1:3)]
-## season_weeks <- c(38:52, 1:14)
+#NEbase_matrix <- NEbase_matrix[ ,-c(1:3)]
+#SEbase_matrix <- SEbase_matrix[ ,-c(1:3)]
+#season_weeks <- c(38:52, 1:14)
 
 #manhattan distance
 NE_d1 <- dist(t(NEbase_matrix), method = "manhattan")
@@ -236,8 +236,22 @@ for (i in 1:6) {
 }
 
 
+
+
 coph_df <- data.frame(linkage = hclust_methods, NEman_coph = NE_coph, SEman_coph = SE_coph)
 
+```
+
+```{r}
+#test 
+
+NEhc_man <- constr.hclust(NE_d2, method = "ward.D2", chron = TRUE)
+
+cor(NE_d22, cophenetic(NEhc_man))
+
+SEhc_man <- constr.hclust(SE_d2, method = "ward.D2", chron = TRUE)
+
+cor(SE_d22, cophenetic(SEhc_man))
 ```
 
 
@@ -259,13 +273,13 @@ NEhc_test3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
 SEhc_test3 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
 
 #ward.D2 with sq. euclidean dist
-NEhc_test4 <- constr.hclust(NE_d22, method = "complete", chron = TRUE)
-SEhc_test4 <- constr.hclust(SE_d22, method = "complete", chron = TRUE)
+NEhc_test4 <- constr.hclust(NE_d22, method = "single", chron = TRUE)
+SEhc_test4 <- constr.hclust(SE_d22, method = "single", chron = TRUE)
 
 
 
-NEhc_test3 <- constr.hclust(NE_d2, method = "average", chron = TRUE)
-SEhc_test4 <- constr.hclust(SE_d2, method = "average", chron = TRUE)
+NEhc_test3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
+SEhc_test4 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
 
 NEhc_test1$order <- c(1:32)
 SEhc_test1$order <- c(1:32)
@@ -312,7 +326,7 @@ rect.hclust(SEhc_test4, k = 2, border = 2:5)
 
 ```{r}
 NEhc_agg3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
-NEcut_agg2 <- cutree(NEhc_agg3, k = 3)
+NEcut_agg2 <- cutree(NEhc_agg3, k = 2)
 
 NEagg2_sil <- silhouette(NEcut_agg2, NE_d22)
 plot(NEagg2_sil, main = "")
@@ -326,8 +340,8 @@ pNE + scale_x_discrete(
   xlab("Weeks")
 
 
-SEhc_agg3 <- constr.hclust(SE_d22, method = "complete", chron = TRUE)
-SEcut_agg2 <- cutree(SEhc_agg3, k = 3) 
+SEhc_agg3 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
+SEcut_agg2 <- cutree(SEhc_agg3, k = 2) 
 
 SEagg2_sil <- silhouette(SEcut_agg2, SE_d22)
 plot(SEagg2_sil)
