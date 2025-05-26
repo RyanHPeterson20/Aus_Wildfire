@@ -32,33 +32,29 @@ SEresp_grouping <- function(SEAus_mat, j = (1:19)){
 ## NE lag predictors
 NElag_grouping <- function(NE_laglist, j = (1:19)){
   #row inclusion
-  #j <- (1:19)
-  
+  j <- (1:19)
   
   #NE group 1: Weeks 35-46 Index (1-12) 
   NE1_lag <- NE_laglist$`Week  35`[j, -(1:2)]
   NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  36`[j, -(1:2)], NE_laglist$`Week  37`[j, -(1:2)],
-                   NE_laglist$`Week  38`[j,-(1:2)], 
-                   NE2_lag, NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
+                   NE_laglist$`Week  38`[j,-(1:2)], NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
                    NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
                    NE_laglist$`Week  43`[j,-(1:2)],
                    NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
                    NE_laglist$`Week  46`[j,-(1:2)])
                    
-                   
-                   
-
   #NE group 2  Weeks 47-52; 1-14 Index (13-32)
-  NE2_lag <-  NE_laglist$`Week  47`[j,-(1:2)]
-  NE2_lag <- rbind( NE_laglist$`Week  48`[j,-(1:2)], NE_laglist$`Week  49`[j,-(1:2)],
+  NE2_lag <- NE_laglist$`Week  47`[j,-(1:2)]
+  NE2_lag <- rbind( NE2_lag, NE_laglist$`Week  48`[j,-(1:2)], NE_laglist$`Week  49`[j,-(1:2)],
                     NE_laglist$`Week  50`[j,-(1:2)], NE_laglist$`Week  51`[j,-(1:2)], 
-                    NE_laglist$`Week  52`[j,-(1:2)],  NE_laglist$`Week  1`[j,-(1:2)], NE_laglist$`Week  2`[j,-(1:2)],
-                    NE_laglist$`Week  3`[j,-(1:2)], NE_laglist$`Week  4`[j,-(1:2)], 
-                    NE_laglist$`Week  5`[j,-(1:2)], NE_laglist$`Week  6`[j,-(1:2)],
-                    NE_laglist$`Week  7`[j,-(1:2)], NE_laglist$`Week  8`[j,-(1:2)],
-                    NE_laglist$`Week  9`[j,-(1:2)], NE_laglist$`Week  10`[j,-(1:2)],
-                    NE_laglist$`Week  11`[j,-(1:2)], NE_laglist$`Week  12`[j,-(1:2)],
-                    NE_laglist$`Week  13`[j,-(1:2)], NE_laglist$`Week  14`[j,-(1:2)])
+                    NE_laglist$`Week  52`[j,-(1:2)], NE_laglist$`Week  1`[j,-(1:2)], 
+                    NE_laglist$`Week  2`[j,-(1:2)], NE_laglist$`Week  3`[j,-(1:2)], 
+                    NE_laglist$`Week  4`[j,-(1:2)], NE_laglist$`Week  5`[j,-(1:2)], 
+                    NE_laglist$`Week  6`[j,-(1:2)], NE_laglist$`Week  7`[j,-(1:2)], 
+                    NE_laglist$`Week  8`[j,-(1:2)], NE_laglist$`Week  9`[j,-(1:2)], 
+                    NE_laglist$`Week  10`[j,-(1:2)], NE_laglist$`Week  11`[j,-(1:2)], 
+                    NE_laglist$`Week  12`[j,-(1:2)], NE_laglist$`Week  13`[j,-(1:2)], 
+                    NE_laglist$`Week  14`[j,-(1:2)])
   
 
   NEAus_preds <- list(NE1_lag, NE2_lag)
@@ -81,7 +77,7 @@ SElag_grouping <- function(SE_laglist, j = (1:19)){
 
   #SE group 2: Weeks 43-52; 1-14 Index (9-32)
   SE2_lag <- SE_laglist$`Week  43`[j,-(1:2)]
-  SE2_lag <- rbind(SE_laglist$`Week  44`[j,-(1:2)],
+  SE2_lag <- rbind(SE2_lag, SE_laglist$`Week  44`[j,-(1:2)],
                    SE_laglist$`Week  45`[j,-(1:2)], SE_laglist$`Week  46`[j,-(1:2)],
                    SE_laglist$`Week  47`[j,-(1:2)], SE_laglist$`Week  48`[j,-(1:2)],
                    SE_laglist$`Week  49`[j,-(1:2)], SE_laglist$`Week  50`[j,-(1:2)], 
