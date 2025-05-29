@@ -226,12 +226,12 @@ cor_df <- data.frame(linkage = hclust_methods, NE_k2 = NE_cor2, SE_k2 = SE_cor2,
 NE_coph <- c()
 SE_coph <- c()
 for (i in 1:6) {
-  NEhc_man <- constr.hclust(NE_d2, method = hclust_methods[i], chron = TRUE)
-  NE_ccc <- cor(NE_d2, cophenetic(NEhc_man))
+  NEhc_man <- constr.hclust(NE_d22, method = hclust_methods[i], chron = TRUE)
+  NE_ccc <- cor(NE_d22, cophenetic(NEhc_man))
   NE_coph <- c(NE_coph, NE_ccc)
   
-  SEhc_man <- constr.hclust(SE_d2, method = hclust_methods[i], chron = TRUE)
-  SE_ccc <- cor(SE_d2, cophenetic(SEhc_man))
+  SEhc_man <- constr.hclust(SE_d22, method = hclust_methods[i], chron = TRUE)
+  SE_ccc <- cor(SE_d22, cophenetic(SEhc_man))
   SE_coph <- c(SE_coph, SE_ccc)
 }
 
@@ -261,25 +261,17 @@ TODO: compare Ward.D and Ward.D2 for euclidean and squared euclidean (just to ma
 
 ```{r wardD_compare}
 #ward.D2 with euclidean dist
-NEhc_test1 <- constr.hclust(NE_d2, method = "average", chron = TRUE)
-SEhc_test1 <- constr.hclust(SE_d2, method = "average", chron = TRUE)
+NEhc_test1 <- constr.hclust(NE_d2, method = "ward.D2", chron = TRUE)
+SEhc_test1 <- constr.hclust(SE_d2, method = "ward.D2", chron = TRUE)
 
 #ward.D with euclidean dist
 NEhc_test2 <- constr.hclust(NE_d2, method = "complete", chron = TRUE)
 SEhc_test2 <- constr.hclust(SE_d2, method = "complete", chron = TRUE)
 
-#ward.D2 with sq. euclidean dist
-NEhc_test3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
-SEhc_test3 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
 
-#ward.D2 with sq. euclidean dist
-NEhc_test4 <- constr.hclust(NE_d22, method = "single", chron = TRUE)
-SEhc_test4 <- constr.hclust(SE_d22, method = "single", chron = TRUE)
-
-
-
-NEhc_test3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
-SEhc_test4 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
+#specific comparisons
+NEhc_test3 <- constr.hclust(NE_d2, method = "ward.D2", chron = TRUE)
+SEhc_test4 <- constr.hclust(SE_d2, method = "ward.D2", chron = TRUE)
 
 NEhc_test1$order <- c(1:32)
 SEhc_test1$order <- c(1:32)
@@ -288,45 +280,34 @@ NEhc_test2$order <- c(1:32)
 SEhc_test2$order <- c(1:32)
 
 NEhc_test3$order <- c(1:32)
-SEhc_test3$order <- c(1:32)
-
-NEhc_test4$order <- c(1:32)
 SEhc_test4$order <- c(1:32)
+
+
 
 
 set.panel(2,2)
 stats:::plot.hclust(NEhc_test1, hang = -1, main = "NE Aus : Cluster Dendrogram")
-rect.hclust(NEhc_test1, k = 3, border = 2:5)
-stats:::plot.hclust(NEhc_test2, hang = -1, main = "NE Aus : Cluster Dendrogram")
-rect.hclust(NEhc_test2, k = 3, border = 2:5)
-stats:::plot.hclust(NEhc_test3, hang = -1, main = "NE Aus : Cluster Dendrogram")
-rect.hclust(NEhc_test3, k = 3, border = 2:5)
-stats:::plot.hclust(NEhc_test4, hang = -1, main = "NE Aus : Cluster Dendrogram")
-rect.hclust(NEhc_test4, k = 3, border = 2:5)
-
-
-set.panel(2,2)
+rect.hclust(NEhc_test1, k = 2, border = 2:5)
 stats:::plot.hclust(SEhc_test1, hang = -1, main = "SE Aus : Cluster Dendrogram")
-rect.hclust(SEhc_test1, k = 3, border = 2:5)
+rect.hclust(SEhc_test1, k = 2, border = 2:5)
+stats:::plot.hclust(NEhc_test2, hang = -1, main = "NE Aus : Cluster Dendrogram")
+rect.hclust(NEhc_test2, k = 2, border = 2:5)
 stats:::plot.hclust(SEhc_test2, hang = -1, main = "SE Aus : Cluster Dendrogram")
-rect.hclust(SEhc_test2, k = 3, border = 2:5)
-stats:::plot.hclust(SEhc_test3, hang = -1, main = "SE Aus : Cluster Dendrogram")
-rect.hclust(SEhc_test3, k = 3, border = 2:5)
-stats:::plot.hclust(SEhc_test4, hang = -1, main = "SE Aus : Cluster Dendrogram")
-rect.hclust(SEhc_test4, k = 3, border = 2:5)
+rect.hclust(SEhc_test2, k = 2, border = 2:5)
+
 
 set.panel(1,2)
 stats:::plot.hclust(NEhc_test3, hang = -1, main = "NE Aus : Cluster Dendrogram")
-rect.hclust(NEhc_test3, k = 2, border = 2:5)
+rect.hclust(NEhc_test3, k = 3, border = 2:5)
 stats:::plot.hclust(SEhc_test4, hang = -1, main = "SE Aus : Cluster Dendrogram")
-rect.hclust(SEhc_test4, k = 2, border = 2:5)
+rect.hclust(SEhc_test4, k = 3, border = 2:5)
 
 ```
 
 
 ```{r}
 NEhc_agg3 <- constr.hclust(NE_d22, method = "average", chron = TRUE)
-NEcut_agg2 <- cutree(NEhc_agg3, k = 2)
+NEcut_agg2 <- cutree(NEhc_agg3, k = 3)
 
 NEagg2_sil <- silhouette(NEcut_agg2, NE_d22)
 plot(NEagg2_sil, main = "")
@@ -341,7 +322,7 @@ pNE + scale_x_discrete(
 
 
 SEhc_agg3 <- constr.hclust(SE_d22, method = "average", chron = TRUE)
-SEcut_agg2 <- cutree(SEhc_agg3, k = 2) 
+SEcut_agg2 <- cutree(SEhc_agg3, k = 3) 
 
 SEagg2_sil <- silhouette(SEcut_agg2, SE_d22)
 plot(SEagg2_sil)
@@ -357,10 +338,62 @@ pSE + scale_x_discrete(
 
 
 ```{r }
+#'sq euclid' ward.D2
+
+NEhc_agg3 <- constr.hclust(NE_d2, method = "ward.D2", chron = TRUE)
+NEcut_agg2 <- cutree(NEhc_agg3, k = 3)
+
+NEagg2_sil <- silhouette(NEcut_agg2, NE_d2)
+plot(NEagg2_sil, main = "")
+pNE <- fviz_silhouette(NEagg2_sil, label = TRUE, print.summary = FALSE)
+
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+
+
+SEhc_agg3 <- constr.hclust(SE_d2, method = "ward.D2", chron = TRUE)
+SEcut_agg2 <- cutree(SEhc_agg3, k = 4) 
+
+SEagg2_sil <- silhouette(SEcut_agg2, SE_d2)
+plot(SEagg2_sil)
+pSE <- fviz_silhouette(SEagg2_sil, label = TRUE, print.summary = FALSE)
+
+pSE + scale_x_discrete(
+      breaks = pSE$data$name,
+      labels = season_weeks[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
 
 ```
 
 
+# Multidimensional Scaling
+
+```{r}
+NEmds <- isoMDS(NE_d22, k = 2)
+SEmds <- isoMDS(SE_d22, k = 2)
+
+NE_color <- rainbow(length(unique(NEcut_agg2)))
+SE_color <- rainbow(length(unique(SEcut_agg2)))
+
+plot(NEmds$points, pch = 16, col = NE_color[NEcut_agg2], main = "NE MDS")
+points(NEmds$points[1:3,], cex = 1.5)
+#text(mds_results$points, labels = colnames(NEbase_matrix), cex = 0.8)
+
+plot(SEmds$points, pch = 16, col = SE_color[SEcut_agg2], main = "SE MDS")
+points(SEmds$points[1:3,], cex = 1.5)
+
+```
+
+
+
+
+# test blocks
 
 ```{r}
 cor_base <- cor(NEbase_matrix)
