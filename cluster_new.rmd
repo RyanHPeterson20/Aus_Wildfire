@@ -459,6 +459,7 @@ SEhc_test2 <- constr.hclust(SE_d2.2, method = "ward.D2", chron = TRUE)
 NEhc_test2$order <- c(1:29)
 SEhc_test2$order <- c(1:29)
 
+
 set.panel(1,2)
 stats:::plot.hclust(NEhc_test2, hang = -1, main = "NE Aus : Cluster Dendrogram")
 rect.hclust(NEhc_test2, k = 3, border = 2:5)
@@ -476,6 +477,233 @@ stats:::plot.hclust(NEhc_test3, hang = -1, main = "NE Aus : Cluster Dendrogram")
 rect.hclust(NEhc_test3, k = 3, border = 2:5)
 stats:::plot.hclust(SEhc_test3, hang = -1, main = "SE Aus : Cluster Dendrogram")
 rect.hclust(SEhc_test3, k = 3, border = 2:5)
+
+```
+
+```{r}
+
+#silhouette plots
+#TODO: repeat for base, w/o 35-37, w/o 12-14. (total of 8 plots)
+
+#NE AUS, without both
+NEhc_test3 <- constr.hclust(NE_d2.3, method = "ward.D2", chron = TRUE)
+
+NEcut_agg3 <- cutree(NEhc_test3, k = 3)
+
+NEagg3_sil <- silhouette(NEcut_agg3, NE_d2.3)
+plot(NEagg3_sil, main = "")
+pNE <- fviz_silhouette(NEagg3_sil, label = TRUE, print.summary = FALSE)
+
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks3[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+
+
+#SE AUS, without both
+SEhc_test3 <- constr.hclust(SE_d2.3, method = "ward.D2", chron = TRUE)
+SEcut_agg3 <- cutree(SEhc_test3, k = 3) 
+
+SEagg3_sil <- silhouette(SEcut_agg3, SE_d2.3)
+plot(SEagg3_sil)
+pSE <- fviz_silhouette(SEagg3_sil, label = TRUE, print.summary = FALSE)
+
+pSE + scale_x_discrete(
+      breaks = pSE$data$name,
+      labels = season_weeks3[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  xlab("Weeks")
+
+```
+
+
+### New Silhouette Analysis
+
+Repeat above analysis as we remove weeks on either side.
+
+```{r base}
+#data setup
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#TODO: functionalize this:
+
+NE_d2 <- dist(t(NEbase_matrix), method = "euclidean")
+SE_d2 <- dist(t(SEbase_matrix), method = "euclidean")
+
+#clustering
+NEhc_base <- constr.hclust(NE_d2, method = "ward.D2", chron = TRUE)
+SEhc_base <- constr.hclust(SE_d2, method = "ward.D2", chron = TRUE)
+
+#groups and silhouette
+NEcut_agg3 <- cutree(NEhc_base, k = 3)
+
+NEagg3_sil <- silhouette(NEcut_agg3, NE_d2)
+plot(NEagg3_sil, main = "") #keep in for now
+
+NEsil_summary <- summary(NEagg3_sil)
+#NEsil_summary$clus.avg.widths
+
+SEcut_agg3 <- cutree(SEhc_base, k = 3)
+
+SEagg3_sil <- silhouette(SEcut_agg3, SE_d2)
+plot(SEagg3_sil, main = "") #keep in for now
+
+SEsil_summary <- summary(SEagg3_sil)
+#SEsil_summary$clus.avg.widths
+
+
+#avg_sil(NEbase_matrix)
+NEsil_summary$clus.avg.widths
+mean(NEsil_summary$clus.avg.widths)
+NEsil_summary$avg.width
+#avg_sil(SEbase_matrix)
+SEsil_summary$clus.avg.widths
+
+```
+
+```{r sil_function}
+
+#fixed for specific hierarchy parameters
+#TODO: update to include the avg silhouette
+avg_sil <- function(resp_matrix) {
+  
+  #fixed euclidean distance
+  euc_dist <- dist(t(resp_matrix), method = "euclidean")
+
+  #clustering
+  #fixed ward's and temp constraints
+  hc_new <- constr.hclust(euc_dist, method = "ward.D2", chron = TRUE)
+  #fixed 3 groups
+  cut_agg3 <- cutree(hc_new, k = 3)
+  
+  sil_summary <- summary(silhouette(cut_agg3, euc_dist))
+  return(sil_summary$clus.avg.widths)
+}
+
+```
+
+
+
+```{r iterate_front}
+#NEbase_matrix1 <- NEbase_matrix[ ,-1]
+#SEbase_matrix1 <- SEbase_matrix[ ,-c(1)]
+
+
+NEsil_matrix <- as.matrix(t(NEsil_summary$clus.avg.widths), by.row = TRUE)
+for (k in 1:6) {
+  NEsil_matrix <- rbind(NEsil_matrix, avg_sil( NEbase_matrix[ ,-c(1:k)]))
+}
+
+SEsil_matrix <- as.matrix(t(SEsil_summary$clus.avg.widths), by.row = TRUE)
+for (j in 1:6) {
+  SEsil_matrix <- rbind(SEsil_matrix, avg_sil( SEbase_matrix[ ,-c(1:j)]))
+}
+
+#THIS is it!
+set.panel(1,2)
+plot(1:6, diff(NEsil_matrix[,1]), type = "b")
+plot(1:6, diff(SEsil_matrix[,1]), type = "b")
+
+#plots of sil coefs
+
+set.panel(1,2)
+NEsil_range <- range(NEsil_matrix) 
+plot(1:7, NEsil_matrix[,1], type = "b", pch = 15, col = "blue3",
+     ylim = NEsil_range)
+lines(1:7, NEsil_matrix[,2], type = "b", pch = 15, col = "red3")
+lines(1:7, NEsil_matrix[,3], type = "b", pch = 15)
+
+SEsil_range <- range(SEsil_matrix)
+plot(1:7, SEsil_matrix[,1], type = "b", pch = 15, col = "blue3",
+     ylim = SEsil_range)
+lines(1:7, SEsil_matrix[,2], type = "b", pch = 15, col = "red3")
+lines(1:7, SEsil_matrix[,3], type = "b", pch = 15)
+
+#update diff plot
+set.panel(1,2)
+NEdiff_range <- range(diff(NEsil_matrix[,3]),
+                      diff(NEsil_matrix[,2]),
+                      diff(NEsil_matrix[,1]))
+plot(1:6, diff(NEsil_matrix[,3]), type = "b", ylim = NEdiff_range,
+     pch = 15)
+abline(h = 0, lty = 2)
+lines(1:6,  diff(NEsil_matrix[,2]), type = "b", pch = 15, col = "red3")
+lines(1:6,  diff(NEsil_matrix[,1]), type = "b", pch = 15, col = "blue3")
+
+SEdiff_range <- range(diff(SEsil_matrix[,3]),
+                      diff(SEsil_matrix[,2]),
+                      diff(SEsil_matrix[,1]))
+plot(1:6, diff(SEsil_matrix[,3]), type = "b", ylim = SEdiff_range,
+     pch = 15)
+abline(h=0, lty = 2)
+lines(1:6,  diff(SEsil_matrix[,2]), type = "b", pch = 15, col = "red3")
+lines(1:6,  diff(SEsil_matrix[,1]), type = "b", pch = 15, col = "blue3")
+
+
+
+```
+
+
+```{r iterate_end}
+#data setup
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#data update without weeks 35-37
+NEbase_matrix <- NEbase_matrix[ ,-c(1:3)]
+SEbase_matrix <- SEbase_matrix[ ,-c(1:3)]
+
+
+NEsil_matrix2 <- as.matrix(t(NEsil_summary$clus.avg.widths), by.row = TRUE)
+for (i in 1:10) {
+  
+  mat_end <- length(NEbase_matrix[1,])
+  mat_beg <- mat_end - i
+  NEsil_matrix2 <- rbind(NEsil_matrix2, avg_sil( NEbase_matrix[ ,-c(mat_beg:mat_end)]))
+}
+
+SEsil_matrix2 <- as.matrix(t(SEsil_summary$clus.avg.widths), by.row = TRUE)
+for (i in 1:10) {
+  
+  mat_end <- length(SEbase_matrix[1,])
+  mat_beg <- mat_end - i
+  SEsil_matrix2 <- rbind(SEsil_matrix2, avg_sil( SEbase_matrix[ ,-c(mat_beg:mat_end)]))
+}
+
+#sill average
+set.panel(1,2)
+NEsil_range <- range(NEsil_matrix2) 
+plot(1:11, NEsil_matrix2[,3], type = "b", pch = 15, ylim = NEsil_range)
+lines(1:11,  NEsil_matrix2[,2], type = "b", col = "red3", pch = 15)
+lines(1:11,  NEsil_matrix2[,1], type = "b", col = "blue3", pch = 15)
+
+SEsil_range <- range(SEsil_matrix2) 
+plot(1:11, SEsil_matrix2[,3], type = "b", pch = 15, ylim = SEsil_range)
+lines(1:11,  SEsil_matrix2[,2], type = "b", col = "red3", pch = 15)
+lines(1:11,  SEsil_matrix2[,1], type = "b", col = "blue3", pch = 15)
+
+
+#diff updates
+set.panel(1,2)
+NEdiff_range <- range(diff(NEsil_matrix2[,3]),
+                      diff(NEsil_matrix2[,2]),
+                      diff(NEsil_matrix2[,1]))
+plot(1:10, diff(NEsil_matrix2[,3]), type = "b", ylim = NEdiff_range, pch = 15)
+abline(h = 0, lty = 2)
+lines(1:10, diff(NEsil_matrix2[,2]), type = "b", col = "red3", pch = 15)
+lines(1:10, diff(NEsil_matrix2[,1]), type = "b", col = "blue3", pch = 15)
+
+SEdiff_range <- range(diff(SEsil_matrix2[,3]),
+                      diff(SEsil_matrix2[,2]),
+                      diff(SEsil_matrix2[,1]))
+plot(1:10, diff(SEsil_matrix2[,3]), type = "b", ylim = SEdiff_range, pch = 15)
+abline(h = 0, lty = 2)
+lines(1:10, diff(NEsil_matrix2[,2]), type = "b", col = "red3", pch = 15)
+lines(1:10, diff(NEsil_matrix2[,1]), type = "b", col = "blue3", pch = 15)
 
 ```
 
