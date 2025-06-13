@@ -137,11 +137,11 @@ title("Nino", adj = 0)
 
 ```{r new_setup}
 #without weeks 35-37
-#NEAus_1.1 <- NEbase_matrix[ ,4:12] 
-#SEAus_1.1 <- SEbase_matrix[ ,4:16] 
+NEAus_1.1 <- NEbase_matrix[ ,4:12] 
+SEAus_1.1 <- SEbase_matrix[ ,4:16] 
 
-NEAus_1.1 <- NEbase_matrix[ ,6:12] 
-SEAus_1.1 <- SEbase_matrix[ ,6:16] 
+#NEAus_1.1 <- NEbase_matrix[ ,6:12] 
+#SEAus_1.1 <- SEbase_matrix[ ,6:16] 
 
 #without week 12-14
 NEAus_3.1 <- NEbase_matrix[ ,18:29]
@@ -185,14 +185,6 @@ NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`
                  NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
                  NE_laglist$`Week  46`[j,-(1:2)])
 
-#for further cuts on the front end (e.g. what happens when we keep cutting.)
-#TODO: delete when done
-NE1_lag <- rbind(NE_laglist$`Week  40`[j,-(1:2)],
-                 NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
-                 NE_laglist$`Week  43`[j,-(1:2)],
-                 NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
-                 NE_laglist$`Week  46`[j,-(1:2)])
-
   
 
 #SE group 1:  Weeks 38-50 Index (1-16)
@@ -221,6 +213,20 @@ NEolr_cor <- cor(ne_df1, method = "pearson")[210:261]
 
 nino_max1 <- which.max(abs(NEcor_list[[1]]$nino_cor))
 nino1_max <- which.max(abs(NEnino_cor))
+
+
+#SE Aus
+se_df1 <- as.data.frame(cbind(SE_resp1[[1]], SE1_lag))
+SEnino_cor <- cor(se_df1, method = "pearson")[2:53]
+
+SEdmi_cor <- cor(se_df1, method = "pearson")[54:105]
+
+SEtsa_cor <- cor(se_df1, method = "pearson")[106:157]
+
+SEaao_cor <- cor(se_df1, method = "pearson")[158:209]
+
+SEolr_cor <- cor(se_df1, method = "pearson")[210:261]
+
 
 ```
 
@@ -302,9 +308,490 @@ title("OLR", adj = 0)
 ```
 
 
+```{r SEAus_group1}
+
+nino_max1 <- which.max(abs(SEcor_list[[1]]$nino_cor))
+nino1_max <- which.max(abs(SEnino_cor))
+
+dmi_max1 <- which.max(abs(SEcor_list[[1]]$dmi_cor))
+dmi1_max <- which.max(abs(SEdmi_cor))
+
+tsa_max1 <- which.max(abs(SEcor_list[[1]]$tsa_cor))
+tsa1_max <- which.max(abs(SEtsa_cor))
+
+aao_max1 <- which.max(abs(SEcor_list[[1]]$aao_cor))
+aao1_max <- which.max(abs(SEaao_cor))
+
+olr_max1 <- which.max(abs(SEcor_list[[1]]$olr_cor))
+olr1_max <- which.max(abs(SEolr_cor))
+
+#nino
+plot(1:52, SEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, SEnino_cor, col = rgb(1, 0, 0, 0.95), lty = 2)
+points(nino_max1, SEcor_list[[1]]$nino_cor[nino_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+points(nino1_max, SEnino_cor[nino1_max], pch = 17, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+title("Nino", adj = 0)
+#TODO: add in line segment from point down. 
+
+#dmi
+plot(1:52, SEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, SEdmi_cor, col = rgb(1, 0, 0, 0.95), lty = 2)
+points(dmi_max1, SEcor_list[[1]]$dmi_cor[dmi_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+points(dmi1_max, SEdmi_cor[dmi1_max], pch = 17, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+title("DMI", adj = 0)
+
+#tsa
+plot(1:52, SEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, SEtsa_cor, col = rgb(1, 0, 0, 0.95), lty = 2)
+points(tsa_max1, SEcor_list[[1]]$tsa_cor[tsa_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+points(tsa1_max, SEtsa_cor[tsa1_max], pch = 17, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+title("TSA", adj = 0)
+
+#AAO (sam)
+plot(1:52, SEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(aao_max1, SEcor_list[[1]]$aao_cor[aao_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEaao_cor, col = rgb(1, 0, 0, 0.95), lty = 2)
+points(aao1_max, SEaao_cor[aao1_max], pch = 17, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+title("SAM (AAO)", adj = 0)
+
+
+plot(1:52, SEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(olr_max1, SEcor_list[[1]]$olr_cor[olr_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEolr_cor, col = rgb(1, 0, 0, 0.95), lty = 2)
+points(olr1_max, SEolr_cor[olr1_max], pch = 17, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+title("OLR", adj = 0)
+
+
+```
+
+
+
+### Group 3 - Correlation
+
+```{r baseline}
+#nino - SE Aus
+nino_max3 <- which.max(abs( NEcor_list[[3]]$nino_cor))
+
+
+plot(1:52, NEcor_list[[3]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+abline(v = nino_max3, lty = 3, col = rgb(0, 0, 1, 0.95))
+points(nino_max3, NEcor_list[[3]]$nino_cor[nino_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("Nino", adj = 0)
+
+```
+
+
+
+```{r}
+
+#predictor updates
+j = (1:19)
+#NE group 3 Week 52; 1-14 Index (18-32)
+NE3_lag <- NE_laglist$`Week  52`[j,-(1:2)]
+NE3_lag <- rbind(NE3_lag, NE_laglist$`Week  1`[j,-(1:2)], 
+                 NE_laglist$`Week  2`[j,-(1:2)], NE_laglist$`Week  3`[j,-(1:2)], 
+                 NE_laglist$`Week  4`[j,-(1:2)], NE_laglist$`Week  5`[j,-(1:2)], 
+                 NE_laglist$`Week  6`[j,-(1:2)], NE_laglist$`Week  7`[j,-(1:2)], 
+                 NE_laglist$`Week  8`[j,-(1:2)], NE_laglist$`Week  9`[j,-(1:2)],
+                 NE_laglist$`Week  10`[j,-(1:2)],
+                 NE_laglist$`Week  11`[j,-(1:2)]) 
+                  #NE_laglist$`Week  12`[j,-(1:2)], NE_laglist$`Week  13`[j,-(1:2)], 
+                  #NE_laglist$`Week  14`[j,-(1:2)])
+
+#SE group 3: Weeks 3-14 Index (21-32)
+SE3_lag <-  SE_laglist$`Week  3`[j,-(1:2)]
+SE3_lag <- rbind(SE3_lag, SE_laglist$`Week  4`[j,-(1:2)], SE_laglist$`Week  5`[j,-(1:2)],
+                 SE_laglist$`Week  6`[j,-(1:2)], SE_laglist$`Week  7`[j,-(1:2)],
+                 SE_laglist$`Week  8`[j,-(1:2)], SE_laglist$`Week  9`[j,-(1:2)],
+                 SE_laglist$`Week  10`[j,-(1:2)],
+                 SE_laglist$`Week  11`[j,-(1:2)])
+                  #SE_laglist$`Week  12`[j,-(1:2)], SE_laglist$`Week  13`[j,-(1:2)],
+                  #SE_laglist$`Week  14`[j,-(1:2)])
+
+
+#response updates
+#without week 12-14
+NEAus_3.1 <- NEbase_matrix[ ,18:29]
+SEAus_3.1 <- SEbase_matrix[ ,21:29]
+
+#baseline 
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+#SEAus
+SEAus_1 <- SEbase_matrix[ ,1:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+
+NEAus_mat1 <- list(NEAus_1, NEAus_2, NEAus_3.1)
+SEAus_mat1 <- list(SEAus_1, SEAus_2, SEAus_3.1)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+rm(NEAus_3.1, SEAus_3.1)
+
+#updated response
+NE_resp1 <- NEresp_3group(NEAus_mat = NEAus_mat1, j = 1:19)
+SE_resp1 <- SEresp_3group(SEAus_mat = SEAus_mat1, j = 1:19)
+
+ne_df3 <- as.data.frame(cbind(NE_resp1[[3]], NE3_lag))
+se_df3 <- as.data.frame(cbind(SE_resp1[[3]], SE3_lag)) 
+```
+
+
+```{r NE_group3}
+NEnino_cor <- cor(ne_df3, method = "pearson")[2:53]
+
+NEdmi_cor <- cor(ne_df3, method = "pearson")[54:105]
+
+NEtsa_cor <- cor(ne_df3, method = "pearson")[106:157]
+
+NEaao_cor <- cor(ne_df3, method = "pearson")[158:209]
+
+NEolr_cor <- cor(ne_df3, method = "pearson")[210:261]
+
+
+nino_max3 <- which.max(abs(NEcor_list[[3]]$nino_cor))
+nino3_max <- which.max(abs(NEnino_cor))
+
+dmi_max3 <- which.max(abs(NEcor_list[[3]]$dmi_cor))
+dmi3_max <- which.max(abs(NEdmi_cor))
+
+tsa_max3 <- which.max(abs(NEcor_list[[3]]$tsa_cor))
+tsa3_max <- which.max(abs(NEtsa_cor))
+
+tsa_max3 <- which.max(abs(NEcor_list[[3]]$tsa_cor))
+tsa3_max <- which.max(abs(NEtsa_cor))
+
+aao_max1 <- which.max(abs(NEcor_list[[3]]$aao_cor))
+aao1_max <- which.max(abs(NEaao_cor))
+
+#nino
+plot(1:52, NEcor_list[[3]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, NEnino_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(nino_max3, NEcor_list[[3]]$nino_cor[nino_max3], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+points(nino3_max, NEnino_cor[nino3_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("Nino", adj = 0)
+#TODO: add in line segment from point down. 
+
+#dmi
+plot(1:52, NEcor_list[[3]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, NEdmi_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(dmi_max3, NEcor_list[[3]]$dmi_cor[dmi_max3], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+points(dmi3_max, NEdmi_cor[dmi3_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("DMI", adj = 0)
+
+#tsa
+plot(1:52, NEcor_list[[3]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, NEtsa_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(tsa_max3, NEcor_list[[3]]$tsa_cor[tsa_max3], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+points(tsa3_max, NEtsa_cor[tsa3_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("TSA", adj = 0)
+
+#AAO (sam)
+plot(1:52, NEcor_list[[3]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+points(aao_max1, NEcor_list[[3]]$aao_cor[aao_max1], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+lines(1:52, NEaao_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(aao1_max, NEaao_cor[aao1_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("SAM (AAO)", adj = 0)
+
+olr_max1 <- which.max(abs(NEcor_list[[3]]$olr_cor))
+olr1_max <- which.max(abs(NEolr_cor))
+
+plot(1:52, NEcor_list[[3]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+points(olr_max1, NEcor_list[[3]]$olr_cor[olr_max1], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+lines(1:52, NEolr_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(olr1_max, NEolr_cor[olr1_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("OLR", adj = 0)
+```
+
+```{r SE_group3}
+SEnino_cor <- cor(se_df3, method = "pearson")[2:53]
+
+SEdmi_cor <- cor(se_df3, method = "pearson")[54:105]
+
+SEtsa_cor <- cor(se_df3, method = "pearson")[106:157]
+
+SEaao_cor <- cor(se_df3, method = "pearson")[158:209]
+
+SEolr_cor <- cor(se_df3, method = "pearson")[210:261]
+
+
+nino_max3 <- which.max(abs(SEcor_list[[3]]$nino_cor))
+nino3_max <- which.max(abs(SEnino_cor))
+
+dmi_max3 <- which.max(abs(SEcor_list[[3]]$dmi_cor))
+dmi3_max <- which.max(abs(SEdmi_cor))
+
+tsa_max3 <- which.max(abs(SEcor_list[[3]]$tsa_cor))
+tsa3_max <- which.max(abs(SEtsa_cor))
+
+tsa_max3 <- which.max(abs(SEcor_list[[3]]$tsa_cor))
+tsa3_max <- which.max(abs(SEtsa_cor))
+
+aao_max1 <- which.max(abs(SEcor_list[[3]]$aao_cor))
+aao1_max <- which.max(abs(SEaao_cor))
+
+olr_max1 <- which.max(abs(SEcor_list[[3]]$olr_cor))
+olr1_max <- which.max(abs(SEolr_cor))
+
+#nino
+plot(1:52, SEcor_list[[3]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, SEnino_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(nino_max3, SEcor_list[[3]]$nino_cor[nino_max3], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+points(nino3_max, SEnino_cor[nino3_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("Nino", adj = 0)
+#TODO: add in line segment from point down. 
+
+#dmi
+plot(1:52, SEcor_list[[3]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, SEdmi_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(dmi_max3, SEcor_list[[3]]$dmi_cor[dmi_max3], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+points(dmi3_max, SEdmi_cor[dmi3_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("DMI", adj = 0)
+
+#tsa
+plot(1:52, SEcor_list[[3]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+lines(1:52, SEtsa_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(tsa_max3, SEcor_list[[3]]$tsa_cor[tsa_max3], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+points(tsa3_max, SEtsa_cor[tsa3_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("TSA", adj = 0)
+
+#AAO (sam)
+plot(1:52, SEcor_list[[3]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+points(aao_max1, SEcor_list[[3]]$aao_cor[aao_max1], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+lines(1:52, SEaao_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(aao1_max, SEaao_cor[aao1_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("SAM (AAO)", adj = 0)
+
+
+plot(1:52, SEcor_list[[3]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(0, 0, 1, 0.95))
+abline(h = 0, lty = 2)
+points(olr_max1, SEcor_list[[3]]$olr_cor[olr_max1], pch = 16, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+lines(1:52, SEolr_cor, col = rgb(0, 0, 1, 0.95), lty = 2)
+points(olr1_max, SEolr_cor[olr1_max], pch = 17, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("OLR", adj = 0)
+```
+
+
+
 ## Heatmaps
 
 Correlation heatmaps
+
+```{r weekly_test}
+#begin with weekly heatmaps
+#nino first, then move on.
+test_df <- NE_laglist_std[[1]][,-1]
+
+nino_test <- cor(test_df, method = "pearson")[2:53]
+dmi_test <- cor(test_df, method = "pearson")[54:105]
+tsa_test <- cor(test_df, method = "pearson")[106:157]
+aao_test <- cor(test_df, method = "pearson")[158:209]
+olr_test <- cor(test_df, method = "pearson")[210:261]
+
+tempCor_df <- data.frame(nino_test, 
+                         dmi_test,
+                         tsa_test,
+                         aao_test,
+                         olr_test)
+
+corr_lagNE <- tempCor_df
+rownames(corr_lagNE) <- paste("Lag", 1:52)
+breaksList = seq(-1.0, 1.0, by = 0.01)
+
+heat_NE <- pheatmap(corr_lagNE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "NE Aus Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+```
+
+```{r }
+group1_NE <- 1:12
+nino_NEcor_df <- matrix(NA, nrow = 52)
+dmi_NEcor_df <- matrix(NA, nrow = 52)
+tsa_NEcor_df <- matrix(NA, nrow = 52) 
+aao_NEcor_df <- matrix(NA, nrow = 52) 
+for (j in 1:12) {
+  temp_df <- NE_laglist_std[[j]][,-1]
+  
+  nino_cor <- cor(temp_df, method = "pearson")[2:53]
+  dmi_cor <- cor(temp_df, method = "pearson")[54:105]
+  tsa_cor <- cor(temp_df, method = "pearson")[106:157]
+  aao_cor <- cor(temp_df, method = "pearson")[158:209]
+  
+  nino_NEcor_df <- cbind(nino_NEcor_df, nino_cor)
+  dmi_NEcor_df <- cbind(dmi_NEcor_df, dmi_cor)
+  tsa_NEcor_df <- cbind(tsa_NEcor_df, tsa_cor)
+  aao_NEcor_df <- cbind(aao_NEcor_df, aao_cor)  
+}
+
+nino_NEcor_df <- as.data.frame(nino_NEcor_df[ ,-1])
+dmi_NEcor_df <- as.data.frame(dmi_NEcor_df[ ,-1])
+tsa_NEcor_df <- as.data.frame(tsa_NEcor_df[ ,-1])
+aao_NEcor_df <- as.data.frame(aao_NEcor_df[ ,-1])
+
+colnames(nino_NEcor_df) <-  paste("Week", season_weeks[1:12])
+colnames(dmi_NEcor_df) <-  paste("Week", season_weeks[1:12])
+colnames(tsa_NEcor_df) <-  paste("Week", season_weeks[1:12])
+colnames(aao_NEcor_df) <-  paste("Week", season_weeks[1:12])
+
+group1_SE <- 1:16
+nino_SEcor_df <- matrix(NA, nrow = 52)
+dmi_SEcor_df <- matrix(NA, nrow = 52)
+tsa_SEcor_df <- matrix(NA, nrow = 52)
+aao_SEcor_df <- matrix(NA, nrow = 52) 
+for (k in 1:16) {
+  temp_df <- SE_laglist_std[[k]][,-1]
+  nino_cor <- cor(temp_df, method = "pearson")[2:53]
+  dmi_cor <- cor(temp_df, method = "pearson")[54:105]
+  tsa_cor <- cor(temp_df, method = "pearson")[106:157]
+  aao_cor <- cor(temp_df, method = "pearson")[158:209]
+    
+  nino_SEcor_df <- cbind(nino_SEcor_df, nino_cor)  
+  dmi_SEcor_df <- cbind(dmi_SEcor_df, dmi_cor)
+  tsa_SEcor_df <- cbind(tsa_SEcor_df, tsa_cor)
+  aao_SEcor_df <- cbind(aao_SEcor_df, aao_cor)
+}
+
+nino_SEcor_df <- as.data.frame(nino_SEcor_df[ ,-1])
+dmi_SEcor_df <- as.data.frame(dmi_SEcor_df[ ,-1])
+tsa_SEcor_df <- as.data.frame(tsa_SEcor_df[ ,-1])
+aao_SEcor_df <- as.data.frame(aao_SEcor_df[ ,-1])
+
+colnames(nino_SEcor_df) <-  paste("Week", season_weeks[1:16])
+colnames(dmi_SEcor_df) <-  paste("Week", season_weeks[1:16])
+colnames(tsa_SEcor_df) <-  paste("Week", season_weeks[1:16])
+colnames(aao_SEcor_df) <-  paste("Week", season_weeks[1:16])
+
+```
+
+
+```{r nino_group1}
+#TODO: move these
+corr_lagNE <- nino_NEcor_df
+corr_lagSE <- nino_SEcor_df
+rownames(corr_lagNE) <- paste("Lag", 1:52)
+rownames(corr_lagSE) <- paste("Lag", 1:52)
+breaksList = seq(-1.0, 1.0, by = 0.01)
+
+
+heat_NE <- pheatmap(corr_lagNE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "NE Aus ~ Nino : Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+heat_SE <- pheatmap(corr_lagSE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "SE Aus ~ Nino : Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+
+
+a <- list(heat_NE[[4]])
+a[[2]] <- heat_SE[[4]]
+
+grid.arrange(heat_NE[[4]], heat_SE[[4]], ncol=2)
+
+z <- do.call(grid.arrange, a)
+
+```
+
+
+```{r dmi_group1}
+corr_lagNE <- dmi_NEcor_df
+corr_lagSE <- dmi_SEcor_df
+rownames(corr_lagNE) <- paste("Lag", 1:52)
+rownames(corr_lagSE) <- paste("Lag", 1:52)
+breaksList = seq(-1.0, 1.0, by = 0.01)
+
+
+heat_NE <- pheatmap(corr_lagNE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "NE Aus ~ DMI : Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+heat_SE <- pheatmap(corr_lagSE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "SE Aus ~ DMI : Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+
+
+a <- list(heat_NE[[4]])
+a[[2]] <- heat_SE[[4]]
+
+grid.arrange(heat_NE[[4]], heat_SE[[4]], ncol=2)
+
+z <- do.call(grid.arrange, a)
+```
+
+
+```{r tsa_group1}
+corr_lagNE <- tsa_NEcor_df
+corr_lagSE <- tsa_SEcor_df
+rownames(corr_lagNE) <- paste("Lag", 1:52)
+rownames(corr_lagSE) <- paste("Lag", 1:52)
+breaksList = seq(-1.0, 1.0, by = 0.01)
+
+
+heat_NE <- pheatmap(corr_lagNE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "NE Aus ~ TSA : Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+heat_SE <- pheatmap(corr_lagSE,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE, main = "SE Aus ~ TSA : Correlation",
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList)), 
+         breaks = breaksList)
+
+
+a <- list(heat_NE[[4]])
+a[[2]] <- heat_SE[[4]]
+
+grid.arrange(heat_NE[[4]], heat_SE[[4]], ncol=2)
+
+z <- do.call(grid.arrange, a)
+```
+
+
+
+
+
 
 ```{r test_heatmaps}
 #comparing group 1
@@ -317,7 +804,6 @@ tempCor_df <- data.frame(NEnino_cor,  NEcor_list[[1]]$nino_cor,
 corr_lagNE <- tempCor_df
 rownames(corr_lagNE) <- paste("Lag", 1:52)
 breaksList = seq(-1.0, 1.0, by = 0.01)
-
 
 heat_NE <- pheatmap(corr_lagNE,
          cluster_cols = FALSE,

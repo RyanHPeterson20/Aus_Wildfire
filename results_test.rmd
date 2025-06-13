@@ -31,9 +31,6 @@ Outline:
 (Note: order can change)
 
 1. Correlation Plots
-  a. 
-
-
 
 # Correlation
 
@@ -126,161 +123,200 @@ plot(1:52, olr_cor)
 nino_max1 <- which.max(abs( NEcor_list[[1]]$nino_cor))
 nino_max2 <- which.max(abs( NEcor_list[[2]]$nino_cor))
 nino_max3 <- which.max(abs( NEcor_list[[3]]$nino_cor))
-
-plot(1:52, NEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
-     ylab = "Correlation", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(nino_max1, NEcor_list[[1]]$nino_cor[nino_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, NEcor_list[[2]]$nino_cor)
-points(nino_max2, NEcor_list[[2]]$nino_cor[nino_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, NEcor_list[[3]]$nino_cor)
-points(nino_max3, NEcor_list[[3]]$nino_cor[nino_max3], pch = 19, col = "blue3", cex = 1.33)
-title("Nino", adj = 0)
-
 #DMI - NE Aus
 dmi_max1 <- which.max(abs( NEcor_list[[1]]$dmi_cor))
 dmi_max2 <- which.max(abs( NEcor_list[[2]]$dmi_cor))
 dmi_max3 <- which.max(abs( NEcor_list[[3]]$dmi_cor))
-
-plot(1:52, NEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(dmi_max1, NEcor_list[[1]]$dmi_cor[dmi_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, NEcor_list[[2]]$dmi_cor)
-points(dmi_max2, NEcor_list[[2]]$dmi_cor[dmi_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, NEcor_list[[3]]$dmi_cor)
-points(dmi_max3, NEcor_list[[3]]$dmi_cor[dmi_max3], pch = 19, col = "blue3", cex = 1.33)
-title("DMI", adj = 0)
-
-
 #TSA - NE Aus
 tsa_max1 <- which.max(abs( NEcor_list[[1]]$tsa_cor))
 tsa_max2 <- which.max(abs( NEcor_list[[2]]$tsa_cor))
 tsa_max3 <- which.max(abs( NEcor_list[[3]]$tsa_cor))
-
-plot(1:52, NEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag", col = "red3", lwd = 0.75)
-abline(h = 0, lty = 2)
-points(tsa_max1, NEcor_list[[1]]$tsa_cor[tsa_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, NEcor_list[[2]]$tsa_cor)
-points(tsa_max2, NEcor_list[[2]]$tsa_cor[tsa_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, NEcor_list[[3]]$tsa_cor)
-points(tsa_max3, NEcor_list[[3]]$tsa_cor[tsa_max3], pch = 19, col = "blue3", cex = 1.33)
-title("TSA", adj = 0)
-
-
 #AAO - NE Aus
 aao_max1 <- which.max(abs( NEcor_list[[1]]$aao_cor))
 aao_max2 <- which.max(abs( NEcor_list[[2]]$aao_cor))
 aao_max3 <- which.max(abs( NEcor_list[[3]]$aao_cor))
-
-plot(1:52, NEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(aao_max1, NEcor_list[[1]]$aao_cor[aao_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, NEcor_list[[2]]$aao_cor)
-points(aao_max2, NEcor_list[[2]]$aao_cor[aao_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, NEcor_list[[3]]$tsa_cor)
-points(aao_max3, NEcor_list[[3]]$aao_cor[aao_max3], pch = 19, col = "blue3", cex = 1.33)
-title("SAM (AAO)", adj = 0)
-
 # OLR - NE Aus
 olr_max1 <- which.max(abs( NEcor_list[[1]]$olr_cor))
 olr_max2 <- which.max(abs( NEcor_list[[2]]$olr_cor))
 olr_max3 <- which.max(abs( NEcor_list[[3]]$olr_cor))
 
-plot(1:52, NEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NE_corr.png", width = 2600, height = 1800, res = 200)
+
+set.panel(2,3)
+plot(1:52, NEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
 abline(h = 0, lty = 2)
-points(olr_max1, NEcor_list[[1]]$olr_cor[olr_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, NEcor_list[[2]]$olr_cor)
-points(olr_max2, NEcor_list[[2]]$olr_cor[olr_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, NEcor_list[[3]]$olr_cor)
-points(olr_max3, NEcor_list[[3]]$olr_cor[olr_max3], pch = 19, col = "blue3", cex = 1.33)
+points(nino_max1, NEcor_list[[1]]$nino_cor[nino_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, NEcor_list[[2]]$nino_cor, col = rgb(0, 1, 0, 0.95))
+points(nino_max2, NEcor_list[[2]]$nino_cor[nino_max2], pch = 17, col ="green4", cex = 1.33)
+lines(1:52, NEcor_list[[3]]$nino_cor, col = rgb(0, 0, 1, 0.95))
+points(nino_max3, NEcor_list[[3]]$nino_cor[nino_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("Nino", adj = 0)
+
+
+plot(1:52, NEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(dmi_max1, NEcor_list[[1]]$dmi_cor[dmi_max1], pch = , col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, NEcor_list[[2]]$dmi_cor, col = rgb(0, 1, 0, 0.95))
+points(dmi_max2, NEcor_list[[2]]$dmi_cor[dmi_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, NEcor_list[[3]]$dmi_cor, col = rgb(0, 0, 1, 0.95))
+points(dmi_max3, NEcor_list[[3]]$dmi_cor[dmi_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("DMI", adj = 0)
+
+
+
+
+plot(1:52, NEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95), lwd = 0.75)
+abline(h = 0, lty = 2)
+points(tsa_max1, NEcor_list[[1]]$tsa_cor[tsa_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, NEcor_list[[2]]$tsa_cor, col = rgb(0, 1, 0, 0.95))
+points(tsa_max2, NEcor_list[[2]]$tsa_cor[tsa_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, NEcor_list[[3]]$tsa_cor, col = rgb(0, 0, 1, 0.95))
+points(tsa_max3, NEcor_list[[3]]$tsa_cor[tsa_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("TSA", adj = 0)
+
+
+
+plot(1:52, NEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(aao_max1, NEcor_list[[1]]$aao_cor[aao_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, NEcor_list[[2]]$aao_cor, col = rgb(0, 1, 0, 0.95))
+points(aao_max2, NEcor_list[[2]]$aao_cor[aao_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, NEcor_list[[3]]$tsa_cor, col = rgb(0, 0, 1, 0.95))
+points(aao_max3, NEcor_list[[3]]$aao_cor[aao_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("SAM (AAO)", adj = 0)
+
+
+plot(1:52, NEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(olr_max1, NEcor_list[[1]]$olr_cor[olr_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, NEcor_list[[2]]$olr_cor, col = rgb(0, 1, 0, 0.95))
+points(olr_max2, NEcor_list[[2]]$olr_cor[olr_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, NEcor_list[[3]]$olr_cor, col = rgb(0, 0, 1, 0.95))
+points(olr_max3, NEcor_list[[3]]$olr_cor[olr_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
 title("OLR", adj = 0)
 
+par(xpd = NA)
+legend("topright", inset = c(-0.50, 0.00),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       pch = c(16, 17, 19),
+       col = c( rgb(1, 0, 0, 0.95), 
+                "green4",
+                rgb(0, 0, 1, 0.95)),
+       pt.cex = c(1.33, 1.33, 1.33),
+       cex = 1.5)
+mtext("NE Aus : Correlation", side = 3, outer = TRUE, line = -1.5, cex = 1.5)
 
+dev.off()
 ```
 
 
 ```{r SEAus_cor}
 #nino - SE Aus
+
+#nino - NE Aus
 nino_max1 <- which.max(abs( SEcor_list[[1]]$nino_cor))
 nino_max2 <- which.max(abs( SEcor_list[[2]]$nino_cor))
 nino_max3 <- which.max(abs( SEcor_list[[3]]$nino_cor))
-
-plot(1:52, SEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
-     ylab = "Correlation", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(nino_max1, SEcor_list[[1]]$nino_cor[nino_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, SEcor_list[[2]]$nino_cor)
-points(nino_max2, SEcor_list[[2]]$nino_cor[nino_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, SEcor_list[[3]]$nino_cor)
-points(nino_max3, SEcor_list[[3]]$nino_cor[nino_max3], pch = 19, col = "blue3", cex = 1.33)
-title("Nino", adj = 0)
-
 #DMI - NE Aus
 dmi_max1 <- which.max(abs( SEcor_list[[1]]$dmi_cor))
 dmi_max2 <- which.max(abs( SEcor_list[[2]]$dmi_cor))
 dmi_max3 <- which.max(abs( SEcor_list[[3]]$dmi_cor))
-
-plot(1:52, SEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(dmi_max1, SEcor_list[[1]]$dmi_cor[dmi_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, SEcor_list[[2]]$dmi_cor)
-points(dmi_max2, SEcor_list[[2]]$dmi_cor[dmi_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, SEcor_list[[3]]$dmi_cor)
-points(dmi_max3, SEcor_list[[3]]$dmi_cor[dmi_max3], pch = 19, col = "blue3", cex = 1.33)
-title("DMI", adj = 0)
-
-
 #TSA - NE Aus
 tsa_max1 <- which.max(abs( SEcor_list[[1]]$tsa_cor))
 tsa_max2 <- which.max(abs( SEcor_list[[2]]$tsa_cor))
 tsa_max3 <- which.max(abs( SEcor_list[[3]]$tsa_cor))
-
-plot(1:52, SEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(tsa_max1, SEcor_list[[1]]$tsa_cor[tsa_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, SEcor_list[[2]]$tsa_cor)
-points(tsa_max2, SEcor_list[[2]]$tsa_cor[tsa_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, SEcor_list[[3]]$tsa_cor)
-points(tsa_max3, SEcor_list[[3]]$tsa_cor[tsa_max3], pch = 19, col = "blue3", cex = 1.33)
-title("TSA", adj = 0)
-
-
 #AAO - NE Aus
 aao_max1 <- which.max(abs( SEcor_list[[1]]$aao_cor))
 aao_max2 <- which.max(abs( SEcor_list[[2]]$aao_cor))
 aao_max3 <- which.max(abs( SEcor_list[[3]]$aao_cor))
-
-plot(1:52, SEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
-abline(h = 0, lty = 2)
-points(aao_max1, SEcor_list[[1]]$aao_cor[aao_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, SEcor_list[[2]]$aao_cor)
-points(aao_max2, SEcor_list[[2]]$aao_cor[aao_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, SEcor_list[[3]]$tsa_cor)
-points(aao_max3, SEcor_list[[3]]$aao_cor[aao_max3], pch = 19, col = "blue3", cex = 1.33)
-title("SAM (AAO)", adj = 0)
-
 # OLR - NE Aus
 olr_max1 <- which.max(abs( SEcor_list[[1]]$olr_cor))
 olr_max2 <- which.max(abs( SEcor_list[[2]]$olr_cor))
 olr_max3 <- which.max(abs( SEcor_list[[3]]$olr_cor))
 
-plot(1:52, SEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
-     ylab = "", xlab = "Lag")
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "sE_corr.png", width = 2600, height = 1800, res = 200)
+
+set.panel(2,3)
+plot(1:52, SEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
 abline(h = 0, lty = 2)
-points(olr_max1, SEcor_list[[1]]$olr_cor[olr_max1], pch = 16, col = "red3", cex = 1.33)
-lines(1:52, SEcor_list[[2]]$olr_cor)
-points(olr_max2, SEcor_list[[2]]$olr_cor[olr_max2], pch = 17, col = "green3", cex = 1.33)
-lines(1:52, SEcor_list[[3]]$olr_cor)
-points(olr_max3, SEcor_list[[3]]$olr_cor[olr_max3], pch = 19, col = "blue3", cex = 1.33)
+points(nino_max1, SEcor_list[[1]]$nino_cor[nino_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEcor_list[[2]]$nino_cor, col = rgb(0, 1, 0, 0.95))
+points(nino_max2, SEcor_list[[2]]$nino_cor[nino_max2], pch = 17, col ="green4", cex = 1.33)
+lines(1:52, SEcor_list[[3]]$nino_cor, col = rgb(0, 0, 1, 0.95))
+points(nino_max3, SEcor_list[[3]]$nino_cor[nino_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("Nino", adj = 0)
+
+
+plot(1:52, SEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(dmi_max1, SEcor_list[[1]]$dmi_cor[dmi_max1], pch = , col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEcor_list[[2]]$dmi_cor, col = rgb(0, 1, 0, 0.95))
+points(dmi_max2, SEcor_list[[2]]$dmi_cor[dmi_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, SEcor_list[[3]]$dmi_cor, col = rgb(0, 0, 1, 0.95))
+points(dmi_max3, SEcor_list[[3]]$dmi_cor[dmi_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("DMI", adj = 0)
+
+
+
+
+plot(1:52, SEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95), lwd = 0.75)
+abline(h = 0, lty = 2)
+points(tsa_max1, SEcor_list[[1]]$tsa_cor[tsa_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEcor_list[[2]]$tsa_cor, col = rgb(0, 1, 0, 0.95))
+points(tsa_max2, SEcor_list[[2]]$tsa_cor[tsa_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, SEcor_list[[3]]$tsa_cor, col = rgb(0, 0, 1, 0.95))
+points(tsa_max3, SEcor_list[[3]]$tsa_cor[tsa_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("TSA", adj = 0)
+
+
+
+plot(1:52, SEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(aao_max1, SEcor_list[[1]]$aao_cor[aao_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEcor_list[[2]]$aao_cor, col = rgb(0, 1, 0, 0.95))
+points(aao_max2, SEcor_list[[2]]$aao_cor[aao_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, SEcor_list[[3]]$tsa_cor, col = rgb(0, 0, 1, 0.95))
+points(aao_max3, SEcor_list[[3]]$aao_cor[aao_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
+title("SAM (AAO)", adj = 0)
+
+
+plot(1:52, SEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "", xlab = "Lag", col = rgb(1, 0, 0, 0.95))
+abline(h = 0, lty = 2)
+points(olr_max1, SEcor_list[[1]]$olr_cor[olr_max1], pch = 16, col = rgb(1, 0, 0, 0.95), cex = 1.33)
+lines(1:52, SEcor_list[[2]]$olr_cor, col = rgb(0, 1, 0, 0.95))
+points(olr_max2, SEcor_list[[2]]$olr_cor[olr_max2], pch = 17, col = "green4", cex = 1.33)
+lines(1:52, SEcor_list[[3]]$olr_cor, col = rgb(0, 0, 1, 0.95))
+points(olr_max3, SEcor_list[[3]]$olr_cor[olr_max3], pch = 19, col = rgb(0, 0, 1, 0.95), cex = 1.33)
 title("OLR", adj = 0)
 
+par(xpd = NA)
+legend("topright", inset = c(-0.50, 0.00),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       pch = c(16, 17, 19),
+       col = c( rgb(1, 0, 0, 0.95), 
+                "green4",
+                rgb(0, 0, 1, 0.95)),
+       pt.cex = c(1.33, 1.33, 1.33),
+       cex = 1.5)
+mtext("SE Aus : Correlation", side = 3, outer = TRUE, line = -1.5, cex = 1.5)
+
+dev.off()
 
 ```
 
