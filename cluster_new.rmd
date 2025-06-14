@@ -708,6 +708,55 @@ lines(1:10, diff(NEsil_matrix2[,1]), type = "b", col = "blue3", pch = 15)
 ```
 
 
+
+# Histograms and Other Raw Data Plots
+
+Looking at raw data to help make decisions for group 3 (weeks 10-14)
+
+```{r}
+#reset setup
+
+#creating histograms
+NE_resp <- resp_matrix[,1:32]
+SE_resp <- resp_matrix[,33:64]
+
+NEbase_matrix <- scale(resp_matrix[, 1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[,33:64], center = TRUE, scale = FALSE)
+
+hist(NEbase_matrix[,4:12], col = rgb(1, 0, 0, 0.2), breaks = 10, freq = FALSE)
+hist(SEbase_matrix[,4:16], col = rgb(1, 0, 0, 0.2), breaks = 10, freq = FALSE)
+
+hist(NEbase_matrix[,18:29], col = rgb(0, 0, 1, 0.2), breaks = 24, freq = FALSE)
+hist(SEbase_matrix[,21:29], col = rgb(0, 0, 1, 0.2), breaks = 24, freq = FALSE)
+
+
+```
+
+```{r}
+hist(NEbase_matrix, breaks = 24, freq = FALSE,
+     xlab = "Atmospheric CO", main = "", ylim = c(0, 0.10))
+hist(NEbase_matrix[,18:29], col = rgb(0, 0, 1, 0.2), breaks = 24, freq = FALSE, add = TRUE)
+
+
+hist(SEbase_matrix, breaks = 24, freq = FALSE,
+     xlab = "Atmospheric CO", main = "", ylim = c(0, 0.12))
+hist(SEbase_matrix[,21:29], col = rgb(0, 0, 1, 0.2), breaks = 20, freq = FALSE, add = TRUE)
+```
+
+```{r}
+hist(NEbase_matrix[ ,18:32], breaks = 24, freq = FALSE,  #col = rgb(0, 0.5, 1, 0.25),
+     xlab = "Atmospheric CO", main = "", ylim = c(0, 0.10))
+hist(NEbase_matrix[,18:29], col = rgb(0, 0, 1, 0.2), breaks = 24, freq = FALSE, add = TRUE)
+
+
+hist(SEbase_matrix[ ,21:32], breaks = 24, freq = FALSE, #col = rgb(0, 0.5, 1, 0.25),
+     xlab = "Atmospheric CO", main = "", ylim = c(0, 0.12))
+hist(SEbase_matrix[,21:29], col = rgb(0, 0, 1, 0.2), breaks = 24, freq = FALSE, add = TRUE)
+```
+
+
+
+
 ## Other Cluster Plots
 
 

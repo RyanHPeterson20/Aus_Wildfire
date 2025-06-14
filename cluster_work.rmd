@@ -32,7 +32,7 @@ load( "lag_list.rda")
 ```{r setup}
 season_weeks <- c(35:52, 1:14)
 
-season_weeks[21]
+#season_weeks[21]
 ```
 
 
@@ -164,11 +164,11 @@ axis(1, at = 1:32, labels = c(season_weeks),
      las = 3, cex.axis = 1.6)
 abline(h = 0, lty = 2)
 title("NE Aus", adj = 0, cex.main = 1.5)
-abline(v = c(12.5, 17.5, 21.5), lty =2, col = "red")
-text(7, -22, "Group 1", col = "red", cex =1)
-text(15, -22, "Group 2", col = "red", cex = 1)
-text(19.5, -22, "Group 3", col = "red", cex = 1)
-text(27, -22, "Group 4", col = "red", cex = 1)
+abline(v = c(3.5, 12.5), lty =2, col = "red")
+text(1.5, -22, "Group 1", col = "red", cex =1)
+text(8.5, -22, "Group 2", col = "red", cex = 1)
+text(22.5, -22, "Group 1", col = "red", cex = 1)
+
 
 boxplot(SEbase_matrix, ylim = y_lim, ylab = "Atmospheric CO", xlab = "Week",
         axes = FALSE, pch = 20, 
@@ -178,12 +178,11 @@ axis(2)
 axis(1, at = 1:32, labels = c(season_weeks),
      las = 3, cex.axis = 1.6)
 abline(h = 0, lty = 2)
-abline(v = c(7.5, 16.5, 20.5), lty =2, col = "red")
+abline(v = c(3.5, 16.5), lty =2, col = "red")
 title("SE Aus", adj = 0, cex.main = 1.5)
-text(4, -22, "Group 1", col = "red", cex =1)
-text(12, -22, "Group 2", col = "red", cex = 1)
-text(18.5, -22, "Group 3", col = "red", cex = 1)
-text(26, -22, "Group 4", col = "red", cex = 1)
+text(1.5, -22, "Group 1", col = "red", cex =1)
+text(10.5, -22, "Group 2", col = "red", cex = 1)
+text(22.5, -22, "Group 1", col = "red", cex = 1)
 
 dev.off()
 ```
@@ -305,8 +304,6 @@ stats:::plot.hclust(NEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "
 axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
      las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
 rect(xleft = 0.5, xright = 12.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2), border = NA)
-#rect(xleft = 3.5, xright = 8.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
-#rect(xleft = 8.5, xright = 12.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
 rect(xleft = 12.5, xright = 17.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
 rect(xleft = 17.5, xright = 21.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
 rect(xleft = 21.5, xright = 32.5, ybottom = 0, ytop = 50, col = rgb(1, 0.5, 0, 0.2), border = NA)
@@ -327,7 +324,6 @@ stats:::plot.hclust(SEconst_clust, hang = -1, labels = FALSE, bty = "n", sub = "
 axis(1, at = 1:32, labels = c(season_weeks[1:32]), 
      las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.6)
 rect(xleft = 0.5, xright = 7.5, ybottom = 0, ytop = 50, col = rgb(1, 0, 0, 0.2), border = NA)
-#rect(xleft = 3.5, xright = 7.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
 rect(xleft = 7.5, xright = 16.5, ybottom = 0, ytop = 50, col = rgb(0, 1, 0, 0.2), border = NA)
 rect(xleft = 16.5, xright = 20.5, ybottom = 0, ytop = 50, col = rgb(0, 0, 1, 0.2), border = NA)
 rect(xleft = 20.5, xright = 32.5, ybottom = 0, ytop = 50, col = rgb(1, 0.5, 0, 0.2), border = NA)
