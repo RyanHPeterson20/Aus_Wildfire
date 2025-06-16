@@ -321,6 +321,24 @@ length(ridge_coef)
 
 ```
 
+
+```{r plot_BIC}
+#plotting BIC with respect to various values to get the appropriate range
+plot(NErefit1[[5]][1:10,1], NErefit1[[5]][1:10,5], type = "b", pch = 16)
+lines(NErefit1[[5]][1:10,1],NErefit1[[5]][1:10,6], type = "b", pch = 16, col = "red", lty = 2 )
+
+NEaus_df <- NULL
+for (i in 1:10) {
+  
+  NEaus_df <- c(NEaus_df ,length( NErefit1[[4]][[i]]))
+}
+
+plot(NErefit1[[5]][1:10,1], NEaus_df)
+
+```
+
+
+
 ```{r SEAus_refit}
 SE_preds <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
 SE_resp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
@@ -3039,8 +3057,7 @@ NE1_tsalag <- c(14,15)
 NE1_tsacoef <- NEridge1_main[9:10]
 
 # --- Range ---
-NEAus1_range <- range(NEridge1_main,
-                      NEridge1_base)
+NEAus1_range <- c(-1,1)
 
 # --- Plot 1: Nino ---
 par(mar = c(4, 4, 2, 1))
@@ -3092,9 +3109,7 @@ title("OLR", adj = 0)
 # --- Plot 6: Interaction Effects ---
 par(mar = c(4, 4, 2, 2))
 
-int_range <- range(NEridge1_main,
-                      NEridge1_main1,
-                      NEridge1_base)
+int_range <- c(-1,1)
 
 plot(NEridge1_main[1], 0, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
@@ -3206,8 +3221,7 @@ NE22_olrcoef <- NEridge2_base[6]
 
 
 # --- Range ---
-NEAus2_range <- range(NEridge2_main,
-                      NEridge2_base)
+NEAus2_range <- c(-1,1)
 
 # --- Plot 1: Nino ---
 par(mar = c(4, 4, 2, 1))
@@ -3457,8 +3471,7 @@ links[[19]] <- list(
 # --- Plot 6: Interaction Effects ---
 par(mar = c(4, 4, 2, 2))
 
-int_range <- range(NEridge2_main,
-                      NEridge2_base)
+int_range <- c(-1,1)
 
 plot(NEridge2_main[1], 0, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
@@ -3692,8 +3705,7 @@ NE32_olrlag <- c(1, 19,20,32)
 NE32_olrcoef <- NEridge3_base[27:30]
 
 # --- Range ---
-NEAus3_range <- range(NEridge3_main,
-                      NEridge3_base)
+NEAus3_range <- c(-1,1)
 
 # --- Plot 1: Nino ---
 par(mar = c(4, 4, 2, 1))
@@ -3932,8 +3944,7 @@ links[[13]] <- list(
 # --- Plot 6: Interaction Effects ---
 par(mar = c(4, 4, 2, 2))
 
-int_range <- range(NEridge3_main,
-                      NEridge3_base)
+int_range <- c(-1,1)
 
 plot(NEridge3_main[1], 0, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
@@ -4181,9 +4192,7 @@ SE12_aaocoef <- SEridge1_base[3]
 ## OLR
 
 # --- Range ---
-SEAus1_range <- range(SEridge1_main,
-                      SEridge1_base)
-
+SEAus1_range <- c(-1,1)
 # --- Plot 1: Nino ---
 par(mar = c(4, 4, 2, 1))
 
@@ -4273,8 +4282,7 @@ title("OLR", adj = 0)
 # --- Plot 6: Interaction Effects ---
 par(mar = c(4, 4, 2, 2))
 
-int_range <- range(SEridge1_main,
-                      SEridge1_base)
+int_range <- c(-1,1)
 
 plot(SEridge1_main[1], 0, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
@@ -4416,8 +4424,8 @@ SE22_aaocoef <- SEridge2_base[7]
 ## OLR
 
 # --- Range ---
-SEAus2_range <- range(SEridge2_main,
-                      SEridge2_base)
+SEAus2_range <- range(SEridge2_main, SEridge2_base)
+SEAus2_range <- c(-1, SEAus2_range[2])
 
 # --- Plot 1: Nino ---
 par(mar = c(4, 4, 2, 1))
@@ -4548,8 +4556,7 @@ title("OLR", adj = 0)
 par(mar = c(4, 4, 2, 2))
 
 
-int_range <- range(SEridge2_main,
-                   SEridge2_base)
+int_range <- c(-1,1)
 
 plot(SEridge2_base[1], 0, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,
@@ -4710,8 +4717,7 @@ SE32_dmicoef <- SEridge3_base[2]
 ## OLR
 
 # --- Range ---
-SEAus3_range <- range(SEridge3_main,
-                      SEridge3_base)
+SEAus3_range <- c(-1,1)
 
 SEAus3_range <- c(-SEAus3_range[2], SEAus3_range[2])
 
@@ -4784,9 +4790,7 @@ title("OLR", adj = 0)
 par(mar = c(4, 4, 2, 2))
 
 
-int_range <- range(SEridge3_main,
-                   SEridge3_main1,
-                   SEridge3_base)
+int_range <- c(-1,1)
 
 plot(SEridge3_base[1], 0, type = "n", main = "", 
      ylim = c(0,1), xlim = int_range,

@@ -1,0 +1,156 @@
+---
+title: "interaction_lasso.rmd"
+author: "Ryan Peterson"
+date: "2025-06-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r library}
+suppressMessages( library(hierNet)) #yes
+suppressMessages( library(glmnet)) #test ridge regression for coefs
+suppressMessages( library(RAMP)) #maybe
+suppressMessages( library(MASS)) #for lm.ridge
+
+suppressMessages( library(foreach)) #parallelization setup
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
+
+suppressMessages( library( lubridate)) #you know why
+suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages( library( fields)) #for set.panel() and others 
+suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
+
+suppressMessages( library( caret)) #for confusion matrix
+
+suppressMessages( library( tictoc)) #some timing
+```
+
+```{r data_functions}
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+#source("group_functions.R") #grouping/clustering
+source("group_functionsNew.R") #new groupings
+source("refit_functions.R") #coef/refit functions
+
+```
+
+
+Most up to date interaction lasso model runs.
+
+(Note: the previous file 'new_interaction.rmd' was a little too messy after all the different runs that exist there.)
+
+
+
+```{r setup}
+#season years/weeks
+season_weeks <- c(38:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+```
+
+
+# Test Cases
+
+Test case for NE Aus Group 1
+
+```{r data_setup}
+#temporary setup for testing use.
+NE_resp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+j <- (1:19)
+  
+#NE group 1: Weeks 38-46 Index (1-12) 
+NE1_lag <- NE_laglist$`Week  38`[j, -(1:2)]
+NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
+                 NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
+                 NE_laglist$`Week  43`[j,-(1:2)],
+                 NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
+                 NE_laglist$`Week  46`[j,-(1:2)])
+
+
+#lambda setup
+lambda_seq <- seq(650, 950, length.out = 20)
+```
+
+```{r test_model}
+
+y_1 <- as.numeric(NE_resp[[1]])
+
+X_1 <- cbind(as.matrix(NE1_lag[ ,1:260]))
+  
+test_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                             diagonal = TRUE, trace = 0) 
+  
+```
+
+## Refit Test
+
+
+```{r refit_function}
+y_1 <- as.numeric(NE_resp[[1]])
+
+X_1 <- cbind(as.matrix(NE1_lag[ ,1:260]))
+
+#working on the refit function to find below errors (errors from the refit test)
+#Error in glm (line 166)
+
+```
+
+
+```{r refit_test}
+#NE Aus Group 1
+#test_path
+
+
+
+NErefit1 <- refit_bic(test_path, max_index = 20, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[1]], preds = NE1_lag, 
+                      preds_quant = NE1_lag)
+
+```
+
+
+

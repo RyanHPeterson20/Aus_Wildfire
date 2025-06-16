@@ -72,11 +72,13 @@ get_coefs <- function(path_group, max_index, resp, preds, preds_quant){
 }
 
 
+#TODO: adjust to remove the preds_quant, since we don't need it anymore.
 
 #assign max lambda index at the start
 #refit with BIC function
-refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE, 
-                      AIC.c = FALSE, intercept = TRUE,
+refit_bic <- function(path_group, max_index, ebic.gamma, gic.gamma, 
+                      lambda.min = TRUE, 
+                      AIC.c = FALSE, intercept = TRUE, 
                       resp, preds, preds_quant){
 
 
@@ -230,8 +232,8 @@ refit_bic <- function(path_group, max_index, ebic.gamma, lambda.min = TRUE,
     lasso_BIC <- length(y)*log(mean(lasso_resid^2)) + log(length(y))*p_length
     lasso_eBIC <- lasso_BIC +  2 * ebic.gamma * log(choose(p_eff, p_length))
     
-    #GIC (fan & tang, 2013)
-    lasso_GIC <- length(y)*log(mean(lasso_resid^2)) + log(log(length(y)))*log(p_eff)*p_length
+    #GIC 
+    lasso_GIC <- length(y)*log(mean(lasso_resid^2)) + gic.gamma * p_length
     
         
     refit_lm[[paste0("LamIndex_", k)]] <- lm_fit
