@@ -707,6 +707,87 @@ lines(1:10, diff(NEsil_matrix2[,1]), type = "b", col = "blue3", pch = 15)
 
 ```
 
+# Multidimensional Scaling
+
+Using MDS to check on the new season boundaries
+
+```{r}
+#Removing 35-37
+NEbase_matrix1 <- NEbase_matrix[ ,-c(1:3)]
+SEbase_matrix1 <- SEbase_matrix[ ,-c(1:3)]
+season_weeks1 <- c(38:52, 1:14)
+
+#Removing 12-14
+NEbase_matrix2 <- NEbase_matrix[ ,-c(30:32)]
+SEbase_matrix2 <- SEbase_matrix[ ,-c(30:32)]
+season_weeks2 <- c(35:52, 1:11)
+
+#removing both (35-37, 12-14)
+NEbase_matrix3 <- NEbase_matrix[ ,-c(1:3, 30:32)]
+SEbase_matrix3 <- SEbase_matrix[ ,-c(1:3, 30:32)]
+season_weeks3 <- c(38:52, 1:11)
+
+#euclidean distance
+NE_d2 <- dist(t(NEbase_matrix), method = "euclidean")
+SE_d2 <- dist(t(SEbase_matrix), method = "euclidean")
+
+NE_d2.1 <- dist(t(NEbase_matrix1), method = "euclidean")
+SE_d2.1 <- dist(t(SEbase_matrix1), method = "euclidean")
+
+NE_d2.2 <- dist(t(NEbase_matrix2), method = "euclidean")
+SE_d2.2 <- dist(t(SEbase_matrix2), method = "euclidean")
+
+NE_d2.3 <- dist(t(NEbase_matrix3), method = "euclidean")
+SE_d2.3 <- dist(t(SEbase_matrix3), method = "euclidean")
+
+#euclidean squared
+NE_d22 <- NE_d2^2
+SE_d22 <- SE_d2^2
+
+NE_d22.1 <- NE_d2.1^2
+SE_d22.1 <- SE_d2.1^2
+
+NE_d22.3 <- NE_d2.3^2
+SE_d22.3 <- SE_d2.3^2
+
+```
+
+
+```{r}
+#clustering
+NEhc_base <- constr.hclust(NE_d2.1, method = "ward.D2", chron = TRUE)
+SEhc_base <- constr.hclust(SE_d2.1, method = "ward.D2", chron = TRUE)
+
+#groups and silhouette
+NEcut_agg3 <- cutree(NEhc_base, k = 3)
+SEcut_agg3 <- cutree(SEhc_base, k = 3)
+
+
+
+```
+
+
+```{r}
+NEmds <- isoMDS(NE_d2.1, k = 2)
+SEmds <- isoMDS(SE_d2.1, k = 2)
+
+NE_color <- rainbow(length(unique(NEcut_agg3)))
+SE_color <- rainbow(length(unique(SEcut_agg3)))
+
+season_weeks[28:32]
+
+plot(NEmds$points, pch = 16, col = NE_color[NEcut_agg3], main = "NE MDS", 
+     xlab = "Dim 1", ylab = "Dim 2")
+#points(NEmds$points[1:3,], cex = 1.5, col = "magenta")
+points(NEmds$points[27:29,], cex = 1.5, col = "magenta")
+#text(mds_results$points, labels = colnames(NEbase_matrix), cex = 0.8)
+
+plot(SEmds$points, pch = 16, col = SE_color[SEcut_agg3], main = "SE MDS", 
+     xlab = "Dim 1", ylab = "Dim 2")
+#points(SEmds$points[1:3,], cex = 1.5, col = "magenta")
+points(SEmds$points[27:29,], cex = 1.5, col = "magenta")
+
+```
 
 
 # Histograms and Other Raw Data Plots
@@ -956,6 +1037,14 @@ pSE + scale_x_discrete(
 
 
 # Multidimensional Scaling
+
+## Updated Groups
+
+```{r}
+
+```
+
+
 
 ```{r}
 NEmds <- isoMDS(NE_d22, k = 2)

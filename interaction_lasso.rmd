@@ -97,31 +97,26 @@ Test case for NE Aus Group 1
 ```{r data_setup}
 #temporary setup for testing use.
 NE_resp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
-
-j <- (1:19)
-  
-#NE group 1: Weeks 38-46 Index (1-12) 
-NE1_lag <- NE_laglist$`Week  38`[j, -(1:2)]
-NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
-                 NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
-                 NE_laglist$`Week  43`[j,-(1:2)],
-                 NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
-                 NE_laglist$`Week  46`[j,-(1:2)])
+NE_preds_test <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
 
 
-#lambda setup
-lambda_seq <- seq(650, 950, length.out = 20)
+
+#lambda setup (expand the range here)
+lambda_seq <- seq(695, 630, length.out = 25)
 ```
 
 ```{r test_model}
 
 y_1 <- as.numeric(NE_resp[[1]])
 
-X_1 <- cbind(as.matrix(NE1_lag[ ,1:260]))
+X_1 <- cbind(as.matrix(NE_preds_test[[1]][ ,1:260]))
   
 test_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
-                             diagonal = TRUE, trace = 0) 
-  
+                              diagonal = TRUE, trace = 0) 
+ 
+#rerun without lambda list
+ # test_path <- hierNet.path( X_1, y_1, strong = TRUE, nlam = 20,
+ #                             diagonal = TRUE, trace = 0) 
 ```
 
 ## Refit Test
@@ -137,20 +132,91 @@ X_1 <- cbind(as.matrix(NE1_lag[ ,1:260]))
 
 ```
 
-
 ```{r refit_test}
 #NE Aus Group 1
 #test_path
 
 
 
-NErefit1 <- refit_bic(test_path, max_index = 20, ebic.gamma = 0.25, gic.gamma = 2.15,
+NErefit1 <- refit_bic(test_path, max_index = 25, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
                       intercept = FALSE,
-                      resp = NE_resp[[1]], preds = NE1_lag, 
-                      preds_quant = NE1_lag)
+                      resp = NE_resp[[1]], preds = NE_preds_test[[1]], 
+                      preds_quant =NE_preds_test[[1]])
+
+NErefit1[[5]]
+
+which.min(NErefit1[[5]][ , 5]) #ridge BIC 
+which.min(NErefit1[[5]][ , 6]) #lasso BIC 
+
+which.min(NErefit1[[5]][ , 8]) #ridge eBIC 
+which.min(NErefit1[[5]][ , 9]) #lasso eBIC 
+
+i <- which.min(NErefit1[[5]][ , 5])
+ridge_coef <- NErefit1[[4]][[i]]
+NEridge1_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
 
 ```
 
 
+## SE Aus test
+
+```{r}
+#temporary setup for testing use.
+SE_resp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+SE_preds_test <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
+
+
+#lambda setup
+lambda_seq <- seq(650, 350, length.out = 25)
+```
+
+
+```{r}
+y_1 <- as.numeric(SE_resp[[1]])
+
+X_1 <- cbind(as.matrix(SE_preds_test[[1]][ ,1:260]))
+  
+test_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+
+#run as CV
+test_cv <- hierNet::hierNet.cv(test_path, X_1, y_1, nfolds = 5)
+ 
+```
+
+
+```{r}
+SErefit1 <- refit_bic(test_path, max_index = 25, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[1]], preds = SE_preds_test[[1]], 
+                      preds_quant =SE_preds_test[[1]])
+
+SErefit1[[5]]
+
+SErefit1[[5]][,c(1,5,6)]
+SErefit1[[5]][,c(1,6)]
+
+which.min(SErefit1[[5]][ , 5]) #ridge BIC 
+which.min(SErefit1[[5]][ , 6]) #lasso BIC 
+which.min(SErefit1[[5]][ , 8]) #ridge eBIC 
+which.min(SErefit1[[5]][ , 9]) #lasso eBIC 
+
+i <- 5
+ridge_coef <- SErefit1[[4]][[i]]
+NEridge1_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+```
+
+```{r cv_test}
+
+plot(test_cv)
+
+```
 
