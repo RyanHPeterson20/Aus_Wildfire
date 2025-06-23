@@ -135,22 +135,22 @@ NElag_3group <- function(NE_laglist, j = (1:19)){
   #row inclusion
   #j <- (1:19)
   
-  # #NE group 1: Weeks 35-46 Index (1-12) 
-  # NE1_lag <- NE_laglist$`Week  35`[j, -(1:2)]
-  # NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  36`[j, -(1:2)], NE_laglist$`Week  37`[j, -(1:2)],
-  #                  NE_laglist$`Week  38`[j,-(1:2)], NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
-  #                  NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
-  #                  NE_laglist$`Week  43`[j,-(1:2)],
-  #                  NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
-  #                  NE_laglist$`Week  46`[j,-(1:2)])
-  
-  #Update group 1 (Weeks 38-46)
-  NE1_lag <- NE_laglist$`Week  38`[j, -(1:2)]
-  NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
+  #NE group 1: Weeks 35-46 Index (1-12)
+  NE1_lag <- NE_laglist$`Week  35`[j, -(1:2)]
+  NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  36`[j, -(1:2)], NE_laglist$`Week  37`[j, -(1:2)],
+                   NE_laglist$`Week  38`[j,-(1:2)], NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
                    NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
                    NE_laglist$`Week  43`[j,-(1:2)],
                    NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
                    NE_laglist$`Week  46`[j,-(1:2)])
+  
+  # #Update group 1 (Weeks 38-46)
+  # NE1_lag <- NE_laglist$`Week  38`[j, -(1:2)]
+  # NE1_lag <- rbind(NE1_lag, NE_laglist$`Week  39`[j,-(1:2)], NE_laglist$`Week  40`[j,-(1:2)],
+  #                  NE_laglist$`Week  41`[j,-(1:2)], NE_laglist$`Week  42`[j,-(1:2)],
+  #                  NE_laglist$`Week  43`[j,-(1:2)],
+  #                  NE_laglist$`Week  44`[j,-(1:2)], NE_laglist$`Week  45`[j,-(1:2)],
+  #                  NE_laglist$`Week  46`[j,-(1:2)])
   
   #NE group 2  Weeks 47-51 Index (13-17)
   NE2_lag <- NE_laglist$`Week  47`[j,-(1:2)]
@@ -187,15 +187,15 @@ SElag_3group <- function(SE_laglist, j = (1:19)){
                    SE_laglist$`Week  47`[j,-(1:2)], SE_laglist$`Week  48`[j,-(1:2)],
                    SE_laglist$`Week  49`[j,-(1:2)], SE_laglist$`Week  50`[j,-(1:2)])
 
-  #SE group 1:  Weeks 35-50 Index (1-16)
-  SE1_lag <- SE_laglist$`Week  38`[j,-(1:2)]
-  SE1_lag <- rbind(SE1_lag, SE_laglist$`Week  39`[j,-(1:2)],
-                   SE_laglist$`Week  40`[j,-(1:2)], SE_laglist$`Week  41`[j,-(1:2)],
-                   SE_laglist$`Week  42`[j,-(1:2)], SE_laglist$`Week  43`[j,-(1:2)],
-                   SE_laglist$`Week  44`[j,-(1:2)],
-                   SE_laglist$`Week  45`[j,-(1:2)], SE_laglist$`Week  46`[j,-(1:2)],
-                   SE_laglist$`Week  47`[j,-(1:2)], SE_laglist$`Week  48`[j,-(1:2)],
-                   SE_laglist$`Week  49`[j,-(1:2)], SE_laglist$`Week  50`[j,-(1:2)])
+  # #SE group 1:  Weeks 35-50 Index (1-16)
+  # SE1_lag <- SE_laglist$`Week  38`[j,-(1:2)]
+  # SE1_lag <- rbind(SE1_lag, SE_laglist$`Week  39`[j,-(1:2)],
+  #                  SE_laglist$`Week  40`[j,-(1:2)], SE_laglist$`Week  41`[j,-(1:2)],
+  #                  SE_laglist$`Week  42`[j,-(1:2)], SE_laglist$`Week  43`[j,-(1:2)],
+  #                  SE_laglist$`Week  44`[j,-(1:2)],
+  #                  SE_laglist$`Week  45`[j,-(1:2)], SE_laglist$`Week  46`[j,-(1:2)],
+  #                  SE_laglist$`Week  47`[j,-(1:2)], SE_laglist$`Week  48`[j,-(1:2)],
+  #                  SE_laglist$`Week  49`[j,-(1:2)], SE_laglist$`Week  50`[j,-(1:2)])
 
   
   #SE group 2: Weeks 51-52; 1-2 Index (17-20)

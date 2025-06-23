@@ -220,3 +220,179 @@ plot(test_cv)
 
 ```
 
+## NE Aus Group 2 (Test)
+
+```{r setup}
+#temporary setup for testing use.
+NE_resp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+NE_preds_test <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+
+
+#lambda setup (expand the range here)
+lambda_seq <- seq(380, 155, length.out = 24)
+```
+
+```{r model_fit}
+y_1 <- as.numeric(NE_resp[[2]])
+
+X_1 <- cbind(as.matrix(NE_preds_test[[2]][ ,1:260]))
+  
+NE2_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+ 
+```
+
+```{r}
+NErefit2 <- refit_bic(NE2_path, max_index = 24, ebic.gamma = 0.2, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[2]], preds = NE_preds_test[[2]], 
+                      preds_quant =NE_preds_test[[2]])
+
+NErefit2[[5]]
+
+NErefit2[[5]][,c(1,5,6)]
+NErefit2[[5]][,c(1,6)]
+
+which.min(NErefit2[[5]][ , 5]) #ridge BIC 
+which.min(NErefit2[[5]][ , 6]) #lasso BIC 
+which.min(NErefit2[[5]][ , 7]) #glm eBIC 
+which.min(NErefit2[[5]][ , 8]) #ridge eBIC 
+which.min(NErefit2[[5]][ , 9]) #lasso eBIC 
+
+i <- 3
+ridge_coef <- NErefit2[[4]][[i]]
+NEridge2_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+#get LM coefs
+j <- 3
+lm_coef <- NErefit2[[2]][[j]]
+#NEridge2_main <- ridge_coef
+lm_coef
+length(lm_coef)
+
+summary(NErefit2[[1]][[j]])
+
+
+#TODO: get lasso values (and compare to ridge)
+NEcoefs2 <- get_coefs(NE2_path, max_index = 24, 
+                      resp = NE_resp[[2]], preds = NE_preds_test[[2]], 
+                      preds_quant =NE_preds_test[[2]])
+
+NEcoefs2[[12]][[1]]$Main_Effect
+NEcoefs2[[12]][[1]]$Coef
+
+#get length
+fit_length <- NULL
+for (i in 1:24) {
+  ridge_coef <- NErefit2[[4]][[i]]
+  fit_length <- c(fit_length, length(ridge_coef))
+}
+```
+
+```{r temp_plots}
+
+
+plot(1:24, NErefit2[[5]][,6], type = "b")
+
+plot(1:24, fit_length)
+
+```
+
+
+## NE Aus group 3 (Test)
+
+
+```{r group3_Setup}
+#temporary setup for testing use.
+NE_resp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+NE_preds_test <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+
+
+#lambda setup (expand the range here)
+lambda_seq <- seq(700, 270, length.out = 24)
+```
+
+```{r model_fit}
+y_1 <- as.numeric(NE_resp[[3]])
+
+X_1 <- cbind(as.matrix(NE_preds_test[[3]][ ,1:260]))
+  
+NE3_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+ 
+```
+
+```{r}
+
+NErefit3 <- refit_bic(NE3_path, max_index = 24, ebic.gamma = 0.2, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[3]], preds = NE_preds_test[[3]], 
+                      preds_quant =NE_preds_test[[3]])
+
+NErefit3[[5]]
+
+NErefit3[[5]][,c(1,5,6)]
+NErefit3[[5]][,c(1,6)]
+
+which.min(NErefit3[[5]][ , 5]) #ridge BIC 
+which.min(NErefit3[[5]][ , 6]) #lasso BIC 
+which.min(NErefit3[[5]][ , 7]) #glm eBIC 
+which.min(NErefit3[[5]][ , 8]) #ridge eBIC 
+which.min(NErefit3[[5]][ , 9]) #lasso eBIC 
+
+i <- 13
+ridge_coef <- NErefit3[[4]][[i]]
+#NEridge2_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+i <- 12
+ridge_coef <- NErefit3[[4]][[i]]
+#NEridge2_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+
+#get LM coefs
+j <- 13
+lm_coef <- NErefit3[[2]][[j]]
+#NEridge2_main <- ridge_coef
+lm_coef
+length(lm_coef)
+
+summary(NErefit3[[1]][[j]])
+
+
+#TODO: get lasso values (and compare to ridge)
+NEcoefs3 <- get_coefs(NE3_path, max_index = 24, 
+                      resp = NE_resp[[3]], preds = NE_preds_test[[3]], 
+                      preds_quant =NE_preds_test[[3]])
+
+NEcoefs3[[i]][[1]]$Main_Effect
+NEcoefs3[[i]][[1]]$Coef
+
+NEcoefs3[[i]][[2]]$Interact_Effect
+NEcoefs3[[i]][[2]]$Coef
+
+#get length
+fit_length <- NULL
+for (i in 1:24) {
+  ridge_coef <- NErefit3[[4]][[i]]
+  fit_length <- c(fit_length, length(ridge_coef))
+}
+
+```
+
+```{r test_plots}
+plot(1:24, NErefit3[[5]][,6], type = "b")
+
+plot(1:24, fit_length)
+```
+
