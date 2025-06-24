@@ -1,0 +1,350 @@
+---
+title: "results_new"
+author: "Ryan Peterson"
+date: "2025-06-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages( library( lubridate))
+```
+
+```{r data_functions}
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+
+source("group_functionsNew.R") #New grouping/clustering
+```
+
+```{r data_setup}
+#season years/weeks
+season_weeks <- c(38:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+
+#full model
+NEpreds <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+NEresp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+SEpreds <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
+SEresp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+
+#partial model
+NEpreds_part <- NElag_3group(NE_laglist = NE_laglist_std, j = -c(19))
+NEresp_part <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(19))
+
+SEpreds_part <- SElag_3group(SE_laglist = SE_laglist_std, j = -c(19))
+SEresp_part <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
+```
+
+
+Updated Figures
+
+1. Data Figures
+2. Clustering Figures
+3. Correlation Figures
+...
+n. Model Results
+
+
+# 1. Data Figures
+
+
+
+# 3. Correlation 
+
+```{r correlation_function}
+#specific to our problem (we can generalize later)
+pred_cor <- function(resp, preds){
+   
+  cor_list <- list()
+  for (j in 1:3) {
+    temp_df <- as.data.frame(cbind(resp[[j]], preds[[j]]))
+  
+    nino_cor <- cor(temp_df, method = "pearson")[2:53]
+    dmi_cor <- cor(temp_df, method = "pearson")[54:105]
+    tsa_cor <- cor(temp_df, method = "pearson")[106:157]
+    aao_cor <- cor(temp_df, method = "pearson")[158:209]
+    olr_cor <- cor(temp_df, method = "pearson")[210:261]
+    
+    cor_df <- data.frame(nino_cor, dmi_cor, tsa_cor, aao_cor, olr_cor)
+    
+    cor_list[[paste0("Group_", j)]] <- cor_df
+  }
+  
+  return(cor_list)
+  
+}
+
+
+```
+
+
+```{r get_cor}
+#full response correlation
+NEcor_list <- pred_cor(NEresp, NEpreds)
+SEcor_list <- pred_cor(SEresp, SEpreds)
+
+#partial response correlation
+NEcor_list_part <- pred_cor(NEresp_part, NEpreds_part)
+SEcor_list_part <- pred_cor(SEresp_part, SEpreds_part)
+```
+
+
+```{r get_maxs}
+#TODO: update as a function
+
+##Nino
+#nino - NE Aus
+NEnino_max1 <- which.max(abs( NEcor_list[[1]]$nino_cor))
+NEnino_max2 <- which.max(abs( NEcor_list[[2]]$nino_cor))
+NEnino_max3 <- which.max(abs( NEcor_list[[3]]$nino_cor))
+#nino - NE Aus (partial)
+NEnino_max1_part <- which.max(abs( NEcor_list_part[[1]]$nino_cor))
+NEnino_max2_part <- which.max(abs( NEcor_list_part[[2]]$nino_cor))
+NEnino_max3_part <- which.max(abs( NEcor_list_part[[3]]$nino_cor))
+
+#nino - SE Aus
+SEnino_max1 <- which.max(abs( SEcor_list[[1]]$nino_cor))
+SEnino_max2 <- which.max(abs( SEcor_list[[2]]$nino_cor))
+SEnino_max3 <- which.max(abs( SEcor_list[[3]]$nino_cor))
+#nino - SE Aus (partial)
+SEnino_max1_part <- which.max(abs( SEcor_list_part[[1]]$nino_cor))
+SEnino_max2_part <- which.max(abs( SEcor_list_part[[2]]$nino_cor))
+SEnino_max3_part <- which.max(abs( SEcor_list_part[[3]]$nino_cor))
+
+
+##DMI
+#dmi - NE Aus
+NEdmi_max1 <- which.max(abs( NEcor_list[[1]]$dmi_cor))
+NEdmi_max2 <- which.max(abs( NEcor_list[[2]]$dmi_cor))
+NEdmi_max3 <- which.max(abs( NEcor_list[[3]]$dmi_cor))
+#dmi - NE Aus (partial)
+NEdmi_max1_part <- which.max(abs( NEcor_list_part[[1]]$dmi_cor))
+NEdmi_max2_part <- which.max(abs( NEcor_list_part[[2]]$dmi_cor))
+NEdmi_max3_part <- which.max(abs( NEcor_list_part[[3]]$dmi_cor))
+
+#dmi - SE Aus
+SEdmi_max1 <- which.max(abs( SEcor_list[[1]]$dmi_cor))
+SEdmi_max2 <- which.max(abs( SEcor_list[[2]]$dmi_cor))
+SEdmi_max3 <- which.max(abs( SEcor_list[[3]]$dmi_cor))
+#dmi - SE Aus (partial)
+SEdmi_max1_part <- which.max(abs( SEcor_list_part[[1]]$dmi_cor))
+SEdmi_max2_part <- which.max(abs( SEcor_list_part[[2]]$dmi_cor))
+SEdmi_max3_part <- which.max(abs( SEcor_list_part[[3]]$dmi_cor))
+
+
+
+```
+
+## Correlation Figures
+
+```{r NE-nino}
+#NE Aus Group 1 - Nino
+plot(1:52, NEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[1]]$nino_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(NEnino_max1, NEcor_list[[1]]$nino_cor[NEnino_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEnino_max1_part, NEcor_list_part[[1]]$nino_cor[NEnino_max1_part], 
+       pch = 21, col = "darkred", bg="darksalmon", cex = 1.23)
+
+#NE Aus Group 2 - Nino
+plot(1:52, NEcor_list[[2]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[2]]$nino_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(NEnino_max2, NEcor_list[[2]]$nino_cor[NEnino_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(NEnino_max2_part, NEcor_list_part[[2]]$nino_cor[NEnino_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.2)
+
+#NE Aus Group 3 - Nino
+plot(1:52, NEcor_list[[3]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[3]]$nino_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(NEnino_max3, NEcor_list[[3]]$nino_cor[NEnino_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(NEnino_max3_part, NEcor_list_part[[3]]$nino_cor[NEnino_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+
+#combine into a single figure (with maximums) and output (as .pdf)
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEnino_cor.png", width = 2000, height = 1800, res = 300)
+#pdf("NEnino_cor.pdf", width=6, height=4)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, NEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, NEcor_list_part[[1]]$nino_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(NEnino_max1, NEcor_list[[1]]$nino_cor[NEnino_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEnino_max1_part, NEcor_list_part[[1]]$nino_cor[NEnino_max1_part], 
+       pch = 21, col = "darkred", bg="darksalmon", cex = 1.23)
+lines(1:52, NEcor_list[[2]]$nino_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, NEcor_list_part[[2]]$nino_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(NEnino_max2, NEcor_list[[2]]$nino_cor[NEnino_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(NEnino_max2_part, NEcor_list_part[[2]]$nino_cor[NEnino_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, NEcor_list[[3]]$nino_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, NEcor_list_part[[3]]$nino_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(NEnino_max3, NEcor_list[[3]]$nino_cor[NEnino_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(NEnino_max3_part, NEcor_list_part[[3]]$nino_cor[NEnino_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("Nino", adj = 0)
+dev.off()
+```
+
+
+```{r SE-nino}
+
+#SE Aus Group 1 - Nino
+plot(1:52, SEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[1]]$nino_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(SEnino_max1, SEcor_list[[1]]$nino_cor[SEnino_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEnino_max1_part, SEcor_list_part[[1]]$nino_cor[SEnino_max1_part], 
+       pch = 21, col = "darkred", bg="darksalmon", cex = 1.23)
+
+#SE Aus Group 2 - Nino
+plot(1:52, SEcor_list[[2]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[2]]$nino_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(SEnino_max2, SEcor_list[[2]]$nino_cor[SEnino_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(SEnino_max2_part, SEcor_list_part[[2]]$nino_cor[SEnino_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.2)
+
+#SE Aus Group 3 - Nino
+plot(1:52, SEcor_list[[3]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[3]]$nino_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(SEnino_max3, SEcor_list[[3]]$nino_cor[SEnino_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(SEnino_max3_part, SEcor_list_part[[3]]$nino_cor[SEnino_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+
+#combined together and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SEnino_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, SEcor_list[[1]]$nino_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, SEcor_list_part[[1]]$nino_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(SEnino_max1, SEcor_list[[1]]$nino_cor[SEnino_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEnino_max1_part, SEcor_list_part[[1]]$nino_cor[SEnino_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.5), cex = 1.23)
+lines(1:52, SEcor_list[[2]]$nino_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, SEcor_list_part[[2]]$nino_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(SEnino_max2, SEcor_list[[2]]$nino_cor[SEnino_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(SEnino_max2_part, SEcor_list_part[[2]]$nino_cor[SEnino_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, SEcor_list[[3]]$nino_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, SEcor_list_part[[3]]$nino_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(SEnino_max3, SEcor_list[[3]]$nino_cor[SEnino_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(SEnino_max3_part, SEcor_list_part[[3]]$nino_cor[SEnino_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("Nino", adj = 0)
+dev.off()
+
+```
+
+
+```{r NE-dmi}
+#NE Aus Group 1 - DMI
+plot(1:52, NEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[1]]$dmi_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(NEdmi_max1, NEcor_list[[1]]$dmi_cor[NEdmi_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEdmi_max1_part, NEcor_list_part[[1]]$dmi_cor[NEdmi_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#NE Aus Group 2 - DMI
+plot(1:52, NEcor_list[[2]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[2]]$dmi_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(NEdmi_max2, NEcor_list[[2]]$dmi_cor[NEdmi_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(NEdmi_max2_part, NEcor_list_part[[2]]$dmi_cor[NEdmi_max2_part], 
+       pch = 21, col = "darkgreen", bg= alpha("palegreen2",0.35), cex = 1.23)
+
+#NE Aus Group 3 - DMI
+plot(1:52, NEcor_list[[3]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[3]]$dmi_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(NEdmi_max3, NEcor_list[[3]]$dmi_cor[NEdmi_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(NEdmi_max3_part, NEcor_list_part[[3]]$dmi_cor[NEdmi_max3_part], 
+       pch = 21, col = "darkblue", bg= alpha("lightskyblue",0.35), cex = 1.23)
+
+#combine plots and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEdmi_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, NEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, NEcor_list_part[[1]]$dmi_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(NEdmi_max1, NEcor_list[[1]]$dmi_cor[NEdmi_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEdmi_max1_part, NEcor_list_part[[1]]$dmi_cor[NEdmi_max1_part], 
+       pch = 21, col = "darkred", bg="darksalmon", cex = 1.23)
+lines(1:52, NEcor_list[[2]]$dmi_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, NEcor_list_part[[2]]$dmi_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(NEdmi_max2, NEcor_list[[2]]$dmi_cor[NEdmi_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(NEdmi_max2_part, NEcor_list_part[[2]]$dmi_cor[NEdmi_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, NEcor_list[[3]]$dmi_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, NEcor_list_part[[3]]$dmi_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(NEdmi_max3, NEcor_list[[3]]$dmi_cor[NEdmi_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(NEdmi_max3_part, NEcor_list_part[[3]]$dmi_cor[NEdmi_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("DMI", adj = 0)
+dev.off()
+```
+
+
+```{r SE-dmi}
+
+```
+
+

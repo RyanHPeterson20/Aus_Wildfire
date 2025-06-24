@@ -617,7 +617,8 @@ SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 SErefit2[[5]]
 
 which.min(SErefit2[[5]][1:30, 2]) #AIC
-which.min(SErefit2[[5]][1:30, 6]) #BIC
+which.min(SErefit2[[5]][1:30, 5]) #ridge BIC
+which.min(SErefit2[[5]][1:30, 6]) #lasso BIC
 which.min(SErefit2[[5]][1:30, 10]) #GIC
 
 i <- 4
@@ -643,7 +644,8 @@ SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 SErefit3[[5]]
 
 which.min(SErefit3[[5]][1:30,2]) #AIC
-which.min(SErefit3[[5]][1:30,6]) #BIC
+which.min(SErefit3[[5]][1:30,5]) #ridge BIC
+which.min(SErefit3[[5]][1:30,6]) #lasso BIC
 which.min(SErefit3[[5]][1:30,10]) #GIC
 
 i <- 3
