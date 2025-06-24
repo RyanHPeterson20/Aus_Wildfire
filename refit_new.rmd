@@ -43,15 +43,13 @@ File for exploring the different model fits and how they compare wrt 2019/2020 w
 
 ## Model Fits
 
-2 group fits (using sq euclidean with average linkage)
-
 
 
 ```{r model_load}
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 
-load( "group_strongNew.rda") # 2-group strong models (only 2 groups per region)
-output_group <- output
+#load( "group_strongNew.rda") # 2-group strong models (only 2 groups per region)
+#output_group <- output
 
 load( "group_strongWard.rda") # 3-group strong models (only 3 groups per region)
 output_groupWard <- output
@@ -60,142 +58,6 @@ output_groupWard <- output
 
 # Fit Analysis
 
-## New Fits / Analysis
-
-```{r new_setup}
-#center response data
-NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
-SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
-
-#NEAus
-NEAus_1 <- NEbase_matrix[ ,1:12] 
-NEAus_2 <- NEbase_matrix[ ,13:32] 
-
-#NEAus
-SEAus_1 <- SEbase_matrix[ ,1:8] 
-SEAus_2 <- SEbase_matrix[ ,9:32] 
-
-NEAus_mat <- list(NEAus_1, NEAus_2)
-SEAus_mat <- list(SEAus_1, SEAus_2)
-
-rm(NEAus_1, NEAus_2, SEAus_1, SEAus_2)
-```
-
-
-```{r NE_Aus}
-NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)
-NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
-NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
-
-#NE Aus Group 1
-NEAus1 <- output_group[[1]]
-
-NEcoefs1 <- get_coefs(NEAus1$hierpath, max_index = 50, 
-                      resp = NE_resp[[1]], preds = NE_preds[[1]], preds_quant = NE_preds_q75[[1]])
-
-
-NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.67,
-                      lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = FALSE,
-                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
-                      preds_quant = NE_preds_q75[[1]])
-
-#NErefit1[[5]]
-
-which.min(NErefit1[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit1[[5]][1:25 , 10]) #GIC 
-#which.min(NErefit1[[5]][ ,3])
-
-i <- 3
-ridge_coef <- NErefit1[[4]][[i]]
-NEridge1_main <- ridge_coef
-ridge_coef
-length(ridge_coef)
-
-
-#NE Aus Group 2
-NEAus2 <- output_group[[2]]
-
-NEcoefs2 <- get_coefs(NEAus2$hierpath, max_index = 50, 
-                      resp = NE_resp[[2]], preds = NE_preds[[2]], preds_quant = NE_preds_q75[[2]])
-
-
-
-NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.67,
-                      lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = FALSE,
-                      resp = NE_resp[[2]], preds = NE_preds[[2]], 
-                      preds_quant = NE_preds_q75[[2]])
-
-#NErefit2[[5]]
-
-which.min(NErefit2[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit2[[5]][1:29 , 10]) #GIC 
-
-i <- 12
-ridge_coef <- NErefit2[[4]][[i]]
-NEridge2_main <- ridge_coef
-ridge_coef
-length(ridge_coef)
-
-```
-
-
-```{r SeAus_refits}
-SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
-SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
-SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
-
-#SE Aus Group 1
-SEAus1 <- output_group[[3]]
-
-SEcoefs1 <- get_coefs(SEAus1$hierpath, max_index = 50, 
-                      resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
-
-
-
-SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.5,
-                      lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = FALSE,
-                      resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
-
-SErefit1[[5]]
-
-which.min(SErefit1[[5]][1:30,2]) #AIC
-which.min(SErefit1[[5]][1:30,10]) #GIC
-
-i <- 10
-ridge_coef <- SErefit1[[4]][[i]]
-SEridge1_main <- ridge_coef
-ridge_coef
-length(ridge_coef)
-
-
-#SE Aus Group 2
-SEAus2 <- output_group[[4]]
-
-SEcoefs2 <- get_coefs(SEAus2$hierpath, max_index = 50, 
-                      resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
-
-
-
-SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.5,
-                      lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = FALSE,
-                      resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
-
-SErefit2[[5]]
-
-which.min(SErefit2[[5]][1:30,2]) #AIC
-which.min(SErefit2[[5]][1:30,10]) #GIC
-
-
-i <- 10
-ridge_coef <- SErefit2[[4]][[i]]
-SEridge2_main <- ridge_coef
-ridge_coef
-length(ridge_coef)
-```
 
 ## Group (Ward's) Analysis
 
@@ -283,10 +145,12 @@ NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 NErefit2[[5]]
 
 which.min(NErefit2[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit2[[5]][1:29 , 6]) # BIC
+which.min(NErefit2[[5]][1:29 , 5]) # Ridge BIC
+which.min(NErefit2[[5]][1:29 , 6]) # Lasso BIC
+
 which.min(NErefit2[[5]][1:29 , 10]) #GIC 
 
-i <- 18
+i <- 4
 ridge_coef <- NErefit2[[4]][[i]]
 NEridge2_main <- ridge_coef
 ridge_coef
@@ -310,7 +174,8 @@ NErefit3 <- refit_bic(NEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 NErefit3[[5]]
 
 which.min(NErefit3[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit3[[5]][1:29 , 6]) # BIC
+which.min(NErefit3[[5]][1:29 , 5]) #ridge BIC
+which.min(NErefit3[[5]][1:29 , 6]) #lasso BIC
 which.min(NErefit3[[5]][1:29 , 10]) #GIC 
 
 i <- 10
@@ -361,6 +226,7 @@ SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 SErefit1[[5]]
 
 which.min(SErefit1[[5]][1:30,2]) #AIC
+which.min(SErefit1[[5]][1:30,5]) #ridge BIC
 which.min(SErefit1[[5]][1:30,6]) #BIC
 which.min(SErefit1[[5]][1:30,10]) #GIC
 
@@ -386,12 +252,16 @@ SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
                       resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
 
 SErefit2[[5]]
+which.min(SErefit2[[5]][1:30, 5]) #ridge BIC
+which.min(SErefit2[[5]][1:30, 6]) #Lasso BIC
+
 
 which.min(SErefit2[[5]][1:30, 2]) #AIC
-which.min(SErefit2[[5]][1:30, 6]) #BIC
+which.min(SErefit2[[5]][1:30, 5]) #ridge BIC
+which.min(SErefit2[[5]][1:30, 6]) #Lasso BIC
 which.min(SErefit2[[5]][1:30, 10]) #GIC
 
-i <- 17
+i <- 14
 ridge_coef <- SErefit2[[4]][[i]]
 SEridge2_main <- ridge_coef
 ridge_coef
@@ -414,10 +284,11 @@ SErefit3 <- refit_bic(SEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 SErefit3[[5]]
 
 which.min(SErefit3[[5]][1:30,2]) #AIC
-which.min(SErefit3[[5]][1:30,6]) #BIC
+which.min(SErefit3[[5]][1:30,5]) # ridge BIC
+which.min(SErefit3[[5]][1:30,6]) # lasso BIC
 which.min(SErefit3[[5]][1:30,10]) #GIC
 
-i <- 2
+i <- 3
 ridge_coef <- SErefit3[[4]][[i]]
 SEridge3_main <- ridge_coef
 ridge_coef
@@ -626,7 +497,8 @@ NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 NErefit1[[5]]
 
 which.min(NErefit1[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit1[[5]][1:29 , 6]) #BIC
+which.min(NErefit1[[5]][1:29 , 5]) #Ridge BIC
+which.min(NErefit1[[5]][1:29 , 6]) #Lasso BIC
 which.min(NErefit1[[5]][1:25 , 10]) #GIC 
 
 i <- 1
@@ -654,7 +526,8 @@ NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 NErefit2[[5]]
 
 which.min(NErefit2[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit2[[5]][1:29 , 6]) # BIC
+which.min(NErefit2[[5]][1:29 , 5]) #Ridge BIC
+which.min(NErefit2[[5]][1:29 , 6]) #Lasso BIC
 which.min(NErefit2[[5]][1:29 , 10]) #GIC 
 
 i <- 8
@@ -681,7 +554,8 @@ NErefit3 <- refit_bic(NEAus3$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 NErefit3[[5]]
 
 which.min(NErefit3[[5]][1:29 , 2]) #AIC (max lambda 1se)
-which.min(NErefit3[[5]][1:29 , 6]) # BIC
+which.min(NErefit3[[5]][1:29 , 5]) #Ridge BIC
+which.min(NErefit3[[5]][1:29 , 6]) #Lasso BIC
 which.min(NErefit3[[5]][1:29 , 10]) #GIC 
 
 i <- 15
@@ -715,7 +589,8 @@ SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.ga
 SErefit1[[5]]
 
 which.min(SErefit1[[5]][1:30,2]) #AIC
-which.min(SErefit1[[5]][1:30,6]) #BIC
+which.min(SErefit1[[5]][1:30, 5]) #ridge BIC
+which.min(SErefit1[[5]][1:30, 6]) #lasso BIC
 which.min(SErefit1[[5]][1:30,10]) #GIC
 
 i <- 6
@@ -4877,6 +4752,145 @@ mtext("SE Aus Group 3 (Weeks 3-14)", outer = TRUE, cex = 1.5, font = 1)
 dev.off()
 
 ```
+
+
+## New Fits / Analysis
+
+```{r new_setup}
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:12] 
+NEAus_2 <- NEbase_matrix[ ,13:32] 
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,1:8] 
+SEAus_2 <- SEbase_matrix[ ,9:32] 
+
+NEAus_mat <- list(NEAus_1, NEAus_2)
+SEAus_mat <- list(SEAus_1, SEAus_2)
+
+rm(NEAus_1, NEAus_2, SEAus_1, SEAus_2)
+```
+
+
+```{r NE_Aus}
+NE_preds <- NElag_grouping(NE_laglist = NE_laglist_std, j = 1:19)
+NE_resp <- NEresp_grouping(NEAus_mat = NEAus_mat, j = 1:19)
+NE_preds_q75 <- NElag_grouping(NE_laglist = NE_laglist_q75, j = 1:19)
+
+#NE Aus Group 1
+NEAus1 <- output_group[[1]]
+
+NEcoefs1 <- get_coefs(NEAus1$hierpath, max_index = 50, 
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], preds_quant = NE_preds_q75[[1]])
+
+
+NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.67,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
+                      preds_quant = NE_preds_q75[[1]])
+
+#NErefit1[[5]]
+
+which.min(NErefit1[[5]][1:29 , 2]) #AIC (max lambda 1se)
+which.min(NErefit1[[5]][1:25 , 10]) #GIC 
+#which.min(NErefit1[[5]][ ,3])
+
+i <- 3
+ridge_coef <- NErefit1[[4]][[i]]
+NEridge1_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+#NE Aus Group 2
+NEAus2 <- output_group[[2]]
+
+NEcoefs2 <- get_coefs(NEAus2$hierpath, max_index = 50, 
+                      resp = NE_resp[[2]], preds = NE_preds[[2]], preds_quant = NE_preds_q75[[2]])
+
+
+
+NErefit2 <- refit_bic(NEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.67,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[2]], preds = NE_preds[[2]], 
+                      preds_quant = NE_preds_q75[[2]])
+
+#NErefit2[[5]]
+
+which.min(NErefit2[[5]][1:29 , 2]) #AIC (max lambda 1se)
+which.min(NErefit2[[5]][1:29 , 10]) #GIC 
+
+i <- 12
+ridge_coef <- NErefit2[[4]][[i]]
+NEridge2_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+```
+
+
+```{r SeAus_refits}
+SE_preds <- SElag_grouping(SE_laglist = SE_laglist_std, j = 1:19)
+SE_resp <- SEresp_grouping(SEAus_mat = SEAus_mat, j = 1:19)
+SE_preds_q75 <- SElag_grouping(SE_laglist = SE_laglist_q75, j = 1:19)
+
+#SE Aus Group 1
+SEAus1 <- output_group[[3]]
+
+SEcoefs1 <- get_coefs(SEAus1$hierpath, max_index = 50, 
+                      resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
+
+
+
+SErefit1 <- refit_bic(SEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.5,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[1]], preds = SE_preds[[1]], preds_quant = SE_preds_q75[[1]])
+
+SErefit1[[5]]
+
+which.min(SErefit1[[5]][1:30,2]) #AIC
+which.min(SErefit1[[5]][1:30,10]) #GIC
+
+i <- 10
+ridge_coef <- SErefit1[[4]][[i]]
+SEridge1_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+
+#SE Aus Group 2
+SEAus2 <- output_group[[4]]
+
+SEcoefs2 <- get_coefs(SEAus2$hierpath, max_index = 50, 
+                      resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
+
+
+
+SErefit2 <- refit_bic(SEAus2$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 1.5,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[2]], preds = SE_preds[[2]], preds_quant = SE_preds_q75[[2]])
+
+SErefit2[[5]]
+
+which.min(SErefit2[[5]][1:30,2]) #AIC
+which.min(SErefit2[[5]][1:30,10]) #GIC
+
+
+i <- 10
+ridge_coef <- SErefit2[[4]][[i]]
+SEridge2_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+```
+
 
 
 
