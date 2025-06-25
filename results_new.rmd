@@ -87,6 +87,23 @@ n. Model Results
 
 
 
+# 2. Clustering Figures
+
+## Silhouette
+
+
+## MDS
+
+Use a metric MDS here and start with euclidean distance.
+TODO: add in explained variance per dimension (scree plot of eigenvalues)
+
+```{r}
+
+```
+
+
+
+
 # 3. Correlation 
 
 ```{r correlation_function}
@@ -170,8 +187,68 @@ SEdmi_max2_part <- which.max(abs( SEcor_list_part[[2]]$dmi_cor))
 SEdmi_max3_part <- which.max(abs( SEcor_list_part[[3]]$dmi_cor))
 
 
+##TSA
+#tsa - NE Aus
+NEtsa_max1 <- which.max(abs( NEcor_list[[1]]$tsa_cor))
+NEtsa_max2 <- which.max(abs( NEcor_list[[2]]$tsa_cor))
+NEtsa_max3 <- which.max(abs( NEcor_list[[3]]$tsa_cor))
+#tsa - NE Aus (partial)
+NEtsa_max1_part <- which.max(abs( NEcor_list_part[[1]]$tsa_cor))
+NEtsa_max2_part <- which.max(abs( NEcor_list_part[[2]]$tsa_cor))
+NEtsa_max3_part <- which.max(abs( NEcor_list_part[[3]]$tsa_cor))
+
+#tsa - SE Aus
+SEtsa_max1 <- which.max(abs( SEcor_list[[1]]$tsa_cor))
+SEtsa_max2 <- which.max(abs( SEcor_list[[2]]$tsa_cor))
+SEtsa_max3 <- which.max(abs( SEcor_list[[3]]$tsa_cor))
+#tsa - SE Aus (partial)
+SEtsa_max1_part <- which.max(abs( SEcor_list_part[[1]]$tsa_cor))
+SEtsa_max2_part <- which.max(abs( SEcor_list_part[[2]]$tsa_cor))
+SEtsa_max3_part <- which.max(abs( SEcor_list_part[[3]]$tsa_cor))
+
+
+##SAM (AAO)
+#aao - NE Aus
+NEaao_max1 <- which.max(abs( NEcor_list[[1]]$aao_cor))
+NEaao_max2 <- which.max(abs( NEcor_list[[2]]$aao_cor))
+NEaao_max3 <- which.max(abs( NEcor_list[[3]]$aao_cor))
+#aao - NE Aus (partial)
+NEaao_max1_part <- which.max(abs( NEcor_list_part[[1]]$aao_cor))
+NEaao_max2_part <- which.max(abs( NEcor_list_part[[2]]$aao_cor))
+NEaao_max3_part <- which.max(abs( NEcor_list_part[[3]]$aao_cor))
+
+#aao - SE Aus
+SEaao_max1 <- which.max(abs( SEcor_list[[1]]$aao_cor))
+SEaao_max2 <- which.max(abs( SEcor_list[[2]]$aao_cor))
+SEaao_max3 <- which.max(abs( SEcor_list[[3]]$aao_cor))
+#aao - SE Aus (partial)
+SEaao_max1_part <- which.max(abs( SEcor_list_part[[1]]$aao_cor))
+SEaao_max2_part <- which.max(abs( SEcor_list_part[[2]]$aao_cor))
+SEaao_max3_part <- which.max(abs( SEcor_list_part[[3]]$aao_cor))
+
+
+##OLR
+#olr - NE Aus
+NEolr_max1 <- which.max(abs( NEcor_list[[1]]$olr_cor))
+NEolr_max2 <- which.max(abs( NEcor_list[[2]]$olr_cor))
+NEolr_max3 <- which.max(abs( NEcor_list[[3]]$olr_cor))
+#olr - NE Aus (partial)
+NEolr_max1_part <- which.max(abs( NEcor_list_part[[1]]$olr_cor))
+NEolr_max2_part <- which.max(abs( NEcor_list_part[[2]]$olr_cor))
+NEolr_max3_part <- which.max(abs( NEcor_list_part[[3]]$olr_cor))
+
+#olr - SE Aus
+SEolr_max1 <- which.max(abs( SEcor_list[[1]]$olr_cor))
+SEolr_max2 <- which.max(abs( SEcor_list[[2]]$olr_cor))
+SEolr_max3 <- which.max(abs( SEcor_list[[3]]$olr_cor))
+#olr - SE Aus (partial)
+SEolr_max1_part <- which.max(abs( SEcor_list_part[[1]]$olr_cor))
+SEolr_max2_part <- which.max(abs( SEcor_list_part[[2]]$olr_cor))
+SEolr_max3_part <- which.max(abs( SEcor_list_part[[3]]$olr_cor))
+
 
 ```
+
 
 ## Correlation Figures
 
@@ -215,7 +292,7 @@ abline(h = 0, lty = 3)
 lines(1:52, NEcor_list_part[[1]]$nino_cor, col = "firebrick2", lty = 2, lwd = 1.25)
 points(NEnino_max1, NEcor_list[[1]]$nino_cor[NEnino_max1], pch = 16, col = "firebrick2", cex = 1.23)
 points(NEnino_max1_part, NEcor_list_part[[1]]$nino_cor[NEnino_max1_part], 
-       pch = 21, col = "darkred", bg="darksalmon", cex = 1.23)
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45) , cex = 1.23)
 lines(1:52, NEcor_list[[2]]$nino_cor, col = "forestgreen", lwd = 1.25)
 lines(1:52, NEcor_list_part[[2]]$nino_cor, col = "forestgreen", lty = 2, lwd = 1.25)
 points(NEnino_max2, NEcor_list[[2]]$nino_cor[NEnino_max2], pch = 17, col = "forestgreen", cex = 1.23)
@@ -271,7 +348,7 @@ abline(h = 0, lty = 3)
 lines(1:52, SEcor_list_part[[1]]$nino_cor, col = "firebrick2", lty = 2, lwd = 1.25)
 points(SEnino_max1, SEcor_list[[1]]$nino_cor[SEnino_max1], pch = 16, col = "firebrick2", cex = 1.23)
 points(SEnino_max1_part, SEcor_list_part[[1]]$nino_cor[SEnino_max1_part], 
-       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.5), cex = 1.23)
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
 lines(1:52, SEcor_list[[2]]$nino_cor, col = "forestgreen", lwd = 1.25)
 lines(1:52, SEcor_list_part[[2]]$nino_cor, col = "forestgreen", lty = 2, lwd = 1.25)
 points(SEnino_max2, SEcor_list[[2]]$nino_cor[SEnino_max2], pch = 17, col = "forestgreen", cex = 1.23)
@@ -327,7 +404,7 @@ abline(h = 0, lty = 3)
 lines(1:52, NEcor_list_part[[1]]$dmi_cor, col = "firebrick2", lty = 2, lwd = 1.25)
 points(NEdmi_max1, NEcor_list[[1]]$dmi_cor[NEdmi_max1], pch = 16, col = "firebrick2", cex = 1.23)
 points(NEdmi_max1_part, NEcor_list_part[[1]]$dmi_cor[NEdmi_max1_part], 
-       pch = 21, col = "darkred", bg="darksalmon", cex = 1.23)
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
 lines(1:52, NEcor_list[[2]]$dmi_cor, col = "forestgreen", lwd = 1.25)
 lines(1:52, NEcor_list_part[[2]]$dmi_cor, col = "forestgreen", lty = 2, lwd = 1.25)
 points(NEdmi_max2, NEcor_list[[2]]$dmi_cor[NEdmi_max2], pch = 17, col = "forestgreen", cex = 1.23)
@@ -344,7 +421,451 @@ dev.off()
 
 
 ```{r SE-dmi}
+#SE Aus Group 1 - DMI
+plot(1:52, SEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[1]]$dmi_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(SEdmi_max1, SEcor_list[[1]]$dmi_cor[SEdmi_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEdmi_max1_part, SEcor_list_part[[1]]$dmi_cor[SEdmi_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#SE Aus Group 2 - DMI
+plot(1:52, SEcor_list[[2]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[2]]$dmi_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(SEdmi_max2, SEcor_list[[2]]$dmi_cor[SEdmi_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(SEdmi_max2_part, SEcor_list_part[[2]]$dmi_cor[SEdmi_max2_part], 
+       pch = 21, col = "darkgreen", bg= alpha("palegreen2",0.35), cex = 1.23)
+
+#SE Aus Group 3 - DMI
+plot(1:52, SEcor_list[[3]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[3]]$dmi_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(SEdmi_max3, SEcor_list[[3]]$dmi_cor[SEdmi_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(SEdmi_max3_part, SEcor_list_part[[3]]$dmi_cor[SEdmi_max3_part], 
+       pch = 21, col = "darkblue", bg= alpha("lightskyblue",0.35), cex = 1.23)
+
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SEdmi_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, SEcor_list[[1]]$dmi_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, SEcor_list_part[[1]]$dmi_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(SEdmi_max1, SEcor_list[[1]]$dmi_cor[SEdmi_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEdmi_max1_part, SEcor_list_part[[1]]$dmi_cor[SEdmi_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, SEcor_list[[2]]$dmi_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, SEcor_list_part[[2]]$dmi_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(SEdmi_max2, SEcor_list[[2]]$dmi_cor[SEdmi_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(SEdmi_max2_part, SEcor_list_part[[2]]$dmi_cor[SEdmi_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, SEcor_list[[3]]$dmi_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, SEcor_list_part[[3]]$dmi_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(SEdmi_max3, SEcor_list[[3]]$dmi_cor[SEdmi_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(SEdmi_max3_part, SEcor_list_part[[3]]$dmi_cor[SEdmi_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("DMI", adj = 0)
+dev.off()
 
 ```
 
+
+```{r NE-tsa}
+#NE Aus Group 1 - TSA
+plot(1:52, NEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[1]]$tsa_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(NEtsa_max1, NEcor_list[[1]]$tsa_cor[NEtsa_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEtsa_max1_part, NEcor_list_part[[1]]$tsa_cor[NEtsa_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#NE Aus Group 2 - TSA
+plot(1:52, NEcor_list[[2]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[2]]$tsa_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(NEtsa_max2, NEcor_list[[2]]$tsa_cor[NEtsa_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(NEtsa_max2_part, NEcor_list_part[[2]]$tsa_cor[NEtsa_max2_part], 
+       pch = 21, col = "darkgreen", bg = alpha("palegreen2", 0.45), cex = 1.23)
+
+#NE Aus Group 3 - TSA
+plot(1:52, NEcor_list[[3]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[3]]$tsa_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(NEtsa_max3, NEcor_list[[3]]$tsa_cor[NEtsa_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(NEtsa_max3_part, NEcor_list_part[[3]]$tsa_cor[NEtsa_max3_part], 
+       pch = 21, col = "darkblue", bg = alpha("lightskyblue", 0.45), cex = 1.23)
+
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEtsa_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, NEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, NEcor_list_part[[1]]$tsa_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(NEtsa_max1, NEcor_list[[1]]$tsa_cor[NEtsa_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEtsa_max1_part, NEcor_list_part[[1]]$tsa_cor[NEtsa_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, NEcor_list[[2]]$tsa_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, NEcor_list_part[[2]]$tsa_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(NEtsa_max2, NEcor_list[[2]]$tsa_cor[NEtsa_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(NEtsa_max2_part, NEcor_list_part[[2]]$tsa_cor[NEtsa_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, NEcor_list[[3]]$tsa_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, NEcor_list_part[[3]]$tsa_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(NEtsa_max3, NEcor_list[[3]]$tsa_cor[NEtsa_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(NEtsa_max3_part, NEcor_list_part[[3]]$tsa_cor[NEtsa_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("TSA", adj = 0)
+dev.off()
+```
+
+
+```{r SE-tsa}
+#SE Aus Group 1 - TSA
+plot(1:52, SEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[1]]$tsa_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(SEtsa_max1, SEcor_list[[1]]$tsa_cor[SEtsa_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEtsa_max1_part, SEcor_list_part[[1]]$tsa_cor[SEtsa_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#SE Aus Group 2 - TSA
+plot(1:52, SEcor_list[[2]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[2]]$tsa_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(SEtsa_max2, SEcor_list[[2]]$tsa_cor[SEtsa_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(SEtsa_max2_part, SEcor_list_part[[2]]$tsa_cor[SEtsa_max2_part], 
+       pch = 21, col = "darkgreen", bg = alpha("palegreen2", 0.45), cex = 1.23)
+
+#SE Aus Group 3 - TSA
+plot(1:52, SEcor_list[[3]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[3]]$tsa_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(SEtsa_max3, SEcor_list[[3]]$tsa_cor[SEtsa_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(SEtsa_max3_part, SEcor_list_part[[3]]$tsa_cor[SEtsa_max3_part], 
+       pch = 21, col = "darkblue", bg = alpha("lightskyblue", 0.45), cex = 1.23)
+
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SEtsa_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, SEcor_list[[1]]$tsa_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, SEcor_list_part[[1]]$tsa_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(SEtsa_max1, SEcor_list[[1]]$tsa_cor[SEtsa_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEtsa_max1_part, SEcor_list_part[[1]]$tsa_cor[SEtsa_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, SEcor_list[[2]]$tsa_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, SEcor_list_part[[2]]$tsa_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(SEtsa_max2, SEcor_list[[2]]$tsa_cor[SEtsa_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(SEtsa_max2_part, SEcor_list_part[[2]]$tsa_cor[SEtsa_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, SEcor_list[[3]]$tsa_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, SEcor_list_part[[3]]$tsa_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(SEtsa_max3, SEcor_list[[3]]$tsa_cor[SEtsa_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(SEtsa_max3_part, SEcor_list_part[[3]]$tsa_cor[SEtsa_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("TSA", adj = 0)
+dev.off()
+
+```
+
+
+```{r NE-aao}
+#NE Aus Group 1 - AAO
+plot(1:52, NEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[1]]$aao_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(NEaao_max1, NEcor_list[[1]]$aao_cor[NEaao_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEaao_max1_part, NEcor_list_part[[1]]$aao_cor[NEaao_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#NE Aus Group 2 - AAO
+plot(1:52, NEcor_list[[2]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[2]]$aao_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(NEaao_max2, NEcor_list[[2]]$aao_cor[NEaao_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(NEaao_max2_part, NEcor_list_part[[2]]$aao_cor[NEaao_max2_part], 
+       pch = 21, col = "darkgreen", bg = alpha("palegreen2", 0.45), cex = 1.23)
+
+#NE Aus Group 3 - AAO
+plot(1:52, NEcor_list[[3]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[3]]$aao_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(NEaao_max3, NEcor_list[[3]]$aao_cor[NEaao_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(NEaao_max3_part, NEcor_list_part[[3]]$aao_cor[NEaao_max3_part], 
+       pch = 21, col = "darkblue", bg = alpha("lightskyblue", 0.45), cex = 1.23)
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEaao_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, NEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, NEcor_list_part[[1]]$aao_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(NEaao_max1, NEcor_list[[1]]$aao_cor[NEaao_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEaao_max1_part, NEcor_list_part[[1]]$aao_cor[NEaao_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, NEcor_list[[2]]$aao_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, NEcor_list_part[[2]]$aao_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(NEaao_max2, NEcor_list[[2]]$aao_cor[NEaao_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(NEaao_max2_part, NEcor_list_part[[2]]$aao_cor[NEaao_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, NEcor_list[[3]]$aao_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, NEcor_list_part[[3]]$aao_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(NEaao_max3, NEcor_list[[3]]$aao_cor[NEaao_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(NEaao_max3_part, NEcor_list_part[[3]]$aao_cor[NEaao_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("SAM (AAO)", adj = 0)
+dev.off()
+
+
+```
+
+
+```{r SE-aao}
+#SE Aus Group 1 - AAO
+plot(1:52, SEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[1]]$aao_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(SEaao_max1, SEcor_list[[1]]$aao_cor[SEaao_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEaao_max1_part, SEcor_list_part[[1]]$aao_cor[SEaao_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#SE Aus Group 2 - AAO
+plot(1:52, SEcor_list[[2]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[2]]$aao_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(SEaao_max2, SEcor_list[[2]]$aao_cor[SEaao_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(SEaao_max2_part, SEcor_list_part[[2]]$aao_cor[SEaao_max2_part], 
+       pch = 21, col = "darkgreen", bg = alpha("palegreen2", 0.45), cex = 1.23)
+
+#SE Aus Group 3 - AAO
+plot(1:52, SEcor_list[[3]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[3]]$aao_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(SEaao_max3, SEcor_list[[3]]$aao_cor[SEaao_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(SEaao_max3_part, SEcor_list_part[[3]]$aao_cor[SEaao_max3_part], 
+       pch = 21, col = "darkblue", bg = alpha("lightskyblue", 0.45), cex = 1.23)
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SEaao_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, SEcor_list[[1]]$aao_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, SEcor_list_part[[1]]$aao_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(SEaao_max1, SEcor_list[[1]]$aao_cor[SEaao_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEaao_max1_part, SEcor_list_part[[1]]$aao_cor[SEaao_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, SEcor_list[[2]]$aao_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, SEcor_list_part[[2]]$aao_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(SEaao_max2, SEcor_list[[2]]$aao_cor[SEaao_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(SEaao_max2_part, SEcor_list_part[[2]]$aao_cor[SEaao_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, SEcor_list[[3]]$aao_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, SEcor_list_part[[3]]$aao_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(SEaao_max3, SEcor_list[[3]]$aao_cor[SEaao_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(SEaao_max3_part, SEcor_list_part[[3]]$aao_cor[SEaao_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("SAM (AAO)", adj = 0)
+dev.off()
+
+
+```
+
+
+```{r NE-olr}
+
+#NE Aus Group 1 - OLR
+plot(1:52, NEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[1]]$olr_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(NEolr_max1, NEcor_list[[1]]$olr_cor[NEolr_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEolr_max1_part, NEcor_list_part[[1]]$olr_cor[NEolr_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#NE Aus Group 2 - OLR
+plot(1:52, NEcor_list[[2]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[2]]$olr_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(NEolr_max2, NEcor_list[[2]]$olr_cor[NEolr_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(NEolr_max2_part, NEcor_list_part[[2]]$olr_cor[NEolr_max2_part], 
+       pch = 21, col = "darkgreen", bg = alpha("palegreen2", 0.45), cex = 1.23)
+
+#NE Aus Group 3 - OLR
+plot(1:52, NEcor_list[[3]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, NEcor_list_part[[3]]$olr_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(NEolr_max3, NEcor_list[[3]]$olr_cor[NEolr_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(NEolr_max3_part, NEcor_list_part[[3]]$olr_cor[NEolr_max3_part], 
+       pch = 21, col = "darkblue", bg = alpha("lightskyblue", 0.45), cex = 1.23)
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEolr_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, NEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, NEcor_list_part[[1]]$olr_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(NEolr_max1, NEcor_list[[1]]$olr_cor[NEolr_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(NEolr_max1_part, NEcor_list_part[[1]]$olr_cor[NEolr_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, NEcor_list[[2]]$olr_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, NEcor_list_part[[2]]$olr_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(NEolr_max2, NEcor_list[[2]]$olr_cor[NEolr_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(NEolr_max2_part, NEcor_list_part[[2]]$olr_cor[NEolr_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, NEcor_list[[3]]$olr_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, NEcor_list_part[[3]]$olr_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(NEolr_max3, NEcor_list[[3]]$olr_cor[NEolr_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(NEolr_max3_part, NEcor_list_part[[3]]$olr_cor[NEolr_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("OLR", adj = 0)
+dev.off()
+
+```
+
+
+```{r SE-olr}
+
+#SE Aus Group 1 - OLR
+plot(1:52, SEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[1]]$olr_cor, col = "firebrick2", lty = 2, lwd = 1.5)
+points(SEolr_max1, SEcor_list[[1]]$olr_cor[SEolr_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEolr_max1_part, SEcor_list_part[[1]]$olr_cor[SEolr_max1_part], 
+       pch = 21, col = "darkred", bg = alpha("darksalmon", 0.45), cex = 1.23)
+
+#SE Aus Group 2 - OLR
+plot(1:52, SEcor_list[[2]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "forestgreen", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[2]]$olr_cor, col = "forestgreen", lty = 2, lwd = 1.5)
+points(SEolr_max2, SEcor_list[[2]]$olr_cor[SEolr_max2], pch = 16, col = "forestgreen", cex = 1.23)
+points(SEolr_max2_part, SEcor_list_part[[2]]$olr_cor[SEolr_max2_part], 
+       pch = 21, col = "darkgreen", bg = alpha("palegreen2", 0.45), cex = 1.23)
+
+#SE Aus Group 3 - OLR
+plot(1:52, SEcor_list[[3]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "royalblue3", lwd = 1.5)
+abline(h = 0, lty = 2)
+lines(1:52, SEcor_list_part[[3]]$olr_cor, col = "royalblue3", lty = 2, lwd = 1.5)
+points(SEolr_max3, SEcor_list[[3]]$olr_cor[SEolr_max3], pch = 16, col = "royalblue3", cex = 1.23)
+points(SEolr_max3_part, SEcor_list_part[[3]]$olr_cor[SEolr_max3_part], 
+       pch = 21, col = "darkblue", bg = alpha("lightskyblue", 0.45), cex = 1.23)
+
+#combine and output
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SEolr_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(1:52, SEcor_list[[1]]$olr_cor, type = "l", ylim = c(-1,1),
+     ylab = "Correlation", xlab = "Lag", col = "firebrick2", lwd = 1.25)
+abline(h = 0, lty = 3)
+lines(1:52, SEcor_list_part[[1]]$olr_cor, col = "firebrick2", lty = 2, lwd = 1.25)
+points(SEolr_max1, SEcor_list[[1]]$olr_cor[SEolr_max1], pch = 16, col = "firebrick2", cex = 1.23)
+points(SEolr_max1_part, SEcor_list_part[[1]]$olr_cor[SEolr_max1_part], 
+       pch = 21, col = "darkred", bg= alpha("darksalmon", 0.45), cex = 1.23)
+lines(1:52, SEcor_list[[2]]$olr_cor, col = "forestgreen", lwd = 1.25)
+lines(1:52, SEcor_list_part[[2]]$olr_cor, col = "forestgreen", lty = 2, lwd = 1.25)
+points(SEolr_max2, SEcor_list[[2]]$olr_cor[SEolr_max2], pch = 17, col = "forestgreen", cex = 1.23)
+points(SEolr_max2_part, SEcor_list_part[[2]]$olr_cor[SEolr_max2_part], 
+       pch = 24, col = "darkgreen", bg = alpha("palegreen2",0.35), cex = 1.15)
+lines(1:52, SEcor_list[[3]]$olr_cor, col = "royalblue3", lwd = 1.25)
+lines(1:52, SEcor_list_part[[3]]$olr_cor, col = "royalblue3", lty = 2, lwd = 1.25)
+points(SEolr_max3, SEcor_list[[3]]$olr_cor[SEolr_max3], pch = 15, col = "royalblue3", cex = 1.23)
+points(SEolr_max3_part, SEcor_list_part[[3]]$olr_cor[SEolr_max3_part], 
+       pch = 22, col = "darkblue", bg = alpha("lightskyblue", 0.35), cex = 1.2)
+title("OLR", adj = 0)
+dev.off()
+
+```
+
+
+```{r legend}
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "legend_cor.png", width = 2000, height = 1800, res = 300)
+par(mar = c(5, 5, 3, 4))
+plot(-1:1, -1:1, type = "n",  axes = FALSE,
+     xlab = "", ylab = "")
+par(xpd = NA)
+legend("topleft", inset = c(0.0, 0.10),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       lty = c(1,1,1),
+              col = c( "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       lwd = c(1.25, 1.25, 1.25),
+       seg.len = 5.5,
+       title = "Correlation with 2019/2020")
+legend("topleft", inset = c(0.50, 0.10),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       pch = c(16, 17, 15),
+       col = c( "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.23, 1.23, 1.23),
+       title = "Max Correlation",
+       cex = 1)
+legend("topleft", inset = c(0.0, 0.5),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       lty = c(2,2,2),
+              col = c( "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       lwd = c(1.25, 1.25, 1.25),
+       seg.len = 5,
+       title = "Correlation without 2019/2020")
+legend("topleft", inset = c(0.50, 0.50),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       pch = c(21, 24, 22),
+       col = c( "darkred", 
+                "darkgreen",
+                "darkblue"),
+       pt.bg = c(alpha("darksalmon", 0.45),
+         alpha("palegreen2",0.45),
+         alpha("lightskyblue", 0.45)),
+       pt.cex = c(1.23, 1.15, 1.23),
+       title = "Max Correlation",
+       cex = 1)
+dev.off()
+
+```
 
