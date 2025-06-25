@@ -117,6 +117,8 @@ X_1 <- cbind(as.matrix(NE_preds_test[[1]][ ,1:260]))
 test_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
                               diagonal = TRUE, trace = 0) 
  
+
+NE1_path <- test_path
 #rerun without lambda list
  # test_path <- hierNet.path( X_1, y_1, strong = TRUE, nlam = 20,
  #                             diagonal = TRUE, trace = 0) 
@@ -124,14 +126,14 @@ test_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
 
 
 ```{r refit_test}
+
 #NE Aus Group 1
-#test_path
-NEcoefs1 <- get_coefs(test_path, max_index = 32, 
+NEcoefs1 <- get_coefs(NE1_path, max_index = 32, 
                       resp = NE_resp[[1]], preds = NE_preds_test[[1]], 
                       preds_quant =NE_preds_test[[1]])
 
 
-NErefit1 <- refit_bic(test_path, max_index = 32, ebic.gamma = 0.25, gic.gamma = 2.15,
+NErefit1 <- refit_bic(NE1_path, max_index = 32, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
                       intercept = FALSE,
                       resp = NE_resp[[1]], preds = NE_preds_test[[1]], 
@@ -139,53 +141,72 @@ NErefit1 <- refit_bic(test_path, max_index = 32, ebic.gamma = 0.25, gic.gamma = 
 
 NErefit1[[5]]
 
+NErefit1[[5]][,c(1,5,6)]
+NErefit1[[5]][,c(1,8,9)]
+
 which.min(NErefit1[[5]][ , 5]) #ridge BIC 
 which.min(NErefit1[[5]][ , 6]) #lasso BIC 
 
 which.min(NErefit1[[5]][ , 8]) #ridge eBIC 
 which.min(NErefit1[[5]][ , 9]) #lasso eBIC 
 
-i <- 4
+i <- 1
 ridge_coef <- NErefit1[[4]][[i]]
 NEridge1_main <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
+#get length
+fit_length <- NULL
+for (i in 1:32) {
+  ridge_coef <- NErefit1[[4]][[i]]
+  fit_length <- c(fit_length, length(ridge_coef))
+}
+```
+
+```{r temp_plots}
+
+
+plot(1:32, NErefit1[[5]][,6], type = "b")
+
+plot(1:32, fit_length)
 
 ```
+
+
 
 
 ## SE Aus Group 1 (test)
 
 Update SElag_3group to remove weeks 35-37 
 
-```{r}
+```{r setup}
 #temporary setup for testing use.
 SE_resp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
 SE_preds_test <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
 
 
 #lambda setup
-lambda_seq <- seq(650, 350, length.out = 25)
+lambda_seq <- seq(650, 350, length.out = 32)
 ```
 
 
-```{r}
+```{r model_path}
 y_1 <- as.numeric(SE_resp[[1]])
 
 X_1 <- cbind(as.matrix(SE_preds_test[[1]][ ,1:260]))
   
-test_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+SE1_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
                               diagonal = TRUE, trace = 0) 
 
 #run as CV
-test_cv <- hierNet::hierNet.cv(test_path, X_1, y_1, nfolds = 5)
+#test_cv <- hierNet::hierNet.cv(test_path, X_1, y_1, nfolds = 5)
  
 ```
 
 
-```{r}
-SErefit1 <- refit_bic(test_path, max_index = 25, ebic.gamma = 0.25, gic.gamma = 2.15,
+```{r refit}
+SErefit1 <- refit_bic(SE1_path, max_index = 32, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
                       intercept = FALSE,
                       resp = SE_resp[[1]], preds = SE_preds_test[[1]], 
@@ -194,18 +215,44 @@ SErefit1 <- refit_bic(test_path, max_index = 25, ebic.gamma = 0.25, gic.gamma = 
 SErefit1[[5]]
 
 SErefit1[[5]][,c(1,5,6)]
-SErefit1[[5]][,c(1,6)]
+SErefit1[[5]][,c(1,8,9)]
 
 which.min(SErefit1[[5]][ , 5]) #ridge BIC 
 which.min(SErefit1[[5]][ , 6]) #lasso BIC 
 which.min(SErefit1[[5]][ , 8]) #ridge eBIC 
 which.min(SErefit1[[5]][ , 9]) #lasso eBIC 
 
-i <- 5
+i <- 16
 ridge_coef <- SErefit1[[4]][[i]]
 NEridge1_main <- ridge_coef
 ridge_coef
 length(ridge_coef)
+
+
+#get LM coefs
+j <- 16
+lm_coef <- SErefit1[[2]][[j]]
+#NEridge2_main <- ridge_coef
+lm_coef
+length(lm_coef)
+
+summary(SErefit1[[1]][[j]])
+
+
+#get length
+fit_length <- NULL
+for (i in 1:32) {
+  ridge_coef <- SErefit1[[4]][[i]]
+  fit_length <- c(fit_length, length(ridge_coef))
+}
+```
+
+```{r temp_plots}
+
+
+plot(1:32, SErefit1[[5]][,6], type = "b")
+
+plot(1:32, fit_length)
 
 ```
 
@@ -224,7 +271,7 @@ NE_preds_test <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
 
 
 #lambda setup (expand the range here)
-lambda_seq <- seq(380, 155, length.out = 24)
+lambda_seq <- seq(380, 155, length.out = 32)
 ```
 
 ```{r model_fit}
@@ -237,8 +284,8 @@ NE2_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
  
 ```
 
-```{r}
-NErefit2 <- refit_bic(NE2_path, max_index = 24, ebic.gamma = 0.2, gic.gamma = 2.15,
+```{r refit}
+NErefit2 <- refit_bic(NE2_path, max_index = 32, ebic.gamma = 0.2, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
                       intercept = FALSE,
                       resp = NE_resp[[2]], preds = NE_preds_test[[2]], 
@@ -247,7 +294,7 @@ NErefit2 <- refit_bic(NE2_path, max_index = 24, ebic.gamma = 0.2, gic.gamma = 2.
 NErefit2[[5]]
 
 NErefit2[[5]][,c(1,5,6)]
-NErefit2[[5]][,c(1,6)]
+NErefit2[[5]][,c(1,8,9)]
 
 which.min(NErefit2[[5]][ , 5]) #ridge BIC 
 which.min(NErefit2[[5]][ , 6]) #lasso BIC 
@@ -282,7 +329,7 @@ NEcoefs2[[12]][[1]]$Coef
 
 #get length
 fit_length <- NULL
-for (i in 1:24) {
+for (i in 1:32) {
   ridge_coef <- NErefit2[[4]][[i]]
   fit_length <- c(fit_length, length(ridge_coef))
 }
@@ -291,10 +338,98 @@ for (i in 1:24) {
 ```{r temp_plots}
 
 
-plot(1:24, NErefit2[[5]][,6], type = "b")
+plot(1:32, NErefit2[[5]][,6], type = "b")
 
-plot(1:24, fit_length)
+plot(1:32, fit_length)
 
+```
+
+
+
+## SE Aus Group 2 (test)
+
+
+```{r setup}
+#temporary setup for testing use.
+SE_resp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+SE_preds_test <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
+
+
+#lambda setup
+lambda_seq <- seq(205, 80, length.out = 32)
+```
+
+```{r model_fit}
+y_1 <- as.numeric(SE_resp[[2]])
+
+X_1 <- cbind(as.matrix(SE_preds_test[[2]][ ,1:260]))
+  
+SE2_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+
+```
+
+```{r refit}
+SErefit2 <- refit_bic(SE2_path, max_index = 32, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SE_resp[[2]], preds = SE_preds_test[[2]], 
+                      preds_quant =SE_preds_test[[2]])
+
+SErefit2[[5]]
+
+SErefit2[[5]][,c(1,5,6)]
+SErefit2[[5]][,c(1,8,9)]
+
+which.min(SErefit2[[5]][ , 5]) #ridge BIC 
+which.min(SErefit2[[5]][ , 6]) #lasso BIC 
+which.min(SErefit2[[5]][ , 8]) #ridge eBIC 
+which.min(SErefit2[[5]][ , 9]) #lasso eBIC 
+
+i <- 14
+ridge_coef <- SErefit2[[4]][[i]]
+ridge_coef
+length(ridge_coef)
+
+#look at lm coeff
+#get LM coefs
+j <- 14
+lm_coef <- SErefit2[[2]][[j]]
+#NEridge2_main <- ridge_coef
+lm_coef
+length(lm_coef)
+
+summary(SErefit2[[1]][[j]])
+
+
+
+SEcoefs2 <- get_coefs(SE2_path, max_index = 32, 
+                      resp = SE_resp[[2]], preds = SE_preds_test[[2]], 
+                      preds_quant = SE_preds_test[[2]])
+
+
+#SEcoefs2
+SEcoefs2[[i]][[1]]$Main_Effect
+SEcoefs2[[i]][[1]]$Coef
+
+SEcoefs2[[i]][[2]]$Interact_Effect
+SEcoefs2[[i]][[2]]$Coef
+
+#due to hiernet constraints the above interaction coefs cannot exceed the main effect coefs.
+
+#get length
+fit_length <- NULL
+for (i in 1:32) {
+  ridge_coef <- SErefit2[[4]][[i]]
+  fit_length <- c(fit_length, length(ridge_coef))
+}
+
+```
+
+```{r plots}
+plot(1:32, SErefit2[[5]][,6], type = "b")
+
+plot(1:32, fit_length)
 ```
 
 
@@ -464,78 +599,6 @@ length(ridge_coef)
 ```
 
 
-## SE Aus Group 2 (test)
-
-
-```{r setup}
-#temporary setup for testing use.
-SE_resp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
-SE_preds_test <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
-
-
-#lambda setup
-lambda_seq <- seq(205, 80, length.out = 24)
-```
-
-```{r model_fit}
-y_1 <- as.numeric(SE_resp[[2]])
-
-X_1 <- cbind(as.matrix(SE_preds_test[[2]][ ,1:260]))
-  
-SE2_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
-                              diagonal = TRUE, trace = 0) 
-
-```
-
-```{r refit}
-SErefit2 <- refit_bic(SE2_path, max_index = 24, ebic.gamma = 0.25, gic.gamma = 2.15,
-                      lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = FALSE,
-                      resp = SE_resp[[2]], preds = SE_preds_test[[2]], 
-                      preds_quant =SE_preds_test[[2]])
-
-SErefit2[[5]]
-
-SErefit2[[5]][,c(1,5,6)]
-SErefit2[[5]][,c(1,8,9)]
-
-which.min(SErefit2[[5]][ , 5]) #ridge BIC 
-which.min(SErefit2[[5]][ , 6]) #lasso BIC 
-which.min(SErefit2[[5]][ , 8]) #ridge eBIC 
-which.min(SErefit2[[5]][ , 9]) #lasso eBIC 
-
-i <- 16
-ridge_coef <- SErefit2[[4]][[i]]
-ridge_coef
-length(ridge_coef)
-
-
-SEcoefs2 <- get_coefs(SE2_path, max_index = 24, 
-                      resp = SE_resp[[2]], preds = SE_preds_test[[2]], 
-                      preds_quant = SE_preds_test[[2]])
-
-
-#SEcoefs2
-SEcoefs2[[i]][[1]]$Main_Effect
-SEcoefs2[[i]][[1]]$Coef
-
-SEcoefs2[[i]][[2]]$Interact_Effect
-SEcoefs2[[i]][[2]]$Coef
-
-#get length
-fit_length <- NULL
-for (i in 1:24) {
-  ridge_coef <- SErefit2[[4]][[i]]
-  fit_length <- c(fit_length, length(ridge_coef))
-}
-
-```
-
-```{r plots}
-plot(1:24, SErefit2[[5]][,6], type = "b")
-
-plot(1:24, fit_length)
-```
 
 
 ## SE Aus Group 3 (test)
