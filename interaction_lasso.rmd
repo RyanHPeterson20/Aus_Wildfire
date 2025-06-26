@@ -54,8 +54,6 @@ Most up to date interaction lasso model runs.
 
 (Note: the previous file 'new_interaction.rmd' was a little too messy after all the different runs that exist there.)
 
-
-
 ```{r setup}
 #season years/weeks
 season_weeks <- c(38:52, 1:14)
@@ -92,7 +90,7 @@ rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
 
 # Test Cases
 
-## SE Aus Group 1 (test)
+## NE Aus Group 1 (new)
 
 Test case for NE Aus Group 1
 
@@ -173,6 +171,11 @@ plot(1:32, fit_length)
 
 ```
 
+### Old NE Aus group 1
+
+```{r}
+
+```
 
 
 

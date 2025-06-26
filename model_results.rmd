@@ -1,0 +1,243 @@
+---
+title: "model_results"
+author: "Ryan Peterson"
+date: "2025-06-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#libraries
+suppressMessages( library(hierNet)) 
+suppressMessages(library(glmnet)) 
+suppressMessages( library( lubridate))
+suppressMessages(library(grid))
+
+suppressMessages( library(scales)) #for adjusting opacity
+```
+
+```{r data_functions}
+# data and functions
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+#source("group_functions.R") #grouping/clustering
+source("group_functionsNew.R") #New grouping/clustering
+source("refit_functions.R") #coef/refit functions
+```
+
+```{r setup}
+#season years/weeks
+season_weeks <- c(38:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,1:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,1:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+
+
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAusmat_new <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAusmat_new <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+```
+
+
+```{r NE_data}
+#old groups
+NEpreds_old <- NElag_old(NE_laglist = NE_laglist_std, j = 1:19)
+NEresp_old <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+#new groups
+NE_preds <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+NE_resp <- NEresp_3group(NEAus_mat = NEAusmat_new, j = 1:19)
+#NE_preds_q75 <- NElag_3group(NE_laglist = NE_laglist_q75, j = 1:19)
+
+```
+
+
+# NE Aus Group 1
+
+```{r old_model}
+#NE Aus Group 1
+NEAus1 <- output_groupWard[[1]]
+
+NErefit1 <- refit_bic(NEAus1$hierpath, max_index = 50, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NEresp_old[[1]], preds = NEpreds_old[[1]], 
+                      preds_quant = NEpreds_old[[1]])
+
+NErefit1[[5]]
+NErefit1[[5]][,c(1,5,6)]
+
+which.min(NErefit1[[5]][ ,5]) #ridge BIC 
+which.min(NErefit1[[5]][ ,6]) #lasso BIC 
+
+i <- 2
+ridge_coef <- NErefit1[[4]][[i]]
+ridge_coef
+length(ridge_coef)
+
+```
+
+Testing unspecified lambdas for reduced group 1.
+
+```{r redo_new}
+#TODO: redo old model fit for group 1 without week (run when I start a multi-hour break)
+#we need to see the full 50 selected lambda for the new group 1 weeks
+y_1 <- as.numeric(NE_resp[[1]])
+
+X_1 <- cbind(as.matrix(NE_preds[[1]][ ,1:260]))
+  
+NEout1_new <- hierNet.path( X_1, y_1, strong = TRUE, nlam = 50,
+                              diagonal = TRUE, trace = 0) 
+```
+
+```{r test_new}
+y_1 <- as.numeric(NE_resp[[1]])
+
+X_1 <- cbind(as.matrix(NE_preds[[1]][ ,1:260]))
+  
+NEout1_test <- hierNet.path( X_1, y_1, strong = TRUE, nlam = 20,
+                              diagonal = TRUE, trace = 0) 
+```
+
+```{r refit_test}
+NErefit1_test <- refit_bic(NEout1_test, max_index = 20, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
+                      preds_quant = NE_preds[[1]])
+
+NErefit1_test[[5]]
+NErefit1_test[[5]][,c(1,5,6)]
+
+
+which.min(NErefit1_test[[5]][ ,5]) #ridge BIC 
+which.min(NErefit1_test[[5]][ ,6]) #lasso BIC 
+
+i <- 1
+ridge_coef <- NErefit1_test[[4]][[i]]
+ridge_coef
+length(ridge_coef)
+
+lambda_fit1_test <- round(NErefit1_test[[5]][ ,1], 2)
+
+plot(1:20, NErefit1_test[[5]][ ,5], type ="b" ,axes = FALSE,
+     xlab = "lambda", "")
+box()
+axis(2)
+axis(1, at = 1:20, labels = lambda_fit1_test)
+```
+
+## New model (with 2019/2020)
+
+```{r}
+lambda_seq <- seq(750, 580, length.out = 32)
+
+y_1 <- as.numeric(NE_resp[[1]])
+
+X_1 <- cbind(as.matrix(NE_preds[[1]][ ,1:260]))
+  
+NE1_path <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+ 
+```
+
+```{r main_refit}
+NEcoefs1 <- get_coefs(NE1_path, max_index = 32, 
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
+                      preds_quant =NE_preds[[1]])
+
+NErefit1 <- refit_bic(NE1_path, max_index = 32, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
+                      preds_quant =NE_preds[[1]])
+
+NErefit1[[5]]
+
+NErefit1[[5]][,c(1,5,6)]
+NErefit1[[5]][,c(1,8,9)]
+
+which.min(NErefit1[[5]][ , 5]) #ridge BIC 
+which.min(NErefit1[[5]][ , 6]) #lasso BIC 
+
+which.min(NErefit1[[5]][ , 8]) #ridge eBIC 
+which.min(NErefit1[[5]][ , 9]) #lasso eBIC 
+
+i <- 1
+ridge_coef <- NErefit1[[4]][[i]]
+NEridge1_main <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+#get LM coefs
+j <- 1
+lm_coef <- NErefit1[[2]][[j]]
+lm_coef
+length(lm_coef)
+
+summary(NErefit1[[1]][[j]])
+
+```
+
+
+## New model (without 2019/2020)
+
+```{r}
+
+```
+
+
+## Plots
+
+
+
+# SE Aus Group 1
+
+

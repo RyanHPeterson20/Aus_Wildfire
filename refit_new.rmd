@@ -19,7 +19,7 @@ suppressMessages(library(grid))
 suppressMessages( library(scales)) #for adjusting opacity
 ```
 
-```{r dat_functions}
+```{r data_functions}
 # data and functions
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 
