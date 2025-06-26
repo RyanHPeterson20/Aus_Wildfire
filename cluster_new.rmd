@@ -557,12 +557,10 @@ SEsil_summary <- summary(SEagg3_sil)
 
 
 #avg_sil(NEbase_matrix)
-NEsil_summary$clus.avg.widths
-mean(NEsil_summary$clus.avg.widths)
-NEsil_summary$avg.width
+data.frame(t(NEsil_summary$clus.avg.widths), avg = NEsil_summary$avg.width)
 #avg_sil(SEbase_matrix)
 SEsil_summary$clus.avg.widths
-
+SEsil_summary$avg.width
 ```
 
 ```{r sil_function}
@@ -1039,11 +1037,6 @@ pSE + scale_x_discrete(
 # Multidimensional Scaling
 
 ## Updated Groups
-
-```{r}
-
-```
-
 
 
 ```{r}

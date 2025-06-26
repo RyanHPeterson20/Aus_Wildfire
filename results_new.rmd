@@ -30,7 +30,7 @@ source("group_functionsNew.R") #New grouping/clustering
 
 ```{r data_setup}
 #season years/weeks
-season_weeks <- c(38:52, 1:14)
+season_weeks <- c(35:52, 1:14)
 season_years <- unique(bounded_resp_df$year)
 
 seasons <- c()
@@ -45,6 +45,7 @@ rm(i, temp_season)
 NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
 SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
 
+#Below includes removal of weeks 35-37 (adjust grouping functions if we need to change this.)
 #NEAus
 NEAus_1 <- NEbase_matrix[ ,4:12] 
 NEAus_2 <- NEbase_matrix[ ,13:17]
@@ -96,6 +97,11 @@ Some goals here:
 
 ## Hierarchical Clustering
 
+Baseline (full season)
+Cut Early (remove weeks 35-37)
+Cut Late (remove weeks 12-14)
+Cut Both (remove weeks 35-37 and 12-14)
+
 ```{r base_clustering}
 #baseline (full wildfire season)
 #distance
@@ -110,6 +116,45 @@ SEhc_base <- constr.hclust(SEd2_base, method = "ward.D2", chron = TRUE)
 NEcut3_base <- cutree(NEhc_base, k = 3)
 SEcut3_base <- cutree(SEhc_base, k = 3)
 
+#dendrogram 
+#re-order cluster
+NEhc_base$order <- c(1:32)
+SEhc_base$order <- c(1:32)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+png(filename = "NEdend_base.png", width = 3600, height = 1200, res = 300)
+stats:::plot.hclust(NEhc_base,  hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "NE Aus : Response Clustering", axes = FALSE, cex.main = 1.1,
+                    cex.lab = 1.1)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[c(1:32)]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.1)
+rect(xleft = 0.5, xright = 12.5, ybottom = 0, ytop = 70, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 12.5, xright = 17.5, ybottom = 0, ytop = 70, col = rgb(0, 1, 0, 0.2), border = NA)
+rect(xleft = 17.5, xright = 32.5, ybottom = 0, ytop = 70, col = rgb(0, 0, 1, 0.2), border = NA)
+text(6.7, -5.6, "Group 1", col = "black", cex = 1.1, xpd = TRUE)
+text(15.5, -5.6, "Group 2", col = "black", cex = 1.1, xpd = TRUE)
+text(24.5, -5.6, "Group 3", col = "black", cex = 1.1, xpd = TRUE)
+#rect.hclust(NEhc_agg2, k = 2, border = 2:3)
+dev.off()
+
+
+png(filename = "SEdend_base.png", width = 3600, height = 1200, res = 300)
+stats:::plot.hclust(SEhc_base, hang = -1, labels = FALSE, bty = "n", sub = "", ylab = "",
+                    xlab = "Week", main = "SE Aus : Response Clustering", axes = FALSE, cex.main = 1.1,
+                    cex.lab = 1.1)
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks[c(1:32)]), 
+     las = 3, gap.axis = 0, tck = 0.5, lty = 0, cex.axis = 1.1)
+rect(xleft = 0.5, xright = 16.5, ybottom = 0, ytop = 70, col = rgb(1, 0, 0, 0.2), border = NA)
+rect(xleft = 16.5, xright = 20.5, ybottom = 0, ytop = 70, col = rgb(0, 1, 0, 0.2), border = NA)
+rect(xleft = 20.5, xright = 32.5, ybottom = 0, ytop = 70, col = rgb(0, 0, 1, 0.2), border = NA)
+text(8.5, -5.6, "Group 1", col = "black", cex = 1.1, xpd = TRUE)
+text(18.5, -5.6, "Group 2", col = "black", cex = 1.1, xpd = TRUE)
+text(25.5, -5.6, "Group 3", col = "black", cex = 1.1, xpd = TRUE)
+#rect.hclust(SEhc_agg2, k = 2, border = 2:5)
+dev.off()
+
 ```
 
 
@@ -120,8 +165,8 @@ NEbase_matrix1 <- NEbase_matrix[ ,-c(1:3)]
 SEbase_matrix1 <- SEbase_matrix[ ,-c(1:3)]
 season_weeks1 <- c(38:52, 1:14)
 
-NEd2 <- dist(t(NEbase_matrix1), method = "euclidean")
-SEd2 <- dist(t(SEbase_matrix1), method = "euclidean")
+NEd2.1 <- dist(t(NEbase_matrix1), method = "euclidean")
+SEd2.1 <- dist(t(SEbase_matrix1), method = "euclidean")
 
 #clustering
 NEhc <- constr.hclust(NEd2, method = "ward.D2", chron = TRUE)
@@ -131,12 +176,74 @@ SEhc <- constr.hclust(SEd2, method = "ward.D2", chron = TRUE)
 NEcut3 <- cutree(NEhc, k = 3)
 SEcut3 <- cutree(SEhc, k = 3)
 
+#TODO: add in dendrogram
 
 ```
 
 
+```{r late_cuts}
+#Removing 12-14
+NEbase_matrix2 <- NEbase_matrix[ ,-c(30:32)]
+SEbase_matrix2 <- SEbase_matrix[ ,-c(30:32)]
+season_weeks2 <- c(35:52, 1:11)
+
+#TODO: add in dendrogram
+
+```
+
+
+```{r both_cuts}
+#removing both (35-37, 12-14)
+NEbase_matrix3 <- NEbase_matrix[ ,-c(1:3, 30:32)]
+SEbase_matrix3 <- SEbase_matrix[ ,-c(1:3, 30:32)]
+season_weeks3 <- c(38:52, 1:11)
+
+
+```
+
 
 ## Silhouette
+
+A lot needs to be added in here:
+-Base silhouette plots
+-New boundary silhouette plots
+-Iterate through boundary cuts:
+--Create plot of group avg
+--Create plot of diffs
+
+
+```{r sil_function}
+
+#fixed for specific hierarchy parameters
+
+avg_sil <- function(resp_matrix) {
+  
+  #fixed euclidean distance
+  euc_dist <- dist(t(resp_matrix), method = "euclidean")
+
+  #clustering
+  #fixed ward's and temp constraints
+  hc_new <- constr.hclust(euc_dist, method = "ward.D2", chron = TRUE)
+  #fixed 3 groups
+  cut_agg3 <- cutree(hc_new, k = 3)
+  
+  sil_summary <- summary(silhouette(cut_agg3, euc_dist))
+  
+  #return df with group avg width and overall avg. width
+  return(data.frame(t(sil_summary$clus.avg.widths), avg = sil_summary$avg.width))
+}
+
+```
+
+
+```{r base_sil}
+
+```
+
+
+```{r iteration}
+#get avg_sil for full resp matrix, then iterate through boundary cuts (ref: cluster_new.rmd, line 589)
+```
 
 
 ## MDS
@@ -145,21 +252,75 @@ Use a metric MDS here and start with euclidean distance.
 TODO: add in explained variance per dimension (scree plot of eigenvalues)
 
 ```{r base_mds}
+#TODO: finalize these plots with week labels for 35-37
+
 #currently testing new mds method
 NEmds_base <- mds(NEd2_base, type = "interval")
+SEmds_base <- mds(SEd2_base, type = "interval")
 
+group_col <- c("firebrick2",
+               "forestgreen",
+               "royalblue3")
 
-
-NEmds_base
+NEmds_base$conf
 summary(NEmds_base)
 
 plot(NEmds_base, plot.type = "resplot")
 plot(NEmds_base, plot.type = "bubbleplot") #bigger the bubble the worse the fit
 
-plot(NEmds_base$conf) #, label.conf = list(pos = 5))
+plot(NEmds_base, pch = 16, col = group_col[NEcut3_base], label.conf = list(label = FALSE, pos = 5), cex= 1)
+abline(h=0, lty =3)
+abline(v= 0, lty =3)
+
+plot(SEmds_base, plot.type = "bubbleplot", label.conf = list(label = TRUE, pos = 5)) 
+plot(SEmds_base, pch = 16, col = group_col[SEcut3_base], label.conf = list(label = FALSE, pos = 5), cex = 1)
+abline(h=0, lty =3)
+abline(v= 0, lty =3)
+```
+
+```{r mds}
+
+NEmds <- mds(NEd2.1, type = "interval")
+SEmds <- mds(SE_d22.1, type = "interval")
+
+#buble plots (for labels)
+plot(SEmds, plot.type = "bubbleplot", label.conf = list(label = TRUE, pos = 5)) 
+
+plot(NEmds, pch = 16, col = group_col[NEcut3], label.conf = list(label = FALSE, pos = 5), cex= 1)
+abline(h=0, lty =3)
+abline(v= 0, lty =3)
+
+
+plot(SEmds, pch = 16, col = group_col[SEcut3], label.conf = list(label = FALSE, pos = 5), cex = 1)
+abline(h=0, lty =3)
+abline(v= 0, lty =3)
 ```
 
 
+Repeat with cmdscale(), I kinda prefer this version
+
+```{r cmds_test}
+NE_mds <- cmdscale(NEd2_base, k =2, eig = TRUE)
+SE_mds <- cmdscale(SEd2_base, k =2, eig = TRUE)
+
+plot(NE_mds$points, pch = 16, col = group_col[NEcut3_base])
+plot(SE_mds$points, pch = 16, col = group_col[SEcut3_base])
+
+```
+
+Get scree plot of from mmds/pca
+
+```{r scree-test-library}
+library(bios2mds)
+# replace with something else later
+```
+
+```{r scree-test}
+mmds1 <- mmds(as.matrix(NEd2_base), pc = 6)
+scree.plot(mmds1$eigen.perc, lab = TRUE)
+
+plot(1:32, NE_mds$eig, type = "b", pch = 16 )
+```
 
 
 # 3. Correlation 
