@@ -171,12 +171,37 @@ plot(1:32, fit_length)
 
 ```
 
-### Old NE Aus group 1
+### test elasticnet - NE Aus group 1
 
 ```{r}
+lambda_seq <- seq(786.636, 566.131, length.out = 12)
 
+y_1 <- as.numeric(NE_resp[[1]])
+
+X_1 <- cbind(as.matrix(NE_preds[[1]][ ,1:260]))
+  
+NEout1_net <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0, delta = 0.05) 
 ```
 
+```{r}
+#NE Aus Group 1
+NEcoefs1_net <- get_coefs(NEout1_net, max_index = 12, 
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
+                      preds_quant =NE_preds[[1]])
+
+NErefit1_net <- refit_bic(NEout1_net, max_index = 12, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = NE_resp[[1]], preds = NE_preds[[1]], 
+                      preds_quant =NE_preds_test[[1]])
+
+NErefit1_net[[5]]
+
+NErefit1_net[[5]][,c(1,5,6)]
+NErefit1_net[[5]][,c(1,8,9)]
+
+```
 
 
 ## SE Aus Group 1 (test)
