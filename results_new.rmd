@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 suppressMessages( library( lubridate))
 
 suppressMessages( library(smacof)) #MDS
+
+suppressMessages( library(fields))
 ```
 
 ```{r data_functions}
@@ -88,6 +90,45 @@ n. Model Results
 
 # 1. Data Figures
 
+```{r proposed}
+
+y_lim <- c(-25, max(NEbase_matrix, SEbase_matrix))
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "boxdata_cuts.png", width = 2600, height = 1800, res = 200)
+set.panel(2,1)
+boxplot(NEbase_matrix, ylim = y_lim, ylab = "Atmospheric CO", xlab = "Week",
+        axes = FALSE, pch = 20, 
+        cex.main = 1.5, cex.lab = 1.25, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+title("NE Aus", adj = 0, cex.main = 1.5)
+abline(v = c(3.5, 29.5), lty =2, col = "red")
+#text(1.5, -22, "Group 1", col = "red", cex =1)
+#text(8.5, -22, "Group 2", col = "red", cex = 1)
+#text(22.5, -22, "Group 1", col = "red", cex = 1)
+
+
+boxplot(SEbase_matrix, ylim = y_lim, ylab = "Atmospheric CO", xlab = "Week",
+        axes = FALSE, pch = 20, 
+        cex.main = 1.5, cex.lab = 1.25, cex.axis = 1.5)
+box()
+axis(2)
+axis(1, at = 1:32, labels = c(season_weeks),
+     las = 3, cex.axis = 1.6)
+abline(h = 0, lty = 2)
+abline(v = c(3.5, 29.5), lty =2, col = "red")
+title("SE Aus", adj = 0, cex.main = 1.5)
+#text(1.5, -22, "Group 1", col = "red", cex =1)
+#text(10.5, -22, "Group 2", col = "red", cex = 1)
+#text(22.5, -22, "Group 1", col = "red", cex = 1)
+
+dev.off()
+```
 
 
 # 2. Clustering Figures
@@ -360,36 +401,157 @@ avg_sil <- function(resp_matrix) {
 #NE AUS
 NEagg_sil <- silhouette(NEcut3_base, NEd2_base)
 plot(NEagg_sil, main = "")
+
 pNE <- fviz_silhouette(NEagg_sil, label = TRUE, print.summary = FALSE)
 
+pNE$labels$title <- "NE Aus Group silhouette"
+
+#output plot
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEsil_base.png", width = 3200, height = 1600, res = 300)
 pNE + scale_x_discrete(
       breaks = pNE$data$name,
       labels = season_weeks[as.integer(as.character(pNE$data$name))]
   ) +
-  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
   xlab("Weeks")
+dev.off()
 
 #SE Aus
 SEagg_sil <- silhouette(SEcut3_base, SEd2_base)
 plot(SEagg_sil)
 pSE <- fviz_silhouette(SEagg_sil, label = TRUE, print.summary = FALSE)
 
+pSE$labels$title <- "SE Aus Group silhouette"
+
+png(filename = "SEsil_base.png", width = 3200, height = 1600, res = 300)
 pSE + scale_x_discrete(
       breaks = pSE$data$name,
       labels = season_weeks[as.integer(as.character(pSE$data$name))]
   ) +
-  theme(axis.text.x = element_text(angle = 90, size = 6)) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
   xlab("Weeks")
-
+dev.off()
 
 ```
+
+```{r updated_sil}
+#updated sil coefs for boundary removals
+
+#cut weeks 35-37
+#NE AUS
+NEagg.1 <- silhouette(NEcut3.1, NEd2.1)
+plot(NEagg.1, main = "")
+
+pNE <- fviz_silhouette(NEagg.1, label = TRUE, print.summary = FALSE)
+pNE$labels$title <- "NE Aus Group silhouette"
+#output plot
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEsil_early.png", width = 3200, height = 1600, res = 300)
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks1[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  xlab("Weeks")
+dev.off()
+
+#SE Aus
+SEagg.1 <- silhouette(SEcut3.1, SEd2.1)
+plot(SEagg.1, main = "")
+pSE <- fviz_silhouette(SEagg.1, label = TRUE, print.summary = FALSE)
+pSE$labels$title <- "SE Aus Group silhouette"
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "SEsil_early.png", width = 3200, height = 1600, res = 300)
+pSE + scale_x_discrete(
+      breaks = pSE$data$name,
+      labels = season_weeks1[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  xlab("Weeks")
+dev.off()
+
+#cut late
+#NE AUS
+NEagg.2 <- silhouette(NEcut3.2, NEd2.2)
+plot(NEagg.2, main = "")
+
+pNE <- fviz_silhouette(NEagg.2, label = TRUE, print.summary = FALSE)
+pNE$labels$title <- "NE Aus Group silhouette"
+
+png(filename = "NEsil_late.png", width = 3200, height = 1600, res = 300)
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks2[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  xlab("Weeks")
+dev.off()
+
+# SE Aus
+SEagg.2 <- silhouette(SEcut3.2, SEd2.2)
+plot(SEagg.2, main = "")
+
+pSE <- fviz_silhouette(SEagg.2, label = TRUE, print.summary = FALSE)
+pSE$labels$title <- "SE Aus Group silhouette"
+
+png(filename = "SEsil_late.png", width = 3200, height = 1600, res = 300)
+pSE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks2[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  xlab("Weeks")
+dev.off()
+
+
+#cut both
+#NE AUS
+NEagg.3 <- silhouette(NEcut3.3, NEd2.3)
+plot(NEagg.3, main = "")
+
+pNE <- fviz_silhouette(NEagg.3, label = TRUE, print.summary = FALSE)
+pNE$labels$title <- "NE Aus Group silhouette"
+
+png(filename = "NEsil_both.png", width = 3200, height = 1600, res = 300)
+pNE + scale_x_discrete(
+      breaks = pNE$data$name,
+      labels = season_weeks3[as.integer(as.character(pNE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  xlab("Weeks")
+dev.off()
+
+
+#SE Aus
+SEagg.3 <- silhouette(SEcut3.3, SEd2.3)
+plot(SEagg.3, main = "")
+
+pSE <- fviz_silhouette(SEagg.3, label = TRUE, print.summary = FALSE)
+pSE$labels$title <- "SE Aus Group silhouette"
+
+png(filename = "SEsil_both.png", width = 3200, height = 1600, res = 300)
+pSE + scale_x_discrete(
+      breaks = pSE$data$name,
+      labels = season_weeks3[as.integer(as.character(pSE$data$name))]
+  ) +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  xlab("Weeks")
+dev.off()
+```
+
 
 
 ```{r iteration}
 #get avg_sil for full resp matrix, then iterate through boundary cuts (ref: cluster_new.rmd, line 589)
+
 NEsil_summary <- avg_sil(NEbase_matrix)
 SEsil_summary <- avg_sil(SEbase_matrix)
 
+#check remove weeks 35-37 (remove weeks 35 - 40)
 NEsil_matrix <- as.matrix(NEsil_summary)
 for (k in 1:6) {
   NEsil_matrix <- rbind(NEsil_matrix, avg_sil( NEbase_matrix[ ,-c(1:k)]))
@@ -400,53 +562,346 @@ for (j in 1:6) {
   SEsil_matrix <- rbind(SEsil_matrix, avg_sil( SEbase_matrix[ ,-c(1:j)]))
 }
 
+#check remove weeks 12-14 (remove weeks 9 - 14)
+NEsil_matrix2 <- as.matrix(NEsil_summary)
+for (i in 1:6) {
+  mat_end <- length(NEbase_matrix[1,])
+  mat_beg <- mat_end - i
+  NEsil_matrix2 <- rbind(NEsil_matrix2, avg_sil(NEbase_matrix[ ,-c(mat_beg:mat_end)]))
+}
+
+SEsil_matrix2 <- as.matrix(SEsil_summary)
+for (i in 1:6) {
+  mat_end <- length(SEbase_matrix[1,])
+  mat_beg <- mat_end - i
+  SEsil_matrix2 <- rbind(SEsil_matrix2, avg_sil(SEbase_matrix[ ,-c(mat_beg:mat_end)]))
+}
+
+#remove weeks 35-37 then check end weeks ( 14 - 9)
+
+NEsil_summary2 <- avg_sil(NEbase_matrix1)
+SEsil_summary2 <- avg_sil(SEbase_matrix1)
+
+NEsil_matrix3 <- as.matrix(NEsil_summary2)
+for (i in 1:6) {
+  mat_end <- length(NEbase_matrix1[1,])
+  mat_beg <- mat_end - i
+  NEsil_matrix3 <- rbind(NEsil_matrix3, avg_sil(NEbase_matrix1[ ,-c(mat_beg:mat_end)]))
+}
+
+SEsil_matrix3 <- as.matrix(SEsil_summary2)
+for (i in 1:6) {
+  mat_end <- length(SEbase_matrix1[1,])
+  mat_beg <- mat_end - i
+  SEsil_matrix3 <- rbind(SEsil_matrix3, avg_sil(SEbase_matrix1[ ,-c(mat_beg:mat_end)]))
+}
+
+
 #test plots
-#plot(1:7, NEsil_matrix[,1], type = "b")
+#plot(1:7, NEsil_matrix2[,1], type = "b")
 #plot(1:7, SEsil_matrix[,1], type = "b")
 
-#plot(1:6, diff(NEsil_matrix[,1]), type = "b")
+#plot(1:6, diff(NEsil_matrix2[,1]), type = "b")
 #plot(1:6, diff(SEsil_matrix[,1]), type = "b")
+```
 
+```{r }
 #TODO: finalize these plots
 
 #formalize plots
 sil_range <- range(NEsil_matrix, SEsil_matrix)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEbound_early.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
 plot(1:7, NEsil_matrix[,4], type = "b", pch = 18, ylim = sil_range, axes = FALSE,
-     ylab = "Coefficient", xlab = "Start Week", main = "NE Silhouette Coefficients")
+     ylab = "Coefficient", xlab = "Start Week", main = "")
 box()
 axis(2)
 axis(1, at = 1:7, labels = c(season_weeks[1:7]))
 lines(1:7, NEsil_matrix[,1], type = "b", pch = 16, col = "firebrick2")
 lines(1:7, NEsil_matrix[,2], type = "b", pch = 17, col = "forestgreen")
 lines(1:7, NEsil_matrix[,3], type = "b", pch = 15, col = "royalblue3")
+title("NE Aus Silhouette Coefficients", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
 #TODO: add in legend
 
+png(filename = "SEbound_early.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
 plot(1:7, SEsil_matrix[,4], type = "b", pch = 18, ylim = sil_range, axes = FALSE,
-     ylab = "Coefficient", xlab = "Start Week", main = "SE Silhouette Coefficients")
+     ylab = "Coefficient", xlab = "Start Week", main = "")
 box()
 axis(2)
 axis(1, at = 1:7, labels = c(season_weeks[1:7]))
 lines(1:7, SEsil_matrix[,1], type = "b", pch = 16, col = "firebrick2")
 lines(1:7, SEsil_matrix[,2], type = "b", pch = 17, col = "forestgreen")
 lines(1:7, SEsil_matrix[,3], type = "b", pch = 15, col = "royalblue3")
-
+title("SE Aus Silhouette Coefficients", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
 
 #differencing plots
 ##diff_range <- range(diff(NEsil_matrix[,1]))
+
+png(filename = "NEdelta_early.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
 plot(1:6, diff(NEsil_matrix[,4]), type = "b", pch = 18, ylim = c(-0.01, 0.05),
-     ylab = expression(paste(Delta, " Coefficient")), xlab = "")
+     ylab = expression(paste(Delta, " Coefficient")), xlab = "Week Removed", axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:6, labels = c(season_weeks[1:6]))
 lines(1:6, diff(NEsil_matrix[,1]), type = "b", pch = 16, col = "firebrick2")
 lines(1:6, diff(NEsil_matrix[,2]), type = "b", pch = 17, col = "forestgreen")
 lines(1:6, diff(NEsil_matrix[,3]), type = "b", pch = 15, col = "royalblue3")
+abline(h = 0, lty = 2)
+title("NE Aus Changes to Silhouette Coefficient", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
 
 
-plot(1:6, diff(SEsil_matrix[,4]), type = "b", pch = 18, ylim = c(-0.01, 0.035),
-     ylab = expression(paste(Delta, " Coefficient")), xlab = "")
+png(filename = "SEdelta_early.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:6, diff(SEsil_matrix[,4]), type = "b", pch = 18, ylim = c(-0.01, 0.05),
+     ylab = expression(paste(Delta, " Coefficient")),xlab = "Week Removed", axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:6, labels = c(season_weeks[1:6]))
 lines(1:6, diff(SEsil_matrix[,1]), type = "b", pch = 16, col = "firebrick2")
 lines(1:6, diff(SEsil_matrix[,2]), type = "b", pch = 17, col = "forestgreen")
 lines(1:6, diff(SEsil_matrix[,3]), type = "b", pch = 15, col = "royalblue3")
+abline(h = 0, lty = 2)
+title("SE Aus Changes to Silhouette Coefficient", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
 
 ```
+
+
+```{r sil_plots}
+sil_range <- range(NEsil_matrix2, SEsil_matrix2)
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEbound_late.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:7, NEsil_matrix2[,4], type = "b", pch = 18, ylim = sil_range, axes = FALSE,
+     ylab = "Coefficient", xlab = "End Week", main = "")
+box()
+axis(2)
+axis(1, at = 1:7, labels = c(season_weeks[32:26]))
+lines(1:7, NEsil_matrix2[,1], type = "b", pch = 16, col = "firebrick2")
+lines(1:7, NEsil_matrix2[,2], type = "b", pch = 17, col = "forestgreen")
+lines(1:7, NEsil_matrix2[,3], type = "b", pch = 15, col = "royalblue3")
+title("NE Aus Silhouette Coefficients", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
+#TODO: add in legend
+png(filename = "SEbound_late.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:7, SEsil_matrix2[,4], type = "b", pch = 18, ylim = sil_range, axes = FALSE,
+     ylab = "Coefficient", xlab = "End Week", main = "")
+box()
+axis(2)
+axis(1, at = 1:7, labels = c(season_weeks[32:26]))
+lines(1:7, SEsil_matrix2[,1], type = "b", pch = 16, col = "firebrick2")
+lines(1:7, SEsil_matrix2[,2], type = "b", pch = 17, col = "forestgreen")
+lines(1:7, SEsil_matrix2[,3], type = "b", pch = 15, col = "royalblue3")
+title("SE Aus Silhouette Coefficients", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
+
+#sil coef (from end season cuts)
+sil_range <- range(NEsil_matrix3, SEsil_matrix3)
+
+
+png(filename = "NEbound_both.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:7, NEsil_matrix3[,4], type = "b", pch = 18, ylim = sil_range, axes = FALSE,
+     ylab = "Coefficient", xlab = "End Week", main = "")
+box()
+axis(2)
+axis(1, at = 1:7, labels = c(season_weeks1[29:23]))
+lines(1:7, NEsil_matrix3[,1], type = "b", pch = 16, col = "firebrick2")
+lines(1:7, NEsil_matrix3[,2], type = "b", pch = 17, col = "forestgreen")
+lines(1:7, NEsil_matrix3[,3], type = "b", pch = 15, col = "royalblue3")
+title("NE Aus Silhouette Coefficients", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
+
+png(filename = "SEbound_both.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:7, SEsil_matrix3[,4], type = "b", pch = 18, ylim = sil_range, axes = FALSE,
+     ylab = "Coefficient", xlab = "End Week", main = "")
+box()
+axis(2)
+axis(1, at = 1:7, labels = c(season_weeks1[29:23]))
+lines(1:7, SEsil_matrix3[,1], type = "b", pch = 16, col = "firebrick2")
+lines(1:7, SEsil_matrix3[,2], type = "b", pch = 17, col = "forestgreen")
+lines(1:7, SEsil_matrix3[,3], type = "b", pch = 15, col = "royalblue3")
+title("SE Aus Silhouette Coefficients", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+```
+
+
+```{r diff_plots}
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEdelta_late.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:6, diff(NEsil_matrix2[,4]), type = "b", pch = 18, ylim = c(-0.08, 0.04),
+     ylab = expression(paste(Delta, " Coefficient")), xlab = "Week Removed", axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:6, labels = c(season_weeks[32:27]))
+lines(1:6, diff(NEsil_matrix2[,1]), type = "b", pch = 16, col = "firebrick2")
+lines(1:6, diff(NEsil_matrix2[,2]), type = "b", pch = 17, col = "forestgreen")
+lines(1:6, diff(NEsil_matrix2[,3]), type = "b", pch = 15, col = "royalblue3")
+abline(h = 0, lty = 2)
+title("NE Aus Changes to Silhouette Coefficient", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
+
+png(filename = "SEdelta_late.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(1:6, diff(SEsil_matrix2[,4]), type = "b", pch = 18, ylim = c(-0.08, 0.04),
+     ylab = expression(paste(Delta, " Coefficient")), xlab = "Week Removed", axes = FALSE)
+box()
+axis(2)
+axis(1, at = 1:6, labels = c(season_weeks[32:27]))
+lines(1:6, diff(SEsil_matrix2[,1]), type = "b", pch = 16, col = "firebrick2")
+lines(1:6, diff(SEsil_matrix2[,2]), type = "b", pch = 17, col = "forestgreen")
+lines(1:6, diff(SEsil_matrix2[,3]), type = "b", pch = 15, col = "royalblue3")
+abline(h = 0, lty = 2)
+title("SE Aus Changes to Silhouette Coefficient", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("All", "Group 1", "Group 2",  "Group 3"),
+       pch = c(18, 16, 17, 15),
+       col = c( "black", 
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.2, 1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
+
+plot(1:6, diff(NEsil_matrix3[,4]), type = "b", pch = 18, ylim = c(-0.05, 0.05),
+     ylab = expression(paste(Delta, " Coefficient")), xlab = "")
+lines(1:6, diff(NEsil_matrix3[,1]), type = "b", pch = 16, col = "firebrick2")
+lines(1:6, diff(NEsil_matrix3[,2]), type = "b", pch = 17, col = "forestgreen")
+lines(1:6, diff(NEsil_matrix3[,3]), type = "b", pch = 15, col = "royalblue3")
+abline(h=0, lty =2)
+
+
+plot(1:6, diff(SEsil_matrix3[,4]), type = "b", pch = 18, ylim = c(-0.03, 0.05),
+     ylab = expression(paste(Delta, " Coefficient")), xlab = "")
+lines(1:6, diff(SEsil_matrix3[,1]), type = "b", pch = 16, col = "firebrick2")
+lines(1:6, diff(SEsil_matrix3[,2]), type = "b", pch = 17, col = "forestgreen")
+lines(1:6, diff(SEsil_matrix3[,3]), type = "b", pch = 15, col = "royalblue3")
+abline(h=0, lty =2)
+
+```
+
+
 
 
 ## MDS
@@ -508,9 +963,54 @@ Repeat with cmdscale(), I kinda prefer this version
 NE_mds <- cmdscale(NEd2_base, k =2, eig = TRUE)
 SE_mds <- cmdscale(SEd2_base, k =2, eig = TRUE)
 
-plot(NE_mds$points, pch = 16, col = group_col[NEcut3_base])
-plot(SE_mds$points, pch = 16, col = group_col[SEcut3_base])
+NEmds_pts <- NE_mds$points
+SEmds_pts <- SE_mds$points
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions/Figures")
+
+png(filename = "NEmds.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(NE_mds$points, pch = 16, col = group_col[NEcut3_base], 
+     xlab = "Dim 1", ylab = "Dim 2")
+points(NEmds_pts[c(1:3), ], cex = 1.25)
+text(NEmds_pts[c(1:3), ], labels = c("35", "36", "37"), pos = c(2,3,2))
+points(NEmds_pts[c(30:32),], cex = 1.25)
+text(NEmds_pts[c(30:32), ], labels = c("12", "13", "14"), pos = c(1,1,3))
+title("NE Aus", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       pch = 16,
+       col = c(  
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
+
+png(filename = "SEmds.png", width = 2200, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 8))
+plot(SE_mds$points, pch = 16, col = group_col[SEcut3_base], 
+     xlab = "Dim 1", ylab = "Dim 2")
+points(SEmds_pts[c(1:3), ], cex = 1.25)
+text(SEmds_pts[c(1:3), ], labels = c("35", "36", "37"), pos = c(3,1,2))
+points(SEmds_pts[c(30:32),], cex = 1.25)
+text(SEmds_pts[c(30:32), ], labels = c("12", "13", "14"), pos = c(4,3,2))
+title("SE Aus", adj = 0)
+par(xpd = NA)
+legend("topright", inset = c(-0.28, 0),
+       legend = c("Group 1", "Group 2",  "Group 3"),
+       pch = 16,
+       col = c(
+         "firebrick2", 
+                "forestgreen",
+                "royalblue3"),
+       pt.cex = c(1.23, 1.23, 1.23),
+       #title = "Avg. Silhouette",
+       cex = 1)
+dev.off()
 ```
 
 Get scree plot of from mmds/pca (probably don't need this at all.)

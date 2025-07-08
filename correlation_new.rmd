@@ -404,9 +404,9 @@ NE3_lag <- rbind(NE3_lag, NE_laglist$`Week  1`[j,-(1:2)],
                  NE_laglist$`Week  2`[j,-(1:2)], NE_laglist$`Week  3`[j,-(1:2)], 
                  NE_laglist$`Week  4`[j,-(1:2)], NE_laglist$`Week  5`[j,-(1:2)], 
                  NE_laglist$`Week  6`[j,-(1:2)], NE_laglist$`Week  7`[j,-(1:2)], 
-                 NE_laglist$`Week  8`[j,-(1:2)], NE_laglist$`Week  9`[j,-(1:2)],
-                 NE_laglist$`Week  10`[j,-(1:2)],
-                 NE_laglist$`Week  11`[j,-(1:2)]) 
+                 NE_laglist$`Week  8`[j,-(1:2)], NE_laglist$`Week  9`[j,-(1:2)])
+                 #NE_laglist$`Week  10`[j,-(1:2)],
+                 #NE_laglist$`Week  11`[j,-(1:2)]) 
                   #NE_laglist$`Week  12`[j,-(1:2)], NE_laglist$`Week  13`[j,-(1:2)], 
                   #NE_laglist$`Week  14`[j,-(1:2)])
 
@@ -414,17 +414,17 @@ NE3_lag <- rbind(NE3_lag, NE_laglist$`Week  1`[j,-(1:2)],
 SE3_lag <-  SE_laglist$`Week  3`[j,-(1:2)]
 SE3_lag <- rbind(SE3_lag, SE_laglist$`Week  4`[j,-(1:2)], SE_laglist$`Week  5`[j,-(1:2)],
                  SE_laglist$`Week  6`[j,-(1:2)], SE_laglist$`Week  7`[j,-(1:2)],
-                 SE_laglist$`Week  8`[j,-(1:2)], SE_laglist$`Week  9`[j,-(1:2)],
-                 SE_laglist$`Week  10`[j,-(1:2)],
-                 SE_laglist$`Week  11`[j,-(1:2)])
+                 SE_laglist$`Week  8`[j,-(1:2)], SE_laglist$`Week  9`[j,-(1:2)])
+                 #SE_laglist$`Week  10`[j,-(1:2)],
+                 #SE_laglist$`Week  11`[j,-(1:2)])
                   #SE_laglist$`Week  12`[j,-(1:2)], SE_laglist$`Week  13`[j,-(1:2)],
                   #SE_laglist$`Week  14`[j,-(1:2)])
 
 
 #response updates
 #without week 12-14
-NEAus_3.1 <- NEbase_matrix[ ,18:29]
-SEAus_3.1 <- SEbase_matrix[ ,21:29]
+NEAus_3.1 <- NEbase_matrix[ ,18:27]
+SEAus_3.1 <- SEbase_matrix[ ,21:27]
 
 #baseline 
 #NEAus
