@@ -1,0 +1,142 @@
+---
+title: "IOD_EOF"
+author: "Ryan Peterson"
+date: "2025-07-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#.nc files
+library(ncdf4)
+suppressMessages(library(terra))
+
+# date mgmt
+suppressMessages(library(lubridate))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+
+```
+
+The goal of this document is to reproduce the pIOD indices from Cai et al, 2021
+
+Starting with OISST v2 (NOAA Optimum Interpolation SST version 2)
+
+From .nc data we clean and sort data correctly, the perform appropriate EOF(PCA), then get S-pIOD and M-pIOD indices.
+
+
+
+
+
+```{r load_data}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Data")
+
+# Open NetCDF file (OISST data)
+
+#weekly data
+nc.OISS <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.wkmean.1990-present.nc")
+
+#montly data
+nc.OISS.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.mnmean.nc")
+
+#add in land sea mask
+nc.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
+
+```
+
+
+
+```{r data_cleaning}
+#use this section to determine how this data looks and setup for use
+#note we can use the work for OLR here, since OLR data is .nc and setup similarly
+
+#extract lon, lat
+lat.grid <- nc.OISS[["dim"]][["lat"]][["vals"]]
+lon.grid <- nc.OISS[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid[lon.grid >= 180] <- lon.grid[lon.grid >= 180] - 360
+this.order <- order(lon.grid)
+
+lon.grid <- lon.grid[this.order]
+
+#time data
+times <- ncvar_get(nc.OISS, "time") # days since 1800-01-01 00:00:0.0
+times <- as_datetime("1800-01-01T00:00:00") + days(times)
+
+#sst data, as array (lon, lat, time)
+sst <- ncvar_get(nc.OISS, "sst")
+sst <- sst[this.order, , ]
+
+```
+
+```{r IOD_bounds}
+#set IOD boundary points (from Cai et al 2021)
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#IOD boundary as vector
+IOD.lon.range <- c(IOD_minLon, IOD_maxLon)
+IOD.lat.range <- c(IOD_minLat, IOD_maxLat) 
+
+#date (time) bounds
+times[523] #2000-01-02 (week 1) (we need +1 year)
+times[471] #1999-01-03 for 12 month (52 week) climatology
+times[1579] #2020-03-29 (week 14)
+```
+
+```{r lsm}
+#TODO: setup lsm data from the oisst that aligns with our other data sets
+#extract lon, lat
+lat.grid.lsm <- nc.lsm[["dim"]][["lat"]][["vals"]]
+lon.grid.lsm <- nc.lsm[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid.lsm[lon.grid.lsm >= 180] <- lon.grid.lsm[lon.grid.lsm >= 180] - 360
+this.order.lsm <- order(lon.grid.lsm)
+
+lon.grid.lsm <- lon.grid.lsm[this.order.lsm]
+
+
+#setup (or find) a land sea mask.
+lsm <- ncvar_get(nc.lsm, "mask")
+lsm <- lsm[this.order.lsm, ]
+
+```
+
+
+```{r EOF_function_test}
+#TODO: test the EOF function from cai et al
+#from matlab code:
+##A is monthly field data array (not anom data) as [time, y, x] or [time, lat, lon]
+##kMod is number of modes (note sure what htis means)
+##aMod is anom data setup, 12 month or all climatology
+
+
+
+```
+
+
+
+```{r test_image}
+times[1250]
+sst_test <- sst[ , ,1250]
+
+
+image.plot(list(x = lon.grid, y = rev(lat.grid), z = sst_test), asp = 1, col = tim.colors(256),
+           bty = "n", xaxt = "n", yaxt = "n", xlim = c(30, 110), ylim = c(-20,20))
+world(add = T)
+rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "magenta3", lwd = 2)
+
+
+```
+
+
+
+
