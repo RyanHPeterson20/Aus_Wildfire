@@ -118,16 +118,52 @@ IOD.lon.range <- c(IOD_minLon, IOD_maxLon)
 IOD.lat.range <- c(IOD_minLat, IOD_maxLat) 
 
 #get value in the boundary range
-lat.grid[lat.grid <= IOD_maxLat & lat.grid >= IOD_minLat]
-which(lat.grid <= IOD_maxLat & lat.grid >= IOD_minLat)
+lat.values <- lat.grid[lat.grid <= IOD_maxLat & lat.grid >= IOD_minLat]
+lat.range <- range(which(lat.grid <= IOD_maxLat & lat.grid >= IOD_minLat))
 
-lon.grid[lon.grid <= IOD_maxLon & lon.grid >= IOD_minLon]
-which(lon.grid <= IOD_maxLon & lon.grid >= IOD_minLon)
+lon.values <- lon.grid[lon.grid <= IOD_maxLon & lon.grid >= IOD_minLon]
+lon.range <- range(which(lon.grid <= IOD_maxLon & lon.grid >= IOD_minLon))
 
 #date (time) bounds (weeks)
 times[523] #2000-01-02 (week 1) (we need +1 year)
 times[471] #1999-01-03 for 12 month (52 week) climatology
 times[1579] #2020-03-29 (week 14)
+
+#get sst for IOD only (and time range)
+sst_IOD <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], 471:1579] 
+
+#TODO: update to combine week 53 with 52, when present
+times[which(epiweek(times)==53)]
+
+temp_week <- epiweek(times[471:1579])
+week53 <- which(temp_week == 53)
+
+sst_IOD[,,260]
+
+#avg and re-assign week 52
+for (i in week53) {
+  mat1 <- sst_IOD[,,i-1]
+  mat2 <- sst_IOD[,,i]
+  sst_IOD[,,i-1] <- (mat1 + mat2)/2
+}
+
+
+#TODO: delete week 53s after
+sst_IOD <- sst_IOD[,,-c(week53)]
+
+#wider viz range #xlim = c(30, 110), ylim = c(-20,20)
+viz_maxLon <- 110
+viz_minLon <- 30
+viz_maxLat <- 20
+viz_minLat <- -20
+
+lat.values.viz <- lat.grid[lat.grid <= viz_maxLat & lat.grid >= viz_minLat]
+lat.range.viz <- range(which(lat.grid <= viz_maxLat & lat.grid >= viz_minLat))
+
+lon.values.viz <- lon.grid[lon.grid <= viz_maxLon & lon.grid >= viz_minLon]
+lon.range.viz <- range(which(lon.grid <= viz_maxLon & lon.grid >= viz_minLon))
+
+
 
 #time bounds for month data
 times.month[218] #2000-01-01 (month 1) (we need +1 year)
@@ -157,13 +193,40 @@ lsm <- lsm[this.order.lsm, ]
 ```
 
 
-
 ```{r masking_test}
 sst_test <- sst[ , ,1250]
 
+times[1250]
+
+sst_test2 <- sst_test[lon.range.viz[1]:lon.range.viz[2], lat.range.viz[1]:lat.range.viz[2]] 
+test_range <- range(sst_test2)
+test_rangebase <- range(sst_test)
+
+#ls mask
 sst.lsm <- sst_test * lsm[ ,ncol(lsm):1]
+
 ```
 
+
+```{r reduced_area}
+
+
+
+```
+
+
+# EOF
+
+
+```{r EOF_setup}
+##A is monthly field data array (not anom data) as [time, y, x] or [time, lat, lon]
+dim(sst_IOD)
+
+A <- aperm(sst_IOD, perm = c(3,2,1)) #[time, lat, lon]
+
+
+
+```
 
 
 ```{r EOF_function_test}
@@ -173,7 +236,49 @@ sst.lsm <- sst_test * lsm[ ,ncol(lsm):1]
 ##kMod is number of modes (note sure what htis means)
 ##aMod is anom data setup, 12 month or all climatology
 
+#matlab code:
+##Q_net=A; #assign array A to Q_net
 
+
+
+```
+
+
+# Visualizations
+
+```{r bubbleplot}
+grid.list <- list(x = lon.grid,
+                  y = rev(lat.grid))
+
+s.grid <- make.surface.grid(grid.list)
+
+z.grid <- as.vector(sst.lsm)
+
+sst.df <- data.frame(s.grid, z = z.grid)
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#surface
+png(filename = "IODsst_test2.png", width = 2000, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 6))
+image.plot(list(x = lon.grid, y = rev(lat.grid), z = sst.lsm), col = tim.colors(256), zlim  = test_range,
+           xlim = c(30, 110), ylim = c(-20, 20), xlab = "Lon", ylab = "Lat",
+           legend.args =list(text = expression(degree * C), side = 1, line = 1.25))
+title("SST from week of August 12, 2013", adj = 0)
+world(add = T)
+rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "black", lwd = 2.5)
+dev.off()
+
+#bubble plot (point)
+png(filename = "IODsst_test.png", width = 2000, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 6))
+bubblePlot(sst.df$x, sst.df$y, sst.df$z, col = tim.colors(256), size = 0.75, zlim  = test_range,
+           xlim = c(30, 110), ylim = c(-20,20), xlab = "Lon", ylab = "Lat",legend.args =list(text = expression(degree * C), side = 1, line = 1.25))
+title("SST from week of August 12, 2013", adj = 0)
+world(add = T)
+rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "black", lwd = 2.5)
+dev.off()
 
 ```
 
@@ -187,17 +292,9 @@ image.plot(list(x = lon.grid, y = rev(lat.grid), z = sst.lsm), asp = 1, col = ti
 world(add = T)
 
 image.plot(list(x = lon.grid, y = rev(lat.grid), z = sst.lsm), asp = 1, col = tim.colors(256),
-           bty = "n", xaxt = "n", yaxt = "n", xlim = c(30, 110), ylim = c(-20,20))
-world(add = T)
-rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "magenta3", lwd = 2)
-
-bubblePlot(x = lon.grid, y = rev(lat.grid), z = sst.lsm, asp = 1, col = tim.colors(256),
-           bty = "n", xaxt = "n", yaxt = "n", xlim = c(30, 110), ylim = c(-20,20))
+           bty = "n", xaxt = "n", yaxt = "n", xlim = c(30, 110), ylim = c(-20,20),  zlim = test_range)
 world(add = T)
 rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "magenta3", lwd = 2)
 
 ```
-
-
-
 
