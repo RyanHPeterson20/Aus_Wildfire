@@ -190,6 +190,11 @@ lon.grid.lsm <- lon.grid.lsm[this.order.lsm]
 lsm <- ncvar_get(nc.lsm, "mask")
 lsm <- lsm[this.order.lsm, ]
 
+#TODO update lsm for reduced region
+#get lsm for IOD only
+lsm_IOD <- lsm[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2]] 
+
+
 ```
 
 
@@ -225,6 +230,9 @@ dim(sst_IOD)
 A <- aperm(sst_IOD, perm = c(3,2,1)) #[time, lat, lon]
 
 
+#sst_IOD is already as [lon, lat, time] (or [nx, ny, nt])
+## -therefore the above re-order needs to be [ny, nx, nt]
+Q_net <- aperm(sst_IOD, perm = c(2, 1, 3))
 
 ```
 
@@ -239,9 +247,83 @@ A <- aperm(sst_IOD, perm = c(3,2,1)) #[time, lat, lon]
 #matlab code:
 ##Q_net=A; #assign array A to Q_net
 
+#TODO: rewrite 
+Q_net <- sst_IOD #as[nx, ny, nt] 
 
+# Get dimensions [nx, ny, nt]
+dims <- dim(Q_net)
+nx <- dims[1]
+ny <- dims[2]
+nt <- dims[3]
+
+#TODO: update so that we don't need all this when we could just change the numbers in the above dimensions
+# Reorder from [nx, ny, nt] to [ny, nx, nt] like in MATLAB loop
+Q_net_1 <- aperm(Q_net, perm = c(2, 1, 3))  # Now [ny, nx, nt]
+  
+# Overwrite Q_net and clear Q_net_1
+Q_net <- Q_net_1
+rm(Q_net_1)
+
+# Flatten spatial dimensions: [ny*nx, nt]
+np <- nx * ny
+var <- matrix(Q_net, nrow = np, ncol = nt)
+
+# Get remainder when nt is divided by 52 (weeks in a year)
+nn <- nt %% 52
+
+#or 12 for month data
+##nn <- nt %% 12
+
+
+#anomaly (yearly)
+week_mean <- matrix(NA, nrow = np, ncol = 52)
+
+#TODO: adjust for loop when we move this over
+for (j in 1:52) {
+  # Find all time indices corresponding to week `j`
+  cols_j <- seq(j, nt, by = 52)
+      
+  # Compute weekly mean across years for each spatial point
+  week_mean[ ,j] <- rowMeans(var[, cols_j, drop = FALSE])
+  
+  # Number of time points this week occurs in
+  ncols <- length(cols_j)
+      
+  # Subtract weekly mean
+  var[, cols_j] <- var[, cols_j] - matrix(week_mean[, j], nrow = np, ncol = ncols)
+}
+
+
+#update from LSM (same as the NaN section in EOF.m)
+# 1. Flatten mask [nx, ny] -> vector [np]
+lsm_vec <- as.vector(lsm_IOD)  
+
+# 2. Keep only ocean points: where mask == 1
+is_ocean <- lsm_vec == 1
+var_masked <- var[is_ocean, ]
+
+var_eof <- var_masked
 
 ```
+
+## PCA (EOF) 
+
+```{r eof_pca}
+#modified code from MATLAB EOF.m
+
+# Assume var_eof is [nspace, ntime] and kmod is the number of modes
+# Compute covariance matrix in time
+cov_mat <- t(var_eof) %*% var_eof
+
+# Eigen-decomposition (EVD of "cov matrix")
+eig <- eigen(cov_mat, symmetric = TRUE)
+
+
+
+#TODO: finish this up and compare to svd() (base R)
+
+```
+
 
 
 # Visualizations
