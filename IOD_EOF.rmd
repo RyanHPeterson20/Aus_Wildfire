@@ -43,6 +43,10 @@ load( "data_matrix.rda")
 
 load( "lag_list.rda")
 
+#Functions
+#load in EOF function
+source("pIOD/EOF_iod.R")
+
 # Open NetCDF file (OISST data)
 
 #weekly data
@@ -129,6 +133,9 @@ times[523] #2000-01-02 (week 1) (we need +1 year)
 times[471] #1999-01-03 for 12 month (52 week) climatology
 times[1579] #2020-03-29 (week 14)
 
+#TODO: determine the weeks for SON (and DJF)
+
+
 #get sst for IOD only (and time range)
 sst_IOD <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], 471:1579] 
 
@@ -169,6 +176,11 @@ lon.range.viz <- range(which(lon.grid <= viz_maxLon & lon.grid >= viz_minLon))
 times.month[218] #2000-01-01 (month 1) (we need +1 year)
 times.month[206] #1999-01-01 for 12 month (52 week) climatology
 times.month[461]  #2020-04-01 (month 4)
+
+
+
+
+
 ```
 
 
@@ -212,16 +224,20 @@ sst.lsm <- sst_test * lsm[ ,ncol(lsm):1]
 
 ```
 
-
-```{r reduced_area}
-
-
-
+```{r SON_DJF}
+#get reduced time scale
 ```
 
 
 # EOF
 
+
+```{r }
+
+```
+
+
+Question: do we pass in standardized data? (Yes?)
 
 ```{r EOF_setup}
 ##A is monthly field data array (not anom data) as [time, y, x] or [time, lat, lon]
@@ -304,12 +320,45 @@ var_masked <- var[is_ocean, ]
 
 var_eof <- var_masked
 
+which(is.na(var_eof))
 ```
+
+
+```{r further_anom_tests}
+#double checking code for anomalies
+np <- nx * ny
+var <- matrix(Q_net, nrow = np, ncol = nt)
+
+# Get remainder when nt is divided by 52 (weeks in a year)
+nn <- nt %% 52
+
+#or 12 for month data
+##nn <- nt %% 12
+
+
+#anomaly (yearly)
+weekly_mean <- matrix(NA, nrow = np, ncol = 52)
+
+j <- 1
+# Find all time indices corresponding to week `j`
+cols_j <- seq(j, nt, by = 52)
+
+```
+
 
 ## PCA (EOF) 
 
+Base matlab code for eigen decomp
+[V1,E]=eig(var_eof'*var_eof);
+E=fliplr(flipud(E));
+V2=fliplr(var_eof*V1);
+
 ```{r eof_pca}
 #modified code from MATLAB EOF.m
+
+kmod <- 2
+
+
 
 # Assume var_eof is [nspace, ntime] and kmod is the number of modes
 # Compute covariance matrix in time
@@ -318,12 +367,119 @@ cov_mat <- t(var_eof) %*% var_eof
 # Eigen-decomposition (EVD of "cov matrix")
 eig <- eigen(cov_mat, symmetric = TRUE)
 
+#corrected section
+E <- eig$values
+
+V1 <- eig$vectors
+V2 <- var_eof %*% V1
 
 
-#TODO: finish this up and compare to svd() (base R)
+#brief test for centered data
+var_center <- scale(var_eof, center = TRUE, scale = TRUE)
+
+cov_test <- t(var_center) %*% var_center
+
+# Eigen-decomposition (EVD of "cov matrix")
+eig_test <- eigen(cov_test, symmetric = TRUE)
+
+
+# Initialize matrices
+V <- matrix(NA, nrow = nrow(V2), ncol = kmod)
+PC <- matrix(NA, nrow = ncol(var_eof), ncol = kmod)
+per <- numeric(kmod)
+
+
+
+# Loop through first kmod modes
+for (i in 1:kmod) {
+  V[, i] <- V2[, i] / sqrt(E[i])              # EOF mode
+  PC[, i] <- as.vector(t(V[, i]) %*% var_eof)      # Principal components (this should be var_eof %*% V, since XV = UD)
+  per[i] <- E[i] / sum(E)                # Variance explained
+}
+
+EOF_mode <- V
 
 ```
 
+
+```{r svd}
+
+#TODO: center var_eof first (X has to be centered)
+svd_test <- svd(scale(var_eof, center = TRUE, scale = FALSE))
+
+#svd outputs
+U <- svd_test$u[ ,1:kmod]
+D <- svd_test$d[1:kmod]
+V <- svd_test$v[ ,1:kmod]
+
+#test outputs
+EOF_test <- U #EOF spatial pattern
+PC_test <- V %*% diag(D)
+per_test <- D^2 / sum(svd_test$d^2) 
+
+```
+
+
+```{r prcomp}
+#test for prcomp
+pca <- prcomp(t(var_eof), center = TRUE, scale. = TRUE )
+
+
+#EOF spatial [np, kmod]
+pc_EOF <- pca$rotation[, 1:kmod]
+
+#pca time series
+pc_ts <- pca$x[, 1:kmod]
+
+matplot(pc_ts[, 1], type = "l", lty = 1, lwd = 2,
+        xlab = "Time", ylab = "Principal Component")
+
+matplot(pc_ts[, 2], type = "l", lty = 1, lwd = 2,
+        xlab = "Time", ylab = "Principal Component")
+
+per <- pca$sdev[1:kmod]^2 / sum(pca$sdev^2)
+
+plot(per[1:2] * 100, type = "b", pch = 19,
+     xlab = "EOF Mode", ylab = "Variance Explained (%)",
+     main = "")
+
+```
+
+
+```{r compare_results}
+dim(EOF_test) #svd
+dim(pc_EOF) #prcomp
+EOF_test[1:10, ]
+pc_EOF[1:10, ]
+
+dim(PC_test)
+dim(pc_ts)
+PC_test[1:10, ]
+pc_ts[1:10, ]
+```
+
+
+```{r S_M-Index}
+S_ind <- (pc_ts[, 1] + pc_ts[, 2])/sqrt(2)
+M_ind <- (pc_ts[, 1] - pc_ts[, 2])/sqrt(2)
+
+matplot(S_ind, type = "l", lty = 1, lwd = 2,
+        xlab = "Time", ylab = "Index", main = "S-Index")
+abline(h = 0, lty = 2)
+
+matplot(M_ind, type = "l", lty = 1, lwd = 2,
+        xlab = "Time", ylab = "Index", main = "M-Index")
+abline(h = 0, lty = 2)
+
+```
+
+
+```{r reintroduce_land}
+V_new <- matrix(NA, nrow = np, ncol = kmod)
+
+#add in lsm sea data
+V_new[lsm_vec == 1, ] <- pc_EOF
+```
 
 
 # Visualizations
@@ -364,7 +520,35 @@ dev.off()
 
 ```
 
+## Anomalies (1 year climatology)
 
+Get from the EOF function
+
+```{r }
+
+```
+
+
+## PCA 
+
+```{r spatial_EOF}
+#spatial patterns from EOFs
+
+eof1_matrix <- matrix(V_new[, 2], nrow = nx, ncol = ny)
+eof1_matrix <- eof1_matrix[ ,ny:2]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = eof1_matrix))
+
+
+matplot(PC_test[, 2], type = "l", lty = 1, lwd = 2,
+        xlab = "Time", ylab = "Principal Component")
+
+
+
+```
+
+
+## Old (delete later)
 
 ```{r test_image}
 #times[1250]
