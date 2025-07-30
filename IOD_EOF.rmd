@@ -133,16 +133,18 @@ times[523] #2000-01-02 (week 1) (we need +1 year)
 times[471] #1999-01-03 for 12 month (52 week) climatology
 times[1579] #2020-03-29 (week 14)
 
+times[1556] #"2019-10-20 UTC"
+
 #TODO: determine the weeks for SON (and DJF)
 
-
 #get sst for IOD only (and time range)
-sst_IOD <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], 471:1579] 
+sst_IOD <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], 523:1579] 
+
 
 #TODO: update to combine week 53 with 52, when present
 times[which(epiweek(times)==53)]
 
-temp_week <- epiweek(times[471:1579])
+temp_week <- epiweek(times[523:1579])
 week53 <- which(temp_week == 53)
 
 sst_IOD[,,260]
@@ -324,6 +326,95 @@ which(is.na(var_eof))
 ```
 
 
+```{r plot_anoms}
+times[522+728]
+
+#726 (1250)
+
+# Step 1: Convert var [ny*nx, nt] back to [ny, nx, nt]
+temp <- array(t(var), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+
+# Step 2: Reverse the earlier aperm to get back to [nx, ny, nt]
+anom_matrix <- aperm(Q_net_1, c(2, 1, 3))
+anom_matrix <- anom_matrix[,,1031]
+
+
+
+lsm_IOD <- lsm[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2]] 
+#lsm_IOD[lsm_IOD == 0] <- 5 
+
+z_range <- range(anom_matrix)
+
+#ls mask
+anom_matrix <- anom_matrix * lsm_IOD[ ,ncol(lsm_IOD):1]
+anom_matrix[anom_matrix == 0] <- -5 
+
+
+#anom_matrix <- matrix(Q_net_reconstructed[ , ,728], nrow = nx, ncol = ny)
+#eof1_matrix <- eof1_matrix[ ,ny:2]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = anom_matrix), zlim  = z_range)
+world(add = TRUE)
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#surface
+png(filename = "IODsst_anom1.png", width = 2400, height = 1000, res = 300)
+par(mar = c(5, 5, 3, 6))
+image.plot(list(x = lon.values, y = rev(lat.values), z = anom_matrix), zlim  = z_range, col = tim.colors(256),
+           xlim = c(40, 100), ylim = c(-5, 5), xlab = "Lon", ylab = "Lat")
+title("SST Anomalies from week of October 20, 2019", adj = 0)
+world(add = T)
+dev.off()
+
+```
+
+```{r test_plot}
+#compare var and original data
+#sst_IOD #as[nx, ny, nt]
+dim(sst_IOD)
+sst_IOD_new <- sst_IOD[,,1031]
+
+sst_range <- range(sst_IOD_new)
+
+#ls mask
+sst_IOD_new <- sst_IOD_new * lsm_IOD[ ,ncol(lsm_IOD):1]
+sst_IOD_new[sst_IOD_new == 0] <- -5 
+
+#var transform from [ny*nx, nt] back to [ny, nx, nt]
+temp <- array(t(var), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+
+# Step 2: Reverse the earlier aperm to get back to [nx, ny, nt]
+anom_matrix <- aperm(Q_net_1, c(2, 1, 3))
+anom_matrix <- anom_matrix[,,1031]
+
+
+
+lsm_IOD <- lsm[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2]] 
+#lsm_IOD[lsm_IOD == 0] <- 5 
+
+z_range <- range(anom_matrix)
+
+#ls mask
+anom_matrix <- anom_matrix * lsm_IOD[ ,ncol(lsm_IOD):1]
+anom_matrix[anom_matrix == 0] <- -5 
+
+
+#anom_matrix <- matrix(Q_net_reconstructed[ , ,728], nrow = nx, ncol = ny)
+#eof1_matrix <- eof1_matrix[ ,ny:2]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = anom_matrix), zlim  = z_range)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = sst_IOD_new), zlim = sst_range)
+world(add = TRUE)
+```
+
+
 ```{r further_anom_tests}
 #double checking code for anomalies
 np <- nx * ny
@@ -422,7 +513,7 @@ per_test <- D^2 / sum(svd_test$d^2)
 
 ```{r prcomp}
 #test for prcomp
-pca <- prcomp(t(var_eof), center = TRUE, scale. = TRUE )
+pca <- prcomp(t(var_eof), center = TRUE, scale. = FALSE )
 
 
 #EOF spatial [np, kmod]
@@ -437,11 +528,47 @@ matplot(pc_ts[, 1], type = "l", lty = 1, lwd = 2,
 matplot(pc_ts[, 2], type = "l", lty = 1, lwd = 2,
         xlab = "Time", ylab = "Principal Component")
 
-per <- pca$sdev[1:kmod]^2 / sum(pca$sdev^2)
+per <- pca$sdev[1:15]^2 / sum(pca$sdev^2)
 
-plot(per[1:2] * 100, type = "b", pch = 19,
-     xlab = "EOF Mode", ylab = "Variance Explained (%)",
-     main = "")
+plot(per[1:6] * 100, type = "b", pch = 19,
+     xlab = "Component", ylab = "Variance Explained (%)", ylim = c(0,50))
+
+```
+
+
+```{r plots}
+
+dates <- times[523:1579]
+temp_week <- epiweek(times[523:1579])
+week53 <- which(temp_week == 53)
+
+dates_new <- dates[-week53]
+
+y_range <- range(pc_ts)
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+
+png(filename = "pct_var.png", width = 2000, height = 1500, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(per[1:6] * 100, type = "b", pch = 19,
+     xlab = "Component", ylab = "Variance Explained (%)", ylim = c(0,50))
+title(" Proportion of Variance Explained", adj = 0)
+dev.off()
+
+png(filename = "pc1_ts.png", width = 2400, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(dates_new, pc_ts[, 1], type = "l", lty = 1, lwd = 1.82, ylim = y_range,
+        xlab = "Year", ylab = "Principal Component")
+title("Principle Component 1 (PC1)", adj = 0)
+dev.off()
+
+png(filename = "pc2_ts.png", width = 2400, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(dates_new, pc_ts[, 2], type = "l", lty = 1, lwd = 1.82, ylim = y_range,
+        xlab = "Year", ylab = "Principal Component")
+title("Principle Component 2 (PC2)", adj = 0)
+dev.off()
 
 ```
 
@@ -460,16 +587,29 @@ pc_ts[1:10, ]
 
 
 ```{r S_M-Index}
+
 S_ind <- (pc_ts[, 1] + pc_ts[, 2])/sqrt(2)
 M_ind <- (pc_ts[, 1] - pc_ts[, 2])/sqrt(2)
 
-matplot(S_ind, type = "l", lty = 1, lwd = 2,
-        xlab = "Time", ylab = "Index", main = "S-Index")
-abline(h = 0, lty = 2)
+index_range <- range(S_ind, M_ind)
 
-matplot(M_ind, type = "l", lty = 1, lwd = 2,
-        xlab = "Time", ylab = "Index", main = "M-Index")
-abline(h = 0, lty = 2)
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png(filename = "strong.png", width = 2400, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(dates_new, S_ind, type = "l", lty = 1, lwd = 1.8, ylim = index_range,
+        xlab = "Year", ylab = "Index")
+abline(h = 0, lty = 2, col = "red")
+title("S-Index", adj = 0)
+dev.off()
+
+png(filename = "moderate.png", width = 2400, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(dates_new, M_ind, type = "l", lty = 1, lwd = 1.8, ylim = index_range,
+        xlab = "Year", ylab = "Index")
+abline(h = 0, lty = 2, col = "red")
+title("M-Index", adj = 0)
+dev.off()
 
 ```
 
@@ -494,6 +634,14 @@ z.grid <- as.vector(sst.lsm)
 
 sst.df <- data.frame(s.grid, z = z.grid)
 
+#test block
+image.plot(list(x = lon.grid, y = rev(lat.grid), z = sst.lsm), col = tim.colors(256), zlim  = z_range,
+           xlim = c(40, 100), ylim = c(-5, 5), xlab = "Lon", ylab = "Lat",
+           legend.args =list(text = expression(degree * C), side = 1, line = 1.25))
+title("SST from week of December 8, 2013", adj = 0)
+world(add = T)
+rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "black", lwd = 2.5)
+
 
 setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
 
@@ -503,7 +651,7 @@ par(mar = c(5, 5, 3, 6))
 image.plot(list(x = lon.grid, y = rev(lat.grid), z = sst.lsm), col = tim.colors(256), zlim  = test_range,
            xlim = c(30, 110), ylim = c(-20, 20), xlab = "Lon", ylab = "Lat",
            legend.args =list(text = expression(degree * C), side = 1, line = 1.25))
-title("SST from week of August 12, 2013", adj = 0)
+title("SST from week of December 8, 2013", adj = 0)
 world(add = T)
 rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "black", lwd = 2.5)
 dev.off()
@@ -513,7 +661,7 @@ png(filename = "IODsst_test.png", width = 2000, height = 1500, res = 300)
 par(mar = c(5, 5, 3, 6))
 bubblePlot(sst.df$x, sst.df$y, sst.df$z, col = tim.colors(256), size = 0.75, zlim  = test_range,
            xlim = c(30, 110), ylim = c(-20,20), xlab = "Lon", ylab = "Lat",legend.args =list(text = expression(degree * C), side = 1, line = 1.25))
-title("SST from week of August 12, 2013", adj = 0)
+title("SST from week of December 8, 2013", adj = 0)
 world(add = T)
 rect(IOD_minLon, IOD_minLat, IOD_maxLon, IOD_maxLat, border = "black", lwd = 2.5)
 dev.off()
