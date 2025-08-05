@@ -1,0 +1,167 @@
+---
+title: "IOD_EOF_test"
+author: "Ryan Peterson"
+date: "2025-08-04"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#.nc files
+library(ncdf4)
+suppressMessages(library(terra))
+
+# date mgmt
+suppressMessages(library(lubridate))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+
+```
+
+
+Reproducing with all four reanalysis products
+
+```{r import_data}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#lots of stuff here, keep minimized when done.
+
+#begin easy with monthly OISST
+nc.OISS.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.mnmean.nc")
+
+#OISST land sea mask
+nc.OISS.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
+
+#GODAS monthly
+#1980 (by year)
+nc.GODASsshg.1980 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sshg.1980.nc") #sea surface height
+
+#1980 
+nc.GODAS.1980 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1980.nc")
+
+#1982
+nc.GODAS.1982 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1982.nc")
+
+
+#ORAS5
+#sept 1979
+nc.ORAS.1979S <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_197909_CONS_v0.1.nc")
+
+
+##SODA3.3.1
+nc.SODA.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/erdSoda331oceanmday_6a77_2294_0698.nc")
+
+```
+
+
+
+# Data Cleaning
+
+OISS cleaning (simple)
+
+```{r OISST}
+#extract lon, lat
+lat.grid <- nc.OISS.month[["dim"]][["lat"]][["vals"]]
+lon.grid <- nc.OISS.month[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid[lon.grid >= 180] <- lon.grid[lon.grid >= 180] - 360
+this.order <- order(lon.grid)
+
+lon.grid <- lon.grid[this.order]
+
+#time data
+times <- ncvar_get(nc.OISS.month, "time") # days since 1800-01-01 00:00:0.0
+times <- as_datetime("1800-01-01T00:00:00") + days(times)
+
+#sst data, as array (lon, lat, time)
+sst <- ncvar_get(nc.OISS.month, "sst")
+sst <- sst[this.order, , ]
+
+```
+
+
+
+```{r GODAS}
+#TODO: repeat for all year, start with 1982 to 2015
+
+#for single month
+lat.grid.godas <- nc.GODAS.1982[["dim"]][["lat"]][["vals"]]
+lon.grid.godas <- nc.GODAS.1982[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid.godas[lon.grid.godas >= 180] <- lon.grid.godas[lon.grid.godas >= 180] - 360
+lon.order.godas <- order(lon.grid.godas)
+
+lon.grid.godas <- lon.grid.godas[lon.order.godas]
+
+#TODO: reorder lat
+lat.grid.godas[length(lat.grid.godas):1]
+
+#times for months
+times.godas <- ncvar_get(nc.GODAS.1982, "time") # days since 1800-01-01 00:00:0.0
+times.godas <- as_datetime("1800-01-01T00:00:00") + days(times.godas)
+
+#temps, as array (lon, lat, level, time)
+#TODO adjust from K to c (K - 273.15)
+sst.godas <- ncvar_get(nc.GODAS.1982, "pottmp")
+sst.godas <- sst.godas[lon.order.godas,length(lat.grid.godas):1, 1, ]
+```
+
+
+```{r ORAS5}
+#for single month
+#TODO: delete later once we get the location matrix set-up correctly
+lat.grid.oras <- nc.ORAS.1979S[["dim"]][["y"]][["vals"]]
+lon.grid.oras <- nc.ORAS.1979S[["dim"]][["x"]][["vals"]]
+
+length(lat.grid.oras)
+length(lon.grid.oras)
+
+get.lat <- ncvar_get(nc.ORAS.1979S, "nav_lat")
+get.lon <- ncvar_get(nc.ORAS.1979S, "nav_lon")
+
+#TODO: create large matrix of tuples (x,y); since we are given a matrix of lon X lat that aligns with the data 
+
+```
+
+
+```{r SODA}
+#for monthly
+lat.grid.soda <- nc.SODA.month[["dim"]][["latitude"]][["vals"]]
+lon.grid.soda <- nc.SODA.month[["dim"]][["longitude"]][["vals"]]
+
+#adjust lon order
+lon.grid.soda[lon.grid.soda >= 180] <- lon.grid.soda[lon.grid.soda >= 180] - 360
+lon.order.soda <- order(lon.grid.soda)
+
+lon.grid.soda <- lon.grid.soda[lon.order.soda]
+
+#TODO get times
+times.soda <- ncvar_get(nc.SODA.month, "time") #"seconds since 1970-01-01T00:00:00Z"
+times.soda <- as_datetime("1970-01-01T00:00:00") + seconds(times.soda)
+  
+  
+sst.soda <- ncvar_get(nc.SODA.month, "temp")
+sst.soda <- sst.soda[lon.order.soda, , ]
+
+```
+
+
+# Grid Fill
+
+Fill in data to match each other (look at reduced range of Indian Ocean)
+
+```{r grid}
+#OISST (grid locations), get 
+lat.grid
+lon.grid
+
+#
+```
+
+
