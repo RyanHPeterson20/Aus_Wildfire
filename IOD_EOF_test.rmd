@@ -99,8 +99,9 @@ lon.order.godas <- order(lon.grid.godas)
 
 lon.grid.godas <- lon.grid.godas[lon.order.godas]
 
-#TODO: reorder lat
-lat.grid.godas[length(lat.grid.godas):1]
+#reorder lat
+lat.order.godas <- order(lat.grid.godas, decreasing = TRUE)
+lat.grid.godas <- lat.grid.godas[lat.order.godas]
 
 #times for months
 times.godas <- ncvar_get(nc.GODAS.1982, "time") # days since 1800-01-01 00:00:0.0
@@ -109,7 +110,7 @@ times.godas <- as_datetime("1800-01-01T00:00:00") + days(times.godas)
 #temps, as array (lon, lat, level, time)
 #TODO adjust from K to c (K - 273.15)
 sst.godas <- ncvar_get(nc.GODAS.1982, "pottmp")
-sst.godas <- sst.godas[lon.order.godas,length(lat.grid.godas):1, 1, ]
+sst.godas <- sst.godas[lon.order.godas, lat.order.godas, 1, ] #level: depth 5m
 ```
 
 
@@ -124,6 +125,8 @@ length(lon.grid.oras)
 
 get.lat <- ncvar_get(nc.ORAS.1979S, "nav_lat")
 get.lon <- ncvar_get(nc.ORAS.1979S, "nav_lon")
+
+#TODO: use the above lon,lat values for selecting for subset
 
 #TODO: create large matrix of tuples (x,y); since we are given a matrix of lon X lat that aligns with the data 
 
@@ -141,13 +144,17 @@ lon.order.soda <- order(lon.grid.soda)
 
 lon.grid.soda <- lon.grid.soda[lon.order.soda]
 
-#TODO get times
-times.soda <- ncvar_get(nc.SODA.month, "time") #"seconds since 1970-01-01T00:00:00Z"
+#adjust lat order
+lat.order.soda <- order(lat.grid.soda, decreasing = TRUE)
+lat.grid.soda <- lat.grid.soda[lat.order.soda]
+
+#get times
+times.soda <- ncvar_get(nc.SODA.month, "time") #seconds since 1970-01-01T00:00:00Z
 times.soda <- as_datetime("1970-01-01T00:00:00") + seconds(times.soda)
   
   
 sst.soda <- ncvar_get(nc.SODA.month, "temp")
-sst.soda <- sst.soda[lon.order.soda, , ]
+sst.soda <- sst.soda[lon.order.soda, lat.order.soda, ]
 
 ```
 
@@ -155,13 +162,87 @@ sst.soda <- sst.soda[lon.order.soda, , ]
 # Grid Fill
 
 Fill in data to match each other (look at reduced range of Indian Ocean)
+lat: (-20, 20)
+lon: (30, 180)
+
+```{r select}
+#set larger boundary (for comparison)
+wide_maxLon <- 110
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+wide.lon.range <- c(wide_minLon, wide_maxLon)
+wide.lat.range <- c(wide_minLat, wide_maxLat)
+
+#get value in the boundary range
+
+#OISST range
+lat.values <- lat.grid[lat.grid <= wide_maxLat & lat.grid >= wide_minLat]
+lat.range <- range(which(lat.grid <= wide_maxLat & lat.grid >= wide_minLat))
+
+lon.values <- lon.grid[lon.grid <= wide_maxLon & lon.grid >= wide_minLon]
+lon.range <- range(which(lon.grid <= wide_maxLon & lon.grid >= wide_minLon))
+
+#get OISST SST reduced matrix
+sst_OISST <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ] 
+
+#GODAS range
+lat.values.godas <- lat.grid.godas[lat.grid.godas <= wide_maxLat & lat.grid.godas >= wide_minLat]
+lat.range.godas <- range(which(lat.grid.godas <= wide_maxLat & lat.grid.godas >= wide_minLat))
+
+lon.values.godas <- lon.grid.godas[lon.grid.godas <= wide_maxLon & lon.grid.godas >= wide_minLon]
+lon.range.godas <- range(which(lon.grid.godas <= wide_maxLon & lon.grid.godas >= wide_minLon))
+
+#get GODAS SST reduced matrix (already masked)
+sst_GODAS <- sst.godas[lon.range.godas[1]:lon.range.godas[2], lat.range.godas[1]:lat.range.godas[2], 1] #january 1982
+sst.godas.new <- sst_GODAS - 273.15
+range(sst.godas.new, na.rm = TRUE)
+
+#TODO: ORAS
+
+
+#SODA range
+lat.values.soda <- lat.grid.soda[lat.grid.soda <= wide_maxLat & lat.grid.soda >= wide_minLat]
+lat.range.soda <- range(which(lat.grid.soda <= wide_maxLat & lat.grid.soda >= wide_minLat))
+
+lon.values.soda <- lon.grid.soda[lon.grid.soda <= wide_maxLon & lon.grid.soda >= wide_minLon]
+lon.range.soda <- range(which(lon.grid.soda <= wide_maxLon & lon.grid.soda >= wide_minLon))
+
+
+
+
+```
+
+
 
 ```{r grid}
 #OISST (grid locations), get 
 lat.grid
 lon.grid
 
-#
+#GODAS
+
+
+#SODA
+
+
+#ORAS
 ```
 
+
+
+# pIOD Index 
+
+```{r IOD_range}
+#set IOD boundary points (from Cai et al 2021)
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#IOD boundary as vector
+IOD.lon.range <- c(IOD_minLon, IOD_maxLon)
+IOD.lat.range <- c(IOD_minLat, IOD_maxLat) 
+```
 
