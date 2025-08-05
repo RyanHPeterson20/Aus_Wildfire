@@ -37,6 +37,7 @@ nc.OISS.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.mnmean.nc")
 nc.OISS.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
 
 #GODAS monthly
+#TODO: move to separate code block
 #1980 (by year)
 nc.GODASsshg.1980 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sshg.1980.nc") #sea surface height
 
@@ -48,12 +49,36 @@ nc.GODAS.1982 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1982.nc")
 
 
 #ORAS5
+#TODO: move to separate code block
 #sept 1979
 nc.ORAS.1979S <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_197909_CONS_v0.1.nc")
 
 
 ##SODA3.3.1
+#all monthly data in a single file
 nc.SODA.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/erdSoda331oceanmday_6a77_2294_0698.nc")
+
+```
+
+
+```{r GODAS_import}
+
+#GODAS yearly (1982-2015)
+
+```
+
+
+```{r ORAS_import}
+
+#ORAS5
+#sept 1979 (test section)
+nc.ORAS.1979S <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_197909_CONS_v0.1.nc")
+
+#jan 1982
+nc.ORAS.198201 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198201_CONS_v0.1.nc")
+
+
+
 
 ```
 
@@ -117,19 +142,26 @@ sst.godas <- sst.godas[lon.order.godas, lat.order.godas, 1, ] #level: depth 5m
 ```{r ORAS5}
 #for single month
 #TODO: delete later once we get the location matrix set-up correctly
-lat.grid.oras <- nc.ORAS.1979S[["dim"]][["y"]][["vals"]]
-lon.grid.oras <- nc.ORAS.1979S[["dim"]][["x"]][["vals"]]
+lat.grid.oras <- nc.ORAS.198201[["dim"]][["y"]][["vals"]]
+lon.grid.oras <- nc.ORAS.198201[["dim"]][["x"]][["vals"]]
 
 length(lat.grid.oras)
 length(lon.grid.oras)
 
-get.lat <- ncvar_get(nc.ORAS.1979S, "nav_lat")
-get.lon <- ncvar_get(nc.ORAS.1979S, "nav_lon")
+get.lat <- ncvar_get(nc.ORAS.198201, "nav_lat")
+get.lon <- ncvar_get(nc.ORAS.198201, "nav_lon")
 
+#adjust lon/lat, (I think they need to be flipped) We might need to find the max first, if the rows are not consistent
+get.lat.new <- get.lat[c(431:nrow(get.lat), 1:430), ncol(get.lat):1]
+get.lon.new <- get.lon[c(431:nrow(get.lon), 1:430), ncol(get.lon):1]
+  
 #TODO: use the above lon,lat values for selecting for subset
 
 #TODO: create large matrix of tuples (x,y); since we are given a matrix of lon X lat that aligns with the data 
 
+#get sst data
+sst.osar <- ncvar_get(nc.ORAS.198201, "sosstsst")
+sst.osar <- sst.osar[c(431:nrow(sst.osar), 1:430), ncol(sst.osar):1]
 ```
 
 
@@ -145,6 +177,7 @@ lon.order.soda <- order(lon.grid.soda)
 lon.grid.soda <- lon.grid.soda[lon.order.soda]
 
 #adjust lat order
+#TODO: double check this, it might be wrong
 lat.order.soda <- order(lat.grid.soda, decreasing = TRUE)
 lat.grid.soda <- lat.grid.soda[lat.order.soda]
 
@@ -185,7 +218,9 @@ lon.values <- lon.grid[lon.grid <= wide_maxLon & lon.grid >= wide_minLon]
 lon.range <- range(which(lon.grid <= wide_maxLon & lon.grid >= wide_minLon))
 
 #get OISST SST reduced matrix
-sst_OISST <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ] 
+sst_OISST <- sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], 2]  #january 1982
+sst.OISST.new <- sst_OISST[,ncol(sst_OISST):1]
+
 
 #GODAS range
 lat.values.godas <- lat.grid.godas[lat.grid.godas <= wide_maxLat & lat.grid.godas >= wide_minLat]
@@ -197,10 +232,27 @@ lon.range.godas <- range(which(lon.grid.godas <= wide_maxLon & lon.grid.godas >=
 #get GODAS SST reduced matrix (already masked)
 sst_GODAS <- sst.godas[lon.range.godas[1]:lon.range.godas[2], lat.range.godas[1]:lat.range.godas[2], 1] #january 1982
 sst.godas.new <- sst_GODAS - 273.15
-range(sst.godas.new, na.rm = TRUE)
+z_godas <- range(sst.godas.new, na.rm = TRUE)
+sst.godas.new <- sst.godas.new[, ncol(sst.godas.new):1]
 
-#TODO: ORAS
 
+#TODO: finalize ORAS for plotting and further manipulation
+lat.bound <- which(get.lat.new <= wide_maxLat & get.lat.new >= wide_minLat, arr.ind = TRUE)
+lon.bound <- which(get.lon.new <= wide_maxLon & get.lon.new >= wide_minLon, arr.ind = TRUE)
+
+
+min(lat.bound[,c(1,2)])
+lat.bound[max(lat.bound[,c(1,2)]), ]
+
+osar_bounded <- which(get.lat.new <= wide_maxLat & get.lat.new >= wide_minLat & get.lon.new <= wide_maxLon & get.lon.new >= wide_minLon)
+
+lat.bound.new <- get.lat.new[osar_bounded]
+lon.bound.new <- get.lon.new[osar_bounded]
+
+#TODO: convert to matrix
+sst.osar.new <- as.matrix(sst.osar[osar_bounded])
+
+range(sst.osar.new, na.rm = TRUE)
 
 #SODA range
 lat.values.soda <- lat.grid.soda[lat.grid.soda <= wide_maxLat & lat.grid.soda >= wide_minLat]
@@ -210,10 +262,68 @@ lon.values.soda <- lon.grid.soda[lon.grid.soda <= wide_maxLon & lon.grid.soda >=
 lon.range.soda <- range(which(lon.grid.soda <= wide_maxLon & lon.grid.soda >= wide_minLon))
 
 
+#get SODA SST reduced matrix 
+sst_soda <- sst.soda[lon.range.soda[1]:lon.range.soda[2], lat.range.soda[1]:lat.range.soda[2], 25]
+sst.soda.new <- sst_soda[,ncol(sst_soda):1]
 
 
+z_soda <- range(sst_soda, na.rm = TRUE)
+
+times.soda[25]
 ```
 
+
+```{r LS-mask}
+#extract lon, lat
+lat.grid.lsm <- nc.OISS.lsm[["dim"]][["lat"]][["vals"]]
+lon.grid.lsm <- nc.OISS.lsm[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid.lsm[lon.grid.lsm >= 180] <- lon.grid.lsm[lon.grid.lsm >= 180] - 360
+this.order.lsm <- order(lon.grid.lsm)
+
+lon.grid.lsm <- lon.grid.lsm[this.order.lsm]
+
+
+#setup (or find) a land sea mask.
+lsm <- ncvar_get(nc.OISS.lsm, "mask")
+lsm <- lsm[this.order.lsm, ]
+
+#TODO update lsm for reduced region
+#get lsm for IOD only
+lsm_IOD <- lsm[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2]] 
+```
+
+
+```{r month_select}
+sst.OISST.new <- sst.OISST.new* lsm_IOD[ ,ncol(lsm_IOD):1]
+```
+
+
+```{r test_figures}
+z_temp <- range(sst_OISST, sst_soda, sst.godas.new, na.rm = TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = sst.OISST.new), col = tim.colors(256), zlim = z_temp, 
+           xlab = "Lon", ylab = "Lat", main = paste0("OISST: ", format(as.Date(times[2]), "%B %Y")))
+world(add=TRUE)
+
+#GODAS plot 
+#TODO: inspect the data cleaning, the data seems "wrong"
+image.plot(list(x = lon.values.godas, y = rev(lat.values.godas), z = sst.godas.new), col = tim.colors(256), zlim = z_temp, 
+           xlab = "Lon", ylab = "Lat", main = paste0("GODAS: ", format(as.Date(times.godas[1]), "%B %Y")))
+world(add=TRUE)
+
+image.plot(list(x = lon.values.soda, y = rev(lat.values.soda), z = sst.soda.new), col = tim.colors(256), zlim = z_temp, 
+           xlab = "Lon", ylab = "Lat", main = paste0("SODA: ", format(as.Date(times.soda[25]), "%B %Y")))
+world(add=TRUE)
+
+
+image.plot(list(x = lon.bound.new, y = lat.bound.new, z = sst.OISST.new), 
+           col = tim.colors(256), zlim = z_temp, 
+           xlab = "Lon", ylab = "Lat", main = paste0("SODA: ", format(as.Date(times.soda[25]), "%B %Y")))
+world(add=TRUE)
+
+```
 
 
 ```{r grid}
