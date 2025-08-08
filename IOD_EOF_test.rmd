@@ -104,8 +104,8 @@ times <- ncvar_get(nc.OISS.month, "time") # days since 1800-01-01 00:00:0.0
 times <- as_datetime("1800-01-01T00:00:00") + days(times)
 
 #sst data, as array (lon, lat, time)
-sst <- ncvar_get(nc.OISS.month, "sst")
-sst <- sst[this.order, , ]
+sst.oisst <- ncvar_get(nc.OISS.month, "sst")
+sst.oisst <- sst.oisst[this.order, , ]
 
 ```
 
@@ -156,12 +156,17 @@ get.lat.new <- get.lat[c(431:nrow(get.lat), 1:430), ncol(get.lat):1]
 get.lon.new <- get.lon[c(431:nrow(get.lon), 1:430), ncol(get.lon):1]
   
 #TODO: use the above lon,lat values for selecting for subset
+#try as lon,lat columns:
+oras.loc <- cbind(as.vector(get.lon.new), as.vector(get.lat.new))
+colnames(oras.loc) <- c("lon", "lat")
 
 #TODO: create large matrix of tuples (x,y); since we are given a matrix of lon X lat that aligns with the data 
 
 #get sst data
 sst.osar <- ncvar_get(nc.ORAS.198201, "sosstsst")
 sst.osar <- sst.osar[c(431:nrow(sst.osar), 1:430), ncol(sst.osar):1]
+sst.osar.vec <- as.vector(sst.osar)
+
 ```
 
 
@@ -224,6 +229,7 @@ sst.OISST.new <- sst_OISST[,ncol(sst_OISST):1]
 
 #GODAS range
 lat.values.godas <- lat.grid.godas[lat.grid.godas <= wide_maxLat & lat.grid.godas >= wide_minLat]
+
 lat.range.godas <- range(which(lat.grid.godas <= wide_maxLat & lat.grid.godas >= wide_minLat))
 
 lon.values.godas <- lon.grid.godas[lon.grid.godas <= wide_maxLon & lon.grid.godas >= wide_minLon]
@@ -236,23 +242,6 @@ z_godas <- range(sst.godas.new, na.rm = TRUE)
 sst.godas.new <- sst.godas.new[, ncol(sst.godas.new):1]
 
 
-#TODO: finalize ORAS for plotting and further manipulation
-lat.bound <- which(get.lat.new <= wide_maxLat & get.lat.new >= wide_minLat, arr.ind = TRUE)
-lon.bound <- which(get.lon.new <= wide_maxLon & get.lon.new >= wide_minLon, arr.ind = TRUE)
-
-
-min(lat.bound[,c(1,2)])
-lat.bound[max(lat.bound[,c(1,2)]), ]
-
-osar_bounded <- which(get.lat.new <= wide_maxLat & get.lat.new >= wide_minLat & get.lon.new <= wide_maxLon & get.lon.new >= wide_minLon)
-
-lat.bound.new <- get.lat.new[osar_bounded]
-lon.bound.new <- get.lon.new[osar_bounded]
-
-#TODO: convert to matrix
-sst.osar.new <- as.matrix(sst.osar[osar_bounded])
-
-range(sst.osar.new, na.rm = TRUE)
 
 #SODA range
 lat.values.soda <- lat.grid.soda[lat.grid.soda <= wide_maxLat & lat.grid.soda >= wide_minLat]
@@ -271,6 +260,74 @@ z_soda <- range(sst_soda, na.rm = TRUE)
 
 times.soda[25]
 ```
+
+
+```{r oras_select}
+#TODO: update to function
+in_bounds <- oras.loc[, "lon"] >= wide_minLon &
+             oras.loc[, "lon"] <= wide_maxLon &
+             oras.loc[, "lat"] >= wide_minLat &
+             oras.loc[, "lat"] <= wide_maxLat
+
+which_pts <- which(in_bounds)
+
+oras.loc.red <- oras.loc[in_bounds, , drop = FALSE]
+
+
+length(oras.loc.red[,"lon"])
+v.lon <- oras.loc.red[,"lon"]
+v.lat <- oras.loc.red[,"lat"]
+
+non_increasing <- diff(v.lon) <= 0
+which(non_increasing)
+
+#get unique values
+unique.lon <- unique(oras.loc.red[,"lon"]) #nrow 
+unique.lat <- unique(oras.loc.red[,"lat"]) #ncol
+
+#reproduce the get.lon matrix then find is.na locations
+get.lon.index <- seq_along(as.vector(get.lon.new))
+get.lon.bounds <- get.lon.index[in_bounds]
+
+get.lon.mask <- matrix(NA, nrow = nrow(get.lon.new), ncol = ncol(get.lon.new))
+get.lon.mask[get.lon.bounds] <- as.vector(get.lon.new)[get.lon.bounds]
+
+test_lon <- !is.na(get.lon.mask)
+row_keep <- apply(test_lon, 1, any)  
+col_keep <- apply(test_lon, 2, any)  
+
+get.lon_test <- get.lon.mask[row_keep, col_keep]
+
+sst.osar.red <- sst.osar[row_keep, col_keep]
+
+
+
+##sort lon/lat for image.plot
+lon_vals <- sort(as.vector(oras.loc.red[,"lon"]))
+lat_vals <- sort(as.vector(oras.loc.red[,"lat"]))
+
+sst.osar.plot <- sst.osar.red[order(lon_vals), order(lat_vals)]
+
+
+#get matrix adjustments
+sst.osar.index <- seq_along(as.vector(sst.osar))
+sst.osar.bounds <- sst.osar.index[in_bounds]
+
+sst.osar.mask <- matrix(NA, nrow = nrow(sst.osar), ncol = ncol(sst.osar))
+sst.osar.mask[sst.osar.bounds] <- as.vector(sst.osar)[sst.osar.bounds]
+
+
+#sst.osar.red <- as.matrix(sst.osar.vec[in_bounds], nrow = length(unique.lon), ncol = length(unique.lat))
+
+```
+
+```{r osar_fig}
+image.plot(list(x = oras.loc.red[,"lon"], y = rev(oras.loc.red[,"lat"]), z = sst.osar.red), 
+           col = tim.colors(256), zlim = z_temp, 
+           xlab = "Lon", ylab = "Lat", main = paste0("SODA: ", format(as.Date(times.soda[25]), "%B %Y")))
+world(add=TRUE)
+```
+
 
 
 ```{r LS-mask}
@@ -318,6 +375,7 @@ image.plot(list(x = lon.values.soda, y = rev(lat.values.soda), z = sst.soda.new)
 world(add=TRUE)
 
 
+#TODO: currently not working
 image.plot(list(x = lon.bound.new, y = lat.bound.new, z = sst.OISST.new), 
            col = tim.colors(256), zlim = z_temp, 
            xlab = "Lon", ylab = "Lat", main = paste0("SODA: ", format(as.Date(times.soda[25]), "%B %Y")))
