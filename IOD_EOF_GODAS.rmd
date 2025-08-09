@@ -368,35 +368,81 @@ lat.range.soda <- range(which(lat.grid.soda <= wide_maxLat & lat.grid.soda >= wi
 lon.values.soda <- lon.grid.soda[lon.grid.soda <= wide_maxLon & lon.grid.soda >= wide_minLon]
 lon.range.soda <- range(which(lon.grid.soda <= wide_maxLon & lon.grid.soda >= wide_minLon))
 
+times.soda[25]
+times.soda[432]
 
 #get SODA SST reduced matrix 
 sst_soda <- sst.soda[lon.range.soda[1]:lon.range.soda[2], lat.range.soda[1]:lat.range.soda[2], ]
-sst.soda.new <- sst_soda[,ncol(sst_soda):1,]
+sst.soda.new <- sst_soda[,ncol(sst_soda):1, 25:432]
 
 ```
 
+```{r interp_SODA}
+#interpolate the soda data set to a 1x1 degree resolution
 
-```{r test.soda}
-#lon.grid.soda
-lat.values.soda
-#lat.grid.soda
-lon.values.soda
+sst.interp.SODA <- NULL
+for (i in 1:dim(sst.soda.new)[3]) {
+  base.obj <- list(x = lon.values.soda, y = rev(lat.values.soda), z = sst.soda.new[,,i])
 
-#TODO: interpolate to 1x1 grid for smaller indian ocean grid
-#set-up coordinate matrix, and vector of observations
+  grid.list <- list(x = lon.values,
+                    y = lat.values)
+  
+  out.interp <- interp.surface.grid(base.obj, grid.list)
+  
+  interp.mat <- out.interp$z[ ,ncol(out.interp$z):1 ]
+  
+  sst.interp.SODA <- abind(sst.interp.SODA, interp.mat, along = 3)
+}
 
-
-#TODO: compare the fine grid and interpolated visually
-
+#final array dim check
+dim(sst.interp.SODA)
+dim(sst.OISST.new)
+dim(sst.array)
 ```
 
 
-```{r IOD_boundary}
+
+```{r IOD_region}
 IOD_maxLon <- 100
 IOD_minLon <- 40
 IOD_maxLat <- 5
 IOD_minLat <- -5
+
+#location range
+lon.values.IOD <- lon.values[lon.values <= IOD_maxLon & lon.values >= IOD_minLon]
+lon.range.IOD <- range(which(lon.values <= IOD_maxLon & lon.values >= IOD_minLon))
+
+lat.values.IOD <- lat.values[lat.values <= IOD_maxLat & lat.values >= IOD_minLat]
+lat.range.IOD <- range(which(lat.values <= IOD_maxLat & lat.values >= IOD_minLat))
+
+#get OISST SST reduced matrix
+sst.OISST.IOD <- sst.OISST.new[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]  #january 1982
+
+#GODAS IOD matrix
+sst.GODAS.IOD <- sst.array[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]  #january 1982
+
+#SODA IOD matrix
+sst.SODA.IOD <- sst.interp.SODA[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+
+#updated LSM
+lsm.new <- lsm[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2]] 
+lsm.IOD <- lsm.new[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2]] 
+
+#lsm_IOD[ ,ncol(lsm_IOD):1]
+
+#dim check
+dim(sst.OISST.IOD)
+dim(sst.GODAS.IOD)
+dim(sst.SODA.IOD)
+
 ```
+
+
+```{rSST_anoms}
+
+```
+
+
 
 
 ```{r differencing}
@@ -428,17 +474,19 @@ dev.off()
 
 
 ```{r test.figures}
-z_temp <- range(sst.array, na.rm = TRUE)
+z_temp <- range(sst.OISST.IOD, sst.GODAS.IOD, sst.SODA.IOD, na.rm = TRUE)
 
-image.plot(list(x = lon.values, y = rev(lat.values), z = sst.array[,,1]), col = tim.colors(256), zlim = z_temp, 
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = sst.GODAS.IOD[,,1]), col = tim.colors(256), zlim = z_temp, 
            xlab = "Lon", ylab = "Lat", main = paste0("GODAS: ", format(as.Date(times[2]), "%B %Y")))
 world(add=TRUE)
 
-image.plot(list(x = lon.values, y = rev(lat.values), z = test_sst.oisst), col = tim.colors(256), zlim = z_temp, 
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = sst.OISST.IOD[,,1]*lsm.IOD[ ,ncol(lsm_IOD):1]), col = tim.colors(256), zlim = z_temp, 
            xlab = "Lon", ylab = "Lat", main = paste0("OISST: ", format(as.Date(times[2]), "%B %Y")))
 world(add=TRUE)
 
-
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = sst.SODA.IOD[,,1]), col = tim.colors(256), zlim = z_temp, 
+           xlab = "Lon", ylab = "Lat", main = paste0("SODA: ", format(as.Date(times[2]), "%B %Y")))
+world(add=TRUE)
 
 
 ```
