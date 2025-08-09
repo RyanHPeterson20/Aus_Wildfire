@@ -580,6 +580,9 @@ world(add = TRUE)
 
 ```
 
+```{r pca}
+#TODO: get updated lsm from the combined (averaged) anom
+```
 
 
 
