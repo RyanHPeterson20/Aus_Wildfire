@@ -438,7 +438,145 @@ dim(sst.SODA.IOD)
 ```
 
 
-```{rSST_anoms}
+```{r SSTanom_function}
+#TODO: determine which climatology anomaly to use, all or by month
+
+#from EOF function
+sst_anom <- function(A, amode = TRUE, weekly = FALSE){
+  Q_net <- A #as [nx, ny, nt] ([lon, lat, time]) 
+  
+  Q_net_1 <- aperm(Q_net, perm = c(2, 1, 3))  # reorder as [ny, nx, nt] ([lat, lon, time])
+  
+  dims <- dim(Q_net_1) #get dimensions from reordered array
+  ny <- dims[1] 
+  nx <- dims[2]
+  nt <- dims[3]
+  
+  # Overwrite Q_net and clear Q_net_1
+  Q_net <- Q_net_1
+  rm(Q_net_1)
+  
+  # 'flatten' to [ny*nx, nt]
+  np <- nx * ny
+  var <- matrix(Q_net, nrow = np, ncol = nt)
+  
+  #anomaly (yearly)
+  if (amode) {
+    if (weekly) {
+      week_mean <- matrix(NA, nrow = np, ncol = 52)
+      for (j in 1:52) {
+        # get all indices for week j (j in 1-52)
+        cols_j <- seq(j, nt, by = 52)
+        
+        # get weekly mean for each spatial point 
+        week_mean[ ,j] <- rowMeans(var[, cols_j, drop = FALSE])
+        
+        # number of time points for j
+        ncols <- length(cols_j)
+        
+        # subtract weekly mean
+        var[, cols_j] <- var[, cols_j] - matrix(week_mean[, j], nrow = np, ncol = ncols)
+      }
+      
+    } else{ #monthly
+      month_mean <- matrix(NA, nrow = np, ncol = 12)
+      
+      for (k in 1:12) {
+        # get all indices for week k (k in 1-12)
+        cols_k <- seq(k, nt, by = 12)
+        
+        # get monthly mean for each spatial point 
+        month_mean[ ,k] <- rowMeans(var[, cols_k, drop = FALSE])
+        
+        # number of time points for k
+        ncols <- length(cols_k)  
+        
+        # subtract monthly mean
+        var[, cols_k] <- var[, cols_k] - matrix(month_mean[, k], nrow = np, ncol = ncols)
+      }
+    }
+  } else{ #full dataset anom
+    var <- sweep(var, 1, rowMeans(var), "-")
+  }
+  
+  return(var)
+}
+```
+
+
+```{r SST_anoms}
+sst.anom.OISST <- sst_anom(sst.OISST.IOD)
+sst.anom.GODAS <- sst_anom(sst.GODAS.IOD)
+sst.anom.SODA <- sst_anom(sst.SODA.IOD)
+
+#get SON time index
+time.dom <- times[2:409]
+
+sept <- seq(9,405, 12)
+oct <- seq(10,406, 12)
+nov <- seq(11,407, 12)
+
+#time.dom[sept]
+#time.dom[oct]
+#time.dom[nov]
+
+sst.anom.mean <- (sst.anom.OISST + sst.anom.GODAS + sst.anom.SODA)/3
+
+son.index <- sort(c(sept, oct, nov))
+
+sst.amom.son <- sst.anom.mean[,son.index]
+
+#test run for SON yearly anom means
+n_groups <- ncol(sst.amom.son) / 3
+mean_mat <- sapply(seq_len(n_groups), function(i) {
+  cols <- ((i - 1) * 3 + 1):(i * 3)
+  rowMeans(sst.amom.son[, cols])
+})
+#TODO: double check some of this to make sure it works
+
+```
+
+```{r anom_viz}
+nt <- 408
+ny <-10
+nx <- 60
+
+temp <- array(t(sst.anom.OISST), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+OISST.anom_mat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+temp <- array(t(sst.anom.GODAS), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+GODAS.anom_mat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+temp <- array(t(sst.anom.SODA), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+SODA.anom_mat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+temp <- array(t(sst.anom.mean), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+mean.anom_mat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+k <- 250
+anom_range <- range(OISST.anom_mat[,,k], GODAS.anom_mat[,,k], SODA.anom_mat[,,k], na.rm = TRUE)
+
+#figures
+set.panel(2,2)
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = OISST.anom_mat[,,k]), zlim = anom_range,
+           ylab = "Lat", xlab = "Lon", main = "OISST Anoms")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = GODAS.anom_mat[,,k]), zlim = anom_range,
+           ylab = "Lat", xlab = "Lon", main = "GODAS Anoms")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = SODA.anom_mat[,,k]), zlim = anom_range,
+           ylab = "Lat", xlab = "Lon", main = "SODA Anoms")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = mean.anom_mat[,,k]), zlim = anom_range,
+           ylab = "Lat", xlab = "Lon", main = "Mean Anoms")
+world(add = TRUE)
 
 ```
 
