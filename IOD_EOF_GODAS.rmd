@@ -20,6 +20,10 @@ suppressMessages(library(abind))
 
 #visualization and interpolation
 suppressMessages(library(fields))
+suppressMessages(library(colorspace))
+
+#matlab function (e.g. detrend)
+suppressMessages(library(pracma))
 ```
 
 ```{r importGODAS}
@@ -229,6 +233,13 @@ nc.OISS.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.mnmean.nc")
 #OISST land sea mask
 nc.OISS.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
 
+#wide, reduced boundary
+wide_maxLon <- 110
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+
 
 #extract lon, lat
 lat.grid <- nc.OISS.month[["dim"]][["lat"]][["vals"]]
@@ -263,7 +274,10 @@ sst_OISST <- sst.oiss[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]  #
 sst.OISST.new <- sst_OISST[,ncol(sst_OISST):1, 2:409]
 
 
-
+#start time index: 2, end time index: 457
+times[50]
+times[457]
+sst.OISST.new2 <- sst_OISST[,ncol(sst_OISST):1, 2:457]
 
 ##Land Sea Mask
 #extract lon, lat
@@ -302,11 +316,6 @@ godas_list <- list(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, n
                    nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
                    nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
 
-#wide, reduced boundary
-wide_maxLon <- 110
-wide_minLon <- 30
-wide_maxLat <- 20
-wide_minLat <- -20
 
 
 #TODO: create functions for data cleaning, boundary setups, and interpolation to 1x1 degree grid
@@ -329,6 +338,15 @@ for (k in 1:length(godas_list)) {
   temp_list[[k]] <- temp.vals
   
 }
+
+rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
+                   nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
+                   nc.GODAS.1992, nc.GODAS.1993, nc.GODAS.1994, nc.GODAS.1995, nc.GODAS.1996,
+                   nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
+                   nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
+                   nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+
 
 dim(sst.array)
 dim(sst_OISST)
@@ -418,6 +436,8 @@ lat.range.IOD <- range(which(lat.values <= IOD_maxLat & lat.values >= IOD_minLat
 #get OISST SST reduced matrix
 sst.OISST.IOD <- sst.OISST.new[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]  #january 1982
 
+sst.OISST.IOD2 <- sst.OISST.new2[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ] 
+
 #GODAS IOD matrix
 sst.GODAS.IOD <- sst.array[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]  #january 1982
 
@@ -429,14 +449,856 @@ lsm.new <- lsm[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2]]
 lsm.IOD <- lsm.new[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2]] 
 
 #lsm_IOD[ ,ncol(lsm_IOD):1]
+#temp.grid <- make.surface.grid(list(x = lon.values.IOD, y = (lat.values.IOD)))
+#image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = lsm.IOD[,ncol(lsm.IOD):1]))
+#bubblePlot(temp.grid[,1], temp.grid[,2], z = lsm.IOD)
 
 #dim check
 dim(sst.OISST.IOD)
 dim(sst.GODAS.IOD)
 dim(sst.SODA.IOD)
 
+dim(sst.OISST.IOD2)
 ```
 
+everything up to here is good! (maybe create a combine LS-mask?)
+
+# New SST SON analysis from .ncl file
+
+
+
+```{r test_OISST}
+#TODO: convert to function after done here
+
+
+A <- sst.OISST.IOD #as [lon, lat, time]
+LSM <- lsm.IOD[,ncol(lsm.IOD):1]
+
+A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+  
+dims <- dim(A.new) #get dimensions from reordered array
+nx <- dims[3]
+ny <- dims[2] 
+nt <- dims[1]
+
+#land sea mask
+LSM.new <- aperm(LSM, perm = c(2,1))
+
+for (k in seq_len(nt)) {
+  temp <- A.new[k,,] 
+  temp[LSM.new == 0] <- NA
+  A.new[k,,] <- temp
+}
+
+#get SON mean
+nyears <- nt %/% 12
+#reshape data array
+A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+A.son <- apply(A.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+
+#TODO: get this working for monthly and weekly data
+
+
+
+#detrend
+#TODO: create detrend function and move outside of this function
+#update nt (and others for functions)
+nt <- dim(A.son)[1]
+ny <- dim(A.son)[2]
+nx <- dim(A.son)[3]
+  
+t <- seq_len(nt)
+#X <- cbind(1, t, t^2)
+Y <- matrix(A.son, nrow = nt, ncol = ny * nx)       # [time, space]
+
+#since this is always going to be masked we just look through 
+A.res <- matrix(NA, nrow = nt, ncol = ny * nx)
+test.na <- which(!is.na(Y), arr.ind = TRUE)
+real.index <- unique(test.na[,2])
+y <- Y[,real.index]
+fit <- lm(y ~ t + I(t^2))
+A.res[test.na] <- resid(fit)
+
+A.dt <- array(A.res, dim = dim(A.son))
+
+#subtract baseline, (eg. 1982-2015) 
+#TODO: check to see if this is needed later on
+nt <- dim(A.dt)[1]
+
+base.mean <- apply(A.dt[seq_len(nt), , ], c(2,3), mean, na.rm = TRUE)
+A.sst.anom <-  sweep(A.dt, MARGIN = c(2,3), STATS = base.mean, FUN = "-")
+
+
+
+test.A <- aperm(A.sst.anom, perm = c(3, 2, 1))
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = test.A[,,16]))
+world(add=TRUE)
+
+
+
+```
+
+
+```{r UpdatedSST_function}
+
+#mask land-sea prior to introducing
+sst.dt.anom <- function(A, son.mean = TRUE, base.seq = FALSE, manual.seq = c(1:34)){
+  #A <- sst.OISST.IOD #as [lon, lat, time]
+
+  A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+    
+  dims <- dim(A.new) #get dimensions from reordered array
+  nx <- dims[3]
+  ny <- dims[2] 
+  nt <- dims[1]
+  
+  if (son.mean) {
+    #get SON mean
+    nyears <- nt %/% 12
+    #reshape data array
+    A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+    A.new <- apply(A.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }
+
+  nt <- dim(A.new)[1]
+  ny <- dim(A.new)[2]
+  nx <- dim(A.new)[3]
+  
+  #quadratic detrend  
+  t <- seq_len(nt)
+  #X <- cbind(1, t, t^2)
+  Y <- matrix(A.new, nrow = nt, ncol = ny * nx) # [time, space]
+  
+  #since this is always going to be masked we just look through 
+  A.res <- matrix(NA, nrow = nt, ncol = ny * nx)
+  test.na <- which(!is.na(Y), arr.ind = TRUE)
+  real.index <- unique(test.na[,2])
+  y <- Y[,real.index].
+  fit <- lm(y ~ t + I(t^2))
+  A.res[test.na] <- resid(fit)
+  
+  #return to [time, lat, lon]
+  A.dt <- array(A.res, dim = dim(A.new))
+  
+  #subtract baseline, (eg. 1982-2015) 
+  #TODO: check to see if this is needed later on
+  nt <- dim(A.dt)[1]
+  if(base.seq){
+    base_range <- manual.seq
+  }else{
+    base_range <- seq_len(nt)
+  }
+  
+  base.mean <- apply(A.dt[base_range, , ], c(2,3), mean, na.rm = TRUE)
+  A.sst.anom <-  sweep(A.dt, MARGIN = c(2,3), STATS = base.mean, FUN = "-")
+  
+  return(A.sst.anom)
+}
+
+#TODO: generate a function for PCA/EOF
+sst.anom.eof <- function(sst.amom, kmode = 2){
+
+  nt <- dim(sst.amom)[1]
+  ny <- dim(sst.amom)[2]
+  nx <- dim(sst.amom)[3]
+ 
+  X <- matrix(sst.amom, nrow = nt, ncol = ny * nx)
+  
+  #get rid of NA's (masked locs)
+  keep <- colSums(is.finite(X)) == nt
+  X.new  <- X[, keep]
+  
+  svd.test <- svd(X.new)
+  
+  #svd outputs
+  U <- svd.test$u[ ,1:kmode]
+  D <- svd.test$d[1:kmode]
+  V <- svd.test$v[ ,1:kmode]
+  
+  #test outputs
+  EOF.test <- V #EOF spatial pattern
+  PC.test <- U %*% diag(D)
+  per.test <- D^2 / sum(svd.test$d^2) 
+  
+  PC.std <- scale(PC.test, center = TRUE, scale = TRUE)
+  PC.std <- -PC.std
+  
+  np <- nx*ny
+  #finalize the spatial eof (pca)
+  V_eof <- matrix(NA, nrow = np, ncol = kmode)
+
+  #add in lsm sea data
+  V_eof[keep, ] <- -EOF.test
+  
+  return(list(EOF = V_eof,
+              PC = PC.test,
+              PC.std = PC.std,
+              per = per.test))
+}
+
+```
+
+
+```{r get.SST}
+#update LSM for OISST
+LSM <- lsm.IOD[,ncol(lsm.IOD):1]
+nt <- dim(sst.OISST.IOD)[3]
+
+sst.OISST.new <- sst.OISST.IOD
+
+for (k in seq_len(nt)) {
+  temp <- sst.OISST.new[,,k] 
+  temp[LSM == 0] <- NA
+  sst.OISST.new[,,k] <- temp
+}
+
+temp.sst.OISST <- sst.dt.anom(sst.OISST.new)
+temp.sst.GODAS <- sst.dt.anom(sst.GODAS.IOD) #already masked w/ NA
+temp.sst.SODA <- sst.dt.anom(sst.SODA.IOD) #already masked w/ NA
+
+updated.sst.anom <- (temp.sst.OISST + temp.sst.GODAS + temp.sst.SODA)/3
+
+
+
+sst.OISST.month <- sst.dt.anom(sst.OISST.new, son.mean = FALSE)
+sst.GODAS.month <- sst.dt.anom(sst.GODAS.IOD, son.mean = FALSE) #already masked w/ NA
+sst.SODA.month <- sst.dt.anom(sst.SODA.IOD, son.mean = FALSE) #already masked w/ NA
+
+
+```
+
+
+```{r OISST_SON}
+
+eof.OISST <- sst.anom.eof(temp.sst.OISST, kmode = 2)
+
+pc.new <- eof.OISST$PC.std
+v.eof.base <- eof.OISST$EOF
+
+s.index <- (pc.new[,1] + pc.new[,2])/sqrt(2)
+m.index <- (pc.new[,1] - pc.new[,2])/sqrt(2)
+
+v.eof1 <- v.eof.base[,1]
+v.eof2 <- v.eof.base[,2]
+
+nt <- 2
+ny <- 10
+nx <- 60
+
+temp <- array(t(v.eof.base), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+v.eof1 <- temp[1,,]
+v.eof2 <- temp[2,,]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+#setup range, breaks, and colors
+eof.range <- range(eof_spat, na.rm = TRUE) 
+upper.eof <- max(abs(eof.range))
+eof.range2 <- c(-upper.eof, upper.eof)
+roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+
+brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+png(filename = "OISST_EOF1.png", width = 2400, height = 1000, res = 300)
+par(mar = c(5, 5, 3, 6))
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,1]), 
+           col = roma_col, breaks = brks, zlim = eof.range2, 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+dev.off()
+
+png(filename = "OISST_EOF2.png", width = 2400, height = 1000, res = 300)
+par(mar = c(5, 5, 3, 6))
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+dev.off()
+```
+
+```{r EOF_regression}
+#get anom/det for
+LSM <- lsm.IOD[,ncol(lsm.IOD):1]
+nt <- dim(sst.OISST.IOD2)[3]
+
+sst.OISST.new2 <- sst.OISST.IOD2
+
+for (k in seq_len(nt)) {
+  temp <- sst.OISST.new2[,,k] 
+  temp[LSM == 0] <- NA
+  sst.OISST.new2[,,k] <- temp
+}
+
+sst.OISST.2019 <- sst.dt.anom(sst.OISST.new2, son.mean = TRUE, base.seq = FALSE)
+
+##year 2019; matrix [lat, lon]
+#eof1/2; matrix [lat, lon]
+
+Y.2019 <- sst.OISST.2019[38,,]
+
+mask.all <- is.finite(Y.2019) & is.finite(v.eof1) & is.finite(v.eof2)
+
+y <- Y.2019[mask.all]
+X <- cbind(v.eof1[mask.all], v.eof2[mask.all])
+
+a1 <- sum(y * v.eof1[mask.all])
+a2 <- sum(y * v.eof2[mask.all])
+
+PC.oisst <- eof.OISST$PC
+PC.2019 <- rbind(PC.oisst, c(a1,a2))
+PC.mean <- mean(PC.2019)
+pc.sd <- sd(PC.2019)
+
+a1.std <- (a1-PC.mean)/pc.sd
+a2.std <- (a2-PC.mean)/pc.sd
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png(filename = "OISST_pca2019.png", width = 2000, height = 2000, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(pc.new[,1], pc.new[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5),
+     xlab = "PC1", ylab = "PC2")
+points(pc.new[c(13,16,25),1], pc.new[c(13,16,25),2], pch = 16, col = "firebrick")
+points(a1.std, a2.std, pch = 17, col = "magenta3")
+text(a1.std, a2.std, "2019", pos = 4, cex = 0.9, col = "magenta3")
+text(pc.new[25,1], pc.new[25,2], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(pc.new[16,1], pc.new[16,2], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(pc.new[13,1], pc.new[13,2], "1994", pos = 3, cex = 0.9, col = "firebrick")
+points(pc.new[c(1,6,34),1], pc.new[c(1,6,34),2], pch = 16, col = "darkgreen")
+text(pc.new[34,1], pc.new[34,2], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(pc.new[6,1], pc.new[6,2], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(pc.new[1,1], pc.new[1,2], "1982", pos = 4, cex = 0.9, col = "darkgreen")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+dev.off()
+
+
+plot(pc.new[,1], pc.new[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(pc.new[c(13,16),1], pc.new[c(13,16),2], pch = 16, col = "red")
+points(pc.new[c(34),1], pc.new[c(34),2], pch = 16, col = "magenta")
+points(a1.std, a2.std, pch = 16, col = "firebrick")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+
+
+eof1.hat <- matrix(NA, nrow = 10, ncol = 60)
+eof1.hat[mask.all] <- y * v.eof1[mask.all]
+
+eof2.hat <- matrix(NA, nrow = 10, ncol = 60)
+eof2.hat[mask.all] <- y * v.eof2[mask.all]
+
+eof_spat1 <- aperm(eof1.hat, c(2, 1)) #  Reverse the earlier aperm to get back to [nx, ny]
+eof_spat2 <- aperm(eof2.hat, c(2, 1)) #  Reverse the earlier aperm to get back to [nx, ny]
+
+#setup range, breaks, and colors
+eof.range <- range(eof_spat1, eof_spat2, na.rm = TRUE) 
+upper.eof <- max(abs(eof.range))
+eof.range2 <- c(-upper.eof, upper.eof)
+roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+
+brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
+
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = -eof_spat1), 
+           col = roma_col, breaks = brks, zlim = eof.range2, 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = -eof_spat2), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+#spatial strong pIOD
+spatial_strong <- (eof_spat1 + eof_spat2)/sqrt(2)
+eof.range <- range(spatial_strong,  na.rm = TRUE) 
+upper.eof <- max(abs(eof.range))
+eof.range2 <- c(-upper.eof, upper.eof)
+roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+
+brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = -spatial_strong), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+```
+
+```{r month_regression}
+#use only SON months
+sept <- seq(9,405, 12)
+oct <- seq(10,406, 12)
+nov <- seq(11,407, 12)
+
+son.index <- sort(c(sept, oct, nov))
+
+sst.OISST.son <- sst.OISST.new[,,son.index]
+
+sst.OISST.month <- sst.dt.anom(sst.OISST.son, son.mean = FALSE)
+
+#index 55 (2000) to 102 (2015)
+times[son.index[55]+1]
+times[son.index[102]+1]
+
+mask.all <- is.finite(v.eof1) & is.finite(v.eof2)
+
+pc.regress <- matrix(NA, ncol = 2)
+for (k in 1:102) {
+  Y.temp <- sst.OISST.month[k,,]
+
+  y <- Y.temp[mask.all]
+
+  a1 <- sum(y * v.eof1[mask.all])
+  a2 <- sum(y * v.eof2[mask.all])
+  
+  pc.regress <- rbind(pc.regress, c(a1,a2))
+}
+
+pc.month <- pc.regress[-1,]
+pc.month.std <- scale(pc.month, center = TRUE, scale = TRUE)
+
+pc.month.std <- pc.month.std[55:102,] #2000 to 2015
+
+s.index.month <- (pc.month.std[,1] + pc.month.std[,2])/sqrt(2)
+m.index.month <- (pc.month.std[,1] - pc.month.std[,2])/sqrt(2)
+
+plot(1:length(s.index.month), s.index.month, type = "l", ylim = range(s.index.month, m.index.month))
+plot(1:length(m.index.month), m.index.month, type = "l", ylim = range(s.index.month, m.index.month))
+```
+
+```{r comparative_figs}
+#get s.index and m.index data frames for segments
+year.pts <- seq(2,47,3)
+
+s.index.seg <- data.frame(
+  y = c(s.index[19:34]),
+  x0 = year.pts - 1.5,
+  x1 = year.pts + 1.5
+)
+
+m.index.seg <- data.frame(
+  y = c(m.index[19:34]),
+  x0 = year.pts - 1.5,
+  x1 = year.pts + 1.5
+)
+
+y.range = range(s.index.month, m.index.month,
+                m.index.seg$y, s.index.seg$y)
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png(filename = "S_index_month.png", width = 2600, height = 1100, res = 250)
+par(mar = c(5, 5, 3, 5))
+plot(1:length(s.index.month), s.index.month, type = "b", ylim = c(-2.5,2.4), pch = 16,
+     xlab = "Year", ylab = "Index", xaxt = "n")
+with(s.index.seg, segments(x0, y, x1, y, lwd = 2, col = "firebrick", lend = "butt"))
+title("Monthly Strong Index 2000-2015",adj = 0)
+abline(v = s.index.seg$x0, lty = 2)
+abline(h = 1.5, lty = 2, col = "firebrick")
+text(year.pts, -2.5, 2000:2015, cex = 0.667)
+dev.off()
+
+png(filename = "M_index_month.png", width = 2600, height = 1100, res = 250)
+par(mar = c(5, 5, 3, 5))
+plot(1:length(m.index.month), m.index.month, type = "b", ylim =c(-2.5,2.4),  pch = 16,
+     xlab = "Year", ylab = "Index", xaxt = "n")
+with(m.index.seg, segments(x0, y, x1, y, lwd = 2, col = "forestgreen", lend = "butt"))
+title("Monthly Moderate Index 2000-2015",adj = 0)
+abline(v = s.index.seg$x0, lty = 2)
+abline(h = 1.25, lty = 2, col = "forestgreen")
+text(year.pts, -2.5, 2000:2015, cex = 0.667)
+dev.off()
+```
+
+
+
+```{r longer_mnthly}
+LSM <- lsm.IOD[,ncol(lsm.IOD):1]
+nt <- dim(sst.OISST.IOD2)[3]
+
+sst.OISST.new2 <- sst.OISST.IOD2
+
+for (k in seq_len(nt)) {
+  temp <- sst.OISST.new2[,,k] 
+  temp[LSM == 0] <- NA
+  sst.OISST.new2[,,k] <- temp
+}
+
+
+
+temp2.sst.OISST <- sst.dt.anom(sst.OISST.new2, son.mean = TRUE, base.seq = FALSE)
+
+eof.OISST.month2 <- sst.anom.eof(temp2.sst.OISST, kmode = 3)
+
+pc.new <- -eof.OISST.month2$PC.std
+v.eof <- -eof.OISST.month2$EOF
+
+plot(1:length(pc.new[,1]), pc.new[,1], type = "l", col = "red")
+plot(1:length(pc.new[,2]), pc.new[,2], type = "l", col = "firebrick")
+plot(1:length(pc.new[,3]), pc.new[,3], type = "l")
+
+
+s.index <- (pc.new[,1] + pc.new[,2])/sqrt(2)
+m.index <- (pc.new[,1] - pc.new[,2])/sqrt(2)
+
+plot(1:length(s.index), s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:length(m.index), m.index, col = "darkgreen")
+
+plot(pc.new[,1], pc.new[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(pc.new[c(9,12,34),1], pc.new[c(9,12,34),2], pch = 16, col = "red")
+points(pc.new[c(34),1], pc.new[c(34),2], pch = 16, col = "magenta")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+
+
+
+#spatial eof output
+temp <- array(t(v.eof), dim = c(3, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+#setup range, breaks, and colors
+eof.range <- range(eof_spat, na.rm = TRUE) 
+upper.eof <- max(abs(eof.range))
+eof.range2 <- c(-upper.eof, upper.eof)
+roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+
+brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
+
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,1]), 
+           col = roma_col, breaks = brks, zlim = eof.range2, 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,3]), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC3")
+world(add = TRUE)
+
+```
+
+```{r longermonthly_regression}
+#get anom/det for
+LSM <- lsm.IOD[,ncol(lsm.IOD):1]
+nt <- dim(sst.OISST.IOD2)[3]
+
+sst.OISST.new2 <- sst.OISST.IOD2
+
+for (k in seq_len(nt)) {
+  temp <- sst.OISST.new2[,,k] 
+  temp[LSM == 0] <- NA
+  sst.OISST.new2[,,k] <- temp
+}
+
+#use only SON months
+sept <- seq(9,453, 12)
+oct <- seq(10,454, 12)
+nov <- seq(11,455, 12)
+
+times[sept[19]+1]
+sept[19]
+
+son.index <- sort(c(sept, oct, nov))
+son.index[55]
+son.index[114]
+#index: 55-114
+
+
+sst.OISST.son <- sst.OISST.new2[,,son.index]
+
+sst.OISST.monthly2019 <- sst.dt.anom(sst.OISST.son, son.mean = FALSE, base.seq = FALSE)
+
+
+
+```
+
+
+
+
+```{r PCA_wFunction}
+
+#use only SON months
+sept <- seq(9,405, 12)
+oct <- seq(10,406, 12)
+nov <- seq(11,407, 12)
+
+son.index <- sort(c(sept, oct, nov))
+
+sst.OISST.son <- sst.OISST.new[,,son.index]
+
+sst.OISST.month <- sst.dt.anom(sst.OISST.son, son.mean = FALSE)
+
+eof.OISST.month <- sst.anom.eof(sst.OISST.month, kmode = 2)
+
+pc.new <- eof.OISST.month$PC.std
+v.eof.base <- eof.OISST.month$EOF
+
+s.index <- (-pc.new[,1] + pc.new[,2])/sqrt(2)
+m.index <- (-pc.new[,1] - pc.new[,2])/sqrt(2)
+
+plot(1:length(s.index), s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:length(m.index), m.index, col = "darkgreen")
+
+nt <- 2
+
+temp <- array(t(v.eof.base), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+#setup range, breaks, and colors
+eof.range <- range(eof_spat, na.rm = TRUE) 
+upper.eof <- max(abs(eof.range))
+eof.range2 <- c(-upper.eof, upper.eof)
+roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+
+brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
+
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = -eof_spat[,,1]), 
+           col = roma_col, breaks = brks, zlim = eof.range2, 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+```
+
+
+```{r}
+#TODO: functionalize this!!
+nt <- dim(updated.sst.anom)[1]
+ny <- dim(updated.sst.anom)[2]
+nx <- dim(updated.sst.anom)[3]
+
+kmode <- 2 #number of components
+ 
+X <- matrix(updated.sst.anom, nrow = nt, ncol = ny * nx)
+
+#get rid of NA's (masked locs)
+keep <- colSums(is.finite(X)) == nt
+X.new  <- X[, keep]
+
+svd.test <- svd(X.new)
+
+#svd outputs
+U <- svd.test$u[ ,1:kmode]
+D <- svd.test$d[1:kmode]
+V <- svd.test$v[ ,1:kmode]
+
+#test outputs
+EOF.test <- V #EOF spatial pattern
+PC.test <- U %*% diag(D)
+per.test <- D^2 / sum(svd.test$d^2) 
+
+PC.std <- scale(PC.test, center = TRUE, scale = TRUE)
+PC.std <- -PC.std
+
+#move eof back to spatial
+#get eof spatial 
+np <- nx*ny
+#finalize the spatial eof (pca)
+V_eof <- matrix(NA, nrow = np, ncol = kmode)
+
+#add in lsm sea data
+V_eof[keep, ] <- -EOF.test
+
+nt <- 2
+
+temp <- array(t(V_eof), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+#setup range, breaks, and colors
+eof.range <- range(eof_spat, na.rm = TRUE) 
+upper.eof <- max(abs(eof.range))
+eof.range2 <- c(-upper.eof, upper.eof)
+roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+
+brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
+
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,1]), 
+           col = roma_col, breaks = brks, zlim = eof.range2, 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           col = roma_col, breaks = brks, zlim = eof.range2,
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+
+
+
+#test figures
+s.index <- (PC.std[,1] + PC.std[,2])/sqrt(2)
+m.index <- (PC.std[,1] - PC.std[,2])/sqrt(2)
+
+
+plot(1:34, s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=1.5, col ="red", lty =2)
+abline(h=1.25, col = "darkgreen", lty = 2)
+
+plot(PC.std[,1], PC.std[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(PC.std[c(13,16),1], PC.std[c(13,16),2], pch = 16, col = "red")
+points(PC.std[c(1,6,34),1], PC.std[c(1,6,34),2], pch = 16, col = "magenta")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+
+divergingx_hcl(n = 12, plot = TRUE)
+```
+
+
+```{r OISST_pca}
+#get updated dims
+A.sst.anom <- temp.sst.OISST
+
+nt <- dim(A.sst.anom)[1]
+ny <- dim(A.sst.anom)[2]
+nx <- dim(A.sst.anom)[3]
+
+kmode <- 2 #number of components
+ 
+X <- matrix(A.sst.anom, nrow = nt, ncol = ny * nx)
+
+#get rid of NA's (masked locs)
+keep <- colSums(is.finite(X)) == nt
+X.new  <- X[, keep]
+
+svd.test <- svd(X.new)
+
+#svd outputs
+U <- svd.test$u[ ,1:kmode]
+D <- svd.test$d[1:kmode]
+V <- svd.test$v[ ,1:kmode]
+
+#test outputs
+EOF.test <- V #EOF spatial pattern
+PC.test <- U %*% diag(D)
+per.test <- D^2 / sum(svd.test$d^2) 
+
+PC.std <- scale(PC.test, center = TRUE, scale = TRUE)
+PC.std <- -PC.std
+
+PC.std.new <- PC.std
+
+years <- 1982:2015
+son_dates <- make_date(years, 1, 1) 
+
+#test figures
+sindex.oisst <- (PC.std[,1] + PC.std[,2])/sqrt(2)
+mindex.oisst <- (PC.std[,1] - PC.std[,2])/sqrt(2)
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png(filename = "pIOD_index.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 5))
+plot(son_dates, s.index, type = "l", col = "red3", ylim = range(s.index, m.index),
+     xlab = "Year", ylab = "Index", lwd = 2, xaxt = "n")
+axis.Date(1, at = seq(min(son_dates), max(son_dates), by = "5 years"), format = "%Y")
+box()
+title("SON pIOD Indices", adj = 0)
+lines(son_dates, sindex.oisst, col = "firebrick", lty = 4, lwd = 1.25)
+lines(son_dates, m.index, col = "darkgreen", lwd = 2)
+lines(son_dates, mindex.oisst, col = "darkgreen", lty = 4, lwd = 1.25)
+text(son_dates[25], s.index[25], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(son_dates[16], s.index[16], "1997", pos = 4, cex = 0.9, col = "firebrick")
+text(son_dates[13], s.index[13], "1994", pos = 3, cex = 0.9, col = "firebrick")
+text(son_dates[34], m.index[34]+0.1, "2015", pos = 3, cex = 0.9, col = "darkgreen")
+text(son_dates[6], m.index[6], "1987", pos = 3, cex = 0.9, col = "darkgreen")
+text(son_dates[1], m.index[1]+0.2, "1982", pos = 3, cex = 0.9, col = "darkgreen")
+legend("topright",
+       legend = c("S-Index", "S-Index (OISSTv2)", "M-Index", "S-Index (OISSTv2)"),
+       lty    = c(1,4,1,4),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c("red3", "firebrick", "darkgreen", "darkgreen"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = 0.01)
+abline(h=1.5, col ="red3", lty = 2)
+abline(h=1.25, col = "darkgreen", lty = 2)
+dev.off()
+
+
+plot(PC.std[,1], PC.std[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(PC.std[c(13,16,25),1], PC.std[c(13,16,25),2], pch = 16, col = "red3")
+points(PC.std.new[c(13,16,25),1], PC.std.new[c(13,16,25),2], pch = 17, col = "firebrick")
+points(PC.std[c(1,6,34),1], PC.std[c(1,6,34),2], pch = 16, col = "darkgreen")
+points(PC.std.new[c(1,6,34),1], PC.std.new[c(1,6,34),2], pch = 17, col = "forestgreen")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+
+```
+
+
+```{r OISST_figures}
+
+s.index <- (PC.std[,1] + PC.std[,2])/sqrt(2)
+m.index <- (PC.std[,1] - PC.std[,2])/sqrt(2)
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+#TODO: save
+png(filename = "OISST_pIOD.png", width = 2400, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(son_dates, s.index, type = "l", col = "firebrick", ylim = range(s.index, m.index),
+     xlab = "Year", ylab = "Index",
+     xaxt = "n", lwd = 1.33)
+axis.Date(1, at = seq(min(son_dates), max(son_dates), by = "5 years"), format = "%Y")
+box()
+lines(son_dates, m.index, col = "darkgreen", lwd = 1.33)
+title("OISSTv2 SON pIOD Indices", adj = 0)
+text(son_dates[25], s.index[25], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(son_dates[16], s.index[16], "1997", pos = 4, cex = 0.9, col = "firebrick")
+text(son_dates[13], s.index[13], "1994", pos = 3, cex = 0.9, col = "firebrick")
+text(son_dates[34], m.index[34], "2015", pos = 3, cex = 0.9, col = "darkgreen")
+text(son_dates[6], m.index[6], "1987", pos = 3, cex = 0.9, col = "darkgreen")
+text(son_dates[1], m.index[1], "1982", pos = 3, cex = 0.9, col = "darkgreen")
+abline(h=1.5, col ="firebrick", lty =2)
+abline(h=1.25, col = "darkgreen", lty = 2)
+legend("topright",
+       legend = c("S-Index", "M-Index"),
+       lty    = 1,                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c("firebrick", "darkgreen"),
+       bty    = "n",               # no box; remove if you want a box
+       inset  = 0.01)
+dev.off()
+
+
+png(filename = "OISST_pca.png", width = 2000, height = 2000, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(PC.std[,1], PC.std[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5),
+     xlab = "PC1", ylab = "PC2")
+points(PC.std[c(13,16,25),1], PC.std[c(13,16,25),2], pch = 16, col = "firebrick")
+text(PC.std[25,1], PC.std[25,2], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(PC.std[16,1], PC.std[16,2], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(PC.std[13,1], PC.std[13,2], "1994", pos = 3, cex = 0.9, col = "firebrick")
+points(PC.std[c(1,6,34),1], PC.std[c(1,6,34),2], pch = 16, col = "darkgreen")
+text(PC.std[34,1], PC.std[34,2], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC.std[6,1], PC.std[6,2], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC.std[1,1], PC.std[1,2], "1982", pos = 4, cex = 0.9, col = "darkgreen")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+dev.off()
+
+
+```
+
+
+
+# Below is old code
+(reference as needed)
 
 ```{r SSTanom_function}
 #TODO: determine which climatology anomaly to use, all or by month
@@ -501,13 +1363,74 @@ sst_anom <- function(A, amode = TRUE, weekly = FALSE){
   
   return(var)
 }
+
+
+sst.anom.full <- function(A){
+  Q_net <- A #as [nx, ny, nt] ([lon, lat, time]) 
+  
+  Q_net_1 <- aperm(Q_net, perm = c(2, 1, 3))  # reorder as [ny, nx, nt] ([lat, lon, time])
+  
+  dims <- dim(Q_net_1) #get dimensions from reordered array
+  ny <- dims[1] 
+  nx <- dims[2]
+  nt <- dims[3]
+  
+  # Overwrite Q_net and clear Q_net_1
+  Q_net <- Q_net_1
+  rm(Q_net_1)
+  
+  # 'flatten' to [ny*nx, nt]
+  np <- nx * ny
+  var <- matrix(Q_net, nrow = np, ncol = nt)
+  
+  var.out <- sweep(var, 1, mean(var, na.rm = TRUE), "-")
+  
+  return(var.out)
+}
 ```
 
 
 ```{r SST_anoms}
-sst.anom.OISST <- sst_anom(sst.OISST.IOD)
-sst.anom.GODAS <- sst_anom(sst.GODAS.IOD)
-sst.anom.SODA <- sst_anom(sst.SODA.IOD)
+#"For each of these four data, anomalies are constructed with reference to the mean of the full period, and then detrended."
+sept <- seq(9,405, 12)
+oct <- seq(10,406, 12)
+nov <- seq(11,407, 12)
+
+son.index <- sort(c(sept, oct, nov))
+
+sst.OISST.son <- sst.OISST.IOD[,,son.index]
+sst.GODAS.son <- sst.GODAS.IOD[,,son.index]
+sst.SODA.son <- sst.SODA.IOD[,,son.index]
+
+
+sst.anom.OISST <- sst.anom.full(sst.OISST.son)
+sst.anom.GODAS <- sst.anom.full(sst.GODAS.son)
+sst.anom.SODA <- sst.anom.full(sst.SODA.son)
+
+#full data set
+#sst.anom.OISST <- sst_anom(sst.OISST.IOD, amode = FALSE)
+#sst.anom.GODAS <- sst_anom(sst.GODAS.IOD, amode = FALSE)
+#sst.anom.SODA <- sst_anom(sst.SODA.IOD, amode = FALSE)
+
+
+#sst.anom.OISST <- sst.anom.full(sst.OISST.IOD)
+#sst.anom.GODAS <- sst.anom.full(sst.GODAS.IOD)
+#sst.anom.SODA <- sst.anom.full(sst.SODA.IOD)
+
+#TODO: detrend (from methods section)
+test.detrend <- t(detrend(t(sst.anom.OISST)))
+
+#polyfit(sst.anom.OISST[,1], sst.amom.OISST[])
+dim(test.detrend)
+
+#temp test figure
+plot(1:102, sst.anom.OISST[1,], type = "l")
+lines(1:102, test.detrend[1,], col = "red", lty = 2 )
+
+#get detrend for all data products
+sst.anom.OISST2 <- t(detrend(t(sst.anom.OISST)))
+sst.anom.GODAS2 <- t(detrend(t(sst.anom.GODAS)))
+sst.anom.SODA2 <- t(detrend(t(sst.anom.SODA)))
 
 #get SON time index
 time.dom <- times[2:409]
@@ -522,22 +1445,68 @@ nov <- seq(11,407, 12)
 
 sst.anom.mean <- (sst.anom.OISST + sst.anom.GODAS + sst.anom.SODA)/3
 
-son.index <- sort(c(sept, oct, nov))
+#son.index <- sort(c(sept, oct, nov))
 
-sst.amom.son <- sst.anom.mean[,son.index]
+#sst.amom.son <- sst.anom.mean[,son.index]
 
 #test run for SON yearly anom means
-n_groups <- ncol(sst.amom.son) / 3
+n_groups <- ncol(sst.anom.mean) / 3
 mean_mat <- sapply(seq_len(n_groups), function(i) {
   cols <- ((i - 1) * 3 + 1):(i * 3)
-  rowMeans(sst.amom.son[, cols])
+  rowMeans(sst.anom.mean[, cols])
 })
 #TODO: double check some of this to make sure it works
 
 ```
 
+```{r sst_anomtest}
+
+  A <- sst.OISST.IOD
+  Q_net <- A #as [nx, ny, nt] ([lon, lat, time]) 
+  
+  Q_net_1 <- aperm(Q_net, perm = c(2, 1, 3))  # reorder as [ny, nx, nt] ([lat, lon, time])
+  
+  dims <- dim(Q_net_1) #get dimensions from reordered array
+  ny <- dims[1] 
+  nx <- dims[2]
+  nt <- dims[3]
+  
+  # Overwrite Q_net and clear Q_net_1
+  Q_net <- Q_net_1
+  rm(Q_net_1)
+  
+  # 'flatten' to [ny*nx, nt]
+  np <- nx * ny
+  var <- matrix(Q_net, nrow = np, ncol = nt)
+  
+  var.test <- sweep(var, 1, rowMeans(var), "-")
+  #var.test <- sweep(var, 1, mean(var, na.rm = TRUE), "-")
+```
+
+
+```{r sst_anoms2}
+which(lsm.IOD[ ,ncol(lsm.IOD):1] == 0)
+
+
+lsm.temp <- lsm.IOD[ ,ncol(lsm.IOD):1] == 0
+
+test.mask <- array(lsm.temp, dim = dim(sst.OISST.IOD))
+
+sst.OISST.IOD[test.mask] <- NA
+#repeat but use mean for everything
+var.test2 <- var
+#TODO: test for loop
+for (j in 1:nrow(var)) {
+  var.test2[j,] <- var[j,] - mean(var[j,])
+}
+
+mean(sst.OISST.IOD, na.rm = TRUE)
+```
+
+
+
 ```{r anom_viz}
-nt <- 408
+nt <- 102
 ny <-10
 nx <- 60
 
@@ -557,7 +1526,7 @@ temp <- array(t(sst.anom.mean), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
 Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
 mean.anom_mat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
 
-k <- 250
+k <- 96
 anom_range <- range(OISST.anom_mat[,,k], GODAS.anom_mat[,,k], SODA.anom_mat[,,k], na.rm = TRUE)
 
 #figures
@@ -580,10 +1549,295 @@ world(add = TRUE)
 
 ```
 
-```{r pca}
-#TODO: get updated lsm from the combined (averaged) anom
+
+```{r yearly}
+nt <- 34
+ny <-10
+nx <- 60
+
+
+
+
+temp <- array(t(mean_mat), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+mean.anom_mat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = mean.anom_mat[,,16]),
+           ylab = "Lat", xlab = "Lon", main = "OISST Anoms")
+world(add = TRUE)
+
 ```
 
+
+```{r pca}
+#TODO: get updated lsm from the combined (averaged) anom
+#compare from the above matrix (for a single year [nx,ny,nt=1]) and the existing [np,nt] matrix)
+
+#length(which( !is.na(mean.anom_mat[,,1]))) 
+
+lsm.index <- which(!is.na(sst.anom.mean[,1]))
+
+var.eof <- mean_mat[lsm.index, ]
+
+kmode <- 2
+
+pca <- prcomp(t(var.eof), center = TRUE, scale. = FALSE )
+
+#EOF spatial [np, kmod]
+pc_EOF <- pca$rotation[, 1:kmode]
+
+#pca time series
+pc_ts <- pca$x[, 1:kmode]
+
+#pc "scaled to unity"
+
+
+pc1.std <- scale(pc_ts[,1], center = TRUE, scale = TRUE)
+pc2.std <- scale(pc_ts[,2], center = TRUE, scale = TRUE)
+
+#percent/proportion for each mode
+per <- pca$sdev[1:kmode]^2 / sum(pca$sdev^2)
+
+np <- nx*ny
+#finalize the spatial eof (pca)
+V_eof <- matrix(NA, nrow = np, ncol = kmode)
+
+#add in lsm sea data
+V_eof[lsm.index, ] <- pc_EOF
+```
+
+
+```{r test_svd}
+lsm.index <- which(!is.na(sst.anom.mean[,1]))
+
+var.eof <- mean_mat[lsm.index, ]
+
+kmode <- 2
+
+#TODO: test with svd instead
+svd_test <- svd(scale(var.eof, center = TRUE, scale = FALSE))
+
+#svd outputs
+U <- svd_test$u[ ,1:kmode]
+D <- svd_test$d[1:kmode]
+V <- svd_test$v[ ,1:kmode]
+
+#test outputs
+EOF_test <- U #EOF spatial pattern
+PC_test <- V %*% diag(D)
+per_test <- D^2 / sum(svd_test$d^2) 
+
+PC.std <- scale(PC_test, center = TRUE, scale = TRUE)
+PC.std <- -PC.std
+
+#get eof spatial 
+np <- nx*ny
+#finalize the spatial eof (pca)
+V_eof <- matrix(NA, nrow = np, ncol = kmode)
+
+#add in lsm sea data
+V_eof[lsm.index, ] <- EOF_test
+
+ny <-10
+nx <- 60
+nt <- 2
+
+temp <- array(t(V_eof), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,1]), 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+
+
+s.index <- (PC.std[,1] + PC.std[,2])/sqrt(2)
+m.index <- (PC.std[,1] - PC.std[,2])/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=1.5, col ="red", lty =2)
+abline(h=1.25, col = "darkgreen", lty = 2)
+
+plot(PC.std[,1], PC.std[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(PC.std[c(13,16),1], PC.std[c(13,16),2], pch = 16, col = "red")
+points(PC.std[c(1,6,34),1], PC.std[c(1,6,34),2], pch = 16, col = "magenta")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+
+
+
+
+```
+
+
+```{r matlab_eig}
+A.new <- t(var.eof)%*%var.eof
+Eig.test <- eigen(A.new)
+E <- diag(Eig.test$values)
+V1 <- Eig.test$vectors
+V2 <- var.eof%*%V1
+
+var1 <-  cbind(V2[,1]/sqrt(E[1,1]), V2[,2]/sqrt(E[2,2]))
+PC1 <- scale(t( t(var1[,1]) %*% var.eof), center = FALSE, scale = FALSE)
+PC2 <- scale(t( t(var1[,2]) %*% var.eof), center = FALSE, scale = FALSE)
+
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=1.5, col ="red", lty =2)
+abline(h=1.25, col = "darkgreen", lty = 2)
+```
+
+
+```{r eof_viz}
+ny <-10
+nx <- 60
+nt <- 2
+
+temp <- array(t(V_eof), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,1]), 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+```
+
+
+```{r}
+s.index <- (pc1.std + pc2.std)/sqrt(2)
+m.index <- (pc1.std - pc2.std)/sqrt(2)
+```
+
+
+```{r pca_figures}
+
+
+plot(1:34, s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:34, m.index, col = "darkgreen")
+
+plot(pc1.std, pc2.std, pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(pc1.std[c(13,16)], pc2.std[c(13,16)], pch = 16, col = "red")
+points(pc1.std[c(6,34)], pc2.std[c(6,34)], pch = 16, col = "magenta")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+```
+
+Repeat but for only SON data between 1982 and 2015
+
+```{r SON_only}
+sept <- seq(9,405, 12)
+oct <- seq(10,406, 12)
+nov <- seq(11,407, 12)
+
+son.index <- sort(c(sept, oct, nov))
+
+sst.OISST.son <- sst.OISST.IOD[,,son.index]
+sst.GODAS.son <- sst.GODAS.IOD[,,son.index]
+sst.SODA.son <- sst.SODA.IOD[,,son.index]
+
+sst.OISST.anom <- sst_anom(sst.OISST.son, amode = FALSE)
+sst.GODAS.anom <- sst_anom(sst.GODAS.son, amode = FALSE)
+sst.SODA.anom <- sst_anom(sst.SODA.son, amode = FALSE)
+
+
+
+#get detrend for all data products
+sst.OISST2.anom <- t(detrend(t(sst.OISST.anom)))
+sst.GODAS2.anom <- t(detrend(t(sst.GODAS.anom)))
+sst.SODA2.anom <- t(detrend(t(sst.SODA.anom)))
+
+
+plot(1:102, sst.OISST.anom[20,], type = "l")
+lines(1:102, sst.OISST2.anom[20,], col = "red", lty = 2 )
+#time.dom[sept]
+#time.dom[oct]
+#time.dom[nov]
+
+sst.anom2.mean <- (sst.OISST2.anom + sst.GODAS2.anom + sst.SODA2.anom)/3
+
+#test run for SON yearly anom means
+n_groups <- ncol(sst.anom2.mean) / 3
+mean_mat2 <- sapply(seq_len(n_groups), function(i) {
+  cols <- ((i - 1) * 3 + 1):(i * 3)
+  rowMeans(sst.anom2.mean[, cols])
+})
+
+
+
+lsm.index <- which(!is.na(sst.anom2.mean[,1]))
+
+var.eof <- mean_mat2[lsm.index, ]
+
+kmode <- 2
+
+pca <- prcomp(t(var.eof), center = TRUE, scale. = TRUE )
+
+#EOF spatial [np, kmod]
+pc_EOF <- pca$rotation[, 1:kmode]
+
+#pca time series
+pc_ts <- pca$x[, 1:kmode]
+
+#pc "scaled to unity"
+pc.std <- scale(pc_ts, center = TRUE, scale = TRUE)
+
+#percent/proportion for each mode
+per <- pca$sdev[1:kmode]^2 / sum(pca$sdev^2)
+
+np <- nx*ny
+#finalize the spatial eof (pca)
+V_eof <- matrix(NA, nrow = np, ncol = kmode)
+
+#add in lsm sea data
+V_eof[lsm.index, ] <- pc_EOF
+
+```
+
+```{r pca_viz_new}
+ny <-10
+nx <- 60
+nt <- 2
+
+temp <- array(t(V_eof), dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
+Q_net_1 <- aperm(temp, c(2, 3, 1))  # [ny, nx, nt]
+eof_spat <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,1]), 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC1")
+world(add = TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof_spat[,,2]), 
+           ylab = "Lat", xlab = "Lon", main = "Spatial EOF; PC2")
+world(add = TRUE)
+
+s.index <- (pc.std[,1] + pc.std[,2])/sqrt(2)
+m.index <- (pc.std[,1] - pc.std[,2])/sqrt(2)
+
+
+plot(1:34, s.index, type = "l", col = "red", ylim = range(s.index, m.index))
+lines(1:34, m.index, col = "darkgreen")
+
+plot(pc.std[,1], pc.std[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5))
+points(pc.std[c(13,16),1], pc.std[c(13,16),2], pch = 16, col = "red")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+
+```
 
 
 ```{r differencing}
