@@ -3,7 +3,7 @@
 
 #libraries
 #.nc files
-library(ncdf4)
+suppressMessages(library(ncdf4))
 suppressMessages(library(terra))
 
 # date mgmt
@@ -68,20 +68,97 @@ var <- sweep(var, 2, colMeans(var), "-") #TODO: check how this might hold up wit
 #detrend
 #TODO: test linear detrend and plot slope
 test.na <- which(!is.na(var), arr.ind = TRUE)
-nrow(test.na)
+
+A.resid <- matrix(NA, nrow = nt, ncol = ny*nx)
+A.coef <- matrix(NA, nrow = 2, ncol = ny*nx)
+
+#TODO: figure out how to work with irregular NAs in time/space (some years have different spatial NAs)
 true.index <- unique(test.na[,2])
-var.y <- var[ ,true.index]
+
+var.x <- seq_len(nt) #time "covariates"
+var.y <- var[ ,true.index] #response variable (sst anoms)
+
+var.fit <- lm(var.y ~ var.x)
+
+A.resid[,true.index] <- var.fit$residuals
+A.coef[,true.index] <- var.fit$coefficients
 
 
 
+
+
+#Visualizations
+## strong years 1994, 1997, 2006 (index: 13, 16, 25)
+## moderate years 1982, 1987, 2015 (index: 1, )
+## along with spatial mean, linear coeffs
+
+#array reformatting code
+#TODO: delete when done, (or move to function) 
+temp <- array(var, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.diff <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+
+#Spatial Mean
+#using var.mean
+spat.mean <- array(var.mean, dim = c(ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean)), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+
+#Spatial detrend coefs
+temp <- array(A.coef, dim = c(2, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.coefs <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,2]), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+
+
+#1993 SON average
+son.avg <- aperm(A.son, c(3, 2, 1))
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = son.avg[,,13]), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")#, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+world(add=TRUE)
+
+#1993 SON anom
+
+temp <- array(var, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.diff <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.diff[,,13]), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")#, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+world(add=TRUE)
+
+#1993 SON anom detrended
+
+temp <- array(A.resid, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,13]), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")#, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+world(add=TRUE)
+
+
+
+
+
+##------TEST SECTION-----##
+#test viz (remove or move down when done):
 #transform from [time, ny*nx] to [time, lat, lon]
 temp <- array(var, dim = c(nt, ny, nx))  # t(var) is [nt, ny*nx]
 spat.diff <- aperm(temp, c(3, 2, 1))  # [ny, nx, nt]
 ##spat.out <- aperm(Q_net_1, c(2, 1, 3)) #  Reverse the earlier aperm to get back to [nx, ny, nt]
 #transform from [time, lat, lon] to [lon, lat, time]
 spat.out <- aperm(A.son, c(3, 2 ,1))
-
-#test viz (remove or move down when done):
 
 
 #set.panel(1,3)
