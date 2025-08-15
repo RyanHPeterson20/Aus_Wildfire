@@ -14,6 +14,7 @@ suppressMessages(library(abind))
 suppressMessages(library(fields))
 suppressMessages(library(colorspace))
 suppressMessages(library(RColorBrewer))
+suppressMessages(library(scales)) #for adjusting opacity
 
 #matlab function (e.g. detrend)
 suppressMessages(library(pracma))
@@ -88,11 +89,42 @@ sst.anoms <- function(A){
               coef = A.coef))
 }
 
-#eof analysis function:
-#TODO: add in function for EOF
-sst.eof <- function(sst){
+#pca/eof analysis function:
+sst.eof <- function(sst.anom, kmode){
+  #sst.anom as [time, lat, lon]
+  nt <- dim(sst.anom)[1]
+  ny <- dim(sst.anom)[2]
+  nx <- dim(sst.anom)[3]
   
+  X <- matrix(sst.anom, nrow = nt, ncol = ny * nx)
+  
+  #get rid of NA's (masked locs)
+  keep <- colSums(is.finite(X)) == nt
+  X.new  <- X[, keep]
+  
+  svd.temp <- svd(X.new)
+  
+  #svd outputs
+  U <- svd.temp$u[ ,1:kmode]
+  D <- svd.temp$d[1:kmode]
+  V <- svd.temp$v[ ,1:kmode]
+  
+  #outputs
+  EOF.temp <- V #EOF spatial pattern
+  PC.temp <- U %*% diag(D)
+  per.temp <- D^2 / sum(svd.temp$d^2) 
+  
+  #finalize the spatial eof (pca)
+  V_eof <- matrix(NA, nrow = ny * nx, ncol = kmode)
+  
+  #add in lsm sea data
+  V_eof[keep, ] <- EOF.temp
+  
+  return(list(EOF = V_eof,
+              PC = PC.temp,
+              percent = per.temp))
 }
+
 
 #sst anomalies SON, for 
 ##OISST
@@ -106,7 +138,7 @@ sst.anom.soda <- sst.anoms(sst.interp.SODA)
 sst.anom.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + sst.anom.soda$anom)/3
 
 
-#TODO: select for reduced region pIOD 
+#select for reduced region pIOD 
 IOD_maxLon <- 100
 IOD_minLon <- 40
 IOD_maxLat <- 5
@@ -123,63 +155,62 @@ sst.anom <- array(sst.anom.avg, dim = c(nt, ny, nx))
 
 sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
 
-#EOF test
-kmode <- 2
-#sst.anom <- array(sst.anom.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
-sst.anom <- sst.anom.pIOD
+#reduced IOD pca
+pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
 
-#sst.anom as [time, lat, lon]
-nt <- dim(sst.anom)[1]
-ny <- dim(sst.anom)[2]
-nx <- dim(sst.anom)[3]
+pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
 
-#TODO: look at just importing as  [nt, ny*nx]
-X <- matrix(sst.anom, nrow = nt, ncol = ny * nx)
+s.index <- (-pc.std.IOD[,1] + pc.std.IOD[,2])/sqrt(2)
+m.index <- (-pc.std.IOD[,1] - pc.std.IOD[,2])/sqrt(2)
 
-#get rid of NA's (masked locs)
-keep <- colSums(is.finite(X)) == nt
-X.new  <- X[, keep]
+#TODO: save these
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 
-svd.temp <- svd(X.new)
-
-#svd outputs
-U <- svd.temp$u[ ,1:kmode]
-D <- svd.temp$d[1:kmode]
-V <- svd.temp$v[ ,1:kmode]
-
-#outputs
-EOF.temp <- V #EOF spatial pattern
-PC.temp <- U %*% diag(D)
-per.temp <- D^2 / sum(svd.temp$d^2) 
-
-#TODO: double check negatives and splitting pc1 and pc2 for standarization
-PC1.std <- scale(PC.temp[,1], center = TRUE, scale = TRUE)
-PC2.std <- scale(PC.temp[,2], center = TRUE, scale = TRUE)
-PC.std <- scale(PC.temp, center = TRUE, scale = TRUE)
-
-#plot(-PC1.std, PC2.std, pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5),
-#     xlab = "PC1", ylab = "PC2")
-plot(-PC.std[,1], PC.std[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 5),
+plot(-pc.std.IOD[,1], pc.std.IOD[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 5),
      xlab = "PC1", ylab = "PC2", col = "darkblue")
-points(-PC.std[c(13,16,25),1], PC.std[c(13,16,25),2], pch = 16, col = "firebrick")
-text(-PC.std[25,1], PC.std[25,2], "2006", pos = 4, cex = 0.9, col = "firebrick")
-text(-PC.std[16,1], PC.std[16,2], "1997", pos = 3, cex = 0.9, col = "firebrick")
-text(-PC.std[13,1], PC.std[13,2], "1994", pos = 4, cex = 0.9, col = "firebrick")
-points(-PC.std[c(1,6,34),1], PC.std[c(1,6,34),2], pch = 16, col = "darkgreen")
-text(-PC.std[34,1], PC.std[34,2], "2015", pos = 4, cex = 0.9, col = "darkgreen")
-text(-PC.std[6,1], PC.std[6,2], "1987", pos = 4, cex = 0.9, col = "darkgreen")
-text(-PC.std[1,1], PC.std[1,2], "1982", pos = 3, cex = 0.9, col = "darkgreen")
+points(-pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 16, col = "firebrick")
+text(-pc.std.IOD[25,1], pc.std.IOD[25,2], "2006", pos = 4, cex = 0.9, col = "firebrick")
+text(-pc.std.IOD[16,1], pc.std.IOD[16,2], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(-pc.std.IOD[13,1], pc.std.IOD[13,2], "1994", pos = 4, cex = 0.9, col = "firebrick")
+points(-pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 16, col = "darkgreen")
+text(-pc.std.IOD[34,1], pc.std.IOD[34,2], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(-pc.std.IOD[6,1], pc.std.IOD[6,2], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(-pc.std.IOD[1,1], pc.std.IOD[1,2], "1982", pos = 3, cex = 0.9, col = "darkgreen")
 abline(h = 0.5, lty = 2)
 abline(v = 1, lty = 2)
 
-#add in index plots 
 
-#finalize the spatial eof (pca)
-np <- nx*ny
-V_eof <- matrix(NA, nrow = np, ncol = kmode)
+#TODO: testing transparent saves
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
 
-#add in lsm sea data
-V_eof[keep, ] <- EOF.temp
+#adjusted colors for overlay
+png("overlay.png", width = 2000, height = 1200, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(1:34, s.index, type = "l", col = "orange", ylim=c(-2,5),
+     axes = FALSE, xlab = "", ylab = "", frame.plot = FALSE, lwd = 9)
+lines(1:34, m.index, col = "lawngreen", lwd = 9)
+abline(h=c(1.5, 1.25), lty = 2, col = c("violetred4", "seagreen4"), lwd = 6)
+dev.off()
+
+png("PCoverlay.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(-pc.std.IOD[,1], pc.std.IOD[,2], pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(-pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(-pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
+dev.off()
+
+#reproduce Fig 1a and 1b:
+#project SST anoms onto EOF1 and EOF2
+
+
 #
 temp <- array(t(V_eof), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
 #v.eof1 <- -temp[1,,]
@@ -209,10 +240,30 @@ world(add=TRUE)
 
 
 #Visualizations
+##s-, m-index
+years <- 1982:2015
+son.dates <- make_date(years, 1, 1) 
+
+plot(son.dates, s.index, type = "l", col = "firebrick3", ylim = c(-2, 5),
+     xlab = "Year", ylab = "Index", lwd = 2, xaxt = "n")
+axis.Date(1, at = son.dates[seq(4,34, by = 5)], format = "%Y")
+#axis.Date(1, at = seq(min(son.dates), max(son.dates), by = "5 years"), format = "%Y")
+lines(son.dates, m.index, col = "forestgreen", lwd = 2)
+text(son.dates[25], s.index[25], "2006", pos = 3, cex = 0.9, col = "firebrick3")
+text(son.dates[16], s.index[16], "1997", pos = 3, cex = 0.9, col = "firebrick3")
+text(son.dates[13], s.index[13], "1994", pos = 3, cex = 0.9, col = "firebrick3")
+text(son.dates[34], m.index[34], "2015", pos = 3, cex = 0.9, col = "forestgreen")
+text(son.dates[6], m.index[6], "1987", pos = 3, cex = 0.9, col = "forestgreen")
+text(son.dates[1], m.index[1]+0.2, "1982", pos = 3, cex = 0.9, col = "forestgreen")
+title("pIOD Indices (SON)", adj = 0)
+
+
+
+
+
 ## strong years 1994, 1997, 2006 (index: 13, 16, 25)
 ## moderate years 1982, 1987, 2015 (index: 1, 6, 34)
 ## along with spatial mean, linear coeffs
-
 
 
 #TODO: set-up preferred spatial colors
@@ -304,8 +355,8 @@ world(add=TRUE)
 
 
 ##------TEST SECTION-----##
+#TODO: delete when done
 ##test anomalies
-#TODO: functionalize if this works
 A <- sst.array #as [lon, lat, time]
 
 A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
@@ -386,3 +437,47 @@ world(add=TRUE)
 
 
 dev.off()
+
+
+# EOF test code
+kmode <- 2
+#sst.anom <- array(sst.anom.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+sst.anom <- sst.anom.pIOD
+
+#sst.anom as [time, lat, lon]
+nt <- dim(sst.anom)[1]
+ny <- dim(sst.anom)[2]
+nx <- dim(sst.anom)[3]
+
+#TODO: look at just importing as  [nt, ny*nx]
+X <- matrix(sst.anom, nrow = nt, ncol = ny * nx)
+
+#get rid of NA's (masked locs)
+keep <- colSums(is.finite(X)) == nt
+X.new  <- X[, keep]
+
+svd.temp <- svd(X.new)
+
+#svd outputs
+U <- svd.temp$u[ ,1:kmode]
+D <- svd.temp$d[1:kmode]
+V <- svd.temp$v[ ,1:kmode]
+
+#outputs
+EOF.temp <- V #EOF spatial pattern
+PC.temp <- U %*% diag(D)
+per.temp <- D^2 / sum(svd.temp$d^2) 
+
+#TODO: double check negatives and splitting pc1 and pc2 for standarization
+PC1.std <- scale(PC.temp[,1], center = TRUE, scale = TRUE)
+PC2.std <- scale(PC.temp[,2], center = TRUE, scale = TRUE)
+PC.std <- scale(PC.temp, center = TRUE, scale = TRUE)
+
+#add in index plots 
+
+#finalize the spatial eof (pca)
+np <- nx*ny
+V_eof <- matrix(NA, nrow = np, ncol = kmode)
+
+#add in lsm sea data
+V_eof[keep, ] <- EOF.temp
