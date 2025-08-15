@@ -137,6 +137,91 @@ sst.anom.soda <- sst.anoms(sst.interp.SODA)
 #get SON average of SST anomalies
 sst.anom.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + sst.anom.soda$anom)/3
 
+#get EOFs for full Indian Ocean region, then 
+#reproduce Fig 1a and 1b: project SST anoms onto EOF1 and EOF2
+nt <- 34
+nx <- length(lon.values)
+ny <- length(lat.values)
+
+sst.anom <- array(sst.anom.avg, dim = c(nt, ny, nx)) 
+pca.base <- sst.eof(sst.anom, kmode = 2)
+
+eof.base <- pca.base$EOF
+pc.base <- pca.base$PC
+
+pc.base1 <- scale(pc.base[,1], center = TRUE, scale = TRUE)
+pc.base2 <- scale(pc.base[,2], center = TRUE, scale = TRUE)
+
+temp <- array(t(eof.base), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
+#v.eof1 <- temp[1,,]
+#v.eof2 <- temp[2,,]
+eof.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
+
+#setup color and range
+eof.absmax <- max(abs(eof.spatial), na.rm = TRUE)
+eof.range <- c(-eof.absmax, eof.absmax) 
+
+#color setup
+cols.ryb <- colorRampPalette(brewer.pal(11, "RdYlBu"))(24)
+brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
+
+#TODO: save a final image
+image.plot(list(x = lon.values, y = rev(lat.values), z = eof.spatial[,,1]), 
+           col = cols.ryb, breaks = brks, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = eof.spatial[,,2]), 
+           col = cols.ryb, breaks = brks, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+#TODO: project SST anoms onto each EOF pattern
+eof.mask <- is.finite(eof.base[,1]) #currently looking at eof1
+
+v.eof1 <- eof.base[eof.mask,1] #eof1 vector (may or may not use this)
+x.anoms <- sst.anom.avg[,eof.mask] #sst anom data matrix
+
+spatial.proj <- matrix(NA, ncol = 2, nrow = 3600)
+proj1 <- t(x.anoms) %*% pc.std.IOD[,1]
+proj2 <- t(x.anoms) %*% pc.std.IOD[,2]
+
+spatial.proj[eof.mask, ] <- cbind(proj1, proj2)
+
+temp <- array(t(spatial.proj), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
+#v.eof1 <- temp[1,,]
+#v.eof2 <- temp[2,,]
+proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
+
+proj.spatial <- proj.spatial/34
+
+#setup color and range
+eof.absmax <- max(abs(proj.spatial), na.rm = TRUE)
+eof.range <- c(-eof.absmax, eof.absmax) 
+
+#color setup
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+brks1 <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
+brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
+
+#TODO: save a final image
+#TODO: adjust to more "exactly" match
+image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,1]), 
+           col = cols.ryb, breaks = brks1, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,2]), 
+           col = cols.ryb, breaks = brks1, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+
+
 
 #select for reduced region pIOD 
 IOD_maxLon <- 100
@@ -160,26 +245,32 @@ pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
 
 pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
 
-s.index <- (-pc.std.IOD[,1] + pc.std.IOD[,2])/sqrt(2)
-m.index <- (-pc.std.IOD[,1] - pc.std.IOD[,2])/sqrt(2)
+pc.std.IOD[,1] <- -pc.std.IOD[,1] 
 
-#TODO: save these
+s.index <- (pc.std.IOD[,1] + pc.std.IOD[,2])/sqrt(2)
+m.index <- (pc.std.IOD[,1] - pc.std.IOD[,2])/sqrt(2)
+
+#TODO: save these further down
 plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
 lines(1:34, m.index, col = "darkgreen")
 abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 
-plot(-pc.std.IOD[,1], pc.std.IOD[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 5),
+plot(pc.std.IOD[,1], pc.std.IOD[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 5),
      xlab = "PC1", ylab = "PC2", col = "darkblue")
-points(-pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 16, col = "firebrick")
-text(-pc.std.IOD[25,1], pc.std.IOD[25,2], "2006", pos = 4, cex = 0.9, col = "firebrick")
-text(-pc.std.IOD[16,1], pc.std.IOD[16,2], "1997", pos = 3, cex = 0.9, col = "firebrick")
-text(-pc.std.IOD[13,1], pc.std.IOD[13,2], "1994", pos = 4, cex = 0.9, col = "firebrick")
-points(-pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 16, col = "darkgreen")
-text(-pc.std.IOD[34,1], pc.std.IOD[34,2], "2015", pos = 4, cex = 0.9, col = "darkgreen")
-text(-pc.std.IOD[6,1], pc.std.IOD[6,2], "1987", pos = 4, cex = 0.9, col = "darkgreen")
-text(-pc.std.IOD[1,1], pc.std.IOD[1,2], "1982", pos = 3, cex = 0.9, col = "darkgreen")
+points(pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 16, col = "firebrick")
+text(pc.std.IOD[25,1], pc.std.IOD[25,2], "2006", pos = 4, cex = 0.9, col = "firebrick")
+text(pc.std.IOD[16,1], pc.std.IOD[16,2], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(pc.std.IOD[13,1], pc.std.IOD[13,2], "1994", pos = 4, cex = 0.9, col = "firebrick")
+points(pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 16, col = "darkgreen")
+text(pc.std.IOD[34,1], pc.std.IOD[34,2], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(pc.std.IOD[6,1], pc.std.IOD[6,2], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(pc.std.IOD[1,1], pc.std.IOD[1,2], "1982", pos = 3, cex = 0.9, col = "darkgreen")
 abline(h = 0.5, lty = 2)
 abline(v = 1, lty = 2)
+abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
+
+
+#TODO: move the sst regression to here
 
 
 #TODO: testing transparent saves
@@ -194,17 +285,18 @@ lines(1:34, m.index, col = "lawngreen", lwd = 9)
 abline(h=c(1.5, 1.25), lty = 2, col = c("violetred4", "seagreen4"), lwd = 6)
 dev.off()
 
-png("PCoverlay.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
+png("PCoverlay_temp.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
 par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
-plot(-pc.std.IOD[,1], pc.std.IOD[,2], pch = 21, col = "black",
+plot(pc.std.IOD[,1], pc.std.IOD[,2], pch = 21, col = "black",
      bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
      xlab = "PC1", ylab = "PC2", cex = 5)
-points(-pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 21, col = "black",
+points(pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 21, col = "black",
        bg = alpha("red1",.75), cex = 5)
-points(-pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 21, col = "black",
+points(pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 21, col = "black",
        bg = alpha("seagreen1",.65), cex = 5)
 abline(h = 0.5, lty = 2, lwd = 4)
 abline(v = 1, lty = 2, lwd = 4)
+abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
 dev.off()
 
 #reproduce Fig 1a and 1b:
@@ -244,6 +336,11 @@ world(add=TRUE)
 years <- 1982:2015
 son.dates <- make_date(years, 1, 1) 
 
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#pIOD indices
+png(filename = "pIODindex_new.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 5))
 plot(son.dates, s.index, type = "l", col = "firebrick3", ylim = c(-2, 5),
      xlab = "Year", ylab = "Index", lwd = 2, xaxt = "n")
 axis.Date(1, at = son.dates[seq(4,34, by = 5)], format = "%Y")
@@ -254,11 +351,32 @@ text(son.dates[16], s.index[16], "1997", pos = 3, cex = 0.9, col = "firebrick3")
 text(son.dates[13], s.index[13], "1994", pos = 3, cex = 0.9, col = "firebrick3")
 text(son.dates[34], m.index[34], "2015", pos = 3, cex = 0.9, col = "forestgreen")
 text(son.dates[6], m.index[6], "1987", pos = 3, cex = 0.9, col = "forestgreen")
-text(son.dates[1], m.index[1]+0.2, "1982", pos = 3, cex = 0.9, col = "forestgreen")
+text(son.dates[1], m.index[1], "1982", pos = 3, cex = 0.9, col = "forestgreen")
 title("pIOD Indices (SON)", adj = 0)
+abline(h=c(1.5, 1.25), lty = 2, lwd =1.5, col = c("firebrick3", "forestgreen"))
+legend("topright",
+       legend = c("S-Index", "M-Index"),
+       lty    = 1,                 # line type
+       lwd    = 2,                 # line width
+       col    = c("firebrick3", "forestgreen"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = 0.01)
+dev.off()
 
-
-
+#PCA plots
+png(filename = "PCA_new.png", width = 2000, height = 2000, res = 300)
+par(mar = c(5, 5, 3, 3))
+plot(pc.std.IOD[,1], pc.std.IOD[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", col = "darkblue")
+points(pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], pch = 16, col = "firebrick3")
+text(pc.std.IOD[c(13,16,25),1], pc.std.IOD[c(13,16,25),2], 
+     c("1994", "1997", "2006"), pos = 4, cex = 0.9, col = "black")
+points(pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2], pch = 16, col = "forestgreen")
+text(pc.std.IOD[c(1,6,34),1], pc.std.IOD[c(1,6,34),2]+c(0.15, -0.1, 0), 
+     c("1982", "1987", "2015"), pos = c(4,4,4), cex = 0.9, col = "black")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+dev.off()
 
 
 ## strong years 1994, 1997, 2006 (index: 13, 16, 25)
