@@ -221,6 +221,44 @@ image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,2]),
 world(add=TRUE)
 
 
+#Update for figures 1e and 1f.
+#reconstruction (UDV^T) of temp anoms
+z1 <- pc.std.IOD[,1] %*% t(proj1)
+z2 <- pc.std.IOD[,2] %*% t(proj2)
+
+test.z1 <- colSums(z1)
+test.z2 <- colSums(z2)
+
+spatial.anoms <- matrix(NA, ncol = 2, nrow = 3600)
+spatial.anoms <- 
+spatial.proj[eof.mask, ] <- cbind(proj1, proj2)
+
+temp <- array(t(spatial.proj), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
+#v.eof1 <- temp[1,,]
+#v.eof2 <- temp[2,,]
+proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
+
+s.spatial <- (proj.spatial[,,1] + proj.spatial[,,2])
+m.spatial <- (proj.spatial[,,1] - proj.spatial[,,2])
+
+#setup color and range
+index.absmax <- max(abs(s.spatial), abs(m.spatial), na.rm = TRUE)
+index.range <- c(-index.absmax, index.absmax) 
+
+brks.index <- c(index.range[1], seq(-1, 1, 0.2), index.range[2])
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = s.spatial), 
+           col = cols.ryb, breaks = brks.index, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = m.spatial), 
+           col = cols.ryb, breaks = brks.index, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
 
 
 #select for reduced region pIOD 
