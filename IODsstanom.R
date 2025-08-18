@@ -618,10 +618,10 @@ dev.off()
 
 #Get spatial mean and coefs for 1982 to 2015
 #godas mean
-#spat.mean <- array(sst.anom.godas$mean, dim = c(ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
-spat.mean <- array(sst.anom.oisst$mean, dim = c(ny, nx))
+spat.mean.godas <- array(sst.anom.godas$mean, dim = c(ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.mean.oisst <- array(sst.anom.oisst$mean, dim = c(ny, nx))
 
-image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean)), 
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean.oisst)), 
            col = tim.colors(256), 
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
@@ -631,27 +631,79 @@ world(add=TRUE)
 sst.anom.godas2019 <- sst.anoms(sst.godas2)
 sst.anom.oisst2019 <- sst.anoms(sst.OISST.masked2)
 
-spat.mean <- array(sst.anom.oisst2019$mean, dim = c(ny, nx))
+spat.mean.godas2019 <- array(sst.anom.godas2019$mean, dim = c(ny, nx))
+spat.mean.oisst2019 <- array(sst.anom.oisst2019$mean, dim = c(ny, nx))
 
-image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean)), 
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean.oisst2019)), 
            col = tim.colors(256), 
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
 
+#get difference between the two
+oisst.diff <- (spat.mean.oisst2019 - spat.mean.oisst)
+godas.diff <- (spat.mean.godas2019 - spat.mean.godas)
 
-#TODO: set-up preferred spatial colors
-#match SST anomalies (deg C) from Cai et al 2021. n = 12, with most colors between (-1, 1)
-#color match may be tricky since the lower and upper bounds may not be included
-rybcol.12 <- rev(divergingx_hcl(n = 12, palette = "RdYlBu"))
-rybcol.48 <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
+diff.max <- max(abs(oisst.diff), na.rm = TRUE)+0.02
+diff.range <- c(-diff.max , diff.max)
+#TODO: get red-blue diverge colors
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(48))
 
-brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
 
-#Spatial Mean
-#using var.mean
-spat.mean <- array(var.mean, dim = c(ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(oisst.diff)), 
+           col = cols.rb, zlim = diff.range,
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
 
-image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean)), 
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(godas.diff)), 
+           col = cols.rb, zlim = diff.range,
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+#Get spatial mean and coefs for 1982 to 2018
+sst.anom.godas2018 <- sst.anoms(sst.godas2[,,1:444])
+sst.anom.oisst2018 <- sst.anoms(sst.OISST.masked2[,,1:444])
+
+spat.mean.godas2018 <- array(sst.anom.godas2018$mean, dim = c(ny, nx))
+spat.mean.oisst2018 <- array(sst.anom.oisst2018$mean, dim = c(ny, nx))
+#get difference between the two
+oisst.diff2018 <- (spat.mean.oisst2018 - spat.mean.oisst)
+godas.diff2018 <- (spat.mean.godas2018 - spat.mean.godas)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(oisst.diff2018)), 
+           col = cols.rb, zlim = diff.range,
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(godas.diff2018)), 
+           col = cols.rb, zlim = diff.range,
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+#2019-2018
+oisst.difflate <- (spat.mean.oisst2019 - spat.mean.oisst2018)
+godas.difflate <- (spat.mean.godas2019 - spat.mean.godas2018)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(oisst.difflate)), 
+           col = cols.rb, zlim = diff.range,
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(godas.difflate)), 
+           col = cols.rb, zlim = diff.range,
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+#Coeffs from 1982-2015 and 2019
+temp <- array(A.coef, dim = c(2, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+
+spat.coefs <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,1]), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,2]), 
            col = tim.colors(256), 
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
