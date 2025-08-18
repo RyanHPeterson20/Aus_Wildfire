@@ -650,7 +650,6 @@ diff.range <- c(-diff.max , diff.max)
 #TODO: get red-blue diverge colors
 cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(48))
 
-
 image.plot(list(x = lon.values, y = rev(lat.values), z = t(oisst.diff)), 
            col = cols.rb, zlim = diff.range,
            xlab = "Lon", ylab = "Lat")
@@ -681,6 +680,7 @@ image.plot(list(x = lon.values, y = rev(lat.values), z = t(godas.diff2018)),
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
 
+
 #2019-2018
 oisst.difflate <- (spat.mean.oisst2019 - spat.mean.oisst2018)
 godas.difflate <- (spat.mean.godas2019 - spat.mean.godas2018)
@@ -695,20 +695,60 @@ image.plot(list(x = lon.values, y = rev(lat.values), z = t(godas.difflate)),
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
 
-#Coeffs from 1982-2015 and 2019
-temp <- array(A.coef, dim = c(2, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
 
-spat.coefs <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+#Coeffs from 1982-2015 and 2019
+
+## oisst/godas coefs from 1982-2015
+#coef.max <- max(abs(sst.anom.godas$coef), na.rm = TRUE)
+coef.max <- max(abs(sst.anom.oisst$coef), na.rm = TRUE)
+
+temp1 <- array(sst.anom.godas$coef, dim = c(2, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.coefs.godas <- aperm(temp1, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+temp2 <- array(sst.anom.oisst$coef, dim = c(2, ny, nx)) 
+spat.coefs.oisst <- aperm(temp2, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+range(spat.coefs[,,2], na.rm = TRUE)
 
 image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,1]), 
-           col = tim.colors(256), 
+           col = cols.rb, zlim = c(-coef.max, coef.max),
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
 
 image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,2]), 
-           col = tim.colors(256), 
+           col = cols.rb, zlim = c(-0.075, 0.075),
            xlab = "Lon", ylab = "Lat")
 world(add=TRUE)
+
+#coeffs from 1982-2019
+coef.max2019 <- max(abs(sst.anom.godas2019$coef), na.rm = TRUE)
+
+temp1 <- array(sst.anom.godas2019$coef, dim = c(2, ny, nx)) 
+spat.coefs.godas2019 <- aperm(temp1, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+temp2 <- array(sst.anom.oisst2019$coef, dim = c(2, ny, nx)) 
+spat.coefs.oisst2019 <- aperm(temp2, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,1]), 
+           col = cols.rb, zlim = c(-coef.max2019, coef.max2019),
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = spat.coefs[,,2]), 
+           col = cols.rb, zlim = c(-0.075, 0.075),
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+
+#coeff differences
+
+
+
+
+
+
+##-------- TEST SECTION -------##
 
 
 #Spatial detrend coefs
@@ -770,6 +810,7 @@ rect(40, -5, 100, 5, border = "black")
 world(add=TRUE)
 dev.off()
 
+
 #just for iod domain
 k <- 13
 pIOD.resid <- aperm(sst.anom.pIOD, c(3, 2, 1)) 
@@ -777,12 +818,10 @@ pIOD.resid <- aperm(sst.anom.pIOD, c(3, 2, 1))
 image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = pIOD.resid[,,k]), 
            col = rev(cols), breaks = breaks.dumb, zlim = resid.range, 
            xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-           #axes = FALSE)
+#axes = FALSE)
 world(add=TRUE)
 
 
-
-##------TEST SECTION-----##
 #TODO: delete when done
 ##test anomalies
 A <- sst.array #as [lon, lat, time]
