@@ -1,12 +1,12 @@
 
-#R script for finding SST anomalies
+#R script for finding SST anomalies and EOF/PCAs
 
 #libraries
 #.nc files
 suppressMessages(library(ncdf4))
 suppressMessages(library(terra))
 
-# date mgmt
+# date/data mgmt
 suppressMessages(library(lubridate))
 suppressMessages(library(abind))
 
