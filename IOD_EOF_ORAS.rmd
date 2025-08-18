@@ -43,6 +43,8 @@ load("sst_base.rda") #mostly for the lon.values and lat.values
 
 ```{r data_clean}
 #TODO: explore the data to see how we need to prep it
+nc.ORAS.1982S$var
+lon.test <- ncvar_get(nc.ORAS.1982S, "lon")
 
 #wide, reduced boundary (Indian Ocean)
 wide_maxLon <- 120
@@ -50,7 +52,8 @@ wide_minLon <- 30
 wide_maxLat <- 20
 wide_minLat <- -20
 
-
+lon.range <- c(wide_minLon, wide_maxLon)
+lat.range <- c(wide_minLat, wide_maxLat)
 
 #TODO: functionalize this since we will have a lot of individual files.
 
@@ -58,16 +61,42 @@ wide_minLat <- -20
 get.lat <- ncvar_get(nc.ORAS.1982S, "nav_lat")
 get.lon <- ncvar_get(nc.ORAS.1982S, "nav_lon")
 
+range(get.lon)
+range(get.lat)
+
+#note the correction here is just to interp to a grid
+grid.list <- list(x = lon.values,
+                    y = lat.values)
+
+#TODO: finalize the interpolation to a grid then funcationalize and run through SST anoms
+
+
+
 #get sst data
 sst.oras <- ncvar_get(nc.ORAS.1982S, "sosstsst")
 
+iod.mask <- get.lat >= wide_minLat & get.lat <= wide_maxLat &
+        get.lon >= wide_minLon & get.lon <= wide_maxLon
+
+lat.in <- get.lat[iod.mask]
+lon.in <- get.lon[iod.mask]
+sst.oras.in <- sst.oras[iod.mask]
 
 
+as.index <- which(iod.mask, arr.ind = TRUE)
 ```
 
 
 ```{r test_viz}
 #for testing the visualization of a single month and year. 
+
+quilt.plot(lon.in, lat.in, sst.oras.in, zlim = c(20, 31))
+world(add= TRUE)
+
+
+image(get.lon, rev(get.lat), iod.mask, col = c("white", "steelblue"),
+      xlim = c(30, 120), ylim = c(-20,20))
+world(add= TRUE)
 ```
 
 
