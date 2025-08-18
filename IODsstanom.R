@@ -23,11 +23,21 @@ suppressMessages(library(pracma))
 #load in data
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
 load("sst_base.rda")
+load("sst_extend.rda")
+
 
 #setup 
 lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.new))
 
 sst.OISST.masked <- ifelse(lsm.IOD.array == 1, sst.OISST.new, NA)
+
+#updated 
+lsm.IOD.array2 <- array(lsm.IOD, dim = dim(sst.OISST.new2))
+
+sst.OISST.masked2 <- ifelse(lsm.IOD.array2 == 1, sst.OISST.new2, NA)
+
+dim(sst.OISST.masked2)
+dim(sst.godas2)
 
 #TODO: check for NA's across the entire period (that is, find a uniform LSM)
 #check on SODA
@@ -137,8 +147,7 @@ sst.anom.soda <- sst.anoms(sst.interp.SODA)
 #get SON average of SST anomalies
 sst.anom.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + sst.anom.soda$anom)/3
 
-#get EOFs for full Indian Ocean region, then 
-#reproduce Fig 1a and 1b: project SST anoms onto EOF1 and EOF2
+#TODO: add back in pca for "full" region
 nt <- 34
 nx <- length(lon.values)
 ny <- length(lat.values)
@@ -147,38 +156,6 @@ sst.anom <- array(sst.anom.avg, dim = c(nt, ny, nx))
 pca.base <- sst.eof(sst.anom, kmode = 2)
 
 eof.base <- pca.base$EOF
-pc.base <- pca.base$PC
-
-pc.base1 <- scale(pc.base[,1], center = TRUE, scale = TRUE)
-pc.base2 <- scale(pc.base[,2], center = TRUE, scale = TRUE)
-
-temp <- array(t(eof.base), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
-#v.eof1 <- temp[1,,]
-#v.eof2 <- temp[2,,]
-eof.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
-
-#setup color and range
-eof.absmax <- max(abs(eof.spatial), na.rm = TRUE)
-eof.range <- c(-eof.absmax, eof.absmax) 
-
-#color setup
-cols.ryb <- colorRampPalette(brewer.pal(11, "RdYlBu"))(24)
-brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
-
-#Note: not the actual 1a and 1b figures, they use the PCs from the reduced pIOD domain
-#TODO: save a final image
-image.plot(list(x = lon.values, y = rev(lat.values), z = eof.spatial[,,1]), 
-           col = cols.ryb, breaks = brks, zlim = eof.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = eof.spatial[,,2]), 
-           col = cols.ryb, breaks = brks, zlim = eof.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
 
 
 #select for reduced region pIOD (redo from earlier, redundant but oh-well)
@@ -201,9 +178,13 @@ sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lo
 #reduced IOD pca
 pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
 
+V_eof <- pca.pIOD$EOF
 pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
 
 pc.std.IOD[,1] <- -pc.std.IOD[,1] 
+
+PC1 <- pc.std.IOD[,1]
+PC2 <- pc.std.IOD[,2]
 
 s.index <- (pc.std.IOD[,1] + pc.std.IOD[,2])/sqrt(2)
 m.index <- (pc.std.IOD[,1] - pc.std.IOD[,2])/sqrt(2)
@@ -212,6 +193,10 @@ m.index <- (pc.std.IOD[,1] - pc.std.IOD[,2])/sqrt(2)
 plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
 lines(1:34, m.index, col = "darkgreen")
 abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+#PC-ts for PC1 and PC2
+plot(1:34, pc.std.IOD[,1], type = "l")
+plot(1:34, pc.std.IOD[,2], type = "l")
 
 plot(pc.std.IOD[,1], pc.std.IOD[,2], pch = 16, xlim = c(-2,4), ylim = c(-3, 5),
      xlab = "PC1", ylab = "PC2", col = "darkblue")
@@ -253,6 +238,30 @@ proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
 
 proj.spatial <- proj.spatial/34
 
+
+#TODO: run quick test for figs 1e & 1f
+#work on this later, I might be onto somethign
+EOF1.full <- proj.spatial[,,1]
+EOF2.full <- proj.spatial[,,2]
+
+test.1 <- PC1 %*% t(proj1) 
+test.2 <- PC2 %*% t(proj2)
+
+spatial.test1 <- matrix(NA, ncol = 3600, nrow = 34)
+spatial.test2 <- matrix(NA, ncol = 3600, nrow = 34)
+
+spatial.test1[ ,eof.mask] <- test.1
+spatial.test2[ ,eof.mask] <- test.2
+
+
+#test location [6,1]
+proj.spatial[6,1,1] +proj.spatial[6,1,2]
+s.eof[6,1]
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = s.eof), 
+      xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
 #setup color and range
 eof.absmax <- max(abs(proj.spatial), na.rm = TRUE)
 eof.range <- c(-eof.absmax, eof.absmax) 
@@ -266,7 +275,7 @@ leg.breaks <- seq(-0.6, 0.6, 0.1)
 
 setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
 
-#pIOD indices
+#figs 1a and 1b reproduced here.
 png(filename = "eof1_1a.png", width = 2400, height = 1600, res = 250)
 par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
 image(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,1]), 
@@ -331,28 +340,51 @@ dev.off()
 
 
 #
-temp <- array(t(V_eof), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
+temp <- array(t(V_eof), dim = c(2, 10, 60))  # t(var) is [nt, ny*nx]
 #v.eof1 <- -temp[1,,]
 #v.eof2 <- temp[2,,]
 eof.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
 #eof.spatial <- aperm(Q_net_1, c(2, 1, 3))
 
 #setup color and range
+#setup color and range
 eof.absmax <- max(abs(eof.spatial), na.rm = TRUE)
 eof.range <- c(-eof.absmax, eof.absmax) 
-roma_col <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
 
-brks <- seq(eof.range[1], eof.range[2], length.out = length(roma_col) + 1)
+#color setup
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
 
 image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = -eof.spatial[,,1]), 
-           col = roma_col, breaks = brks, zlim = eof.range, 
+           col = cols.ryb, breaks = brks, zlim = eof.range, 
            xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
 #axes = FALSE)
 world(add=TRUE)
 
-
 image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = eof.spatial[,,2]), 
-           col = roma_col, breaks = brks, zlim = eof.range, 
+           col = cols.ryb, breaks = brks, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+#naive s.eof, m.eof
+eof1.std <- scale(-eof.spatial[,,1])
+eof2.std <- scale(eof.spatial[,,2])
+s.eof <- (eof1.std + eof2.std)/sqrt(2)
+m.eof <- (eof1.std - eof2.std)/sqrt(2)
+
+pIODeof.absmax <- max(abs(s.eof), abs(m.eof), na.rm = TRUE)
+pIODeof.range <- c(-pIODeof.absmax, pIODeof.absmax) 
+brks.new <- seq(pIODeof.range[1], pIODeof.range[2], length.out = length(cols.ryb) + 1)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = s.eof), 
+           col = cols.ryb, breaks = brks.new, zlim = pIODeof.range, 
+           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
+#axes = FALSE)
+world(add=TRUE)
+
+image.plot(list(x = lon.values.IOD, y = rev(lat.values.IOD), z = m.eof), 
+           col = cols.ryb, breaks = brks.new, zlim = pIODeof.range, 
            xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
 #axes = FALSE)
 world(add=TRUE)
@@ -410,6 +442,202 @@ dev.off()
 ## moderate years 1982, 1987, 2015 (index: 1, 6, 34)
 ## along with spatial mean, linear coeffs
 
+##SST anomalies (detrended)
+temp <- array(sst.anom.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#1994 SON anom detrended
+k <- 13
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: SST Anomalies", adj = 0)
+dev.off()
+
+
+#1997 SON anom detrended
+k <- 16
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#extended fig1b
+png(filename = "sst1997anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+      col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: SST Anomalies", adj = 0)
+dev.off()
+
+#2006 SON anom detrended
+k <- 25
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#extended fig1c
+png(filename = "sst2006anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+      col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: SST Anomalies", adj = 0)
+dev.off()
+
+
+#1982 SON anom detrended
+k <- 1
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#extended fig2a
+png(filename = "sst1982anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+      col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: SST Anomalies", adj = 0)
+dev.off()
+
+
+#1987 SON anom detrended
+k <- 6
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#extended fig2b
+png(filename = "sst1987anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+      col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: SST Anomalies", adj = 0)
+dev.off()
+
+
+#2015 SON anom detrended
+k <- 34
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#extended fig2c
+png(filename = "sst2015anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+      col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: SST Anomalies", adj = 0)
+dev.off()
+
+
+#Get spatial mean and coefs for 1982 to 2015
+#godas mean
+#spat.mean <- array(sst.anom.godas$mean, dim = c(ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.mean <- array(sst.anom.oisst$mean, dim = c(ny, nx))
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean)), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+
+#Get spatial mean and coefs for 1982 to 2019
+sst.anom.godas2019 <- sst.anoms(sst.godas2)
+sst.anom.oisst2019 <- sst.anoms(sst.OISST.masked2)
+
+spat.mean <- array(sst.anom.oisst2019$mean, dim = c(ny, nx))
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = t(spat.mean)), 
+           col = tim.colors(256), 
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
 
 #TODO: set-up preferred spatial colors
 #match SST anomalies (deg C) from Cai et al 2021. n = 12, with most colors between (-1, 1)
@@ -418,7 +646,6 @@ rybcol.12 <- rev(divergingx_hcl(n = 12, palette = "RdYlBu"))
 rybcol.48 <- rev(divergingx_hcl(n = 48, palette = "RdYlBu"))
 
 brks <- seq(eof.range2[1], eof.range2[2], length.out = length(roma_col) + 1)
-
 
 #Spatial Mean
 #using var.mean
@@ -477,6 +704,7 @@ brks <- seq(resid.range[1], resid.range[2], length.out = length(rybcol.48) + 1)
 cols <- colorRampPalette(brewer.pal(11, "RdYlBu"))(12)
 breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
 
+
 image.plot(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
            col = rev(cols), breaks = breaks.dumb, zlim = resid.range, 
            xlab = "Lon", ylab = "Lat", #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
@@ -486,6 +714,7 @@ axis(2)
 box()
 rect(40, -5, 100, 5, border = "black")
 world(add=TRUE)
+dev.off()
 
 #just for iod domain
 k <- 13
