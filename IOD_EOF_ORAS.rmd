@@ -1,0 +1,75 @@
+---
+title: "IOF_EOF_ORAS"
+author: "Ryan Peterson"
+date: "2025-08-10"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#.nc files
+suppressMessages(library(ncdf4))
+suppressMessages(library(terra))
+
+# date/data mgmt
+suppressMessages(library(lubridate))
+suppressMessages(library(abind))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+suppressMessages(library(colorspace))
+suppressMessages(library(RColorBrewer))
+suppressMessages(library(scales)) #for adjusting opacity
+```
+
+```{r import}
+#import some of the associated data
+setwd("~/CO_AUS/Aus_CO-main")
+
+#ORAS5
+#sept 1982
+nc.ORAS.1982S <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198209_CONS_v0.1.nc")
+
+```
+
+```{r load_ins}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+load("sst_base.rda") #mostly for the lon.values and lat.values
+```
+
+
+```{r data_clean}
+#TODO: explore the data to see how we need to prep it
+
+#wide, reduced boundary (Indian Ocean)
+wide_maxLon <- 120
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+
+
+#TODO: functionalize this since we will have a lot of individual files.
+
+#lon/lat matrices
+get.lat <- ncvar_get(nc.ORAS.1982S, "nav_lat")
+get.lon <- ncvar_get(nc.ORAS.1982S, "nav_lon")
+
+#get sst data
+sst.oras <- ncvar_get(nc.ORAS.1982S, "sosstsst")
+
+
+
+```
+
+
+```{r test_viz}
+#for testing the visualization of a single month and year. 
+```
+
+
+
+

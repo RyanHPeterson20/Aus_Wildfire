@@ -47,6 +47,7 @@ dim(sst.godas2)
 
 #internal functions
 
+#TODO: remove this later after the functions are finalized in pIOD_functions.R
 
 #following the .ncl method for cmip5 model data
 #currently only provides SON anoms
@@ -439,6 +440,61 @@ abline(h = 0.5, lty = 2)
 abline(v = 1, lty = 2)
 dev.off()
 
+#extension to 2019 (from 1982 to 2019)
+sst.anom.godas2019 <- sst.anoms(sst.godas2)
+sst.anom.oisst2019 <- sst.anoms(sst.OISST.masked2)
+
+sst.anom.avg2019 <- (sst.anom.godas2019$anom + sst.anom.oisst2019$anom)/2
+
+sst.anom2019 <- array(sst.anom.avg2019, dim = c(38, ny, nx)) 
+sst.anom.pIOD2019 <- sst.anom2019[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+
+#reduced IOD pca 1982-2019
+#with naive detrend
+pca.pIOD2019 <- sst.eof(sst.anom.pIOD2019, kmode = 2)
+
+pc.std.IOD2019 <- scale(pca.pIOD2019$PC, center = TRUE, scale = TRUE)
+
+pc.std.IOD2019[,1] <- -pc.std.IOD2019[,1] 
+PC1.2019 <- pc.std.IOD2019[,1]
+PC2.2019 <- pc.std.IOD2019[,2]
+
+s.index2019 <- (PC1.2019 + PC2.2019)/sqrt(2)
+m.index2019 <- (PC1.2019 -PC2.2019)/sqrt(2)
+
+plot(1:38, s.index2019, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:38, m.index2019, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+temp <- array(sst.anom.avg2019, dim = c(38, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#2019 SON anom detrended
+k <- 38
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+      col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+
+#detrend using only 1982-2015 mean and detrend
+
+
+
+##---- Spatial Visualization ----##
 
 ## strong years 1994, 1997, 2006 (index: 13, 16, 25)
 ## moderate years 1982, 1987, 2015 (index: 1, 6, 34)
@@ -742,9 +798,34 @@ world(add=TRUE)
 
 
 #coeff differences
+oisst.diffcoef1 <- (spat.coefs.oisst2019[,,1] - spat.coefs.oisst[,,1])
+godas.diffcoef1 <- (spat.coefs.godas2019[,,1] - spat.coefs.godas[,,1])
 
+oisst.diffcoef2 <- (spat.coefs.oisst2019[,,2] - spat.coefs.oisst[,,2])
+godas.diffcoef2 <- (spat.coefs.godas2019[,,2] - spat.coefs.godas[,,2])
 
+diff.coefrange1 <- range(oisst.diffcoef1, godas.diffcoef1, na.rm = TRUE) 
+diff.coefrange2 <- range(oisst.diffcoef2, godas.diffcoef2, na.rm = TRUE) 
 
+image.plot(list(x = lon.values, y = rev(lat.values), z = oisst.diffcoef1), 
+           col = cols.rb, zlim = c(-0.3, 0.3),
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = godas.diffcoef1), 
+           col = cols.rb, zlim = c(-0.3, 0.3),
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = oisst.diffcoef2), 
+           col = cols.rb, zlim = c(-0.03, 0.03),
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
+
+image.plot(list(x = lon.values, y = rev(lat.values), z = godas.diffcoef2), 
+           col = cols.rb, zlim = c(-0.03, 0.03),
+           xlab = "Lon", ylab = "Lat")
+world(add=TRUE)
 
 
 
