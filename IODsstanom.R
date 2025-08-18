@@ -165,6 +165,7 @@ eof.range <- c(-eof.absmax, eof.absmax)
 cols.ryb <- colorRampPalette(brewer.pal(11, "RdYlBu"))(24)
 brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
 
+#Note: not the actual 1a and 1b figures, they use the PCs from the reduced pIOD domain
 #TODO: save a final image
 image.plot(list(x = lon.values, y = rev(lat.values), z = eof.spatial[,,1]), 
            col = cols.ryb, breaks = brks, zlim = eof.range, 
@@ -178,179 +179,9 @@ image.plot(list(x = lon.values, y = rev(lat.values), z = eof.spatial[,,2]),
 #axes = FALSE)
 world(add=TRUE)
 
-#TODO: project SST anoms onto each EOF pattern
-eof.mask <- is.finite(eof.base[,1]) #currently looking at eof1
-
-v.eof1 <- eof.base[eof.mask,1] #eof1 vector (may or may not use this)
-x.anoms <- sst.anom.avg[,eof.mask] #sst anom data matrix
-
-spatial.proj <- matrix(NA, ncol = 2, nrow = 3600)
-proj1 <- t(x.anoms) %*% pc.std.IOD[,1]
-proj2 <- t(x.anoms) %*% pc.std.IOD[,2]
-
-#proj1 <- t(x.anoms) %*% pca.pIOD$PC[,1]
-#proj2 <- t(x.anoms) %*% pca.pIOD$PC[,2]
-
-spatial.proj[eof.mask, ] <- cbind(proj1, proj2)
-
-temp <- array(t(spatial.proj), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
-#v.eof1 <- temp[1,,]
-#v.eof2 <- temp[2,,]
-proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
-
-proj.spatial <- proj.spatial/34
-
-#setup color and range
-eof.absmax <- max(abs(proj.spatial), na.rm = TRUE)
-eof.range <- c(-eof.absmax, eof.absmax) 
-
-#color setup
-cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
-brks1 <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
-brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
-
-#TODO: save a final image
-#TODO: adjust to more "exactly" match
-image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,1]), 
-           col = cols.ryb, breaks = brks1, zlim = eof.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,2]), 
-           col = cols.ryb, breaks = brks1, zlim = eof.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-#TODO: get everything fixed below here 
-#TRY!!! (I think this will be it)
-proj1 <- t(x.anoms) %*% s.index
-proj2 <- t(x.anoms) %*% m.index
-#TODO: then repeat the above steps!
-
-proj1 <- scale(proj1)
-proj2 <- scale(proj2)
-
-spatial.proj <- matrix(NA, ncol = 2, nrow = 3600)
-spatial.proj[eof.mask, ] <- cbind(proj1, proj2)
-
-temp <- array(t(spatial.proj), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
-#v.eof1 <- temp[1,,]
-#v.eof2 <- temp[2,,]
-proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
-
-#setup color and range
-eof.absmax <- max(abs(proj.spatial), na.rm = TRUE)
-eof.range <- c(-eof.absmax, eof.absmax) 
-
-#color setup
-cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
-brks1 <- c(eof.range[1], seq(-1, 1, 0.2), eof.range[2])
-brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
-
-#TODO: save a final image
-#TODO: adjust to more "exactly" match
-image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,1]), 
-           #col = cols.ryb, breaks = brks1, zlim = eof.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,2]), 
-           col = cols.ryb, breaks = brks1, zlim = eof.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-#TODO: delete some of these attemps
-#quick test, redo later
-s.test <- (proj.spatial[,,1] + proj.spatial[,,2])
-
-index.absmax <- max(abs(s.test), na.rm = TRUE)
-index.range <- c(-index.absmax, index.absmax) 
-brks.index <- c(index.absmax[1], seq(-1, 1, 0.2), index.range[2])
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = s.test), 
-           col = cols.ryb, breaks = brks.index, zlim = index.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
 
 
-#Update for figures 1e and 1f.
-proj1.scale <- proj1/34
-proj2.scale <- proj2/34
-
-test.strong <- (proj1.scale + proj2.scale)
-test.moderate <- (proj1.scale - proj2.scale)
-
-test.index <- matrix(NA, ncol = 2, nrow = 3600)
-test.index[eof.mask, ] <-  cbind(test.strong, test.moderate)
-
-temp <- array(t(test.index), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
-#v.eof1 <- temp[1,,]
-#v.eof2 <- temp[2,,]
-proj.index <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
-
-
-
-brks.index <- seq(-1.2, 1.2, 0.2)
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = proj.index[,,1]), 
-           col = cols.ryb, breaks = brks.index, #zlim = index.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = proj.index[,,2]), 
-           col = cols.ryb, breaks = brks.index, #zlim = index.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-#reconstruction (UDV^T) of temp anoms
-z1 <- pca.pIOD$PC[1,1] %*% t(proj1)
-z2 <- pca.pIOD$PC[1,2] %*% t(proj2)
-
-#TODO: redo below with a single year in the above PCs
-
-#test.z1 <- colSums(z1)
-#test.z2 <- colSums(z2)
-
-spatial.anoms <- matrix(NA, ncol = 2, nrow = 3600)
-spatial.anoms[eof.mask, ] <-  cbind(z1, z2)
-
-temp <- array(t(spatial.anoms), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
-#v.eof1 <- temp[1,,]
-#v.eof2 <- temp[2,,]
-proj.anoms <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
-
-s.spatial <- (proj.anoms[,,1] + proj.anoms[,,2])/sqrt(2)
-m.spatial <- (proj.anoms[,,1] - proj.anoms[,,2])/sqrt(2)
-
-range(s.spatial, na.rm = TRUE)
-#setup color and range
-index.absmax <- max(abs(s.spatial), abs(m.spatial), na.rm = TRUE)
-index.range <- c(-index.absmax, index.absmax) 
-
-brks.index <- c(index.range[1], seq(-1, 1, 0.2), index.range[2])
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = -s.spatial/34), 
-           #col = cols.ryb, breaks = brks.index, zlim = index.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-image.plot(list(x = lon.values, y = rev(lat.values), z = -m.spatial/34), 
-           #col = cols.ryb, breaks = brks.index, zlim = index.range, 
-           xlab = "Lon", ylab = "Lat") #, main = paste0("OISST v2: ", format(as.Date(times[25+1]), "%B %Y")))
-#axes = FALSE)
-world(add=TRUE)
-
-
-
-#select for reduced region pIOD 
+#select for reduced region pIOD (redo from earlier, redundant but oh-well)
 IOD_maxLon <- 100
 IOD_minLon <- 40
 IOD_maxLat <- 5
@@ -397,10 +228,79 @@ abline(v = 1, lty = 2)
 abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
 
 
-#TODO: move the sst regression to here
+#--sst regression to here: (fig 1a and 1b)
+#project SST anoms onto each EOF pattern
+eof.mask <- is.finite(eof.base[,1]) #currently looking at eof1
+
+v.eof1 <- eof.base[eof.mask,1] #eof1 vector (may or may not use this)
+x.anoms <- sst.anom.avg[,eof.mask] #sst anom data matrix
+
+spatial.proj <- matrix(NA, ncol = 2, nrow = 3600)
+proj1 <- t(x.anoms) %*% pc.std.IOD[,1]
+proj2 <- t(x.anoms) %*% pc.std.IOD[,2]
+
+#proj1 <- t(x.anoms) %*% pca.pIOD$PC[,1]
+#proj2 <- t(x.anoms) %*% pca.pIOD$PC[,2]
+
+spatial.proj[eof.mask, ] <- cbind(proj1, proj2)
 
 
-#TODO: testing transparent saves
+
+temp <- array(t(spatial.proj), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
+#v.eof1 <- temp[1,,]
+#v.eof2 <- temp[2,,]
+proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
+
+proj.spatial <- proj.spatial/34
+
+#setup color and range
+eof.absmax <- max(abs(proj.spatial), na.rm = TRUE)
+eof.range <- c(-eof.absmax, eof.absmax) 
+
+#color setup
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+brks1 <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
+brks <- seq(eof.range[1], eof.range[2], length.out = length(cols.ryb) + 1)
+leg.breaks <- seq(-0.6, 0.6, 0.1)
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#pIOD indices
+png(filename = "eof1_1a.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,1]), 
+      col = cols.ryb, breaks = brks1, zlim = eof.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.breaks, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+dev.off()
+
+png(filename = "eof2_1b.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = proj.spatial[,,2]), 
+      col = cols.ryb, breaks = brks1, zlim = eof.range, 
+      xlab = "Lon", ylab = "Lat",
+      axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.breaks, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+dev.off()
+
+
+#transparent saves
 setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
 
 #adjusted colors for overlay
