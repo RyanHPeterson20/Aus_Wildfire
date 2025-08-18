@@ -31,11 +31,12 @@ lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.new))
 
 sst.OISST.masked <- ifelse(lsm.IOD.array == 1, sst.OISST.new, NA)
 
-#updated 
+#updated (for up to 2019)
 lsm.IOD.array2 <- array(lsm.IOD, dim = dim(sst.OISST.new2))
 
 sst.OISST.masked2 <- ifelse(lsm.IOD.array2 == 1, sst.OISST.new2, NA)
 
+#dim check
 dim(sst.OISST.masked2)
 dim(sst.godas2)
 
@@ -46,8 +47,6 @@ dim(sst.godas2)
 
 #internal functions
 
-
-##----Main----##
 
 #following the .ncl method for cmip5 model data
 #currently only provides SON anoms
@@ -136,6 +135,9 @@ sst.eof <- function(sst.anom, kmode){
 }
 
 
+##----Main----##
+
+
 #sst anomalies SON, for 
 ##OISST
 sst.anom.oisst <- sst.anoms(sst.OISST.masked)
@@ -215,9 +217,10 @@ abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
 
 #--sst regression to here: (fig 1a and 1b)
 #project SST anoms onto each EOF pattern
-eof.mask <- is.finite(eof.base[,1]) #currently looking at eof1
+eof.mask <- is.finite(eof.base[,1]) #currently using eof1
 
-v.eof1 <- eof.base[eof.mask,1] #eof1 vector (may or may not use this)
+v.eof1 <- eof.base[eof.mask,1] #eof1 vector (may or may NOT use this)
+#TODO: potentially average here? ("for the 1982-2015 period average" - cai et al)
 x.anoms <- sst.anom.avg[,eof.mask] #sst anom data matrix
 
 spatial.proj <- matrix(NA, ncol = 2, nrow = 3600)
@@ -230,7 +233,6 @@ proj2 <- t(x.anoms) %*% pc.std.IOD[,2]
 spatial.proj[eof.mask, ] <- cbind(proj1, proj2)
 
 
-
 temp <- array(t(spatial.proj), dim = c(2, ny, nx))  # t(var) is [nt, ny*nx]
 #v.eof1 <- temp[1,,]
 #v.eof2 <- temp[2,,]
@@ -239,8 +241,8 @@ proj.spatial <- aperm(temp, c(3, 2, 1))  # [nx, ny, nt]
 proj.spatial <- proj.spatial/34
 
 
-#TODO: run quick test for figs 1e & 1f
-#work on this later, I might be onto somethign
+#TODO: finalize WIP for figs 1e and 1f
+#work on this later, I might be onto something
 EOF1.full <- proj.spatial[,,1]
 EOF2.full <- proj.spatial[,,2]
 
