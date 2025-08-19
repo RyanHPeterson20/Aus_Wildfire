@@ -43,8 +43,6 @@ load("sst_base.rda") #mostly for the lon.values and lat.values
 
 ```{r data_clean}
 #TODO: explore the data to see how we need to prep it
-nc.ORAS.1982S$var
-lon.test <- ncvar_get(nc.ORAS.1982S, "lon")
 
 #wide, reduced boundary (Indian Ocean)
 wide_maxLon <- 120
@@ -57,34 +55,212 @@ lat.range <- c(wide_minLat, wide_maxLat)
 
 #TODO: functionalize this since we will have a lot of individual files.
 
-#lon/lat matrices
+#lon/lat matrices [nx, ny] ([lon, lat])
 get.lat <- ncvar_get(nc.ORAS.1982S, "nav_lat")
 get.lon <- ncvar_get(nc.ORAS.1982S, "nav_lon")
-
-range(get.lon)
-range(get.lat)
-
-#note the correction here is just to interp to a grid
-grid.list <- list(x = lon.values,
-                    y = lat.values)
-
-#TODO: finalize the interpolation to a grid then funcationalize and run through SST anoms
-
-
 
 #get sst data
 sst.oras <- ncvar_get(nc.ORAS.1982S, "sosstsst")
 
 iod.mask <- get.lat >= wide_minLat & get.lat <= wide_maxLat &
         get.lon >= wide_minLon & get.lon <= wide_maxLon
+mask.index <- which(iod.mask, arr.ind = TRUE)
+
+lon.mask <- get.lon >= wide_minLon & get.lon <= wide_maxLon
+lat.mask <- get.lat >= wide_minLat & get.lat <= wide_maxLat
+
+true.nrow <- length(unique(mask.index[,1])) #number of unique rows
+true.ncol <- length(unique(mask.index[,2])) #number of unique cols
+nrow(mask.index)
 
 lat.in <- get.lat[iod.mask]
 lon.in <- get.lon[iod.mask]
 sst.oras.in <- sst.oras[iod.mask]
 
+sst.subset <- matrix(sst.oras[iod.mask], ncol = true.ncol)
+
+
+
+#duplicates test...
+coord_pts <- cbind(lon.in, lat.in)
+data_mat <- cbind(lon.in, lat.in, sst.oras.in)
+
+
+true_tuple <- paste(coord_pts[, 1], coord_pts[, 2], sep = "_")
+
+up_flags <- duplicated(true_tuple) | duplicated(true_tuple, fromLast = TRUE)
+dup.index <- which(up_flags)
+
+dup_mat <- data_mat[dup.index, ]
+
+#TODO: finish cleaning duplicated data
+unique_index <- !duplicated(true_tuple)
+
+length(which(unique_index == FALSE))
+
+lon.new <- lon.in[unique_index]
+lat.new <- lat.in[unique_index]
+sst.oras.new <- sst.oras.in[unique_index]
+
+#note the correction here is just to interp to a grid
+grid.list <- list(x = lon.values,
+                  y = rev(lat.values))
+obj.oras <- list(x = lon.in, y = lat.in, z = sst.subset)
+
+out.interp <- interp.surface.grid(obj.oras, grid.list) #not currently working (duplicated data)
+
+#temp work on interp surface grid, delete when fixed
+x <- grid.list$x
+y <- grid.list$y
+M <- length(x)
+N <- length(y)
+out <- matrix(NA, nrow = M, ncol = N)
+
+test.new <- cbind(rep(x[i], N), y)
+
+i <- 1
+out[i,] <- interp.surface(obj.oras, cbind(rep(x[i], N), y))
+
+
+
+ 
+#TODO: finalize the interpolation to a grid then funcationalize and run through SST anoms
+
+
+#interpolation example code for SODA3.3.1
+sst.interp.SODA <- NULL
+for (i in 1:dim(sst.soda.new)[3]) {
+  base.obj <- list(x = lon.values.soda, y = rev(lat.values.soda), z = sst.soda.new[,,i])
+
+  grid.list <- list(x = lon.values,
+                    y = lat.values)
+  
+  out.interp <- interp.surface.grid(base.obj, grid.list)
+  
+  interp.mat <- out.interp$z[ ,ncol(out.interp$z):1 ]
+  
+  sst.interp.SODA <- abind(sst.interp.SODA, interp.mat, along = 3)
+}
+
+
+
 
 as.index <- which(iod.mask, arr.ind = TRUE)
+sst.oras.mat <- sst.oras[as.index]
 ```
+
+```{r temp_clean}
+#TODO: re-sort everything to get the correct order since these are fucked!
+n <- length(lon.in) /363
+
+seq.list <- split(1:59169, ceiling(seq_along(1:59169) / 363))
+
+seq.list[[1]]
+
+lon.test <- lon.in[1:363]
+lat.test <- lat.in[1:363]
+sst.test <- sst.oras.in[1:363]
+
+#take chunk of 363 reorder, red-attached
+new.order <- c(191:363, 3:190)
+
+sst.df <- data.frame(lon = lon.test[new.order], 
+                     lat = lat.test[new.order], 
+                     sst = sst.oras.in[new.order])
+
+sst.mat <- matrix(NA, nrow = 3)
+#TODO: setup re-order loop
+for (i in 1:n) {
+  lon.temp <- lon.in[seq.list[[i]]]
+  lat.temp <- lat.in[seq.list[[i]]]
+  sst.temp <- sst.oras.in[seq.list[[i]]]
+  
+  #TODO: finish from above new.order code
+}
+
+
+#more space to clean up the 
+locs <- cbind(lon.in, lat.in)
+tps.model <- Tps(locs, sst.oras.in)
+```
+
+
+
+```{r temp_interp}
+#for getting the interp surface working with the ORAS data
+
+#this issue might be in all the na data at lower lon values,
+## use other data product to figure out when the NAs stop
+test.sst <- sst.array[,,1]
+
+#note the correction here is just to interp to a grid
+grid.list <- list(x = lon.values,
+                  y = rev(lat.values))
+obj.oras <- list(x = lon.new, y = rev(lat.new), z = sst.oras.new)
+
+out.interp <- interp.surface.grid(obj.oras, grid.list) #not currently working (duplicated data)
+
+#temp work on interp surface grid, delete when fixed
+x <- grid.list$x
+length(unique(x))
+y <- grid.list$y
+M <- length(x)
+N <- length(y)
+out <- matrix(NA, nrow = M, ncol = N)
+ncol(out)
+
+test.new <- cbind(rep(x[i], N), y)
+
+i <- 5
+out[i,] <- interp.surface(obj.oras, cbind(rep(x[i], N), y)) 
+length(interp.surface(obj.oras, cbind(rep(x[i], N), y))) #produces 80 instead of 40
+
+#internals of interp.surface
+obj <- obj.oras
+loc <- cbind(rep(x[i], N), y)
+
+x <- obj$x
+range(x)
+
+y <- obj$y
+length(y)
+range(y)
+
+z <- obj$z
+nx <- length(x)
+ny <- length(y)
+
+length(loc[, 1])
+
+lx <- approx(x, 1:nx, loc[, 1])$y
+ly <- approx(y, 1:ny, loc[, 2])$y
+lx1 <- floor(lx)
+ly1 <- floor(ly)
+
+
+
+x[lx1]
+y[ly1]
+
+cbind(lx1, ly1)
+z[cbind(lx1, ly1)]
+
+ex <- lx - lx1
+ey <- ly - ly1
+
+ex[lx1 == nx] <- 1
+ey[ly1 == ny] <- 1
+lx1[lx1 == nx] <- nx - 1
+ly1[ly1 == ny] <- ny - 1
+
+
+
+z[cbind(lx1, ly1)] * (1 - ex) * (1 - ey) + z[cbind(lx1 + 
+        1, ly1)] * ex * (1 - ey) + z[cbind(lx1, ly1 + 1)] * (1 - 
+        ex) * ey + z[cbind(lx1 + 1, ly1 + 1)] * ex * ey
+
+```
+
 
 
 ```{r test_viz}
