@@ -30,8 +30,16 @@ suppressMessages(library(scales)) #for adjusting opacity
 setwd("~/CO_AUS/Aus_CO-main")
 
 #ORAS5
+##1982
 #sept 1982
 nc.ORAS.1982S <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198209_CONS_v0.1.nc")
+#oct 1982
+nc.ORAS.1982o <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198210_CONS_v0.1.nc")
+#nov 1982
+nc.ORAS.1982n <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198211_CONS_v0.1.nc")
+
+##1983
+#sept 1983
 
 ```
 
@@ -40,8 +48,111 @@ setwd("~/CO_AUS/Aus_CO-main/pIOD")
 load("sst_base.rda") #mostly for the lon.values and lat.values
 ```
 
+```{r functions}
+array_setup <- function(nc.data, wide.lon, wide.lat){
+
+  
+  #lon/lat matrices [nx, ny] ([lon, lat])
+  get.lat <- ncvar_get(nc.data, "nav_lat")
+  get.lon <- ncvar_get(nc.data, "nav_lon")
+  
+  #get sst data
+  sst.oras <- ncvar_get(nc.data, "sosstsst")
+  
+  iod.mask <- get.lat >= wide.lat[1] & get.lat <= wide.lat[2] &
+          get.lon >= wide.lon[1] & get.lon <= wide.lon[2]
+  
+  lat.in <- get.lat[iod.mask]
+  lon.in <- get.lon[iod.mask]
+  sst.oras.in <- sst.oras[iod.mask]
+  
+  return(list(lon = lon.in,
+              lat = lat.in,
+              sst = sst.oras.in))
+}
+
+
+reformat_interpolate <- function(lon.in, lat.in, sst.oras.in, 
+                                 grid.list){
+  #reformat 
+  n <- length(lon.in) /363
+  
+  seq.list <- split(1:59169, ceiling(seq_along(1:59169) / 363))
+  
+  #take chunk of 363 reorder, and remove duplicate data manually
+  new.order <- c(191:363, 3:190)
+  
+  #TODO: setup additional matrix just for the sst data
+  sst.mat <- matrix(NA, ncol = 3)
+  colnames(sst.mat) < c("lon", "lat", "sst")
+  for (i in 1:n) {
+    lon.temp <- lon.in[seq.list[[i]]]
+    lat.temp <- lat.in[seq.list[[i]]]
+    sst.temp <- sst.oras.in[seq.list[[i]]]
+    
+    #temporary matrix setup
+    temp.mat <- cbind(lon = lon.temp[new.order], 
+                      lat = lat.temp[new.order], 
+                      sst = sst.temp[new.order])
+    
+    sst.mat <- rbind(sst.mat, temp.mat)
+  }
+  
+  sst.df <- as.data.frame(sst.mat[-1,])
+  
+  get.x <- unique(sst.df$lon)
+  get.y <- unique(sst.df$lat)
+  
+  sst.oras.matrix <- matrix(sst.df$sst, nrow = 361)
+  
+  #interpolate
+
+  obj.oras <- list(x = get.x, y = get.y, z = sst.oras.matrix)
+  
+  out.interp <- interp.surface.grid(obj.oras, grid.list) #not currently working (duplicated data)
+
+  return(out.interp$z)
+}
+
+```
+
 
 ```{r data_clean}
+
+#wide, reduced boundary (Indian Ocean)
+wide_maxLon <- 120
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+wide.lon <- c(wide_minLon, wide_maxLon)
+wide.lat <- c(wide_minLat, wide_maxLat)
+
+#lon/lat matrices [nx, ny] ([lon, lat])
+get.lat <- ncvar_get(nc.ORAS.1982S, "nav_lat")
+get.lon <- ncvar_get(nc.ORAS.1982S, "nav_lon")
+
+#get sst data
+sst.oras <- ncvar_get(nc.ORAS.1982S, "sosstsst")
+
+iod.mask <- get.lat >= wide_minLat & get.lat <= wide_maxLat &
+        get.lon >= wide_minLon & get.lon <= wide_maxLon
+
+lat.in <- get.lat[iod.mask]
+lon.in <- get.lon[iod.mask]
+sst.oras.in <- sst.oras[iod.mask]
+
+#setup gridlist
+grid.list <- list(x = lon.values,
+                  y = rev(lat.values))
+
+
+
+```
+
+
+
+```{r TESTdata_clean}
 #TODO: explore the data to see how we need to prep it
 
 #wide, reduced boundary (Indian Ocean)
@@ -64,64 +175,53 @@ sst.oras <- ncvar_get(nc.ORAS.1982S, "sosstsst")
 
 iod.mask <- get.lat >= wide_minLat & get.lat <= wide_maxLat &
         get.lon >= wide_minLon & get.lon <= wide_maxLon
-mask.index <- which(iod.mask, arr.ind = TRUE)
-
-lon.mask <- get.lon >= wide_minLon & get.lon <= wide_maxLon
-lat.mask <- get.lat >= wide_minLat & get.lat <= wide_maxLat
-
-true.nrow <- length(unique(mask.index[,1])) #number of unique rows
-true.ncol <- length(unique(mask.index[,2])) #number of unique cols
-nrow(mask.index)
 
 lat.in <- get.lat[iod.mask]
 lon.in <- get.lon[iod.mask]
 sst.oras.in <- sst.oras[iod.mask]
 
-sst.subset <- matrix(sst.oras[iod.mask], ncol = true.ncol)
+#reformat 
+n <- length(lon.in) /363
 
+seq.list <- split(1:59169, ceiling(seq_along(1:59169) / 363))
 
+#take chunk of 363 reorder, and remove duplicate data manually
+new.order <- c(191:363, 3:190)
 
-#duplicates test...
-coord_pts <- cbind(lon.in, lat.in)
-data_mat <- cbind(lon.in, lat.in, sst.oras.in)
+#TODO: setup additional matrix just for the sst data
+sst.mat <- matrix(NA, ncol = 3)
+colnames(sst.mat) < c("lon", "lat", "sst")
+for (i in 1:n) {
+  lon.temp <- lon.in[seq.list[[i]]]
+  lat.temp <- lat.in[seq.list[[i]]]
+  sst.temp <- sst.oras.in[seq.list[[i]]]
+  
+  #temporary matrix setup
+  temp.mat <- cbind(lon = lon.temp[new.order], 
+                    lat = lat.temp[new.order], 
+                    sst = sst.temp[new.order])
+  
+  sst.mat <- rbind(sst.mat, temp.mat)
+}
 
+sst.df <- as.data.frame(sst.mat[-1,])
 
-true_tuple <- paste(coord_pts[, 1], coord_pts[, 2], sep = "_")
+get.x <- unique(sst.df$lon)
+get.y <- unique(sst.df$lat)
 
-up_flags <- duplicated(true_tuple) | duplicated(true_tuple, fromLast = TRUE)
-dup.index <- which(up_flags)
-
-dup_mat <- data_mat[dup.index, ]
-
-#TODO: finish cleaning duplicated data
-unique_index <- !duplicated(true_tuple)
-
-length(which(unique_index == FALSE))
-
-lon.new <- lon.in[unique_index]
-lat.new <- lat.in[unique_index]
-sst.oras.new <- sst.oras.in[unique_index]
+sst.oras.matrix <- matrix(sst.df$sst, nrow = 361)
 
 #note the correction here is just to interp to a grid
 grid.list <- list(x = lon.values,
                   y = rev(lat.values))
-obj.oras <- list(x = lon.in, y = lat.in, z = sst.subset)
+obj.oras <- list(x = get.x, y = get.y, z = sst.oras.matrix)
 
 out.interp <- interp.surface.grid(obj.oras, grid.list) #not currently working (duplicated data)
 
-#temp work on interp surface grid, delete when fixed
-x <- grid.list$x
-y <- grid.list$y
-M <- length(x)
-N <- length(y)
-out <- matrix(NA, nrow = M, ncol = N)
-
-test.new <- cbind(rep(x[i], N), y)
-
-i <- 1
-out[i,] <- interp.surface(obj.oras, cbind(rep(x[i], N), y))
-
-
+#test output
+image.plot(list(x=lon.values, y=rev(lat.values), z=out.interp$z),
+           col = ryb_col, breaks = brks)
+world(add = TRUE)
 
  
 #TODO: finalize the interpolation to a grid then funcationalize and run through SST anoms
@@ -155,33 +255,50 @@ n <- length(lon.in) /363
 
 seq.list <- split(1:59169, ceiling(seq_along(1:59169) / 363))
 
-seq.list[[1]]
+#test run for seq.list and individual 
+#seq.list[[1]]
+lon.test <- lon.in[seq.list[[1]]]
+lat.test <- lat.in[seq.list[[1]]]
+sst.test <- sst.oras.in[seq.list[[1]]]
 
-lon.test <- lon.in[1:363]
-lat.test <- lat.in[1:363]
-sst.test <- sst.oras.in[1:363]
-
-#take chunk of 363 reorder, red-attached
-new.order <- c(191:363, 3:190)
-
-sst.df <- data.frame(lon = lon.test[new.order], 
+test.mat <- cbind(lon = lon.test[new.order], 
                      lat = lat.test[new.order], 
                      sst = sst.oras.in[new.order])
 
-sst.mat <- matrix(NA, nrow = 3)
-#TODO: setup re-order loop
+#take chunk of 363 reorder, and remove duplicate data manually
+new.order <- c(191:363, 3:190)
+
+#TODO: setup additional matrix just for the sst data
+sst.mat <- matrix(NA, ncol = 3)
+colnames(sst.mat) < c("lon", "lat", "sst")
 for (i in 1:n) {
   lon.temp <- lon.in[seq.list[[i]]]
   lat.temp <- lat.in[seq.list[[i]]]
   sst.temp <- sst.oras.in[seq.list[[i]]]
   
-  #TODO: finish from above new.order code
+  #temporary matrix setup
+  temp.mat <- cbind(lon = lon.temp[new.order], 
+                    lat = lat.temp[new.order], 
+                    sst = sst.temp[new.order])
+  
+  sst.mat <- rbind(sst.mat, temp.mat)
 }
 
+sst.df <- as.data.frame(sst.mat[-1,])
 
-#more space to clean up the 
-locs <- cbind(lon.in, lat.in)
-tps.model <- Tps(locs, sst.oras.in)
+get.x <- unique(sst.df$lon)
+get.y <- unique(sst.df$lat)
+
+sst.oras.matrix <- matrix(sst.df$sst, nrow = 361)
+
+oras.max <-max(sst.oras.matrix, na.rm = TRUE)
+ryb_col <- rev(divergingx_hcl(n = 18, palette = "RdYlBu"))
+brks <- c(-2:0, 4, 8, 12, 16, 20:30, oras.max)
+
+
+image.plot(list(x=get.x, y=get.y, z=sst.oras.matrix),
+           col = ryb_col, breaks = brks)
+world(add = TRUE)
 ```
 
 
