@@ -9,6 +9,8 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Setup
+
 ```{r library}
 #.nc files
 suppressMessages(library(ncdf4))
@@ -135,7 +137,7 @@ sst.eof <- function(sst.anom, kmode){
 ```
 
 ```{r setup}
-#setup 
+#setup (land sea mask for OISST data)
 lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.new))
 
 sst.OISST.masked <- ifelse(lsm.IOD.array == 1, sst.OISST.new, NA)
@@ -144,6 +146,48 @@ sst.OISST.masked <- ifelse(lsm.IOD.array == 1, sst.OISST.new, NA)
 lsm.IOD.array2 <- array(lsm.IOD, dim = dim(sst.OISST.new2))
 
 sst.OISST.masked2 <- ifelse(lsm.IOD.array2 == 1, sst.OISST.new2, NA)
+
+rm(lsm.IOD.array, lsm.IOD.array2)
 ```
+
+# Main
+
+## SST Anomalies
+
+Outline: 
+1. Get SST Anoms for all four data products
+
+```{r get_sstanoms}
+#sst anomalies SON, for 
+##OISST
+sst.anom.oisst <- sst.anoms(sst.OISST.masked)
+#GODAS
+sst.anom.godas <- sst.anoms(sst.array)
+#SODA
+sst.anom.soda <- sst.anoms(sst.interp.SODA)
+#ORA-S5
+sst.anom.oras <- sst.anoms(sst.oras.array, son.only = TRUE)
+
+#get SON average of 3 SST anomalies
+sst.anom.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + sst.anom.soda$anom)/3
+#get 'full' son avg for all 4 data product sst anoms
+
+sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + 
+                   sst.anom.soda$anom + sst.anom.oras$anom  )/4
+```
+
+```{r get_yearlyanoms}
+#find notable pIOD years to compare to cai et al 2021
+#strong years 1994, 1997, 2006 (index: )
+#monderate years 1982, 1987, 2015 (index: 1, , 34 )
+
+
+```
+
+
+
+# Test Section
+
+For testing some ideas
 
 
