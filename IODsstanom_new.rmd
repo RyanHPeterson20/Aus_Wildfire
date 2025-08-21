@@ -23,7 +23,7 @@ suppressMessages(library(abind))
 #visualization and interpolation
 suppressMessages(library(fields))
 suppressMessages(library(colorspace))
-suppressMessages(library(RColorBrewer))
+suppressMessages(library(RColorBrewer)) #colorRampPalette
 suppressMessages(library(scales)) #for adjusting opacity
 
 #matlab function (e.g. detrend)
@@ -52,7 +52,7 @@ sst.anoms <- function(A, son.only = FALSE){
   
   #get SON mean (get 1 sst per year (as son mean))
   if (son.only) {
-    #if only provided with 3 mothns (son) per year
+    #if only provided with 3 months (son) per year
     nyears <- nt %/% 3
     A.temp <- array(A.new, dim = c(3, nyears, ny, nx))
     A.son <- apply(A.temp[1:3, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
@@ -152,10 +152,85 @@ rm(lsm.IOD.array, lsm.IOD.array2)
 
 # Main
 
+```{r test_function}
+#test function for a son monthly data
+#only returns array
+sst.anoms.month <- function(A, son.only = FALSE){
+  
+  A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+  
+  #get dimensions from reordered array
+  nx <- dim(A.new)[3]
+  ny <- dim(A.new)[2] 
+  nt <- dim(A.new)[1]
+  
+  #get SON mean (get 1 sst per year (as son mean))
+  if (son.only) {
+    #if only provided with 3 months (son) per year
+    nyears <- nt %/% 3
+    A.temp <- array(A.new, dim = c(3, nyears, ny, nx))
+    
+    A.temp.s <- A.temp[1,,,]
+    A.temp.o <- A.temp[2,,,]
+    A.temp.n <- A.temp[3,,,]
+    
+    A.sonList <- list(A.temp.s, A.temp.o, A.temp.n)
+  }else {
+    nyears <- nt %/% 12
+    #reshape data array
+    A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+    
+    A.temp.s <- A.temp[9,,,]
+    A.temp.o <- A.temp[10,,,]
+    A.temp.n <- A.temp[11,,,]
+    
+    A.sonList <- list(A.temp.s, A.temp.o, A.temp.n)
+  }
+  
+  rm(A.temp)  
+  
+  resid.array <- NULL
+  for (j in 1:3) {
+    
+    A.son <- A.sonList[[j]]
+    #update time dim
+    nt <- dim(A.son)[1]
+      
+    #remove mean
+    var <- matrix(A.son, nrow = nt, ncol = ny * nx) #from earlier work on detrend
+    #get full period mean
+    var.mean <- colMeans(var) #TODO: visualize this spatially (transform to [lon, lat])
+    #next:...  
+    var.anom <- sweep(var, 2, colMeans(var), "-")
+    
+    #de-trend:
+    test.na <- which(!is.na(var.anom), arr.ind = TRUE) 
+    true.index <- unique(test.na[,2])
+    
+    A.resid <- matrix(NA, nrow = nt, ncol = ny*nx)
+    A.coef <- matrix(NA, nrow = 2, ncol = ny*nx)
+    
+    var.x <- seq_len(nt) #time "covariates"
+    var.y <- var.anom[ ,true.index] #response variable (sst anoms)
+      
+    #TODO: add in an elif for linear and quadratic
+    var.fit <- lm(var.y ~ var.x)
+    
+    A.resid[,true.index] <- var.fit$residuals
+    
+    resid.array <- abind(resid.array, A.resid, along = 3)
+  }
+  
+  return(resid.array)  
+}
+
+```
+
 ## SST Anomalies
 
 Outline: 
 1. Get SST Anoms for all four data products
+2. PCA/EOF 
 
 ```{r get_sstanoms}
 #sst anomalies SON, for 
@@ -176,14 +251,418 @@ sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom +
                    sst.anom.soda$anom + sst.anom.oras$anom  )/4
 ```
 
-```{r get_yearlyanoms}
-#find notable pIOD years to compare to cai et al 2021
-#strong years 1994, 1997, 2006 (index: )
-#monderate years 1982, 1987, 2015 (index: 1, , 34 )
 
+```{r get.monthly_sstanoms}
+#sst anomalies for sept, oct, nov 
+sst.oisst <- sst.anoms.month(sst.OISST.masked)
+sst.godas <- sst.anoms.month(sst.array)
+sst.soda <- sst.anoms.month(sst.interp.SODA)
+sst.oras <- sst.anoms.month(sst.oras.array, son.only = TRUE)
+
+#sst son mean
+sst.oisst.son <- apply(sst.oisst[ , ,1:3], c(1,2), mean, na.rm = TRUE)
+sst.godas.son <- apply(sst.godas[ , ,1:3], c(1,2), mean, na.rm = TRUE)
+sst.soda.son <- apply(sst.soda[ , ,1:3], c(1,2), mean, na.rm = TRUE)
+sst.oras.son <- apply(sst.oras[ , ,1:3], c(1,2), mean, na.rm = TRUE)
+
+dim(sst.oisst.son)
+dim(sst.godas.son)
+dim(sst.soda.son)
+dim(sst.oras.son)
+
+#full sst anom
+sst.son.anom <- (sst.oisst.son + sst.godas.son + 
+                   sst.soda.son + sst.oras.son  )/4
 
 ```
 
+
+```{r temp_mean_check}
+mat_list <- list(sst.anom.oisst$anom, sst.anom.godas$anom,
+                  sst.anom.soda$anom, sst.anom.oras$anom)
+
+array_new <- abind(mat_list, along = 3)
+
+mean_sst <- apply(array_new, c(1, 2), mean, na.rm = TRUE)
+dimnames(mean_sst) <- NULL
+```
+
+
+## EOF/PCA work
+
+```{r pca_work}
+#select for reduced region pIOD (redo from earlier, redundant but oh-well)
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#location range
+lon.values.IOD <- lon.values[lon.values <= IOD_maxLon & lon.values >= IOD_minLon]
+lon.range.IOD <- range(which(lon.values <= IOD_maxLon & lon.values >= IOD_minLon))
+
+lat.values.IOD <- lat.values[lat.values <= IOD_maxLat & lat.values >= IOD_minLat]
+lat.range.IOD <- range(which(lat.values <= IOD_maxLat & lat.values >= IOD_minLat))
+
+nt <- 34
+ny <- 40
+nx <- 90
+
+#sst.anom <- array(sst.full.avg, dim = c(nt, ny, nx)) 
+#sst.anom <- array(mean_sst, dim = c(nt, ny, nx)) 
+sst.anom <- array(sst.son.anom, dim = c(nt, ny, nx)) 
+
+sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+
+#reduced IOD pca
+pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
+
+pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
+
+#pc.std.IOD[,1] <- scale(pca.pIOD$PC[,1], center = TRUE, scale = TRUE)
+#pc.std.IOD[,2] <- scale(pca.pIOD$PC[,2], center = TRUE, scale = TRUE)
+
+PC1 <- -pc.std.IOD[,1]
+PC2 <- pc.std.IOD[,2]
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+PC1[16]
+PC2[16]
+
+```
+
+
+```{r PCA_overlay}
+#transparent saves
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png("PCoverlay_new.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
+#abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
+dev.off()
+```
+
+
+## Visualizations : SST Anoms
+
+```{r get_yearlyanoms}
+#find notable pIOD years to compare to cai et al 2021
+#strong years 1994, 1997, 2006 (index: 13, 16, 25)
+
+
+##SST anomalies (detrended)
+nt <- 34
+ny <- 40
+nx <- 90
+temp <- array(mean_sst, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#sst anoms for only 3 data products
+temp2 <- array(sst.anom.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid2 <- aperm(temp2, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+rm(temp, temp2)
+
+#1994 SON anom detrended
+k <- 13
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: SST Anomalies", adj = 0)
+#dev.off()
+
+
+#TODO: check on how including that 4th data product changes the anom field
+anom.diff <- spat.resid[,,k] - spat.resid2[,,k]
+diff.absmax <- max(abs(anom.diff), na.rm = TRUE)
+diff.range <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb) + 1)
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = anom.diff), 
+           col = cols.rb, breaks = breaks.diff, zlim = diff.range, 
+           xlab = "Lon", ylab = "Lat")
+title("1994: Differences from adding ORA-S5", adj = 0)
+world(add= TRUE)
+
+
+#1997 SON anom detrended
+k <- 16
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1b
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: SST Anomalies", adj = 0)
+
+#differences
+anom.diff <- spat.resid[,,k] - spat.resid2[,,k]
+diff.absmax <- max(abs(anom.diff), na.rm = TRUE)
+diff.range <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb) + 1)
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = anom.diff), 
+           col = cols.rb, breaks = breaks.diff, zlim = diff.range, 
+           xlab = "Lon", ylab = "Lat")
+title("1997: Differences from adding ORA-S5", adj = 0)
+world(add= TRUE)
+
+
+#2006 SON anom detrended
+k <- 25
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1b
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: SST Anomalies", adj = 0)
+
+#differences
+anom.diff <- spat.resid[,,k] - spat.resid2[,,k]
+diff.absmax <- max(abs(anom.diff), na.rm = TRUE)
+diff.range <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb) + 1)
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = anom.diff), 
+           col = cols.rb, breaks = breaks.diff, zlim = diff.range, 
+           xlab = "Lon", ylab = "Lat")
+title("2006: Differences from adding ORA-S5", adj = 0)
+world(add= TRUE)
+```
+
+```{r yearlyanoms_moderate}
+#moderate years 1982, 1987, 2015 (index: 1, 6, 34)
+
+##SST anomalies (detrended)
+nt <- 34
+ny <- 40
+nx <- 90
+temp <- array(sst.full.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#sst anoms for only 3 data products
+temp2 <- array(sst.anom.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid2 <- aperm(temp2, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+rm(temp, temp2)
+
+#1982 SON anom detrended
+k <- 1
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: SST Anomalies", adj = 0)
+#dev.off()
+
+
+#TODO: check on how including that 4th data product changes the anom field
+anom.diff <- spat.resid[,,k] - spat.resid2[,,k]
+diff.absmax <- max(abs(anom.diff), na.rm = TRUE)
+diff.range <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb) + 1)
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = anom.diff), 
+           col = cols.rb, breaks = breaks.diff, zlim = diff.range, 
+           xlab = "Lon", ylab = "Lat")
+title("1982: Differences from adding ORA-S5", adj = 0)
+world(add= TRUE)
+
+
+
+#1987 SON anom detrended
+k <- 6
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: SST Anomalies", adj = 0)
+#dev.off()
+
+
+#TODO: check on how including that 4th data product changes the anom field
+anom.diff <- spat.resid[,,k] - spat.resid2[,,k]
+diff.absmax <- max(abs(anom.diff), na.rm = TRUE)
+diff.range <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb) + 1)
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = anom.diff), 
+           col = cols.rb, breaks = breaks.diff, zlim = diff.range, 
+           xlab = "Lon", ylab = "Lat")
+title("1987: Differences from adding ORA-S5", adj = 0)
+world(add= TRUE)
+
+
+
+#2015 SON anom detrended
+k <- 34
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.values, y = rev(lat.values), z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: SST Anomalies", adj = 0)
+#dev.off()
+
+
+#TODO: check on how including that 4th data product changes the anom field
+anom.diff <- spat.resid[,,k] - spat.resid2[,,k]
+diff.absmax <- max(abs(anom.diff), na.rm = TRUE)
+diff.range <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb) + 1)
+
+imagePlot(list(x = lon.values, y = rev(lat.values), z = anom.diff), 
+           col = cols.rb, breaks = breaks.diff, zlim = diff.range, 
+           xlab = "Lon", ylab = "Lat")
+title("2015: Differences from adding ORA-S5", adj = 0)
+world(add= TRUE)
+
+
+```
 
 
 # Test Section
