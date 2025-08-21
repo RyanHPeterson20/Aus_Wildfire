@@ -482,6 +482,34 @@ dim(sst.oras.array)
 
 ```
 
+```{r save_data}
+#TODO: save the data 
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+
+save(sst.oras.array, 
+     file = "sst_oras5.rda")
+```
+
+
+```{r test_sstanoms}
+#checking for sst-anoms with the oras data, modifications from sst.anoms function
+A.new <- aperm(sst.oras.array, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+  
+#get dimensions from reordered array
+nx <- dim(A.new)[3]
+ny <- dim(A.new)[2] 
+nt <- dim(A.new)[1]
+
+#if only using son:  
+#TODO: adjust the original sst.anom function to account for only son months
+nyears <- nt %/% 3
+A.temp <- array(A.new, dim = c(3, nyears, ny, nx))
+
+A.son <- apply(A.temp[1:3, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+rm(A.temp)
+```
+
 
 
 # Test : Old work
