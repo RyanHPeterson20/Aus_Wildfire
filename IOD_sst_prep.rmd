@@ -1,0 +1,177 @@
+---
+title: "IOD_sst_prep"
+author: "Ryan Peterson"
+date: "2025-08-22"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+#.nc files
+suppressMessages(library(ncdf4))
+suppressMessages(library(terra))
+
+# date/data mgmt
+suppressMessages(library(lubridate))
+suppressMessages(library(abind))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+suppressMessages(library(colorspace))
+suppressMessages(library(RColorBrewer))
+suppressMessages(library(scales)) #for adjusting opacity
+```
+
+Data Prep file for the following reanalysis products:
+
+1. GODAS (NCEP Global Ocean Data Assimilation System from 1980 to 2019)
+  a. Resolution:
+2. ORA-S5 (ECMWF Ocean Reanalysis System 5 from 1979 to 2018)
+  a. Resolution
+3. OISST v2 (NOAA Optimum Interpolation SST version 2 from 1982 to 2019)
+  a. Resolution
+4. SODA3.3.1 (Simple Ocean Data Assimilation version 3.3.1 from 1980 to 2015)
+  a. Resolution
+
+
+Goal: be able to produce flexible (wrt spatial grid and time) sst arrays for each data product
+
+
+# GODAS
+
+```{r GODAS_import}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#GODAS data only (yearly .nc 1982-2015)
+#1982
+nc.GODAS.1982 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1982.nc")
+
+#1983
+nc.GODAS.1983 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1983.nc")
+
+#1984
+nc.GODAS.1984 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1984.nc")
+
+#1985
+nc.GODAS.1985 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1985.nc")
+
+#1986
+nc.GODAS.1986 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1986.nc")
+
+#1987
+nc.GODAS.1987 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1987.nc")
+
+#1988
+nc.GODAS.1988 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1988.nc")
+
+#1989
+nc.GODAS.1989 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1989.nc")
+
+#1990
+nc.GODAS.1990 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1990.nc")
+
+#1991
+nc.GODAS.1991 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1991.nc")
+
+#1992
+nc.GODAS.1992 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1992.nc")
+
+#1993
+nc.GODAS.1993 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1993.nc")
+
+#1994
+nc.GODAS.1994 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1994.nc")
+
+#1995
+nc.GODAS.1995 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1995.nc")
+
+#1996
+nc.GODAS.1996 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1996.nc")
+
+#1997
+nc.GODAS.1997 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1997.nc")
+
+#1998
+nc.GODAS.1998 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1998.nc")
+
+#1999
+nc.GODAS.1999 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1999.nc")
+
+#2000
+nc.GODAS.2000 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2000.nc")
+
+#2001
+nc.GODAS.2001 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2001.nc")
+
+#2002
+nc.GODAS.2002 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2002.nc")
+
+#2003
+nc.GODAS.2003 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2003.nc")
+
+#2004
+nc.GODAS.2004 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2004.nc")
+
+#2005
+nc.GODAS.2005 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2005.nc")
+
+#2006
+nc.GODAS.2006 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2006.nc")
+
+#2007
+nc.GODAS.2007 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2007.nc")
+
+#2008
+nc.GODAS.2008 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2008.nc")
+
+#2009
+nc.GODAS.2009 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2009.nc")
+
+#2010
+nc.GODAS.2010 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2010.nc")
+
+#2011
+nc.GODAS.2011 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2011.nc")
+
+#2012
+nc.GODAS.2012 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2012.nc")
+
+#2013
+nc.GODAS.2013 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2013.nc")
+
+#2014
+nc.GODAS.2014 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2014.nc")
+
+#2015
+nc.GODAS.2015 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2015.nc")
+
+```
+
+```{r additional_GODAS_import}
+#include back to 1980
+#1980
+nc.GODAS.1980 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1980.nc")
+
+#1981
+nc.GODAS.1981 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1981.nc")
+
+#include up to 2019
+#2016
+nc.GODAS.2016 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2016.nc")
+
+#2017
+nc.GODAS.2017 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2017.nc")
+
+#2018
+nc.GODAS.2018 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2018.nc")
+
+#2019
+nc.GODAS.2019 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2019.nc")
+```
+
+
+
