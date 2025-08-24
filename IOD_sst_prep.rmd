@@ -40,6 +40,53 @@ Data Prep file for the following reanalysis products:
 
 Goal: be able to produce flexible (wrt spatial grid and time) sst arrays for each data product
 
+Note: we are moving all the associated EOF prep files to here then moving them elsewhere.
+
+# Set-up
+
+```{r ranges}
+#indian ocean region
+wide_maxLon <- 120
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+#DMI west/WTIO (50, -10) X (70, 10) 
+wDMI_maxLon <- 70
+wDMI_minLon <- 50
+wDMI_maxLat <- 10
+wDMI_minLat <- -10
+
+#DMI east/SETIO (90, -10) X (110, 0)
+eDMI_maxLon <- 110
+eDMI_minLon <- 90
+eDMI_maxLat <- 0
+eDMI_minLat <- -10
+
+#pIOD (40, -5) X (100, 5)
+pIOD_maxLon <- 100
+pIOD_minLon <- 40 
+pIOD_maxLat <- 5
+pIOD_minLat <- -5
+
+```
+
+```{r grid_points}
+#setup grid points for 1x1 degree resolution.
+#lon.wide <- seq(wide_minLon+0.5, wide_maxLon-0.5, by = 1)
+#lat.wide <- seq(wide_minLat+0.5, wide_maxLat-0.5, by = 1)
+
+lon.wide <- seq(wide_minLon, wide_maxLon, by = 1)
+lat.wide <- seq(wide_minLat, wide_maxLat, by = 1)
+
+#grid list from 
+grid.list <- list(x = lon.wide,
+                  y = lat.wide)
+
+
+#TODO: rm() region boundaries after all the points and ranges are setup
+```
+
 
 # GODAS
 
@@ -174,4 +221,185 @@ nc.GODAS.2019 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2019.nc")
 ```
 
 
+## GODAS Functions
+
+```{r prep_functions}
+#sorting/extraction of godas .nc data
+godas_prep <- function(nc.data){
+  
+  #extract lon.lat
+  lon.grid.temp <- nc.data[["dim"]][["lon"]][["vals"]]
+  lat.grid.temp <- nc.data[["dim"]][["lat"]][["vals"]]
+  
+  #reorder lon for 
+  lon.grid.temp[lon.grid.temp >= 180] <- lon.grid.temp[lon.grid.temp >= 180] - 360
+  lon.order.temp <- order(lon.grid.temp)
+  
+  lon.grid.temp <- lon.grid.temp[lon.order.temp]
+  
+  #reorder lat
+  lat.order.temp <- order(lat.grid.temp, decreasing = TRUE)
+  lat.grid.temp <- lat.grid.temp[lat.order.temp]
+  
+  #times for months
+  times.temp <- ncvar_get(nc.data, "time") # days since 1800-01-01 00:00:0.0
+  times.temp <- as_datetime("1800-01-01T00:00:00") + days(times.temp)
+  
+  #temps, as array (lon, lat, level, time)
+  #TODO adjust from K to c (K - 273.15)
+  sst.temp <- ncvar_get(nc.data, "pottmp")
+  sst.temp <- sst.temp[lon.order.temp, lat.order.temp, 1, ] #level: depth 5m
+  
+  #adjust to C from K (c = K - 273.15)
+  sst.temp <- sst.temp - 273.15
+  
+  #return lon, lat, time, sst
+  return(list(
+    lon = lon.grid.temp,
+    lat = lat.grid.temp,
+    time = times.temp,
+    sst = sst.temp
+  ))
+}
+
+
+```
+
+## GODAS Data Setup
+
+```{r data_cleaning}
+#data cleaning 
+godas_list <- list(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
+                   nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
+                   nc.GODAS.1992, nc.GODAS.1993, nc.GODAS.1994, nc.GODAS.1995, nc.GODAS.1996,
+                   nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
+                   nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
+                   nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+
+#get lon, lat, sst, and times
+sst.GODAS.new <- NULL
+for (i in 1:length(godas_list)) {
+  nc.temp <- godas_list[[i]] 
+  
+  temp.nc.godas <- godas_prep(nc.temp)
+  temp.lon <- temp.nc.godas$lon
+  temp.lat <- temp.nc.godas$lat
+  temp.sst <- temp.nc.godas$sst
+  
+  #get reduce range (indian ocean region)
+  new.lon <- temp.lon[temp.lon <= wide_maxLon & temp.lon >= wide_minLon]
+  lon.range <- range(which(temp.lon <= wide_maxLon & temp.lon >= wide_minLon))
+  new.lat <- temp.lat[temp.lat <= wide_maxLat & temp.lat >= wide_minLat]
+  lat.range <- range(which(temp.lat <= wide_maxLat & temp.lat >= wide_minLat))
+  
+  new.sst <- temp.sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
+  
+  #interpolate to 1x1 grid
+  sst.godas.interp <- NULL
+  for (j in 1:dim(new.sst)[3]) {
+    obj.godas <- list(x = new.lon, y = rev(new.lat), z = new.sst[,,j])
+  
+    interp.out <-  interp.surface.grid(obj.godas, grid.list)
+    
+    sst.godas.interp <- abind(sst.godas.interp, interp.out$z[ ,ncol(interp.out$z):1 ], along = 3)
+  }
+  sst.GODAS.new <- abind(sst.GODAS.new, sst.godas.interp, along = 3)
+}
+
+rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
+                   nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
+                   nc.GODAS.1992, nc.GODAS.1993, nc.GODAS.1994, nc.GODAS.1995, nc.GODAS.1996,
+                   nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
+                   nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
+                   nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(sst.GODAS.new, file = "sstGODAS.rda")
+
+```
+
+
+# ORA-S5
+
+
+
+
+# OISST v2
+
+('default' data product: use as a template for other products )
+
+```{r load_data}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#begin easy with monthly OISST
+nc.OISST.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.mnmean.nc")
+
+#OISST land sea mask
+nc.OISST.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
+```
+
+## Test Section - (Move and) Delete when done
+
+
+```{r}
+#extract lon, lat
+lat.grid <- nc.OISST.month[["dim"]][["lat"]][["vals"]]
+lon.grid <- nc.OISST.month[["dim"]][["lon"]][["vals"]]
+
+#reorder lon
+lon.grid[lon.grid >= 180] <- lon.grid[lon.grid >= 180] - 360
+this.order <- order(lon.grid)
+
+lon.grid <- lon.grid[this.order]
+
+#time data
+times <- ncvar_get(nc.OISST.month, "time") # days since 1800-01-01 00:00:0.0
+times <- as_datetime("1800-01-01T00:00:00") + days(times)
+
+#sst data, as array (lon, lat, time)
+sst.oisst <- ncvar_get(nc.OISST.month, "sst")
+sst.oisst <- sst.oisst[this.order, , ]
+
+#get reduced indian ocean region
+lat.values <- lat.grid[lat.grid <= wide_maxLat & lat.grid >= wide_minLat]
+lat.range <- range(which(lat.grid <= wide_maxLat & lat.grid >= wide_minLat))
+
+lon.values <- lon.grid[lon.grid <= wide_maxLon & lon.grid >= wide_minLon]
+lon.range <- range(which(lon.grid <= wide_maxLon & lon.grid >= wide_minLon))
+
+#get OISST SST reduced matrix
+sst.OISST.new <- sst.oisst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
+
+
+```
+
+
+# SODA3.3.1
+
+
+
+# Figures
+
+(compare data products)
+
+
+```{r}
+#GODAS test
+sst.godas.test <- sst.GODAS.new[,,9]
+
+#absmax <- max(abs(sst.godas.test), na.rm = TRUE)
+sst.range <- range(sst.GODAS.new, na.rm = TRUE)
+
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(24))
+breaks.sst <- seq(sst.range[1], sst.range[2], length.out = length(cols.ryb) + 1)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = sst.godas.test), 
+           col = cols.ryb, breaks = breaks.sst, zlim = sst.range,
+           xlab = "Lon", ylab = "Lat")
+world(add = TRUE)
+
+```
 
