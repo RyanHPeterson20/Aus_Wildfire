@@ -239,15 +239,224 @@ sst.anoms.month <- function(A, son.only = FALSE){
 
 ### Individual Data Products (Yang et al, 2020)
 
+
+### Individual Data Products - Test Section
+
 ```{r test_functions}
 
 #following yang et al, 2020 we will try only quadratic detrend.
 
-#remove the quadratic trend of monthly data
+#remove the quadratic trend of monthly data 
+A <- sst.GODAS.new
+
+sst.detrend <- function(A){
+  
+  #'normal' setup
+  A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+    
+  #get dimensions from reordered array
+  nx <- dim(A.new)[3]
+  ny <- dim(A.new)[2] 
+  nt <- dim(A.new)[1]
+  
+  nyears <- nt %/% 12
+  #reshape data array
+  A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+  
+  A.temp.s <- A.temp[9,,,]
+  A.temp.o <- A.temp[10,,,]
+  A.temp.n <- A.temp[11,,,]
+  
+  rm(A.temp)
+  
+  A.sonList <- list(A.temp.s, A.temp.o, A.temp.n)
+  
+  #get quadratic trend of monthly data
+  
+  #test with sept (A.temp.s)
+  resid.array <- NULL
+  for (j in 1:3) {
+    A.son <- A.sonList[[j]]
+    #update time dim
+    nt <- dim(A.son)[1]
+    nx <- dim(A.son)[3]
+    ny <- dim(A.son)[2]
+    
+    var <- matrix(A.son, nrow = nt, ncol = ny * nx) #from earlier work on detrend
+    
+    #de-trend:
+    test.na <- which(!is.na(var), arr.ind = TRUE) 
+    true.index <- unique(test.na[,2])
+    
+    A.resid <- matrix(NA, nrow = nt, ncol = ny*nx)
+    A.coef <- matrix(NA, nrow = 2, ncol = ny*nx)
+    
+    var.x <- seq_len(nt) #time "covariates"
+    var.y <- var[ ,true.index] #response variable (sst anoms)
+      
+    #TODO: add in an elif for linear and quadratic
+    #quadratic here
+    var.fit <- lm(var.y ~ var.x + I(var.x^2))
+    
+    #linear here: var.fit <- lm(var.y ~ var.x)
+    
+    A.resid[,true.index] <- var.fit$residuals
+    
+    resid.array <- abind(resid.array, A.resid, along = 3)  
+  }
+    
+  return(resid.array)
+}
+
+
+
+sst.eigen <- function(sst.anom){
+  
+  #sst.anom as [time, lat, lon]
+  nt <- dim(sst.anom)[1]
+  ny <- dim(sst.anom)[2]
+  nx <- dim(sst.anom)[3]
+  
+  np <- ny *nx
+  
+  sst.reorder <- aperm(sst.anom, c(2,3,1)) #[ny, nx, nt]
+  
+  #X <- matrix(sst.anom, nrow = nt, ncol = ny * nx)
+  #following eof function (e.g. [space, time])
+  X <-  matrix(sst.reorder, nrow = np, ncol = nt)
+  
+  #rowSums(is.na(X))
+  #rowSums(is.finite(X))
+  
+  #get rid of NA's (masked locs)
+  keep <- rowSums(is.finite(X)) == nt
+  X.new  <- X[keep,] #data without NAs
+  
+  #modification of eof function
+  
+  cov.matrix <- t(X.new) %*% X.new
+  
+  #eigendecomposition
+  eig <- eigen(cov.matrix, symmetric = TRUE)
+  E <- diag(eig$values)
+  V1 <- eig$vectors  
+  
+  #order_idx <- order(eig$values, decreasing = TRUE) #double check E order
+  
+  V2 <- X.new %*% V1
+  
+  kmod <- 2 
+  V <- matrix(NA, nrow = nrow(V2), ncol = kmod) #EOFs
+  PC <- matrix(NA, nrow = ncol(X.new), ncol = kmod)
+  lamd <- diag(E)
+  per <- numeric(kmod)
+  
+  for (i in 1:kmod) {
+    V[, i] <- V2[, i] / sqrt(E[i, i])
+    PC[, i] <- t(V[, i]) %*% X.new
+    per[i] <- E[i, i] / sum(lamd)
+  }
+
+  return(list(EOF = V, 
+              PC = PC,
+              percent = per))
+}
+
+
+godas.detrend <- sst.detrend(sst.GODAS.new)
+
+dim(godas.detrend)
+
+son.avg <- apply(godas.detrend[ , ,1:3], c(1,2), mean, na.rm = TRUE)
+
+dim(son.avg)
+
+nt <- 34
+ny <- 41
+nx <- 91
+
+sst.anom <- array(son.avg, dim = c(nt, ny, nx)) 
+
+lon.range.new <- range(which(lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon))
+lat.range.new <- range(which(lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat))
+
+sst.anom.pIOD <- sst.anom[,lat.range.new[1]:lat.range.new[2],lon.range.new[1]:lon.range.new[2]]
+
+son.avg.pca <- sst.eigen(sst.anom.pIOD)
+
+
+#son.anom <- sweep(son.avg, 2, colMeans(son.avg), "-")
+
+#dim(son.anom)
+
+#build a new EOF function that exactly follows the Cai et al 2020 example code
+
+#TODO: turn below into a function
+sst.anom <- sst.anom.pIOD
+
+dim(sst.anom) #[nt, ny, nx]
+
 
 
 ```
 
+```{r test_figures}
+
+
+
+godas.sept <- godas.detrend[,,1]
+
+
+plot(1:34, godas.sept[,501], type = "l")
+```
+
+```{r updated_eof}
+nt <- 34
+ny <- 41
+nx <- 91
+
+sst.anom <- array(son.anom, dim = c(nt, ny, nx)) 
+
+lon.range.new <- range(which(lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon))
+lat.range.new <- range(which(lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat))
+
+sst.anom.pIOD <- sst.anom[,lat.range.new[1]:lat.range.new[2],lon.range.new[1]:lon.range.new[2]]
+
+pca.godas <- sst.eof(sst.anom.pIOD, kmode = 2)
+
+pc.std.IOD <- scale(pca.godas$PC, center = TRUE, scale = TRUE)
+
+#pc.std.IOD[,1] <- scale(pca.pIOD$PC[,1], center = TRUE, scale = TRUE)
+#pc.std.IOD[,2] <- scale(pca.pIOD$PC[,2], center = TRUE, scale = TRUE)
+
+PC1 <- -pc.std.IOD[,1]
+PC2 <- -pc.std.IOD[,2]
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+
+
+#transparent saves
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png("PCoverlay_godas.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = c(0,1), lty = c(1,2), lwd = 4)
+dev.off()
+```
 
 ```{r}
 #GODAS
@@ -265,7 +474,6 @@ lon.range.new <- range(which(lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon))
 
 lat.values.new <- lat.wide[lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat]
 lat.range.new <- range(which(lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat))
-
 
 sst.anom.pIOD <- sst.anom[,lat.range.new[1]:lat.range.new[2],lon.range.new[1]:lon.range.new[2]]
 
@@ -369,6 +577,32 @@ dimnames(mean_sst) <- NULL
 
 ## EOF/PCA work
 
+```{r pca_setup}
+#select for reduced region pIOD (redo from earlier, redundant but oh-well)
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#location range
+lon.values.IOD <- lon.values[lon.values <= IOD_maxLon & lon.values >= IOD_minLon]
+lon.range.IOD <- range(which(lon.values <= IOD_maxLon & lon.values >= IOD_minLon))
+
+lat.values.IOD <- lat.values[lat.values <= IOD_maxLat & lat.values >= IOD_minLat]
+lat.range.IOD <- range(which(lat.values <= IOD_maxLat & lat.values >= IOD_minLat))
+
+nt <- 34
+ny <- 40
+nx <- 90
+
+#sst.anom <- array(sst.full.avg, dim = c(nt, ny, nx)) 
+#sst.anom <- array(mean_sst, dim = c(nt, ny, nx)) 
+sst.anom <- array(sst.son.anom, dim = c(nt, ny, nx)) 
+
+sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+```
+
+
 ```{r pca_work}
 #select for reduced region pIOD (redo from earlier, redundant but oh-well)
 IOD_maxLon <- 100
@@ -434,6 +668,44 @@ abline(h = 0.5, lty = 2, lwd = 4)
 abline(v = 1, lty = 2, lwd = 4)
 #abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
 dev.off()
+```
+
+
+```{r alt_pca}
+#using alternative (to example code) PCA works
+sst.anom <- array(sst.full.avg, dim = c(nt, ny, nx)) 
+
+sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+
+#sst.anom as [time, lat, lon]
+nt <- dim(sst.anom.pIOD)[1]
+ny <- dim(sst.anom.pIOD)[2]
+nx <- dim(sst.anom.pIOD)[3]
+
+X <- matrix(sst.anom.pIOD, nrow = nt, ncol = ny * nx)
+
+#get rid of NA's (masked locs)
+keep <- colSums(is.finite(X)) == nt
+X.new  <- X[, keep]
+
+pca <- prcomp(X.new, center = TRUE, scale. = FALSE)
+
+PCs <- pca$x
+PCs_unit <- sweep(PCs, 2, apply(PCs, 2, sd, na.rm = TRUE), "/")
+
+PC1 <- -PCs_unit[,1]
+PC2 <- PCs_unit[,2] 
+
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
+
 ```
 
 

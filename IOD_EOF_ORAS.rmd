@@ -25,6 +25,7 @@ suppressMessages(library(RColorBrewer))
 suppressMessages(library(scales)) #for adjusting opacity
 ```
 
+
 ```{r import}
 #import some of the associated data
 setwd("~/CO_AUS/Aus_CO-main")
@@ -305,6 +306,14 @@ nc.ORAS.2015n <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_
 #TODO: add in years 2016-2019
 
 ```
+
+
+```{r import_additional}
+#ORA-S5 from 1979 to 2018
+
+
+```
+
 
 ```{r load_ins}
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
