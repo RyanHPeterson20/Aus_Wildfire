@@ -41,16 +41,33 @@ load("sst_oras5.rda")
 ```{r load_data}
 #load in new data
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-load("sstGODAS.rda")
+
+
+load("sstAnoms.rda")
 
 ```
 
 
 
+```{r setup}
+#setup (land sea mask for OISST data)
+lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.new))
+
+sst.OISST.masked <- ifelse(lsm.IOD.array == 1, sst.OISST.new, NA)
+
+#updated (for up to 2019)
+lsm.IOD.array2 <- array(lsm.IOD, dim = dim(sst.OISST.new2))
+
+sst.OISST.masked2 <- ifelse(lsm.IOD.array2 == 1, sst.OISST.new2, NA)
+
+rm(lsm.IOD.array, lsm.IOD.array2)
+```
+
+
 ```{r functions}
 #following the .ncl method for cmip5 model data
 #currently only provides SON anoms
-sst.anoms <- function(A, son.only = FALSE){
+sst.anoms <- function(A, son.only = FALSE, quadratic = FALSE){
     
   A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
   
@@ -96,10 +113,18 @@ sst.anoms <- function(A, son.only = FALSE){
   var.y <- var[ ,true.index] #response variable (sst anoms)
   
   #TODO: add in an elif for linear and quadratic, with and without intercept
-  var.fit <- lm(var.y ~ 0 + var.x)
+  
+  if (quadratic) {
+    var.fit <- lm(var.y ~ var.x + I(var.x^2))
+    A.coef[,true.index] <- var.fit$coefficients[1:2, ]
+  } else {
+    var.fit <- lm(var.y ~ var.x)
+    A.coef[,true.index] <- var.fit$coefficients
+  }
   
   A.resid[,true.index] <- var.fit$residuals
-  A.coef[,true.index] <- var.fit$coefficients
+  #TODO: update this handle quadratic fit
+  #A.coef[,true.index] <- var.fit$coefficients
   
   return(list(mean = var.mean,
               anom = A.resid,
@@ -145,21 +170,300 @@ sst.eof <- function(sst.anom, kmode){
 
 ```
 
-```{r setup}
-#setup (land sea mask for OISST data)
-lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.new))
+```{r pca_functions}
+#working with eof/pca
 
-sst.OISST.masked <- ifelse(lsm.IOD.array == 1, sst.OISST.new, NA)
+#pca/eof analysis function:
+sst.eof <- function(sst.anom, kmode){
+  #sst.anom as [time, lat, lon]
+  nt <- dim(sst.anom)[1]
+  ny <- dim(sst.anom)[2]
+  nx <- dim(sst.anom)[3]
+  
+  X <- matrix(sst.anom, nrow = nt, ncol = ny * nx)
+  
+  #get rid of NA's (masked locs)
+  keep <- colSums(is.finite(X)) == nt
+  X.new  <- X[, keep]
+  
+  svd.temp <- svd(X.new)
+  
+  #svd outputs
+  U <- svd.temp$u[ ,1:kmode]
+  D <- svd.temp$d[1:kmode]
+  V <- svd.temp$v[ ,1:kmode]
+  
+  #outputs
+  EOF.temp <- V #EOF spatial pattern
+  PC.temp <- U %*% diag(D)
+  per.temp <- D^2 / sum(svd.temp$d^2) 
+  
+  #finalize the spatial eof (pca)
+  V_eof <- matrix(NA, nrow = ny * nx, ncol = kmode)
+  
+  #add in lsm sea data
+  V_eof[keep, ] <- EOF.temp
+  
+  return(list(EOF = V_eof,
+              PC = PC.temp,
+              percent = per.temp))
+}
 
-#updated (for up to 2019)
-lsm.IOD.array2 <- array(lsm.IOD, dim = dim(sst.OISST.new2))
 
-sst.OISST.masked2 <- ifelse(lsm.IOD.array2 == 1, sst.OISST.new2, NA)
 
-rm(lsm.IOD.array, lsm.IOD.array2)
+
+#update with 'other' eof methods
+
+
+sst.eigen <- function(sst.anom){
+  
+  #sst.anom as [time, lat, lon]
+  nt <- dim(sst.anom)[1]
+  ny <- dim(sst.anom)[2]
+  nx <- dim(sst.anom)[3]
+  
+  np <- ny *nx
+  
+  sst.reorder <- aperm(sst.anom, c(2,3,1)) #[ny, nx, nt]
+  
+  #X <- matrix(sst.anom, nrow = nt, ncol = ny * nx)
+  #following eof function (e.g. [space, time])
+  X <-  matrix(sst.reorder, nrow = np, ncol = nt)
+  
+  #rowSums(is.na(X))
+  #rowSums(is.finite(X))
+  
+  #get rid of NA's (masked locs)
+  keep <- rowSums(is.finite(X)) == nt
+  X.new  <- X[keep,] #data without NAs
+  
+  #modification of eof function
+  
+  cov.matrix <- t(X.new) %*% X.new
+  
+  #eigendecomposition
+  eig <- eigen(cov.matrix, symmetric = TRUE)
+  E <- diag(eig$values)
+  V1 <- eig$vectors  
+  
+  #order_idx <- order(eig$values, decreasing = TRUE) #double check E order
+  
+  V2 <- X.new %*% V1
+  
+  kmod <- 2 
+  V <- matrix(NA, nrow = nrow(V2), ncol = kmod) #EOFs
+  PC <- matrix(NA, nrow = ncol(X.new), ncol = kmod)
+  lamd <- diag(E)
+  per <- numeric(kmod)
+  
+  for (i in 1:kmod) {
+    V[, i] <- V2[, i] / sqrt(E[i, i])
+    PC[, i] <- t(V[, i]) %*% X.new
+    per[i] <- E[i, i] / sum(lamd)
+  }
+
+  return(list(EOF = V, 
+              PC = PC,
+              percent = per))
+}
+
+```
+
+```{r temp_function}
+make_weights <- function(lat_deg, take_sqrt = TRUE) {
+  stopifnot(is.numeric(lat_deg))
+  # convert to radians
+  lat_rad <- lat_deg * pi / 180
+  # numerical guard: cos(±90°) ~ 0; tiny negatives from rounding -> clamp to 0
+  w <- pmax(cos(lat_rad), 0)
+  if (take_sqrt) w <- sqrt(w)
+  # if someone passed impossible lats, mark NA
+  w[abs(lat_deg) > 90] <- NA_real_
+  return(w)
+}
 ```
 
 # Main
+
+```{r get_sst_anoms}
+#sst anomalies SON, for 
+##OISST
+sst.anom.oisst <- sst.anoms(sst.OISST.new, quadratic = FALSE)
+#GODAS
+sst.anom.godas <- sst.anoms(sst.GODAS.new, quadratic = FALSE)
+#SODA
+sst.anom.soda <- sst.anoms(sst.SODA.new, quadratic = FALSE)
+#ORA-S5
+sst.anom.oras <- sst.anoms(sst.ORAS.new, son.only = TRUE, quadratic = FALSE)
+
+
+#get 'full' son avg for all 4 data product sst anoms
+sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + 
+                   sst.anom.soda$anom + sst.anom.oras$anom  )/4
+
+
+#scale sst.full.avg
+sst.full.scale <- apply(sst.full.avg, 2, scale, center = TRUE)
+
+sst.full.avg[,409]
+sst.full.scale[,409]
+```
+
+```{r new_eofs}
+#select for reduced region pIOD (redo from earlier, redundant but oh-well)
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#location range
+lon.values.IOD <- lon.wide[lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon]
+lon.range.IOD <- range(which(lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon))
+
+lat.values.IOD <- lat.wide[lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat]
+lat.range.IOD <- range(which(lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat))
+
+#TODO: attempt with areal weghts
+wlat <- make_weights(lat.values.IOD)
+
+nt <- 34
+ny <- 41
+nx <- 91
+
+sst.anom <- array(sst.full.avg, dim = c(nt, ny, nx)) 
+#sst.anom <- array(mean_sst, dim = c(nt, ny, nx)) 
+#sst.anom <- array(sst.son.anom, dim = c(nt, ny, nx)) 
+
+sst.anom.pIOD <- sst.anom[ ,lat.range.IOD[1]:lat.range.IOD[2], lon.range.IOD[1]:lon.range.IOD[2]]
+
+for (j in 1:nt) {
+  sst.anom.pIOD[j, ,] <- sweep(sst.anom.pIOD[j, ,], 2, wlat, `*`)
+}
+
+#reduced IOD pca
+pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
+
+sd(pca.pIOD$PC[,1])
+sd(pca.pIOD$PC[,2])
+
+PC.iod <- pca.pIOD$PC
+apply(PC.iod, 2, sd, na.rm = TRUE)
+
+PC.unit <- sweep(PC.iod, 2, apply(PC.iod, 2, sd, na.rm = TRUE), "/")
+
+#pc.std.IOD <- scale(pca.pIOD$PC, center = FALSE, scale = TRUE)
+
+#pc.std.IOD[,1] <- scale(pca.pIOD$PC[,1], center = FALSE, scale = TRUE)
+#pc.std.IOD[,2] <- scale(pca.pIOD$PC[,2], center = FALSE, scale = TRUE)
+
+PC1 <- -PC.unit[,1]
+PC2 <- PC.unit[,2]
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+PC1[16]
+PC2[16]
+
+```
+
+
+```{r}
+pc.alt <- sst.eigen(sst.anom.pIOD)
+
+pc.std.alt <- scale(pc.alt$PC, center = FALSE, scale = TRUE)
+
+#pc.std.IOD[,1] <- scale(pca.pIOD$PC[,1], center = FALSE, scale = TRUE)
+#pc.std.IOD[,2] <- scale(pca.pIOD$PC[,2], center = FALSE, scale = TRUE)
+
+PC1 <- -pc.std.alt[,1]
+PC2 <- pc.std.alt[,2]
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+PC1[16]
+PC2[16]
+
+```
+
+
+
+
+Updated work with better grid of data 
+
+```{r multi_prod}
+sst.full.avg <- (sst.GODAS.anom2 + sst.ORAS.anom2 +
+                 sst.OISST.anom2 + sst.SODA.anom2 )/4
+
+
+#multi-product averages
+mat_list <- list(sst.GODAS.anom2, sst.ORAS.anom2,
+                 sst.OISST.anom2, sst.SODA.anom2)
+
+
+array_new <- abind(mat_list, along = 4)
+
+mean_sst <- apply(array_new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(mean_sst) <- NULL
+
+dim(mean_sst)
+
+#pIOD boundaries
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#location range
+lon.values.IOD <- lon.wide[lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon]
+lon.range.IOD <- range(which(lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon))
+
+lat.values.IOD <- lat.wide[lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat]
+lat.range.IOD <- range(which(lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat))
+
+```
+
+```{r }
+sst.anom.pIOD <- sst.full.avg[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+
+dim(sst.anom.pIOD) #as [nx, ny, nt]
+sst.anom.new <- aperm(sst.anom.pIOD,  perm = c(3, 2, 1))
+
+pca.new <- sst.eof(sst.anom.new, kmode = 2)
+
+
+#pc.std.IOD <- scale(pca.new$PC, center = FALSE, scale = TRUE)
+
+pc.std.IOD[,1] <- scale(pca.new$PC[,1], center = FALSE, scale = TRUE)
+pc.std.IOD[,2] <- scale(pca.new$PC[,2], center = FALSE, scale = TRUE)
+
+PC1 <- -pc.std.IOD[,1]
+PC2 <- pc.std.IOD[,2]
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+PC1[16]
+PC2[16]
+
+```
+
+
+
+# Old-Main
 
 ```{r test_function}
 #test function for a son monthly data
@@ -572,6 +876,8 @@ array_new <- abind(mat_list, along = 3)
 
 mean_sst <- apply(array_new, c(1, 2), mean, na.rm = TRUE)
 dimnames(mean_sst) <- NULL
+
+dim(mean_sst) 
 ```
 
 

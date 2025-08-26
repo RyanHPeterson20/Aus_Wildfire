@@ -993,7 +993,28 @@ son.anom <- function(sst){
 
 ##detrend son anomalies
 son.detrend <- function(anom, order = 1){
+  #get dimensions
+  nx <- dim(anom)[1]
+  ny <- dim(anom)[2]
+  nt <- dim(anom)[3]
   
+  t <- 1:nt
+  sst.resid <- anom
+  #double for-loop (not efficient, but oh well)
+  for (i in 1:nx) {
+    for (j in 1:ny) {
+      x <- anom[i,j,]
+      if (all(!is.na(x))){ 
+        fit.lm <- switch(order,
+                         '1' = lm(x ~ t),
+                         '2' = lm(x ~ t + I(t^2)))
+    
+      }
+      
+      }
+    sst.resid[i,j,] <- fit.lm$residuals
+  }
+  return(sst.resid)
 }
 
 ```
@@ -1014,53 +1035,209 @@ sst.ORAS.anom <- son.anom(sst.ORAS.son)
 sst.OISST.anom <- son.anom(sst.OISST.son)
 sst.SODA.anom <- son.anom(sst.SODA.son)
 
+#get detrended data
+sst.GODAS.anom2 <- son.detrend(sst.GODAS.anom)
+sst.ORAS.anom2 <- son.detrend(sst.ORAS.anom)
+sst.OISST.anom2 <- son.detrend(sst.OISST.anom)
+sst.SODA.anom2 <- son.detrend(sst.SODA.anom)
+
 #dimension check
-dim(sst.GODAS.anom)
-dim(sst.ORAS.anom)
-dim(sst.OISST.anom)
-dim(sst.SODA.anom)
+dim(sst.GODAS.anom2)
+dim(sst.ORAS.anom2)
+dim(sst.OISST.anom2)
+dim(sst.SODA.anom2)
 
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(sst.GODAS.anom2, sst.ORAS.anom2,
+    sst.OISST.anom2, sst.SODA.anom2, 
+    lon.wide, lat.wide, file = "sstAnoms.rda")
 
 ```
 
 
+## SON Multi-Product Averages
+
+```{r}
+#temp location for multi prod averages.
 
 
-## Test Section - SST Anoms (Delete when done)
+```
 
+## Alternative SST Anoms
 
-```{r dtrend}
-#testing detrending function
-
-
+```{r alt_function}
+sst.anoms <- function(A, son.only = FALSE, quadratic = FALSE){
+    
+  A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+  
+  #get dimensions from reordered array
+  nx <- dim(A.new)[3]
+  ny <- dim(A.new)[2] 
+  nt <- dim(A.new)[1]
+  
+  #get SON mean (get 1 sst per year (as son mean))
+  if (son.only) {
+    #if only provided with 3 months (son) per year
+    nyears <- nt %/% 3
+    A.temp <- array(A.new, dim = c(3, nyears, ny, nx))
+    A.son <- apply(A.temp[1:3, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }else {
+    nyears <- nt %/% 12
+    #reshape data array
+    A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+    A.son <- apply(A.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }
+  
+  rm(A.temp)
+  
+  #update time dim
+  nt <- dim(A.son)[1]
+  
+  #remove mean
+  var <- matrix(A.son, nrow = nt, ncol = ny * nx) #from earlier work on detrend
+  
+  #get full period mean
+  var.mean <- colMeans(var) #TODO: visualize this spatially (transform to [lon, lat])
+  var <- sweep(var, 2, colMeans(var), "-") #TODO: check how this might hold up with irregular spatial masks
+  
+  #de-trend
+  #TODO: figure out how to work with irregular NAs in time/space (some years have different spatial NAs)
+  test.na <- which(!is.na(var), arr.ind = TRUE) 
+  true.index <- unique(test.na[,2])
+  
+  A.resid <- matrix(NA, nrow = nt, ncol = ny*nx)
+  A.coef <- matrix(NA, nrow = 2, ncol = ny*nx)
+  
+  var.x <- seq_len(nt) #time "covariates"
+  var.y <- var[ ,true.index] #response variable (sst anoms)
+  
+  #TODO: add in an elif for linear and quadratic, with and without intercept
+  
+  if (quadratic) {
+    var.fit <- lm(var.y ~ var.x + I(var.x^2))
+    A.coef[,true.index] <- var.fit$coefficients[1:2, ]
+  } else {
+    var.fit <- lm(var.y ~ var.x)
+    A.coef[,true.index] <- var.fit$coefficients
+  }
+  
+  A.resid[,true.index] <- var.fit$residuals
+  #TODO: update this handle quadratic fit
+  #A.coef[,true.index] <- var.fit$coefficients
+  
+  return(list(mean = var.mean,
+              anom = A.resid,
+              coef = A.coef))
+}
 ```
 
 
 ```{r}
-##son anomalies
-#1. compute SON (seasonal) climatology
-#2. seasonal means minus seasonal climatology
+#sst anomalies SON, for 
+##OISST
+sst.anom.oisst <- sst.anoms(sst.OISST.new, quadratic = FALSE)
+#GODAS
+sst.anom.godas <- sst.anoms(sst.GODAS.new, quadratic = FALSE)
+#SODA
+sst.anom.soda <- sst.anoms(sst.SODA.new, quadratic = FALSE)
+#ORA-S5
+sst.anom.oras <- sst.anoms(sst.ORAS.new, son.only = TRUE, quadratic = FALSE)
 
-mean(sst.GODAS.son, na.rm = TRUE)
 
-temp.mean <- apply(sst.GODAS.son, c(1, 2), mean, na.rm = FALSE)
-
-
- sweep(sst.GODAS.son, MARGIN = c(1, 2), STATS = temp.mean, FUN = "-")
-```
-
-```{r}
-#quick son avg check
-(sst.GODAS.new[21,2,9] + sst.GODAS.new[21,2,10] +sst.GODAS.new[21,2,11])/3
-sst.GODAS.son[21,2,1]
-
-(sst.ORAS.new[21,2,1] + sst.ORAS.new[21,2,2] +sst.ORAS.new[21,2,3])/3
-sst.ORAS.son[21,2,1]
+#get 'full' son avg for all 4 data product sst anoms
+sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + 
+                   sst.anom.soda$anom + sst.anom.oras$anom  )/4
 
 ```
 
 
 # Figures
+
+## SST anomalies
+
+```{r}
+##SST anomalies (detrended)
+nt <- 34
+ny <- 41
+nx <- 91
+temp <- array(sst.full.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+spat.resid <- aperm(temp, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+
+#1994 SON anom detrended
+k <- 13
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+cols_alpha <- adjustcolor(cols.ryb, alpha.f = 0.25)
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+
+png(filename = "sst1994anom_overlay.png", width = 2400, height = 1600, bg = "transparent", type = "cairo")
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = spat.resid[,,k]), 
+           col = cols_alpha, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+rect(pIOD_minLon ,pIOD_minLat , pIOD_maxLon , pIOD_maxLat, lty = 2, lwd = 5 )
+world(add=TRUE, lwd = 6)
+contour(x = lon.wide, y = lat.wide, z = spat.resid[,,k], add = TRUE, 
+        levels = breaks.dumb, drawlabels = FALSE, lwd = 4)
+dev.off()
+
+```
+
+
+```{r}
+
+#1997 SON anom detrended
+k <- 16
+resid.absmax <- max(abs(spat.resid[,,k]), na.rm = TRUE)
+resid.range <- c(-resid.absmax, resid.absmax) 
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+cols_alpha <- adjustcolor(cols.ryb, alpha.f = 0.15)
+
+breaks.dumb <- c(resid.range[1], seq(-1,1, 0.2), resid.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+png(filename = "sst1997anom_overlay.png", width = 2400, height = 1600, bg = "transparent", type = "cairo")
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = spat.resid[,,k]), 
+           col = cols_alpha, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+rect(pIOD_minLon ,pIOD_minLat , pIOD_maxLon , pIOD_maxLat, lty = 2, lwd = 5 )
+world(add=TRUE, lwd = 6)
+contour(x = lon.wide, y = lat.wide, z = spat.resid[,,k], add = TRUE, 
+        levels = breaks.dumb, drawlabels = FALSE, lwd = 4)
+dev.off()
+
+png(filename = "sst1997anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = spat.resid[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+rect(pIOD_minLon ,pIOD_minLat , pIOD_maxLon , pIOD_maxLat, lty = 2, lwd = 2 )
+world(add=TRUE, lwd = 2)
+contour(x = lon.wide, y = lat.wide, z = spat.resid[,,k], add = TRUE, 
+        levels = breaks.dumb, drawlabels = FALSE, lwd = 1)
+dev.off()
+
+```
+
 
 (compare data products)
 
