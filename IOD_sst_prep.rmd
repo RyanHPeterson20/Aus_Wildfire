@@ -318,9 +318,59 @@ rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986,
 
 dim(sst.GODAS.new)
 
-setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(sst.GODAS.new, file = "sstGODAS.rda")
 
+
+```
+
+### GODAS w/o Interpolation
+
+```{r godas_raw}
+#data cleaning 
+godas_list <- list(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
+                   nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
+                   nc.GODAS.1992, nc.GODAS.1993, nc.GODAS.1994, nc.GODAS.1995, nc.GODAS.1996,
+                   nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
+                   nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
+                   nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+
+#get lon, lat, sst, and times
+sst.GODAS.new2 <- NULL
+for (i in 1:length(godas_list)) {
+  nc.temp <- godas_list[[i]] 
+  
+  temp.nc.godas <- godas_prep(nc.temp)
+  temp.lon <- temp.nc.godas$lon
+  temp.lat <- temp.nc.godas$lat
+  temp.sst <- temp.nc.godas$sst
+  
+  #get reduce range (indian ocean region)
+  new.lon <- temp.lon[temp.lon <= wide_maxLon & temp.lon >= wide_minLon]
+  lon.range <- range(which(temp.lon <= wide_maxLon & temp.lon >= wide_minLon))
+  new.lat <- temp.lat[temp.lat <= wide_maxLat & temp.lat >= wide_minLat]
+  lat.range <- range(which(temp.lat <= wide_maxLat & temp.lat >= wide_minLat))
+  
+  sst.GODAS.new2 <- temp.sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
+  
+}
+
+rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
+                   nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
+                   nc.GODAS.1992, nc.GODAS.1993, nc.GODAS.1994, nc.GODAS.1995, nc.GODAS.1996,
+                   nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
+                   nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
+                   nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+
+
+dim(sst.GODAS.new2)
+
+
+```
+
+```{r save_godas}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(sst.GODAS.new, sst.GODAS.new2, file = "sstGODAS.rda")
 ```
 
 
@@ -675,6 +725,43 @@ reformat_interpolate <- function(lon.in, lat.in, sst.oras.in,
   return(out.interp$z)
 }
 
+
+
+reformat_oras <- function(lon.in, lat.in, sst.oras.in){
+  
+  #TODO: adjust raw numbers if needed
+  #reformat 
+  n <- length(lon.in) /363
+  
+  seq.list <- split(1:59169, ceiling(seq_along(1:59169) / 363))
+  
+  #take chunk of 363 reorder, and remove duplicate data manually
+  new.order <- c(191:363, 3:190)
+  
+  #TODO: setup additional matrix just for the sst data
+  sst.mat <- matrix(NA, ncol = 3)
+  colnames(sst.mat) < c("lon", "lat", "sst")
+  for (i in 1:n) {
+    lon.temp <- lon.in[seq.list[[i]]]
+    lat.temp <- lat.in[seq.list[[i]]]
+    sst.temp <- sst.oras.in[seq.list[[i]]]
+    
+    #temporary matrix setup
+    temp.mat <- cbind(lon = lon.temp[new.order], 
+                      lat = lat.temp[new.order], 
+                      sst = sst.temp[new.order])
+    
+    sst.mat <- rbind(sst.mat, temp.mat)
+  }
+  
+  sst.df <- as.data.frame(sst.mat[-1,])
+  
+  sst.oras.matrix <- matrix(sst.df$sst, nrow = 361)
+  
+
+  return(sst.oras.matrix)
+}
+
 ```
 
 ## ORA-S5 Data Setup
@@ -776,6 +863,40 @@ setwd("~/CO_AUS/Aus_CO-main/pIOD")
 save(sst.ORAS.new, file = "sstORAS.rda")
 
 ```
+
+
+### ORA-S5 w/o Interpolation
+ 
+ 
+```{r}
+#TODO: work in-progress code chunk
+
+#wide, reduced boundary (Indian Ocean) setup
+wide.lon <- c(wide_minLon, wide_maxLon)
+wide.lat <- c(wide_minLat, wide_maxLat)
+
+
+temp.nc <- nc.ORAS.1982s
+out.temp <- array_setup(temp.nc, wide.lon, wide.lat)
+
+temp.sst 
+
+
+#sst array setup
+sst.ORAS.new <- NULL
+for (j in 1:length(oras_list)) {
+  temp.nc <- oras_list[[j]]
+  
+  out.temp <- array_setup(temp.nc, wide.lon, wide.lat)
+  
+  temp.sst <- reformat_interpolate(out.temp$lon, out.temp$lat, 
+                     out.temp$sst, grid.list)
+  
+  sst.ORAS.new <- abind(sst.ORAS.new, temp.sst, along = 3)
+}
+
+```
+
 
 
 ## Get ORA-S5 Land-Sea Mask
@@ -1111,17 +1232,17 @@ sst.anoms <- function(A, son.only = FALSE, quadratic = FALSE){
   var.x <- seq_len(nt) #time "covariates"
   var.y <- var[ ,true.index] #response variable (sst anoms)
   
-  #TODO: add in an elif for linear and quadratic, with and without intercept
   
   if (quadratic) {
     var.fit <- lm(var.y ~ var.x + I(var.x^2))
-    A.coef[,true.index] <- var.fit$coefficients[1:2, ]
+    A.coef[,true.index] <- var.fit$coefficients[1:2, ] #only works for first two coeffs
   } else {
     var.fit <- lm(var.y ~ var.x)
     A.coef[,true.index] <- var.fit$coefficients
   }
   
   A.resid[,true.index] <- var.fit$residuals
+  
   #TODO: update this handle quadratic fit
   #A.coef[,true.index] <- var.fit$coefficients
   

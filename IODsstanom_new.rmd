@@ -42,6 +42,10 @@ load("sst_oras5.rda")
 #load in new data
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
 
+load("sstGODAS.rda")
+load("sstORAS.rda")
+load("sstOISST.rda")
+load("sstSODA.rda")
 
 load("sstAnoms.rda")
 
@@ -303,7 +307,7 @@ sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom +
 
 
 #scale sst.full.avg
-sst.full.scale <- apply(sst.full.avg, 2, scale, center = TRUE)
+sst.full.scale <- apply(sst.full.avg, 2, scale, center = FALSE, scale = TRUE)
 
 sst.full.avg[,409]
 sst.full.scale[,409]
@@ -336,9 +340,9 @@ sst.anom <- array(sst.full.avg, dim = c(nt, ny, nx))
 
 sst.anom.pIOD <- sst.anom[ ,lat.range.IOD[1]:lat.range.IOD[2], lon.range.IOD[1]:lon.range.IOD[2]]
 
-for (j in 1:nt) {
-  sst.anom.pIOD[j, ,] <- sweep(sst.anom.pIOD[j, ,], 2, wlat, `*`)
-}
+#for (j in 1:nt) {
+#  sst.anom.pIOD[j, ,] <- sweep(sst.anom.pIOD[j, ,], 2, wlat, `*`)
+#}
 
 #reduced IOD pca
 pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
@@ -366,8 +370,30 @@ plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
 lines(1:34, m.index, col = "darkgreen")
 abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 
-PC1[16]
-PC2[16]
+PC1[c(16, 25)]
+PC2[c(16, 25)]
+
+
+
+#add in overlay output
+
+
+#transparent saves
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png("PCoverlay_new2.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
+#abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
+dev.off()
 
 ```
 
