@@ -258,8 +258,7 @@ godas_prep <- function(nc.data){
     lon = lon.grid.temp,
     lat = lat.grid.temp,
     time = times.temp,
-    sst = sst.temp
-  ))
+    sst = sst.temp))
 }
 
 
@@ -350,9 +349,14 @@ for (i in 1:length(godas_list)) {
   new.lat <- temp.lat[temp.lat <= wide_maxLat & temp.lat >= wide_minLat]
   lat.range <- range(which(temp.lat <= wide_maxLat & temp.lat >= wide_minLat))
   
-  sst.GODAS.new2 <- temp.sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
+  #assign
+  sst.temp <- temp.sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
   
+  sst.GODAS.new2 <- abind(sst.GODAS.new2, sst.temp, along = 3)
 }
+
+GODAS.lon <- new.lon
+GODAS.lat <- new.lat
 
 rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
                    nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
@@ -362,15 +366,13 @@ rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986,
                    nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
                    nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
 
-
 dim(sst.GODAS.new2)
-
 
 ```
 
 ```{r save_godas}
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(sst.GODAS.new, sst.GODAS.new2, file = "sstGODAS.rda")
+save(sst.GODAS.new, sst.GODAS.new2, GODAS.lon, GODAS.lat,  file = "sstGODAS.rda")
 ```
 
 
@@ -758,8 +760,13 @@ reformat_oras <- function(lon.in, lat.in, sst.oras.in){
   
   sst.oras.matrix <- matrix(sst.df$sst, nrow = 361)
   
+  get.x <- unique(sst.df$lon)
+  get.y <- unique(sst.df$lat)
+  
 
-  return(sst.oras.matrix)
+  return(list(lon = get.x,
+              lat = get.y, 
+              sst = sst.oras.matrix))
 }
 
 ```
@@ -817,8 +824,11 @@ for (j in 1:length(oras_list)) {
   temp.sst <- reformat_interpolate(out.temp$lon, out.temp$lat, 
                      out.temp$sst, grid.list)
   
+  
   sst.ORAS.new <- abind(sst.ORAS.new, temp.sst, along = 3)
 }
+
+
 
 rm(nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n,
     nc.ORAS.1983s, nc.ORAS.1983o, nc.ORAS.1983n,
@@ -855,48 +865,120 @@ rm(nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n,
     nc.ORAS.2014s, nc.ORAS.2014o, nc.ORAS.2014n,
     nc.ORAS.2015s, nc.ORAS.2015o, nc.ORAS.2015n)
 
-sst.ORAS.new <- sst.oras.array
-
 dim(sst.ORAS.new) #[lon, lat, son_months]
 
-setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(sst.ORAS.new, file = "sstORAS.rda")
+
 
 ```
 
-
 ### ORA-S5 w/o Interpolation
  
- 
-```{r}
-#TODO: work in-progress code chunk
+```{r raw_oras}
 
 #wide, reduced boundary (Indian Ocean) setup
 wide.lon <- c(wide_minLon, wide_maxLon)
 wide.lat <- c(wide_minLat, wide_maxLat)
 
 
-temp.nc <- nc.ORAS.1982s
-out.temp <- array_setup(temp.nc, wide.lon, wide.lat)
 
-temp.sst 
-
+oras_list <- list(nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n,
+                  nc.ORAS.1983s, nc.ORAS.1983o, nc.ORAS.1983n,
+                  nc.ORAS.1984s, nc.ORAS.1984o, nc.ORAS.1984n,
+                  nc.ORAS.1985s, nc.ORAS.1985o, nc.ORAS.1985n,
+                  nc.ORAS.1986s, nc.ORAS.1986o, nc.ORAS.1986n,
+                  nc.ORAS.1987s, nc.ORAS.1987o, nc.ORAS.1987n,
+                  nc.ORAS.1988s, nc.ORAS.1988o, nc.ORAS.1988n,
+                  nc.ORAS.1989s, nc.ORAS.1989o, nc.ORAS.1989n,
+                  nc.ORAS.1990s, nc.ORAS.1990o, nc.ORAS.1990n,
+                  nc.ORAS.1991s, nc.ORAS.1991o, nc.ORAS.1991n,
+                  nc.ORAS.1992s, nc.ORAS.1992o, nc.ORAS.1992n,
+                  nc.ORAS.1993s, nc.ORAS.1993o, nc.ORAS.1993n,
+                  nc.ORAS.1994s, nc.ORAS.1994o, nc.ORAS.1994n,
+                  nc.ORAS.1995s, nc.ORAS.1995o, nc.ORAS.1995n,
+                  nc.ORAS.1996s, nc.ORAS.1996o, nc.ORAS.1996n,
+                  nc.ORAS.1997s, nc.ORAS.1997o, nc.ORAS.1997n,
+                  nc.ORAS.1998s, nc.ORAS.1998o, nc.ORAS.1998n,
+                  nc.ORAS.1999s, nc.ORAS.1999o, nc.ORAS.1999n,
+                  nc.ORAS.2000s, nc.ORAS.2000o, nc.ORAS.2000n,
+                  nc.ORAS.2001s, nc.ORAS.2001o, nc.ORAS.2001n,
+                  nc.ORAS.2002s, nc.ORAS.2002o, nc.ORAS.2002n,
+                  nc.ORAS.2003s, nc.ORAS.2003o, nc.ORAS.2003n,
+                  nc.ORAS.2004s, nc.ORAS.2004o, nc.ORAS.2004n,
+                  nc.ORAS.2005s, nc.ORAS.2005o, nc.ORAS.2005n,
+                  nc.ORAS.2006s, nc.ORAS.2006o, nc.ORAS.2006n,
+                  nc.ORAS.2007s, nc.ORAS.2007o, nc.ORAS.2007n,
+                  nc.ORAS.2008s, nc.ORAS.2008o, nc.ORAS.2008n,
+                  nc.ORAS.2009s, nc.ORAS.2009o, nc.ORAS.2009n,
+                  nc.ORAS.2010s, nc.ORAS.2010o, nc.ORAS.2010n,
+                  nc.ORAS.2011s, nc.ORAS.2011o, nc.ORAS.2011n,
+                  nc.ORAS.2012s, nc.ORAS.2012o, nc.ORAS.2012n,
+                  nc.ORAS.2013s, nc.ORAS.2013o, nc.ORAS.2013n,
+                  nc.ORAS.2014s, nc.ORAS.2014o, nc.ORAS.2014n,
+                  nc.ORAS.2015s, nc.ORAS.2015o, nc.ORAS.2015n)
 
 #sst array setup
-sst.ORAS.new <- NULL
+sst.ORAS.new2 <- NULL
+#TODO: get lon, lat (unique) output:
+
 for (j in 1:length(oras_list)) {
   temp.nc <- oras_list[[j]]
   
   out.temp <- array_setup(temp.nc, wide.lon, wide.lat)
   
-  temp.sst <- reformat_interpolate(out.temp$lon, out.temp$lat, 
-                     out.temp$sst, grid.list)
+  temp.sst <- reformat_oras(out.temp$lon, out.temp$lat, 
+                     out.temp$sst)
   
-  sst.ORAS.new <- abind(sst.ORAS.new, temp.sst, along = 3)
+  oras.lon <- temp.sst$lon
+  oras.lat <- temp.sst$lat
+  
+  sst.ORAS.new2 <- abind(sst.ORAS.new2, temp.sst$sst, along = 3)
 }
 
+
+
+rm(nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n,
+    nc.ORAS.1983s, nc.ORAS.1983o, nc.ORAS.1983n,
+    nc.ORAS.1984s, nc.ORAS.1984o, nc.ORAS.1984n,
+    nc.ORAS.1985s, nc.ORAS.1985o, nc.ORAS.1985n,
+    nc.ORAS.1986s, nc.ORAS.1986o, nc.ORAS.1986n,
+    nc.ORAS.1987s, nc.ORAS.1987o, nc.ORAS.1987n,
+    nc.ORAS.1988s, nc.ORAS.1988o, nc.ORAS.1988n,
+    nc.ORAS.1989s, nc.ORAS.1989o, nc.ORAS.1989n,
+    nc.ORAS.1990s, nc.ORAS.1990o, nc.ORAS.1990n,
+    nc.ORAS.1991s, nc.ORAS.1991o, nc.ORAS.1991n,
+    nc.ORAS.1992s, nc.ORAS.1992o, nc.ORAS.1992n,
+    nc.ORAS.1993s, nc.ORAS.1993o, nc.ORAS.1993n,
+    nc.ORAS.1994s, nc.ORAS.1994o, nc.ORAS.1994n,
+    nc.ORAS.1995s, nc.ORAS.1995o, nc.ORAS.1995n,
+    nc.ORAS.1996s, nc.ORAS.1996o, nc.ORAS.1996n,
+    nc.ORAS.1997s, nc.ORAS.1997o, nc.ORAS.1997n,
+    nc.ORAS.1998s, nc.ORAS.1998o, nc.ORAS.1998n,
+    nc.ORAS.1999s, nc.ORAS.1999o, nc.ORAS.1999n,
+    nc.ORAS.2000s, nc.ORAS.2000o, nc.ORAS.2000n,
+    nc.ORAS.2001s, nc.ORAS.2001o, nc.ORAS.2001n,
+    nc.ORAS.2002s, nc.ORAS.2002o, nc.ORAS.2002n,
+    nc.ORAS.2003s, nc.ORAS.2003o, nc.ORAS.2003n,
+    nc.ORAS.2004s, nc.ORAS.2004o, nc.ORAS.2004n,
+    nc.ORAS.2005s, nc.ORAS.2005o, nc.ORAS.2005n,
+    nc.ORAS.2006s, nc.ORAS.2006o, nc.ORAS.2006n,
+    nc.ORAS.2007s, nc.ORAS.2007o, nc.ORAS.2007n,
+    nc.ORAS.2008s, nc.ORAS.2008o, nc.ORAS.2008n,
+    nc.ORAS.2009s, nc.ORAS.2009o, nc.ORAS.2009n,
+    nc.ORAS.2010s, nc.ORAS.2010o, nc.ORAS.2010n,
+    nc.ORAS.2011s, nc.ORAS.2011o, nc.ORAS.2011n,
+    nc.ORAS.2012s, nc.ORAS.2012o, nc.ORAS.2012n,
+    nc.ORAS.2013s, nc.ORAS.2013o, nc.ORAS.2013n,
+    nc.ORAS.2014s, nc.ORAS.2014o, nc.ORAS.2014n,
+    nc.ORAS.2015s, nc.ORAS.2015o, nc.ORAS.2015n)
+
+dim(sst.ORAS.new2) #[lon, lat, son_months]
 ```
 
+
+```{r save_oras}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(sst.ORAS.new, sst.ORAS.new2, oras.lon, oras.lat, file = "sstORAS.rda")
+```
 
 
 ## Get ORA-S5 Land-Sea Mask
@@ -922,6 +1004,7 @@ nc.OISST.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.mnmean.nc")
 #OISST land sea mask
 nc.OISST.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
 ```
+
 
 ## OISST Data Setup
 
@@ -956,10 +1039,22 @@ lon.range <- range(which(lon.grid <= (wide_maxLon+1) & lon.grid >= (wide_minLon-
 lat.values.oisst <- lat.grid[lat.grid <= (wide_maxLat+1) & lat.grid >=  (wide_minLat-1)]
 lon.values.oisst <- lon.grid[lon.grid <= (wide_maxLon+1) & lon.grid >= (wide_minLon-1)]
 
+lat.range.base <- range(which(lat.grid <= (wide_maxLat) & lat.grid >= (wide_minLat)))
+lon.range.base <- range(which(lon.grid <= (wide_maxLon) & lon.grid >= (wide_minLon)))
+
+lat.values.base <- lat.grid[lat.grid <= (wide_maxLat) & lat.grid >=  (wide_minLat)]
+lon.values.base <- lon.grid[lon.grid <= (wide_maxLon) & lon.grid >= (wide_minLon)]
+
+
+
 #get OISST SST reduced matrix
 sst.OISST.wide <- sst.oisst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], 2:409]
 
 dim(sst.OISST.wide)
+
+sst.OISST.base <- sst.oisst[lon.range.base[1]:lon.range.base[2], lat.range.base[1]:lat.range.base[2], 2:409]
+
+dim(sst.OISST.base)
 
 
 #interpolate onto 1.0 x 1.0 grid
@@ -986,8 +1081,48 @@ sst.OISST.new <- apply(sst.OISST.new, 3, function(X) {
 dim(sst.OISST.new) <- c(91, 41, 408)
 
 
+```
+
+
+```{r alt_lsm}
+#lsm for sst.OISST.base 
+
+##Land Sea Mask
+#extract lon, lat
+lat.grid.lsm <- nc.OISST.lsm[["dim"]][["lat"]][["vals"]]
+lon.grid.lsm <- nc.OISST.lsm[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid.lsm[lon.grid.lsm >= 180] <- lon.grid.lsm[lon.grid.lsm >= 180] - 360
+this.order.lsm <- order(lon.grid.lsm)
+
+lon.grid.lsm <- lon.grid.lsm[this.order.lsm]
+
+
+#setup (or find) a land sea mask.
+lsm <- ncvar_get(nc.OISST.lsm, "mask")
+lsm <- lsm[this.order.lsm, ]
+
+#TODO update lsm for reduced region
+#get lsm for IOD only
+lsm_IOD <- lsm[lon.range.base[1]:lon.range.base[2], lat.range.base[1]:lat.range.base[2]] 
+
+lsm.IOD <- lsm_IOD[ ,ncol(lsm_IOD):1]
+
+#setup (land sea mask for OISST data)
+lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.base))
+
+sst.OISST.new2 <- ifelse(lsm.IOD.array == 1, sst.OISST.base, NA)
+
+dim(sst.OISST.new2)
+
+```
+
+
+```{r save_oisst}
+
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(sst.OISST.new, file = "sstOISST.rda")
+save(sst.OISST.new, sst.OISST.new2, lat.values.base, lon.values.base, file = "sstOISST.rda")
 ```
 
 
@@ -999,6 +1134,7 @@ setwd("~/CO_AUS/Aus_CO-main")
 ##SODA3.3.1
 #all monthly data in a single file
 nc.SODA.month <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/erdSoda331oceanmday_6a77_2294_0698.nc")
+
 ```
 
 ## SODA Data Setup
@@ -1043,12 +1179,14 @@ times.soda[432]
 
 #get SODA SST reduced matrix 
 sst_soda <- sst.soda[lon.range.soda[1]:lon.range.soda[2], lat.range.soda[1]:lat.range.soda[2], ]
-sst.soda.wide <- sst_soda[,, 25:432]
+sst.SODA.new2 <- sst_soda[,, 25:432]
+
+dim(sst.SODA.new2) #[nx, ny, nt]
 
 #interpolate onto 1.0 x 1.0 grid
 sst.SODA.new <- NULL
-for (j in 1:dim(sst.soda.wide)[3]) {
-  base.obj <- list(x = lon.values.soda, y = lat.values.soda, z = sst.soda.wide[,,j])
+for (j in 1:dim(sst.SODA.new2)[3]) {
+  base.obj <- list(x = lon.values.soda, y = lat.values.soda, z = sst.SODA.new2[,,j])
 
   
   out.interp <- interp.surface.grid(base.obj, grid.list)
@@ -1061,9 +1199,14 @@ for (j in 1:dim(sst.soda.wide)[3]) {
 dim(sst.SODA.new)
 
 
-setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(sst.SODA.new, file = "sstSODA.rda")
+```
 
+
+```{r save_soda}
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+
+save(sst.SODA.new, sst.SODA.new2, lon.values.soda, lat.values.soda, file = "sstSODA.rda")
 ```
 
 
@@ -1074,6 +1217,7 @@ save(sst.SODA.new, file = "sstSODA.rda")
 ## Anomaly Functions
 
 ```{r functions}
+
 #son average (seasonal mean for each year)
 son.avg <- function(sst, son.only = FALSE){
   ##sst as [lon, lat, time]
@@ -1264,10 +1408,9 @@ sst.anom.soda <- sst.anoms(sst.SODA.new, quadratic = FALSE)
 #ORA-S5
 sst.anom.oras <- sst.anoms(sst.ORAS.new, son.only = TRUE, quadratic = FALSE)
 
-
 #get 'full' son avg for all 4 data product sst anoms
 sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom + 
-                   sst.anom.soda$anom + sst.anom.oras$anom  )/4
+                   sst.anom.soda$anom + sst.anom.oras$anom)/4
 
 ```
 
@@ -1276,7 +1419,7 @@ sst.full.avg <- (sst.anom.oisst$anom + sst.anom.godas$anom +
 
 ## SST anomalies
 
-```{r}
+```{r 1994_fig}
 ##SST anomalies (detrended)
 nt <- 34
 ny <- 41
@@ -1313,8 +1456,7 @@ dev.off()
 
 ```
 
-
-```{r}
+```{r 1997_fig}
 
 #1997 SON anom detrended
 k <- 16
@@ -1359,6 +1501,125 @@ dev.off()
 
 ```
 
+
+### SST Anomalies (w/o Interpolation)
+
+```{r test_section}
+#sst.GODAS.new2
+son.GODAS.sst <- son.avg(sst.GODAS.new2)
+
+#sst.ORAS.new2
+son.ORAS.sst <- son.avg(sst.ORAS.new2, son.only = TRUE)
+
+#sst.OISST.new2
+son.OISST.sst <-  son.avg(sst.OISST.new2)
+
+#sst.SODA.new2
+son.SODA.sst <- son.avg(sst.SODA.new2)
+
+
+dim(son.GODAS.sst)
+dim(son.ORAS.sst)
+dim(son.OISST.sst)
+dim(son.SODA.sst)
+
+```
+
+```{r test_sst_anoms}
+#sst anoms
+##OISST
+sst.anom.oisst2 <- sst.anoms(sst.OISST.new2, quadratic = FALSE)
+#GODAS
+sst.anom.godas2 <- sst.anoms(sst.GODAS.new2, quadratic = FALSE)
+#SODA
+sst.anom.soda2 <- sst.anoms(sst.SODA.new2, quadratic = FALSE)
+#ORA-S5
+sst.anom.oras2 <- sst.anoms(sst.ORAS.new2, son.only = TRUE, quadratic = FALSE)
+
+```
+
+(interpolate SST anoms)
+
+```{r interp_sst}
+dim.GODAS <- dim(sst.GODAS.new2)
+dim.OISST <- dim(sst.OISST.new2)
+dim.SODA <- dim(sst.SODA.new2)
+dim.ORAS <- dim(sst.ORAS.new2)
+
+#GODAS Interpolat
+nx <- dim.GODAS[1]
+ny <- dim.GODAS[2]
+
+#GODAS lat: new.lat, lon: new.lon 
+GODAS.new <- array(sst.anom.godas2$anom, dim = c(34, ny, nx)) 
+GODAS.new <- aperm(GODAS.new, c(3, 2, 1)) #as [nx, ny, nt]
+
+GODAS.anom <- NULL
+for (j in seq_len(34)) {
+  GODAS.obj <-  list(x = new.lon, y = new.lat, z = GODAS.new[,,j])
+
+  temp.interp <- interp.surface.grid(GODAS.obj, grid.list)
+  GODAS.anom <- abind(GODAS.anom, temp.interp$z, along = 3)
+}
+
+
+#ORAS Interpolat
+nx <- dim.ORAS[1]
+ny <- dim.ORAS[2]
+
+#ORAS lat: oras.lat, lon: oras.lon 
+ORAS.new <- array(sst.anom.oras2$anom, dim = c(34, ny, nx)) 
+ORAS.new <- aperm(ORAS.new, c(3, 2, 1)) #as [nx, ny, nt]
+
+ORAS.anom <- NULL
+for (j in seq_len(34)) {
+  ORAS.obj <-  list(x = oras.lon, y = oras.lat, z = ORAS.new[,,j])
+
+  temp.interp <- interp.surface.grid(ORAS.obj, grid.list)
+  ORAS.anom <- abind(ORAS.anom, temp.interp$z, along = 3)
+}
+
+
+#OISST Interpolation
+nx <- dim.OISST[1]
+ny <- dim.OISST[2]
+
+
+#OISST lat: lat.values.base, lon: lon.values.base 
+OISST.new <- array(sst.anom.oisst2$anom, dim = c(34, ny, nx)) 
+OISST.new <- aperm(OISST.new, c(3, 2, 1)) #as [nx, ny, nt]
+
+OISST.anom <- NULL
+for (j in seq_len(34)) {
+  OISST.obj <-  list(x = lon.values.base, y = lat.values.base, z = OISST.new[,,j])
+
+  temp.interp <- interp.surface.grid(OISST.obj, grid.list)
+  OISST.anom <- abind(OISST.anom, temp.interp$z, along = 3)
+}
+
+
+#SODA Interpolation
+nx <- dim.SODA[1]
+ny <- dim.SODA[2]
+
+
+#SODA lat: lat.values.soda, lon: lon.values.soda 
+SODA.new <- array(sst.anom.soda2$anom, dim = c(34, ny, nx)) 
+SODA.new <- aperm(SODA.new, c(3, 2, 1)) #as [nx, ny, nt]
+
+SODA.anom <- NULL
+for (j in seq_len(34)) {
+  SODA.obj <-  list(x = lon.values.soda, y = lat.values.soda, z = SODA.new[,,j])
+
+  temp.interp <- interp.surface.grid(SODA.obj, grid.list)
+  SODA.anom <- abind(SODA.anom, temp.interp$z, along = 3)
+}
+
+dim(GODAS.anom)
+dim(OISST.anom)
+dim(ORAS.anom)
+dim(SODA.anom)
+```
 
 (compare data products)
 
@@ -1420,6 +1681,171 @@ world(add = TRUE)
 ```
 
 ## SON Anomalies
+
+### Interpolation after ANOMS
+
+```{r 1x1grid}
+
+#get range for all sst.anom objects
+anom.range <- range(GODAS.anom, OISST.anom,
+                    ORAS.anom, SODA.anom, na.rm = TRUE)
+anom.absmax <- max(abs(anom.range))
+anom.range <- c(-anom.absmax, anom.absmax)
+#color/breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(anom.range[1], seq(-1,1, 0.2), anom.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#1997 SON anom detrended (as a test case)
+k <- 16
+
+#GODAS
+image(list(x = lon.wide, y = lat.wide, z = GODAS.anom[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("GODAS SST Anoms 1997", adj = 0)
+
+#OISST
+image(list(x = lon.wide, y = lat.wide, z = OISST.anom[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("OISST SST Anoms 1997", adj = 0)
+
+#ORAS
+image(list(x = lon.wide, y = lat.wide, z = ORAS.anom[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("ORA-S5 SST Anoms 1997", adj = 0)
+
+#SODA
+image(list(x = lon.wide, y = lat.wide, z = SODA.anom[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("SODA3.3.1 SST Anoms 1997", adj = 0)
+
+```
+
+### Interpolation before ANOMS
+
+```{r pre_interp}
+##SST anomalies (detrended)
+nt <- 34
+ny <- 41
+nx <- 91
+
+#GODAS
+temp1 <- array(sst.anom.godas$anom, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+godas.anom.base <- aperm(temp1, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#ORAS
+temp2 <- array(sst.anom.oras$anom, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+oras.anom.base <- aperm(temp2, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#OISST
+temp3 <- array(sst.anom.oisst$anom, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+oisst.anom.base <- aperm(temp3, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+#SODA
+temp4 <- array(sst.anom.soda$anom, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+soda.anom.base <- aperm(temp4, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+rm(temp1, temp2, temp3, temp4)
+
+#get range for all sst.anom objects
+anom.range <- range(godas.anom.base, oras.anom.base,
+                    oisst.anom.base, soda.anom.base, na.rm = TRUE)
+anom.absmax <- max(abs(anom.range))
+anom.range <- c(-anom.absmax, anom.absmax)
+#color/breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(anom.range[1], seq(-1,1, 0.2), anom.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#1997 SON anom detrended (as a test case)
+k <- 16
+
+#GODAS
+image(list(x = lon.wide, y = lat.wide, z = godas.anom.base[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("GODAS SST Anoms 1997", adj = 0)
+
+#OISST
+image(list(x = lon.wide, y = lat.wide, z = oisst.anom.base[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("OISST SST Anoms 1997", adj = 0)
+
+#ORAS
+image(list(x = lon.wide, y = lat.wide, z = oras.anom.base[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("ORA-S5 SST Anoms 1997", adj = 0)
+
+#SODA
+image(list(x = lon.wide, y = lat.wide, z = soda.anom.base[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("SODA3.3.1 SST Anoms 1997", adj = 0)
+```
+
+### Differences
+
+```{r}
+#1997 differences
+k <- 16
+godas.diff <- 
+oras.diff
+oisst.diff
+soda.diff
+
+
+
+```
+
+
+
+
 
 ## SON Detrending
 
