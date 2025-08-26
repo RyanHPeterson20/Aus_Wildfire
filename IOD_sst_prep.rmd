@@ -1541,6 +1541,16 @@ sst.anom.oras2 <- sst.anoms(sst.ORAS.new2, son.only = TRUE, quadratic = FALSE)
 (interpolate SST anoms)
 
 ```{r interp_sst}
+
+lon.wide <- seq(wide_minLon, wide_maxLon, by = 1)
+lat.wide <- seq(wide_minLat, wide_maxLat, by = 1)
+
+#grid list from 
+grid.list <- list(x = lon.wide,
+                  y = lat.wide)
+
+
+
 dim.GODAS <- dim(sst.GODAS.new2)
 dim.OISST <- dim(sst.OISST.new2)
 dim.SODA <- dim(sst.SODA.new2)
@@ -1619,7 +1629,83 @@ dim(GODAS.anom)
 dim(OISST.anom)
 dim(ORAS.anom)
 dim(SODA.anom)
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(GODAS.anom, OISST.anom, ORAS.anom, SODA.anom, file = "sstSODA.rda")
+
 ```
+
+
+
+```{r interp_sstavg}
+
+mat_list <- list(GODAS.anom, ORAS.anom,
+                OISST.anom, SODA.anom)
+
+array_new <- abind(mat_list, along = 4)
+
+mean_sst <- apply(array_new, c(1, 2, 3), mean, na.rm = TRUE)
+dimnames(mean_sst) <- NULL
+
+dim(mean_sst) 
+```
+
+```{r lsm_adjustments}
+#shave some pixels off
+IOD_maxLon <- 100
+IOD_minLon <- 40
+IOD_maxLat <- 5
+IOD_minLat <- -5
+
+#location range
+lon.values.IOD <- lon.wide[lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon]
+lon.range.IOD <- range(which(lon.wide <= IOD_maxLon & lon.wide >= IOD_minLon))
+
+lat.values.IOD <- lat.wide[lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat]
+lat.range.IOD <- range(which(lat.wide <= IOD_maxLat & lat.wide >= IOD_minLat))
+ 
+sst.anom <- aperm(mean_sst, c(3, 2, 1))
+
+sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+sst.anom.mean <- mean_sst[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+
+sst.anom.mean[,,1]
+lon.values.IOD
+lat.values.IOD
+
+sst.anom.mean[c(1,2), c(2,4),1]
+
+#cut (1,3), (2,4), 
+
+#kinda unhinged shit right here:
+
+coords <- matrix(c(1, 2,
+                   2, 4,
+                   3, 5, 
+                   4, 6,
+                   5, 7,
+                   6, 8,
+                   7, 8,
+                   8, 9,
+                   9, 10,
+                   10,11), 
+                 byrow = TRUE, ncol = 2)
+
+for (k in 1:dim(sst.anom.mean)[3]) {
+  for (i in 1:nrow(coords)) {
+    row_i <- coords[i, 1]
+    col_i <- coords[i, 2]
+    sst.anom.mean[row_i, col_i, k] <- NaN
+  }
+}
+
+sst.anom.mean
+sst.anom <- aperm(sst.anom.mean, c(3, 2, 1))
+dim(sst.anom)
+```
+
+
 
 (compare data products)
 
@@ -1701,7 +1787,7 @@ k <- 16
 
 #GODAS
 image(list(x = lon.wide, y = lat.wide, z = GODAS.anom[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1712,7 +1798,7 @@ title("GODAS SST Anoms 1997", adj = 0)
 
 #OISST
 image(list(x = lon.wide, y = lat.wide, z = OISST.anom[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1723,7 +1809,7 @@ title("OISST SST Anoms 1997", adj = 0)
 
 #ORAS
 image(list(x = lon.wide, y = lat.wide, z = ORAS.anom[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1734,7 +1820,7 @@ title("ORA-S5 SST Anoms 1997", adj = 0)
 
 #SODA
 image(list(x = lon.wide, y = lat.wide, z = SODA.anom[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1786,7 +1872,7 @@ k <- 16
 
 #GODAS
 image(list(x = lon.wide, y = lat.wide, z = godas.anom.base[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1797,7 +1883,7 @@ title("GODAS SST Anoms 1997", adj = 0)
 
 #OISST
 image(list(x = lon.wide, y = lat.wide, z = oisst.anom.base[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1808,7 +1894,7 @@ title("OISST SST Anoms 1997", adj = 0)
 
 #ORAS
 image(list(x = lon.wide, y = lat.wide, z = oras.anom.base[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1819,7 +1905,7 @@ title("ORA-S5 SST Anoms 1997", adj = 0)
 
 #SODA
 image(list(x = lon.wide, y = lat.wide, z = soda.anom.base[,,k]), 
-           col = cols.ryb, breaks = breaks.dumb, zlim = resid.range, 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
            xlab = "Lon", ylab = "Lat",
            axes = FALSE)
 axis(1, at = c(60, 90, 120))  
@@ -1834,16 +1920,147 @@ title("SODA3.3.1 SST Anoms 1997", adj = 0)
 ```{r}
 #1997 differences
 k <- 16
-godas.diff <- 
-oras.diff
-oisst.diff
-soda.diff
+godas.diff <- GODAS.anom[,,k] - godas.anom.base[,,k]
+oras.diff <- ORAS.anom[,,k] - oras.anom.base[,,k]
+oisst.diff <- OISST.anom[,,k] - oisst.anom.base[,,k]
+soda.diff <- SODA.anom[,,k] - soda.anom.base[,,k]
 
+length(which(godas.diff != 0))
+length(which(oras.diff != 0 ))
+length(which(oisst.diff != 0))
+length(which(soda.diff != 0 ))
 
+range.diff <- range(godas.diff, oras.diff, oisst.diff, soda.diff, na.rm = TRUE)
+diff.absmax <- max(abs(range.diff))
+range.diff <- c(-diff.absmax, diff.absmax)
+
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.rb <- seq(range.diff[1], range.diff[2], length.out = length(cols.rb)+1)
+
+#GODAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = godas.diff), 
+           col = cols.rb, #breaks = breaks.rb, zlim = range.diff, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("GODAS SST Anoms 1997", adj = 0)
+
+#OISST
+imagePlot(list(x = lon.wide, y = lat.wide, z = oisst.diff), 
+           col = cols.rb, #breaks = breaks.rb, zlim = range.diff, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("OISST SST Anoms 1997", adj = 0)
+
+#ORAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = oras.diff), 
+           col = cols.rb, #breaks = breaks.rb, zlim = range.diff, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("ORA-S5 SST Anoms 1997", adj = 0)
+
+#SODA
+imagePlot(list(x = lon.wide, y = lat.wide, z = soda.diff), 
+           col = cols.rb, #breaks = breaks.rb, zlim = range.diff, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("SODA3.3.1 SST Anoms 1997", adj = 0)
 
 ```
 
+### Multi-Prod SST Anomalies
 
+```{r}
+##1997 test case
+
+#post sst anom interpolation
+anom.absmax <- max(abs(mean_sst), na.rm = TRUE)
+anom.range <- c(-anom.absmax, anom.absmax)
+#color/breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(anom.range[1], seq(-1,1, 0.2), anom.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#1997 SON anom detrended (as a test case)
+k <- 16
+
+#
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+png(filename = "sst1997anom_test.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = mean_sst[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+rect(40, -5, 100, 5, border = "black", lwd = 2)
+title("SST Anoms 1997", adj = 0)
+dev.off()
+
+
+#pre sst anom interpolation
+nt <- 34
+ny <- 41
+nx <- 91
+
+#GODAS
+temp1 <- array(sst.full.avg, dim = c(nt, ny, nx))  # from [nt, ny*nx] to [nt, ny, nx]
+sst.anom.base <- aperm(temp1, c(3, 2, 1))  # from [nt, ny, nx] to [nx, ny, nt]
+
+anom.absmax <- max(abs(sst.anom.base), na.rm = TRUE)
+anom.range <- c(-anom.absmax, anom.absmax)
+#color/breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(anom.range[1], seq(-1,1, 0.2), anom.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+#1997 SON anom detrended (as a test case)
+k <- 16
+
+#
+image(list(x = lon.wide, y = lat.wide, z = sst.anom.base[,,k]), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = anom.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("SST Anoms 1997", adj = 0)
+
+#diff
+sst.diff <- sst.anom.base[,,k] - mean_sst[,,k]
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = sst.diff), 
+           col = cols.ryb,
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE, lwd = 1)
+title("SST Anoms 1997", adj = 0)
+
+```
 
 
 
