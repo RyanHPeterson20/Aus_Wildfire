@@ -1651,7 +1651,11 @@ dimnames(mean_sst) <- NULL
 dim(mean_sst) 
 ```
 
+
 ```{r lsm_adjustments}
+#TODO: finalize this with respect to the eastern LSM, and make this all better
+
+
 #shave some pixels off
 IOD_maxLon <- 100
 IOD_minLon <- 40
@@ -1703,6 +1707,8 @@ for (k in 1:dim(sst.anom.mean)[3]) {
 sst.anom.mean
 sst.anom <- aperm(sst.anom.mean, c(3, 2, 1))
 dim(sst.anom)
+
+sst.anom[1,,]
 ```
 
 

@@ -1043,7 +1043,9 @@ abline(v = 1, lty = 2, lwd = 4)
 
 ```
 
-## Test Section (WORKING!)
+
+
+# PCA Section (WORKING!)
 
 very close (close enough)
 
@@ -1071,8 +1073,13 @@ sst.anom <- aperm(mean_sst, c(3, 2, 1))
 
 sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
 
+dim(sst.anom.pIOD)
+
 #reduced IOD pca
 pca.pIOD <- sst.eof(sst.anom.pIOD, kmode = 2)
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(pca.pIOD, file = "pca_newest.rda")
 
 pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
 
@@ -1081,6 +1088,8 @@ pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
 
 PC1 <- -pc.std.IOD[,1]
 PC2 <- pc.std.IOD[,2]
+
+
 
 s.index <- (PC1 + PC2)/sqrt(2)
 m.index <- (PC1 - PC2)/sqrt(2)
@@ -1096,6 +1105,15 @@ PC2[16]
 #transparent saves
 setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
 
+#adjusted colors for overlay
+png("pIOD_overlay.png", width = 2000, height = 1200, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(1:34, s.index, type = "l", col = "orange", ylim=c(-2,5),
+     axes = FALSE, xlab = "", ylab = "", frame.plot = FALSE, lwd = 7, lty = 1)
+lines(1:34, m.index, col = "lawngreen", lwd = 7, lty = 1)
+abline(h=c(1.5, 1.25), lty = 2, col = c("violetred4", "seagreen4"), lwd = 6)
+dev.off()
+
 png("PCoverlay_interp2.png", width = 1500, height = 1500, bg = "transparent", type = "cairo") 
 par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
 plot(PC1, PC2, pch = 21, col = "black",
@@ -1110,8 +1128,196 @@ abline(v = 1, lty = 2, lwd = 4)
 #abline(v = c(1.1, 1.25), lty = 2, col = "firebrick")
 dev.off()
 
+
+
+
 ```
 
+## EOFs/Spatial Pattern
+
+```{r smaller_piod}
+#just over the tropical IOD
+EOF1 <- matrix(pca.pIOD$EOF[,1], nrow = 11, ncol = 61)
+EOF2 <- matrix(pca.pIOD$EOF[,2], nrow = 11, ncol = 61)
+
+
+imagePlot(list(x = lon.values.IOD, y = lat.values.IOD, z = -t(EOF1)))
+world(add = TRUE)
+
+imagePlot(list(x = lon.values.IOD, y = lat.values.IOD, z = t(EOF2)))
+world(add = TRUE)
+
+
+s.eof <- (-t(EOF1) + t(EOF2))/sqrt(2)
+m.eof <- (-t(EOF1) - t(EOF2))/sqrt(2)
+
+pIOD.range <- range(s.eof, m.eof, na.rm = TRUE)
+pIOD.absmax <- max(abs(pIOD.range))
+pIOD.range <- c(-pIOD.absmax, pIOD.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(pIOD.range[1], seq(-1, 1, 0.2), pIOD.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+
+imagePlot(list(x = lon.values.IOD, y = lat.values.IOD, z = s.eof),
+          col = cols.ryb, breaks = breaks.dumb, zlim = pIOD.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+world(add = TRUE)
+
+imagePlot(list(x = lon.values.IOD, y = lat.values.IOD, z = m.eof),
+          col = cols.ryb, breaks = breaks.dumb, zlim = pIOD.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+world(add = TRUE)
+
+```
+
+### Projection 
+
+```{r}
+nx <- dim(mean_sst)[1]
+ny <- dim(mean_sst)[2]
+nt <- dim(mean_sst)[3]
+
+son.mean <- matrix(mean_sst, nrow =  ny * nx, ncol = nt)
+
+pc1.son <- son.mean %*% PC1
+pc2.son <- son.mean %*% PC2
+
+eof1.son <- matrix(pc1.son/nt, nrow = nx, ncol = ny)
+eof2.son <- matrix(pc2.son/nt, nrow = nx, ncol = ny)
+
+eof.range <- range(eof1.son, eof2.son, na.rm = TRUE)
+eof.absmax <- max(abs(eof.range))
+eof.range <- c(-eof.absmax, eof.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
+leg.brks2 <- seq(-0.6, 0.6, 0.1) 
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+png(filename = "eof1.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = eof1.son), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+#title("", adj = 0)
+dev.off()
+
+
+png(filename = "eof2.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = eof2.son), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+#title("", adj = 0)
+dev.off()
+
+```
+
+
+```{r}
+s.eof <- (eof1.son + eof2.son)/sqrt(2)
+m.eof <- (eof1.son - eof2.son)/sqrt(2)
+
+#sindex.son <- son.mean %*% s.index
+#mindex.son <- son.mean %*% m.index
+
+#s.eof <- matrix(sindex.son, nrow = nx, ncol = ny)
+#m.eof <- matrix(mindex.son, nrow = nx, ncol = ny)
+
+
+
+pIOD.range <- range(s.eof, m.eof, na.rm = TRUE)
+pIOD.absmax <- max(abs(pIOD.range))
+pIOD.range <- c(-pIOD.absmax, pIOD.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(18))
+breaks.new <- seq(pIOD.range[1], pIOD.range[2], length.out = length(cols.ryb)+1)
+
+breaks.dumb <- c(pIOD.range[1], seq(-1, 1, 0.2), pIOD.range[2])
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+
+
+#setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures")
+
+#extended fig1a
+#png(filename = "sst1994anom.png", width = 2400, height = 1600, res = 250)
+par(mar = c(4, 5, 2, 5), mgp = c(2.25, 1, 0))
+imagePlot(list(x = lon.wide, y = lat.wide, z = s.eof), 
+           col = cols.ryb, breaks = breaks.new, zlim = pIOD.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+#image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+#           breaks = leg.brks2, horizontal = TRUE, 
+#           axis.args = list(at = seq(-1, 1, 0.2)),
+#           smallplot = c(0.1, 0.9, 0.08, 0.10))
+#title("1982: SST Anomalies", adj = 0)
+#dev.off()
+
+
+
+par(mar = c(4, 5, 2, 5), mgp = c(2.25, 1, 0))
+imagePlot(list(x = lon.wide, y = lat.wide, z = m.eof), 
+           col = cols.ryb, breaks = breaks.new, zlim = pIOD.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+#image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+#           breaks = leg.brks2, horizontal = TRUE, 
+#           axis.args = list(at = seq(-1, 1, 0.2)),
+#           smallplot = c(0.1, 0.9, 0.08, 0.10))
+
+
+
+
+
+```
 
 
 
