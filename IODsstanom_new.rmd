@@ -1044,10 +1044,9 @@ abline(v = 1, lty = 2, lwd = 4)
 ```
 
 
-
 # PCA Section (WORKING!)
 
-very close (close enough)
+(close enough)
 
 ```{r pca_work}
 #select for reduced region pIOD (redo from earlier, redundant but oh-well)
@@ -1132,6 +1131,31 @@ dev.off()
 
 
 ```
+
+
+## Extending to 2019
+
+```{r}
+iod.eof <- pca.pIOD$EOF
+
+sst.2019.iod <- sst.2019.godas[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2]]
+
+nx <- dim(sst.2019.iod)[1]
+ny <- dim(sst.2019.iod)[2]
+  
+matrix(iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+matrix(iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+```
+
+
+```{r}
+#TODO: align the NAs
+test.na <- 
+
+
+```
+
+
 
 ## EOFs/Spatial Pattern
 

@@ -1206,7 +1206,8 @@ summary(SErefit2[[1]][[j]])
 
 ```{r model_fits}
 
-lambda_seq <- seq(140, 72, length.out = 32)
+#lambda_seq <- seq(140, 72, length.out = 32)
+lambda_seq <- seq(137, 95, length.out = 50)
 
 y_1 <- as.numeric(SEresp_wo[[2]])
 
@@ -1220,18 +1221,18 @@ SE2path_wo <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
 
 ```{r refits}
 
-SEcoefs2_wo <- get_coefs(SE2path_wo, max_index = 32, 
+SEcoefs2_wo <- get_coefs(SE2path_wo, max_index = 42, 
                       resp = SEresp_wo[[2]], preds = SEpreds_wo[[2]], 
                       preds_quant = SEpreds_wo[[2]])
 
 
-SErefit2_wo <- refit_bic(SE2path_wo, max_index = 32, ebic.gamma = 0.25, gic.gamma = 2.15,
+SErefit2_wo <- refit_bic(SE2path_wo, max_index = 42, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
                       intercept = FALSE,
                       resp = SEresp_wo[[2]], preds = SEpreds_wo[[2]], 
                       preds_quant =SEpreds_wo[[2]])
 
-SErefit2_wo[[5]]
+se2_ic <- SErefit2_wo[[5]]
 
 SErefit2_wo[[5]][,c(1,5,6)]
 SErefit2_wo[[5]][,c(1,8,9)]
@@ -1244,16 +1245,30 @@ which.min(SErefit2_wo[[5]][ , 8]) #ridge eBIC
 which.min(SErefit2_wo[[5]][ , 9]) #lasso eBIC 
 
 
-i <- 6
+i <- 12
 ridge_coef <- SErefit2_wo[[4]][[i]]
 SEridge2_wo <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
-j <- 15
+model_lngt <- NULL
+for (i in 1:42) {
+  model_lngt <- c(model_lngt, length(SErefit2_wo[[4]][[i]]))
+}
+
+#TODO: somehow represent this (plot bic compared to lambda)
+plot(1:42, model_lngt, type = "l")
+
+plot(1:42, SErefit2_wo[[5]][1:42, 6], type = "l")
+
+
+j <- 16
 summary(SErefit2_wo[[1]][[j]])
 
 ```
+
+
+
 
 ## Plots
 

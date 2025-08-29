@@ -1504,6 +1504,8 @@ dev.off()
 
 ### SST Anomalies (w/o Interpolation)
 
+Working section
+
 ```{r test_section}
 #sst.GODAS.new2
 son.GODAS.sst <- son.avg(sst.GODAS.new2)
@@ -1651,6 +1653,7 @@ dimnames(mean_sst) <- NULL
 dim(mean_sst) 
 ```
 
+### WIP: Land-Sea Mask Adjustments
 
 ```{r lsm_adjustments}
 #TODO: finalize this with respect to the eastern LSM, and make this all better
@@ -1704,12 +1707,128 @@ for (k in 1:dim(sst.anom.mean)[3]) {
   }
 }
 
-sst.anom.mean
+
+sst.anom.temp <- sst.anom.mean[,,1]
 sst.anom <- aperm(sst.anom.mean, c(3, 2, 1))
 dim(sst.anom)
 
 sst.anom[1,,]
 ```
+
+```{r final_lsm}
+westcoords <- matrix(c(1, 2,
+                   2, 4,
+                   3, 5, 
+                   4, 6,
+                   5, 7,
+                   6, 8,
+                   7, 8,
+                   8, 9,
+                   9, 10,
+                   10,11), 
+                 byrow = TRUE, ncol = 2)
+```
+
+
+# Extension to 2019
+
+Begin by reproducing the GODAS 2019 data from fig1
+
+```{r prep_GODAS}
+#load in just 2019
+
+nc.temp <- nc.GODAS.2019
+  
+temp.nc.godas <- godas_prep(nc.temp)
+temp.lon <- temp.nc.godas$lon
+temp.lat <- temp.nc.godas$lat
+temp.sst <- temp.nc.godas$sst
+
+#get reduce range (indian ocean region)
+new.lon <- temp.lon[temp.lon <= wide_maxLon & temp.lon >= wide_minLon]
+lon.range <- range(which(temp.lon <= wide_maxLon & temp.lon >= wide_minLon))
+new.lat <- temp.lat[temp.lat <= wide_maxLat & temp.lat >= wide_minLat]
+lat.range <- range(which(temp.lat <= wide_maxLat & temp.lat >= wide_minLat))
+
+#assign
+sst.GODAS.2019 <- temp.sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
+
+GODAS.lon <- new.lon
+GODAS.lat <- new.lat
+
+#son.avg(sst.GODAS.2019)
+
+```
+
+```{r SON_anom}
+A.new <- aperm(sst.GODAS.2019, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+  
+#get dimensions from reordered array
+nx <- dim(A.new)[3]
+ny <- dim(A.new)[2] 
+nt <- dim(A.new)[1]
+
+#get SON mean (get 1 sst per year (as son mean))
+nyears <- nt %/% 12
+#reshape data array
+A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+A.son <- apply(A.temp[9:11, , , ], c(2,3), mean, na.rm = TRUE) #already at correct subset
+
+#remove mean 
+var <- as.vector(matrix(A.son, nrow = ny * nx, ncol = 1)) #super messy but whatever
+
+#mean and trend from existing work
+godas.mean <- sst.anom.godas2$mean
+
+godas.anom1 <- var - godas.mean
+
+godas.coef <- sst.anom.godas2$coef
+
+t <- 38
+godas.trend <- godas.coef[1,] + t*godas.coef[2,]
+godas.amom.2019 <- godas.anom1 - godas.trend
+
+```
+
+
+```{r 2019_interp}
+#GODAS lat: new.lat, lon: new.lon 
+GODAS.new2 <- array(godas.amom.2019, dim = c(1, ny, nx)) 
+GODAS.new2 <- aperm(GODAS.new2, c(3, 2, 1)) #as [nx, ny, nt]
+
+
+
+GODAS.obj <-  list(x = GODAS.lon, y = GODAS.lat, z = GODAS.new2[,,1])
+GODAS.interp <- interp.surface.grid(GODAS.obj, grid.list)
+
+sst.2019.godas <- GODAS.interp$z
+```
+
+
+## Figures-For 2019
+
+```{r godas_only}
+sst.temp <- matrix(godas.amom.2019, nrow = ny, ncol = nx)
+sst.temp <- sst.temp[ny:1,]
+
+abs.max <- max(abs(sst.temp), na.rm = TRUE)
+abs.range <- c(-abs.max, abs.max)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(14))
+breaks.dumb <- c(abs.range[1], seq(-2.4,2.4, 0.4), abs.range[2])
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = t(sst.temp)),
+          col = cols.ryb, breaks = breaks.dumb, zlim =  range(abs.range),
+          xlim = c(40, 120), ylim = c(-10,10))
+world(add = TRUE)
+
+
+imagePlot(list(x = grid.list$x, y = grid.list$y, z = GODAS.interp$z),
+          col = cols.ryb, breaks = breaks.dumb, zlim =  range(abs.range),
+          xlim = c(40, 120), ylim = c(-10,10))
+world(add = TRUE)
+
+```
+
 
 
 
