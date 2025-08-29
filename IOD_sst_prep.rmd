@@ -1677,7 +1677,7 @@ sst.anom <- aperm(mean_sst, c(3, 2, 1))
 sst.anom.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
 sst.anom.mean <- mean_sst[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
 
-sst.anom.mean[,,1]
+sst.anom.mean[,,16]
 lon.values.IOD
 lat.values.IOD
 
@@ -1727,6 +1727,20 @@ westcoords <- matrix(c(1, 2,
                    9, 10,
                    10,11), 
                  byrow = TRUE, ncol = 2)
+
+#partial east coordiantes
+eastcoords <- matrix(c( 61, 5,
+                        60, 6,
+                        59, 8,
+                        58, 9,
+                        57, 10,
+                        59, 11,
+                        60, 10,
+                        61, 9,
+                        ),
+                      byrow = TRUE, ncol=2) 
+  
+  
 ```
 
 
@@ -1788,6 +1802,11 @@ t <- 38
 godas.trend <- godas.coef[1,] + t*godas.coef[2,]
 godas.amom.2019 <- godas.anom1 - godas.trend
 
+```
+
+
+```{r SONanom_alt}
+#repeat the son.avg() but with added 2019 data
 ```
 
 

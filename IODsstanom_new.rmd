@@ -1143,14 +1143,48 @@ sst.2019.iod <- sst.2019.godas[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[
 nx <- dim(sst.2019.iod)[1]
 ny <- dim(sst.2019.iod)[2]
   
-matrix(iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
-matrix(iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+eof1.mat <- matrix(iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+eof2.mat <- matrix(iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+
+#move back to vector
+sst.2019.vec <- as.vector(sst.2019.iod)
+eof1.vec <- as.vector(eof1.mat)
+eof2.vec <- as.vector(eof2.mat)
 ```
 
 
 ```{r}
 #TODO: align the NAs
-test.na <- 
+test.na <- is.finite(sst.2019.vec) & is.finite(eof1.vec) & is.finite(eof2.vec)
+
+y <- sst.2019.vec[test.na]
+X <- cbind(eof1.vec[test.na], eof2.vec[test.na])
+
+a1 <- sum(y * eof1.vec[test.na])
+a2 <- sum(y * eof2.vec[test.na])
+
+#get pc mean and std dev
+pc.iod <- pca.pIOD$PC
+#pc.mean <- mean(rbind(pc.iod, c(a1, a2)))
+#pc.std <- sd(rbind(pc.iod, c(a1, a2)))
+
+pc.mean <- mean(pc.iod)
+pc.std <- sd(pc.iod)
+
+pc1.2019 <- -(a1-pc.mean)/pc.std
+pc2.2019 <- (a2-pc.mean)/pc.std
+
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+points(pc1.2019, pc2.2019, pch = 21, col = "black",
+       bg = alpha("plum2",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
 
 
 ```
