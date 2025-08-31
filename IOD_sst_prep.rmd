@@ -264,6 +264,17 @@ godas_prep <- function(nc.data){
 
 ```
 
+
+```{r test_function}
+#test function for nc.GODAS.2019
+nc.data <- nc.GODAS.2019
+on.grid.temp <- nc.data[["dim"]][["lon"]][["vals"]]
+
+ sst.temp <- ncvar_get(nc.GODAS.2019, "pottmp")
+ sst.temp <- ncvar_get(nc.data, "pottmp")
+```
+
+
 ## GODAS Data Setup
 
 ```{r data_cleaning}
@@ -331,7 +342,7 @@ godas_list <- list(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, n
                    nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
                    nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
                    nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
-                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015, nc.GODAS.2019)
 
 #get lon, lat, sst, and times
 sst.GODAS.new2 <- NULL
@@ -1772,6 +1783,15 @@ GODAS.lat <- new.lat
 
 #son.avg(sst.GODAS.2019)
 
+dim(sst.GODAS.2019)
+dim(sst.GODAS.new2)
+
+sst.GODAS.new3 <- abind(sst.GODAS.new2, sst.GODAS.2019, along = 3)
+dim(sst.GODAS.new3)
+#GODAS
+sst.anom.godas3 <- sst.anoms(sst.GODAS.new3, quadratic = FALSE)
+
+
 ```
 
 ```{r SON_anom}
@@ -1816,11 +1836,30 @@ GODAS.new2 <- array(godas.amom.2019, dim = c(1, ny, nx))
 GODAS.new2 <- aperm(GODAS.new2, c(3, 2, 1)) #as [nx, ny, nt]
 
 
-
 GODAS.obj <-  list(x = GODAS.lon, y = GODAS.lat, z = GODAS.new2[,,1])
 GODAS.interp <- interp.surface.grid(GODAS.obj, grid.list)
 
 sst.2019.godas <- GODAS.interp$z
+
+
+#interpolate
+##TODO: sst.anom.godas3 anomalies onto grid
+#GODAS Interpolat
+nx <- dim.GODAS[1]
+ny <- dim.GODAS[2]
+
+#GODAS lat: new.lat, lon: new.lon 
+GODAS.new2 <- array(sst.anom.godas3$anom, dim = c(34, ny, nx)) 
+GODAS.new2 <- aperm(GODAS.new2, c(3, 2, 1)) #as [nx, ny, nt]
+
+GODAS.anom2 <- NULL
+for (j in seq_len(34)) {
+  GODAS.obj <-  list(x = new.lon, y = new.lat, z = GODAS.new2[,,j])
+
+  temp.interp <- interp.surface.grid(GODAS.obj, grid.list)
+  GODAS.anom2 <- abind(GODAS.anom, temp.interp$z, along = 3)
+}
+
 ```
 
 
