@@ -3,8 +3,10 @@
 
 #TODO: wip for pIOD index functions for SST anoms and PCA/EOF
 
+
+#following the .ncl method for cmip5 model data
 #currently only provides SON anoms
-sst.anoms <- function(A){
+sst.anoms <- function(A, son.only = FALSE, quadratic = FALSE){
   
   A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
   
@@ -13,11 +15,19 @@ sst.anoms <- function(A){
   ny <- dim(A.new)[2] 
   nt <- dim(A.new)[1]
   
-  #get SON mean
-  nyears <- nt %/% 12
-  #reshape data array
-  A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
-  A.son <- apply(A.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  #get SON mean (get 1 sst per year (as son mean))
+  if (son.only) {
+    #if only provided with 3 months (son) per year
+    nyears <- nt %/% 3
+    A.temp <- array(A.new, dim = c(3, nyears, ny, nx))
+    A.son <- apply(A.temp[1:3, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }else {
+    nyears <- nt %/% 12
+    #reshape data array
+    A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+    A.son <- apply(A.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }
+  
   rm(A.temp)
   
   #update time dim
@@ -25,9 +35,9 @@ sst.anoms <- function(A){
   
   #remove mean
   var <- matrix(A.son, nrow = nt, ncol = ny * nx) #from earlier work on detrend
+  
   #get full period mean
   var.mean <- colMeans(var) #TODO: visualize this spatially (transform to [lon, lat])
-  
   var <- sweep(var, 2, colMeans(var), "-") #TODO: check how this might hold up with irregular spatial masks
   
   #de-trend
@@ -41,11 +51,19 @@ sst.anoms <- function(A){
   var.x <- seq_len(nt) #time "covariates"
   var.y <- var[ ,true.index] #response variable (sst anoms)
   
-  #TODO: add in an elif for linear and quadratic
-  var.fit <- lm(var.y ~ var.x)
+  #TODO: add in an elif for linear and quadratic, with and without intercept
+  
+  if (quadratic) {
+    var.fit <- lm(var.y ~ var.x + I(var.x^2))
+    A.coef[,true.index] <- var.fit$coefficients[1:2, ]
+  } else {
+    var.fit <- lm(var.y ~ var.x)
+    A.coef[,true.index] <- var.fit$coefficients
+  }
   
   A.resid[,true.index] <- var.fit$residuals
-  A.coef[,true.index] <- var.fit$coefficients
+  #TODO: update this handle quadratic fit
+  #A.coef[,true.index] <- var.fit$coefficients
   
   return(list(mean = var.mean,
               anom = A.resid,
@@ -87,5 +105,4 @@ sst.eof <- function(sst.anom, kmode){
               PC = PC.temp,
               percent = per.temp))
 }
-
 

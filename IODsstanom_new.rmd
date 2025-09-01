@@ -1153,6 +1153,15 @@ eof2.vec <- as.vector(eof2.mat)
 ```
 
 
+```{r updated_anom}
+
+godas.amom.iod <- GODAS.anom2[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], 35]
+
+
+
+```
+
+
 ```{r}
 #TODO: align the NAs
 test.na <- is.finite(sst.2019.vec) & is.finite(eof1.vec) & is.finite(eof2.vec)
