@@ -39,7 +39,7 @@ source("pIOD_functions.R") #sst.anom and eof functions
 ```
 
 ```{r load_data}
-setwd()
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
 #load in other data
 load("sstGODAS.rda") #load sst.GODAS data
 ```
@@ -259,7 +259,7 @@ godas_list <- list(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, n
                    nc.GODAS.2017, nc.GODAS.2018, nc.GODAS.2019)
 
 #get lon, lat, sst, and times
-sst.GODAS.new2 <- NULL
+sst.GODAS.w2019 <- NULL
 for (i in 1:length(godas_list)) {
   nc.temp <- godas_list[[i]] 
   
@@ -277,11 +277,12 @@ for (i in 1:length(godas_list)) {
   #assign
   sst.temp <- temp.sst[lon.range[1]:lon.range[2], lat.range[1]:lat.range[2], ]
   
-  sst.GODAS.new2 <- abind(sst.GODAS.new2, sst.temp, along = 3)
+  sst.GODAS.w2019 <- abind(sst.GODAS.w2019, sst.temp, along = 3)
 }
 
 GODAS.lon <- new.lon
 GODAS.lat <- new.lat
+
 
 rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986, 
                    nc.GODAS.1987, nc.GODAS.1988, nc.GODAS.1989, nc.GODAS.1990, nc.GODAS.1991,
@@ -291,7 +292,7 @@ rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986,
                    nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
                    nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
 
-dim(sst.GODAS.new2)
+dim(sst.GODAS.w2019)
 
 
 ```
@@ -303,14 +304,14 @@ dim(sst.GODAS.new2)
 
 ```{r get_anoms}
 #use sst.anom function
-sst.anom.godas2 <- sst.anoms(sst.GODAS.new2, quadratic = FALSE)
+sst.anom.godas2 <- sst.anoms(sst.GODAS.w2019, quadratic = FALSE)
 
 ```
 
 ## Interpolation
 
 ```{r interpolate_anoms}
-dim.GODAS <- dim(sst.GODAS.new2)
+dim.GODAS <- dim(sst.GODAS.w2019)
 
 #GODAS Interpolat
 nx <- dim.GODAS[1]
@@ -332,11 +333,141 @@ for (j in seq_len(nt)) {
 dim(GODAS.anom2)
 ```
 
-## pIOD Range
+### Figures
 
-```{r pIOD}
+```{r anom_figues}
+#get dimensions
+nx <- dim(GODAS.anom2)[1]
+ny <- dim(GODAS.anom2)[2]
+
+anom.temp <- GODAS.anom2[,,]
+
+#sst.temp <- matrix(anom.temp, nrow = ny, ncol = nx)
+
+abs.max <- max(abs(anom.temp), na.rm = TRUE)
+abs.range <- c(-abs.max, abs.max)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(14))
+breaks.dumb <- c(abs.range[1], seq(-2.4,2.4, 0.4), abs.range[2])
+
+
+imagePlot(list(x = grid.list$x, y = grid.list$y, z = anom.temp[,,38]),
+          col = cols.ryb, breaks = breaks.dumb, zlim =  range(abs.range),
+          xlim = c(40, 120), ylim = c(-10,10),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 2019", adj = 0)
+world(add = TRUE)
+
 
 ```
 
+
+## pIOD Range
+
+```{r pIOD}
+#location range
+lon.values.IOD <- lon.wide[lon.wide <= pIOD_maxLon & lon.wide >= pIOD_minLon]
+lon.range.IOD <- range(which(lon.wide <= pIOD_maxLon & lon.wide >= pIOD_minLon))
+
+lat.values.IOD <- lat.wide[lat.wide <= pIOD_maxLat & lat.wide >= pIOD_minLat]
+lat.range.IOD <- range(which(lat.wide <= pIOD_maxLat & lat.wide >= pIOD_minLat))
+
+#temp dimension setup
+#nt <- 38
+#ny <- 41
+#nx <- 91
+
+#TODO: adjust for the array
+#sst.anom <- array(sst.full.avg, dim = c(nt, ny, nx)) 
+#sst.anom <- array(mean_sst, dim = c(nt, ny, nx)) 
+sst.anom2 <- aperm(GODAS.anom2, c(3, 2, 1))
+
+sst.anom.pIOD <- sst.anom2[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+
+dim(sst.anom.pIOD)
+```
+
+
+
+# PCA
+
+(move up the 1982-2015 'baseline' pca up to here, that is, load it here)
+
+```{r baseline_pca}
+#load in previous pca work
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+load("pca_newest.rda") #loads in pca.pIOD
+
+#standardize PCs
+pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
+
+PC1 <- -pc.std.IOD[,1]
+PC2 <- pc.std.IOD[,2]
+
+#new indices
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+#TODO: add in better PC1 v. PC2 plot 
+```
+
+## PCA: 1982-2019 SST Anoms
+
+```{r pca}
+#eof functions
+pca.iod.2019 <- sst.eof(sst.anom.pIOD, kmode = 2)
+
+#TODO: update names from here so we don't have any confusion
+pc.std.IOD <- scale(pca.iod.2019$PC, center = TRUE, scale = TRUE)
+
+#TODO: clean this up once we decide which direction to go in. 
+#pc.std.IOD[,1] <- scale(pca.pIOD$PC[,1], center = TRUE, scale = TRUE)
+#pc.std.IOD[,2] <- scale(pca.pIOD$PC[,2], center = TRUE, scale = TRUE)
+
+PC1 <- -pc.std.IOD[,1]
+PC2 <- pc.std.IOD[,2]
+
+s.index <- (PC1 + PC2)/sqrt(2)
+m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:38, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:38, m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+PC1[16]
+PC2[16]
+
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
+```
+
+## Regress 2019
+
+Regress the 2019 data onto eof1 and eof2 (loadings) of the baseline PCA. 
+
+```{r pca_2019}
+#select 2019 sst anoms
+anom.2019 <- GODAS.anom2[,,38] #full regional 
+
+sst.anom2 <- aperm(GODAS.anom2, c(3, 2, 1))
+sst.2019.pIOD <- sst.anom2[38, lat.range.IOD[1]:lat.range.IOD[2], lon.range.IOD[1]:lon.range.IOD[2]] #pIOD (equitorial IOD)
+
+#setup eof and anom vectors
+iod.eof <- pca.pIOD$EOF
+
+
+#TODO: finalize the vector setup then perform regression
+
+```
 
 
