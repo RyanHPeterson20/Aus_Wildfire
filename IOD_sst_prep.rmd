@@ -1646,7 +1646,7 @@ dim(SODA.anom)
 
 
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(GODAS.anom, OISST.anom, ORAS.anom, SODA.anom, file = "sstSODA.rda")
+save(GODAS.anom, OISST.anom, ORAS.anom, SODA.anom, file = "sstinterp.rda")
 
 ```
 

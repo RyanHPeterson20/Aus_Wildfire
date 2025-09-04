@@ -28,6 +28,10 @@ suppressMessages(library(scales)) #for adjusting opacity
 suppressMessages(library(pracma))
 ```
 
+Baseline Exploration:
+1. Mean state change 1982 to 2015, 2019
+
+
 Extend from 2015 to 2019:
 1. replicate the GODAS 2019 point from fig 1 (cai et al 2019)
 2. replicate data up to 2019 from 2025 Indian Ocean paper
@@ -40,8 +44,11 @@ source("pIOD_functions.R") #sst.anom and eof functions
 
 ```{r load_data}
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-#load in other data
+#load in preped data products
 load("sstGODAS.rda") #load sst.GODAS data
+load("sstOISST.rda")
+load("sstORAS.rda")
+load("sstSODA.rda")
 ```
 
 
@@ -298,16 +305,69 @@ dim(sst.GODAS.w2019)
 ```
 
 
+
+## Oceanic Processes in Ocean Temp Products
+
+Reproducing the work by Yang et al 2020.
+
+Data products:
+- ORA‐S5
+- SODA
+- GODAS
+- OISST
+
+
 # SST Anom Prep
 
-(get sst anomalies)
 
+## Get SON Avg
+
+```{r extra_clean}
+
+ny<- dim(sst.GODAS.new2)[2]
+
+sst.GODAS.new2 <- sst.GODAS.new2[,ny:1,]
+
+```
+
+```{r SON_avgs}
+#sst.GODAS.new2
+son.GODAS.avg <- son.avg(sst.GODAS.new2)
+
+#sst.ORAS.new2
+son.ORAS.avg <- son.avg(sst.ORAS.new2, son.only = TRUE)
+
+#sst.OISST.new2
+son.OISST.avg <-  son.avg(sst.OISST.new2)
+
+#sst.SODA.new2
+son.SODA.avg <- son.avg(sst.SODA.new2)
+
+#dim check
+dim(son.GODAS.avg)
+dim(son.ORAS.avg)
+dim(son.OISST.avg)
+dim(son.SODA.avg)
+```
+
+
+```{r lsm}
+#get lsm mask
+#TODO: create updated LSM that resembles that in the papers
+
+```
+
+
+## Get SST Anoms
+
+(get sst anomalies)
 
 ```{r get_anoms}
 #use sst.anom function
 sst.anom.godas2 <- sst.anoms(sst.GODAS.w2019, quadratic = FALSE)
 
 ```
+
 
 ### Alt. SST Anoms
 
@@ -525,7 +585,6 @@ eof2.vec <- as.vector(eof2.mat)
 
 ```
 
-
 ```{r regress_eof}
 test.na <- is.finite(sst.2019.vec) & is.finite(eof1.vec) & is.finite(eof2.vec)
 
@@ -571,4 +630,329 @@ points(pc1.2019, pc2.2019, pch = 21, col = "black",
 abline(h = 0.5, lty = 2, lwd = 4)
 abline(v = 1, lty = 2, lwd = 4)
 ```
+
+
+# Visualization
+
+Begin with requested plots (for slides)
+- SST SON avg for each product.
+-- Repeat for interpolated SON avg (non anom) (e.g. Yang et al, 2020.)
+
+## SST SON Avg. (each product)
+
+```{r range_cols}
+#prep:
+son.range <- range(son.OISST.avg, son.ORAS.avg, son.GODAS.avg, son.SODA.avg, na.rm = TRUE)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.son <- seq(son.range[1], son.range[2], length.out = length(cols.ryb)+1)
+```
+
+```{r OISST}
+# using lon, lat: lat.values.base, lon.values.base
+
+#1982
+k <- 1
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 2015", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r ORAS}
+# oras.lon, oras.lat
+
+
+#1982
+k <- 1
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON 1982", adj = 0)
+world(add = TRUE)
+
+
+#1998
+k <- 17
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON 1998", adj = 0)
+world(add = TRUE)
+
+
+#2015
+k <- 34
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON 2015", adj = 0)
+world(add = TRUE)
+
+
+```
+
+```{r GODAS}
+
+#, GODAS.lon, GODAS.lat
+
+#1982
+k <- 1
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 2015", adj = 0)
+world(add = TRUE)
+```
+
+```{r SODA}
+#lon.values.soda, lat.values.soda
+
+
+#1982
+k <- 1
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.avg[,,k]),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON 2015", adj = 0)
+world(add = TRUE)
+```
+
+
+### Mean Field
+
+```{r fullperiod_mean}
+#1982-2015 mean
+#OISST
+son.OISST.mean <- apply(son.OISST.avg, c(1,2), mean)
+
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.mean),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+#ORAS
+son.ORAS.mean <- apply(son.ORAS.avg, c(1,2), mean)
+
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.mean),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS:Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+#GODAS
+son.GODAS.mean <- apply(son.GODAS.avg, c(1,2), mean)
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.mean),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+#SODA
+son.SODA.mean <- apply(son.SODA.avg, c(1,2), mean)
+
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.mean),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r partialperiod_mean}
+#1982-1998 mean
+son.OISST.mean1 <- apply(son.OISST.avg[,,1:17], c(1,2), mean)
+son.ORAS.mean1 <- apply(son.ORAS.avg[,,1:17], c(1,2), mean)
+son.GODAS.mean1 <- apply(son.GODAS.avg[,,1:17], c(1,2), mean)
+son.SODA.mean1 <- apply(son.SODA.avg[,,1:17], c(1,2), mean)
+
+#1999-2015 mean
+son.OISST.mean2 <- apply(son.OISST.avg[,,18:34], c(1,2), mean)
+son.ORAS.mean2 <- apply(son.ORAS.avg[,,18:34], c(1,2), mean)
+son.GODAS.mean2 <- apply(son.GODAS.avg[,,18:34], c(1,2), mean)
+son.SODA.mean2 <- apply(son.SODA.avg[,,18:34], c(1,2), mean)
+
+#plots
+##1982-1998
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.mean1),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: Mean 1982-1998", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.mean1),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS:Mean 1982-1998", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.mean1),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean 1982-1998", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.mean1),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: Mean 1982-1998", adj = 0)
+world(add = TRUE)
+
+
+##1999-2015
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.mean2),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: Mean 1998-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.mean2),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS:Mean 1998-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.mean2),
+          col = cols.ryb, breaks = breaks.son, zlim = son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean 1998-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.mean2),
+          col = cols.ryb, breaks = breaks.son, zlim =  son.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: Mean 1998-2015", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r partial_diffs}
+#get differenes
+son.OISST.diff <- son.OISST.mean2 - son.OISST.mean1
+son.ORAS.diff <- son.ORAS.mean2 - son.ORAS.mean1
+son.GODAS.diff <- son.GODAS.mean2 - son.GODAS.mean1
+son.SODA.diff <- son.SODA.mean2 - son.SODA.mean1
+
+
+#setup range and colors
+#TODO: combine son diffs
+diff.max <- max(abs(c(son.GODAS.diff, son.OISST.diff,
+                          son.ORAS.diff, son.SODA.diff)), na.rm = TRUE)
+diff.range <- c(-diff.max, diff.max)
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb)+1)
+
+
+
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = son.OISST.diff),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: Mean Field Difference", adj = 0)
+world(add = TRUE)
+
+
+imagePlot(list(x = oras.lon, y = oras.lat, z = son.ORAS.diff),
+          col = cols.rb, breaks = breaks.diff, zlim = diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: Mean Field Difference", adj = 0)
+world(add = TRUE)
+
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = son.GODAS.diff),
+          col = cols.rb, breaks = breaks.diff, zlim = diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean Field Difference", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = son.SODA.diff),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: Mean Field Difference", adj = 0)
+world(add = TRUE)
+
+```
+
+
+
+
+
 

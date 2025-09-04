@@ -106,3 +106,31 @@ sst.eof <- function(sst.anom, kmode){
               percent = per.temp))
 }
 
+
+#son averages
+## sst as [lon, lat, time]
+son.avg <- function(sst, son.only = FALSE){
+  ##sst as [lon, lat, time]
+  A.new <- aperm(sst, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
+  
+  #get dimensions from reordered array
+  nx <- dim(A.new)[3]
+  ny <- dim(A.new)[2] 
+  nt <- dim(A.new)[1]
+  
+  #get SON mean (get 1 sst per year (as son mean))
+  if (son.only) {
+    #if only provided with 3 months (son) per year
+    nyears <- nt %/% 3
+    A.temp <- array(A.new, dim = c(3, nyears, ny, nx))
+    A.son <- apply(A.temp[1:3, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }else {
+    nyears <- nt %/% 12
+    #reshape data array
+    A.temp <- array(A.new, dim = c(12, nyears, ny, nx))
+    A.son <- apply(A.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  }
+  
+  return(aperm(A.son, perm = c(3, 2, 1))) #return as [lon, lat, time]
+}
+
