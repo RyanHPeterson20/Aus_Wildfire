@@ -320,7 +320,10 @@ Data products:
 # SST Anom Prep
 
 
+
+
 ## Get SON Avg
+
 
 ```{r extra_clean}
 
@@ -329,6 +332,125 @@ ny<- dim(sst.GODAS.new2)[2]
 sst.GODAS.new2 <- sst.GODAS.new2[,ny:1,]
 
 ```
+
+### Interpolate (pre SON avg.)
+
+```{r interp_functions}
+sst.interp <- function(sst, sst.lon, sst.lat, grid.list){
+  
+  #get dime
+  dim.sst <- dim(sst)
+  
+  nx <- dim.sst[1]
+  ny <- dim.sst[2]
+  nt <- dim.sst[3]
+  
+  #interpolate 
+  sst.interp <- NULL
+  for (j in seq_len(nt)) {
+    sst.obj <-  list(x = sst.lon, y = sst.lat, z = sst[,,j])
+  
+    temp.interp <- interp.surface.grid(sst.obj, grid.list)
+    sst.interp <- abind(sst.interp, temp.interp$z, along = 3)
+  }
+  
+  return(sst.interp)
+}
+```
+
+
+```{r interp}
+#TODO: functionalize this
+
+#get dimen
+dim.GODAS <- dim(sst.GODAS.new2)
+dim.OISST <- dim(sst.OISST.new2)
+dim.SODA <- dim(sst.SODA.new2)
+dim.ORAS <- dim(sst.ORAS.new2)
+
+#GODAS interpolate
+nx <- dim.GODAS[1]
+ny <- dim.GODAS[2]
+nt <- dim.GODAS[3]
+
+#GODAS lat: new.lat, lon: new.lon 
+GODAS.interp <- NULL
+for (j in seq_len(nt)) {
+  GODAS.obj <-  list(x = GODAS.lon, y = GODAS.lat, z = sst.GODAS.new2[,,j])
+
+  temp.interp <- interp.surface.grid(GODAS.obj, grid.list)
+  GODAS.interp <- abind(GODAS.interp, temp.interp$z, along = 3)
+}
+
+
+#ORAS interpolate
+nx <- dim.ORAS[1]
+ny <- dim.ORAS[2]
+nt <- dim.ORAS[3]
+
+#ORAS lat: oras.lat, lon: oras.lon 
+
+ORAS.interp <- NULL
+for (j in seq_len(nt)) {
+  ORAS.obj <-  list(x = oras.lon, y = oras.lat, z = sst.ORAS.new2[,,j])
+
+  temp.interp <- interp.surface.grid(ORAS.obj, grid.list)
+  ORAS.interp <- abind(ORAS.interp, temp.interp$z, along = 3)
+}
+
+
+#OISST interpolate
+nx <- dim.OISST[1]
+ny <- dim.OISST[2]
+nt <- dim.OISST[3]
+
+#OISST lat: lat.values.base, lon: lon.values.base 
+
+OISST.interp <- NULL
+for (j in seq_len(nt)) {
+  OISST.obj <-  list(x = lon.values.base, y = lat.values.base, z = sst.OISST.new2[,,j])
+
+  temp.interp <- interp.surface.grid(OISST.obj, grid.list)
+  OISST.interp <- abind(OISST.interp, temp.interp$z, along = 3)
+}
+
+
+#SODA interpolate
+nx <- dim.SODA[1]
+ny <- dim.SODA[2]
+nt <- dim.SODA[3]
+
+#SODA lat: lat.values.soda, lon: lon.values.soda 
+
+SODA.interp <- NULL
+for (j in seq_len(nt)) {
+  SODA.obj <-  list(x = lon.values.soda, y = lat.values.soda, z = sst.SODA.new2[,,j])
+
+  temp.interp <- interp.surface.grid(SODA.obj, grid.list)
+  SODA.interp <- abind(SODA.interp, temp.interp$z, along = 3)
+}
+
+dim(GODAS.interp)
+dim(OISST.interp)
+dim(ORAS.interp)
+dim(SODA.interp)
+```
+
+```{r son_avg}
+#get son average post interpolate
+son.GODAS.interp <- son.avg(GODAS.interp)
+son.ORAS.interp <- son.avg(ORAS.interp, son.only = TRUE)
+son.OISST.interp <-  son.avg(OISST.interp)
+son.SODA.interp <- son.avg(SODA.interp)
+
+#dim check
+dim(son.GODAS.interp)
+dim(son.ORAS.interp)
+dim(son.OISST.interp)
+dim(son.SODA.interp)
+```
+
+## SON SST Avg
 
 ```{r SON_avgs}
 #sst.GODAS.new2
@@ -350,11 +472,26 @@ dim(son.OISST.avg)
 dim(son.SODA.avg)
 ```
 
-
 ```{r lsm}
 #get lsm mask
 #TODO: create updated LSM that resembles that in the papers
 
+```
+
+
+### Interpolate (post SON Avg.)
+
+```{r son.avg_interp}
+son.GODAS.interp2 <- sst.interp(son.GODAS.avg, GODAS.lon, GODAS.lat, grid.list)
+son.ORAS.interp2 <- sst.interp(son.ORAS.avg, oras.lon, oras.lat, grid.list)
+son.OISST.interp2 <- sst.interp(son.OISST.avg, lon.values.base, lat.values.base, grid.list)
+son.SODA.interp2 <- sst.interp(son.SODA.avg, lon.values.soda, lat.values.soda, grid.list)
+
+#dim check
+dim(son.GODAS.interp2)
+dim(son.ORAS.interp2)
+dim(son.OISST.interp2)
+dim(son.SODA.interp2)
 ```
 
 
@@ -497,7 +634,6 @@ abline(v = 1, lty = 2, lwd = 1)
 ```{r fig1a_1b}
 #TODO: get exact fig 1a, 1b working
 ```
-
 
 
 ## PCA: 1982-2019 SST Anoms
@@ -951,6 +1087,321 @@ world(add = TRUE)
 
 ```
 
+
+## SST SON Avg. (interpolated)
+
+Each data product interpolated to a $1^{\circ} \times 1^{\circ}$ grid. 
+
+```{r col_range}
+#prep:
+interp.range <- range(son.OISST.interp, son.ORAS.interp, son.GODAS.interp, son.SODA.interp, na.rm = TRUE)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.interp <- seq(interp.range[1], interp.range[2], length.out = length(cols.ryb)+1)
+
+```
+
+```{r OISST}
+#1982
+k <- 1
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.OISST.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.OISST.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.OISST.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 1998", adj = 0)
+world(add = TRUE)
+```
+
+```{r ORAS}
+#1982
+k <- 1
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.ORAS.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.ORAS.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.ORAS.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON 1998", adj = 0)
+world(add = TRUE)
+```
+
+```{r GODAS}
+ny <- dim(son.GODAS.interp)[2]
+
+#1982
+k <- 1
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.GODAS.interp[,ny:1,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.GODAS.interp[,ny:1,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.GODAS.interp[,ny:1,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 1998", adj = 0)
+world(add = TRUE)
+```
+
+```{r SODA}
+#1982
+k <- 1
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.SODA.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON 1982", adj = 0)
+world(add = TRUE)
+
+#1998
+k <- 17
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.SODA.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON 1998", adj = 0)
+world(add = TRUE)
+
+#2015
+k <- 34
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.SODA.interp[,,k]),
+          col = cols.ryb, breaks = breaks.interp, zlim =  interp.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON 1998", adj = 0)
+world(add = TRUE)
+```
+
+
+### Data Product Differences (wrt SON Avg)
+
+```{r temp_diff}
+#temporary checks on differences between when interpolation occurs
+k <- 16
+OISST.interp.diff <- son.OISST.interp2[,,k] - son.OISST.interp[,,k]
+
+
+diff.max <- max(abs(OISST.interp.diff), na.rm = TRUE)
+diff.range <- c(-diff.max, diff.max)
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb)+1)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = OISST.interp.diff),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON 1997 Diff", adj = 0)
+world(add = TRUE)
+
+```
+
+Note/TODO: somehow represent the below figures in a meaningful way...
+
+```{r OISST_diff}
+
+##1982
+k <- 1
+OISST.diff1 <- son.OISST.interp[,,k] - son.ORAS.interp[,,k]
+OISST.diff2 <- son.OISST.interp[,,k] - son.GODAS.interp[,dim(son.GODAS.interp)[2]:1,k]
+OISST.diff3 <- son.OISST.interp[,,k] - son.SODA.interp[,,k]
+
+diff.max <- max(abs(c(OISST.diff1, OISST.diff2, OISST.diff3)), na.rm = TRUE)
+diff.range <- c(-diff.max, diff.max)
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb)+1)
+
+#OISST - ORAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = OISST.diff1),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST - ORAS: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - GODAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = OISST.diff2),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST - GODAS: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - SODA
+imagePlot(list(x = lon.wide, y = lat.wide, z = OISST.diff3),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST - SODA: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r ORAS_diff}
+##1982
+k <- 1
+ORAS.diff1 <- son.ORAS.interp[,,k] - son.OISST.interp[,,k]
+ORAS.diff2 <- son.ORAS.interp[,,k] - son.GODAS.interp[,dim(son.GODAS.interp)[2]:1,k]
+ORAS.diff3 <- son.ORAS.interp[,,k] - son.SODA.interp[,,k]
+
+diff.max <- max(abs(c(ORAS.diff1, ORAS.diff2, ORAS.diff3)), na.rm = TRUE)
+diff.range <- c(-diff.max, diff.max)
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb)+1)
+
+
+#OISST - ORAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = ORAS.diff1),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS - OISST: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - GODAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = ORAS.diff2),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS - GODAS: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - SODA
+imagePlot(list(x = lon.wide, y = lat.wide, z = ORAS.diff3),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS - SODA: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+
+
+```
+
+```{r GODAS_diff}
+##1982
+k <- 1
+GODAS.diff1 <- son.GODAS.interp[,dim(son.GODAS.interp)[2]:1,k] - son.OISST.interp[,,k]
+GODAS.diff2 <- son.GODAS.interp[,dim(son.GODAS.interp)[2]:1,k] - son.ORAS.interp[,,k]
+GODAS.diff3 <- son.GODAS.interp[,dim(son.GODAS.interp)[2]:1,k] - son.SODA.interp[,,k]
+
+diff.max <- max(abs(c(GODAS.diff1, GODAS.diff2, GODAS.diff3)), na.rm = TRUE)
+diff.range <- c(-diff.max, diff.max)
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb)+1)
+
+
+#OISST - ORAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = GODAS.diff1),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS - OISST: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - GODAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = GODAS.diff2),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS - ORAS: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - SODA
+imagePlot(list(x = lon.wide, y = lat.wide, z = GODAS.diff3),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS - SODA: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r SODA_diff}
+
+##1982
+k <- 1
+SODA.diff1 <- son.SODA.interp[,,k] - son.OISST.interp[,,k]
+SODA.diff2 <- son.SODA.interp[,,k] - son.ORAS.interp[,,k]
+SODA.diff3 <- son.SODA.interp[,,k] - son.GODAS.interp[,dim(son.GODAS.interp)[2]:1,k]
+
+diff.max <- max(abs(c(SODA.diff1, SODA.diff2, SODA.diff3)), na.rm = TRUE)
+diff.range <- c(-diff.max, diff.max)
+cols.rb <- rev(colorRampPalette(brewer.pal(11, "RdBu"))(12))
+breaks.diff <- seq(diff.range[1], diff.range[2], length.out = length(cols.rb)+1)
+
+
+#OISST - ORAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = SODA.diff1),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA - OISST: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - GODAS
+imagePlot(list(x = lon.wide, y = lat.wide, z = SODA.diff2),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA - ORAS: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+#OISST - SODA
+imagePlot(list(x = lon.wide, y = lat.wide, z = SODA.diff3),
+          col = cols.rb, breaks = breaks.diff, zlim =  diff.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA - GODAS: SON 1982 Difference", adj = 0)
+world(add = TRUE)
+
+
+```
 
 
 
