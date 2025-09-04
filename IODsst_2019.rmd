@@ -302,11 +302,21 @@ dim(sst.GODAS.w2019)
 
 (get sst anomalies)
 
+
 ```{r get_anoms}
 #use sst.anom function
 sst.anom.godas2 <- sst.anoms(sst.GODAS.w2019, quadratic = FALSE)
 
 ```
+
+### Alt. SST Anoms
+
+```{r alt_anoms}
+#
+
+
+```
+
 
 ## Interpolation
 
@@ -360,7 +370,6 @@ world(add = TRUE)
 
 ```
 
-
 ## pIOD Range
 
 ```{r pIOD}
@@ -403,6 +412,9 @@ pc.std.IOD <- scale(pca.pIOD$PC, center = TRUE, scale = TRUE)
 PC1 <- -pc.std.IOD[,1]
 PC2 <- pc.std.IOD[,2]
 
+#1994 PCs
+loc.1994 <- c(PC1[13], PC2[13])
+
 #new indices
 s.index <- (PC1 + PC2)/sqrt(2)
 m.index <- (PC1 - PC2)/sqrt(2)
@@ -411,8 +423,22 @@ plot(1:34, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
 lines(1:34, m.index, col = "darkgreen")
 abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 
-#TODO: add in better PC1 v. PC2 plot 
+#PC1 v. PC2 plot 
+plot(PC1, PC2, pch = 19, col = "navyblue", xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 1)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 19, col = "red1", cex =1)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 19, col = "darkgreen", cex = 1)
+abline(h = 0.5, lty = 2, lwd = 1)
+abline(v = 1, lty = 2, lwd = 1)
 ```
+
+## SON SST Patterns
+
+```{r fig1a_1b}
+#TODO: get exact fig 1a, 1b working
+```
+
+
 
 ## PCA: 1982-2019 SST Anoms
 
@@ -421,25 +447,118 @@ abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 pca.iod.2019 <- sst.eof(sst.anom.pIOD, kmode = 2)
 
 #TODO: update names from here so we don't have any confusion
-pc.std.IOD <- scale(pca.iod.2019$PC, center = TRUE, scale = TRUE)
+pc.std.godas <- scale(pca.iod.2019$PC, center = TRUE, scale = TRUE)
 
 #TODO: clean this up once we decide which direction to go in. 
 #pc.std.IOD[,1] <- scale(pca.pIOD$PC[,1], center = TRUE, scale = TRUE)
 #pc.std.IOD[,2] <- scale(pca.pIOD$PC[,2], center = TRUE, scale = TRUE)
 
-PC1 <- -pc.std.IOD[,1]
-PC2 <- pc.std.IOD[,2]
+PC1.godas <- -pc.std.godas[,1]
+PC2.godas <- pc.std.godas[,2]
 
-s.index <- (PC1 + PC2)/sqrt(2)
-m.index <- (PC1 - PC2)/sqrt(2)
+s.index.godas <- (PC1.godas + PC2.godas)/sqrt(2)
+m.index.godas <- (PC1.godas - PC2.godas)/sqrt(2)
 
-plot(1:38, s.index, type = "l", col = "firebrick", ylim=c(-2,5))
-lines(1:38, m.index, col = "darkgreen")
+plot(1:38, s.index.godas, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:38, m.index.godas, col = "darkgreen")
 abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 
-PC1[16]
-PC2[16]
+PC1.godas[38] #2019
+PC2.godas[38]
 
+PC1.godas[13] #1994
+PC2.godas[13]
+
+plot(PC1.godas, PC2.godas, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1.godas[c(13,16,25)], PC2.godas[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1.godas[c(1,6,34)], PC2.godas[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+points(PC1.godas[38], PC2.godas[38], pch = 21, col = "black",
+       bg = alpha("firebrick4",.65), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = 1, lty = 2, lwd = 4)
+```
+
+## PCA: GODAS SST Anoms
+
+```{r pca_godas}
+#TODO: set-up godas data and repeat
+```
+
+
+## Regress 2019
+
+"...the black dot marks the 2019 pIOD, obtained by regressing the SST anomaly pattern over the tropical Indian Ocean in 2019 from the GODAS dataset onto the EOF1 and EOF2 patterns;" Fig 1 (cai et al, 2021).
+
+
+We need: 
+- SST anomaly pattern 
+
+Regress the 2019 data onto eof1 and eof2 (loadings) of the baseline PCA. 
+
+```{r regress_setup}
+#select 2019 sst anoms
+anom.2019 <- GODAS.anom2[,,38] #full regional 
+
+sst.anom2 <- aperm(GODAS.anom2, c(3, 2, 1))
+sst.2019.pIOD <- sst.anom2[38, lat.range.IOD[1]:lat.range.IOD[2], lon.range.IOD[1]:lon.range.IOD[2]] #pIOD (equitorial IOD)
+
+#alternate pIOD (equitorial IOD)
+sst.2019.iod <- GODAS.anom2[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], 38] #[lon, lat, year = 2019]
+nx <- dim(sst.2019.iod)[1]
+ny <- dim(sst.2019.iod)[2]
+
+#setup eof and anom vectors
+iod.eof <- pca.pIOD$EOF
+
+#temp matrix (for comparison to sst.2019.iod, sst.anom matrix)
+eof1.mat <- matrix(iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+eof2.mat <- matrix(iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+
+#move back to vector
+sst.2019.vec <- as.vector(sst.2019.iod)
+eof1.vec <- as.vector(eof1.mat)
+eof2.vec <- as.vector(eof2.mat)
+
+```
+
+
+```{r regress_eof}
+test.na <- is.finite(sst.2019.vec) & is.finite(eof1.vec) & is.finite(eof2.vec)
+
+y <- sst.2019.vec[test.na]
+X <- cbind(eof1.vec[test.na], eof2.vec[test.na])
+
+a1 <- sum(y * eof1.vec[test.na])
+a2 <- sum(y * eof2.vec[test.na])
+
+#get pc mean and std dev
+#pc.iod <- pca.pIOD$PC
+pc.iod <- pca.iod.2019$PC
+#pc.mean <- mean(rbind(pc.iod, c(a1, a2)))
+#pc.std <- sd(rbind(pc.iod, c(a1, a2)))
+
+pc.mean <- mean(pc.iod)
+pc.std <- sd(pc.iod)
+
+pc1.2019 <- -(a1-pc.mean)/pc.std
+pc2.2019 <- (a2-pc.mean)/pc.std
+
+
+#TODO: add in baseline (fig 1c)
+plot(PC1, PC2, pch = 19, col = "navyblue", xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 1)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 19, col = "red1", cex =1)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 19, col = "darkgreen", cex = 1)
+points(pc1.2019, pc2.2019, pch = 19, col = "black", cex =1.25)
+abline(h = 0.5, lty = 2, lwd = 1)
+abline(v = 1, lty = 2, lwd = 1)
+
+
+#overlay
 plot(PC1, PC2, pch = 21, col = "black",
      bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
      xlab = "PC1", ylab = "PC2", cex = 5)
@@ -447,27 +566,9 @@ points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
        bg = alpha("red1",.75), cex = 5)
 points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
        bg = alpha("seagreen1",.65), cex = 5)
+points(pc1.2019, pc2.2019, pch = 21, col = "black",
+       bg = alpha("plum2",.65), cex = 5)
 abline(h = 0.5, lty = 2, lwd = 4)
 abline(v = 1, lty = 2, lwd = 4)
 ```
-
-## Regress 2019
-
-Regress the 2019 data onto eof1 and eof2 (loadings) of the baseline PCA. 
-
-```{r pca_2019}
-#select 2019 sst anoms
-anom.2019 <- GODAS.anom2[,,38] #full regional 
-
-sst.anom2 <- aperm(GODAS.anom2, c(3, 2, 1))
-sst.2019.pIOD <- sst.anom2[38, lat.range.IOD[1]:lat.range.IOD[2], lon.range.IOD[1]:lon.range.IOD[2]] #pIOD (equitorial IOD)
-
-#setup eof and anom vectors
-iod.eof <- pca.pIOD$EOF
-
-
-#TODO: finalize the vector setup then perform regression
-
-```
-
 
