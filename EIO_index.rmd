@@ -1,0 +1,50 @@
+---
+title: "EIO_index"
+author: "Ryan Peterson"
+date: "2025-09-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+#.nc files
+suppressMessages(library(ncdf4))
+suppressMessages(library(terra))
+
+# date/data mgmt
+suppressMessages(library(lubridate))
+suppressMessages(library(abind))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+suppressMessages(library(colorspace))
+suppressMessages(library(RColorBrewer)) #colorRampPalette
+suppressMessages(library(scales)) #for adjusting opacity
+
+#matlab function (e.g. detrend)
+suppressMessages(library(pracma))
+```
+
+```{r functions_data}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+
+source("pIOD_functions.R") #sst.anom and eof functions
+
+#load in preped data products
+load("sstGODAS.rda") #load sst.GODAS data
+load("sstOISST.rda")
+load("sstORAS.rda")
+load("sstSODA.rda")
+```
+
+Let's try this again for the nth time, reproducing results from Cai et al (2021) and Wang et al (2025).
+
+Our aim is to *exactly* reproduce the S- and M-indices that describe positive IOD events in the Equatorial Indian Ocean (EIO).
+
+Outline/Notes:
+1. 
+
+

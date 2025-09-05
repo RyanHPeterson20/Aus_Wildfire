@@ -51,6 +51,15 @@ wide_minLon <- 30
 wide_maxLat <- 20
 wide_minLat <- -20
 
+#pIOD (40, -5) X (100, 5)
+pIOD_maxLon <- 100
+pIOD_minLon <- 40 
+pIOD_maxLat <- 5
+pIOD_minLat <- -5
+
+```
+
+```{r dmi_range}
 #DMI west/WTIO (50, -10) X (70, 10) 
 wDMI_maxLon <- 70
 wDMI_minLon <- 50
@@ -62,13 +71,6 @@ eDMI_maxLon <- 110
 eDMI_minLon <- 90
 eDMI_maxLat <- 0
 eDMI_minLat <- -10
-
-#pIOD (40, -5) X (100, 5)
-pIOD_maxLon <- 100
-pIOD_minLon <- 40 
-pIOD_maxLat <- 5
-pIOD_minLat <- -5
-
 ```
 
 ```{r grid_points}
@@ -264,17 +266,6 @@ godas_prep <- function(nc.data){
 
 ```
 
-
-```{r test_function}
-#test function for nc.GODAS.2019
-nc.data <- nc.GODAS.2019
-on.grid.temp <- nc.data[["dim"]][["lon"]][["vals"]]
-
- sst.temp <- ncvar_get(nc.GODAS.2019, "pottmp")
- sst.temp <- ncvar_get(nc.data, "pottmp")
-```
-
-
 ## GODAS Data Setup
 
 ```{r data_cleaning}
@@ -342,8 +333,8 @@ godas_list <- list(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, n
                    nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
                    nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
                    nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
-                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015, nc.GODAS.2016,
-                   nc.GODAS.2017, nc.GODAS.2018, nc.GODAS.2019)
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)  #, nc.GODAS.2016,
+                   #nc.GODAS.2017, nc.GODAS.2018, nc.GODAS.2019)
 
 #get lon, lat, sst, and times
 sst.GODAS.new2 <- NULL
@@ -671,6 +662,25 @@ nc.ORAS.2015n <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_
 
 ```
 
+```{r expanded_oras_import}
+#TODO: expand this to include all months between 1982-2015
+setwd("~/CO_AUS/Aus_CO-main")
+
+#ORAS5
+##1982
+#jan 1982
+nc.ORAS.1982jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198201_CONS_v0.1.nc")
+#feb 1982
+nc.ORAS.1982feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198202_CONS_v0.1.nc")
+#mar 1982
+nc.ORAS.1982mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198203_CONS_v0.1.nc")
+#apr 1982
+nc.ORAS.1982apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198204_CONS_v0.1.nc")
+
+
+#TODO: finish this if needed, it will take a lot of time.
+```
+
 ## ORA-S5 Functions
 
 ```{r oras_functions}
@@ -986,12 +996,10 @@ rm(nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n,
 dim(sst.ORAS.new2) #[lon, lat, son_months]
 ```
 
-
 ```{r save_oras}
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
 save(sst.ORAS.new, sst.ORAS.new2, oras.lon, oras.lat, file = "sstORAS.rda")
 ```
-
 
 ## Get ORA-S5 Land-Sea Mask
 (Note: this mask looks very close to those presented in the paper)
@@ -1005,7 +1013,8 @@ temp.lsm <- is.na(sst.ORAS.new[,,1])
 
 # OISST v2
 
-('default' data product: use as a template for other products )
+('default' data product: use as a template for other products, also available with weekly data )
+
 
 ```{r load_data}
 setwd("~/CO_AUS/Aus_CO-main")
@@ -1343,6 +1352,7 @@ save(sst.GODAS.anom2, sst.ORAS.anom2,
 ## Alternative SST Anoms
 
 ```{r alt_function}
+
 sst.anoms <- function(A, son.only = FALSE, quadratic = FALSE){
     
   A.new <- aperm(A, perm = c(3, 2, 1))  # reorder data as [time, lat, lon]
@@ -1539,7 +1549,7 @@ dim(son.SODA.sst)
 
 ```
 
-```{r test_sst_anoms}
+```{r sst_anoms}
 #sst anoms
 ##OISST
 sst.anom.oisst2 <- sst.anoms(sst.OISST.new2, quadratic = FALSE)
@@ -1644,7 +1654,6 @@ dim(OISST.anom)
 dim(ORAS.anom)
 dim(SODA.anom)
 
-
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
 save(GODAS.anom, OISST.anom, ORAS.anom, SODA.anom, file = "sstinterp.rda")
 
@@ -1665,9 +1674,73 @@ mean_sst <- apply(array_new, c(1, 2, 3), mean, na.rm = TRUE)
 dimnames(mean_sst) <- NULL
 
 dim(mean_sst) 
+
+
+#location range
+lon.values.IOD <- lon.wide[lon.wide <= pIOD_maxLon & lon.wide >= pIOD_minLon]
+lon.range.IOD <- range(which(lon.wide <= pIOD_maxLon & lon.wide >= pIOD_minLon))
+
+lat.values.IOD <- lat.wide[lat.wide <= pIOD_maxLat & lat.wide >= pIOD_minLat]
+lat.range.IOD <- range(which(lat.wide <= pIOD_maxLat & lat.wide >= pIOD_minLat))
+
+sst.anom.mean <- mean_sst[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+
 ```
 
-### WIP: Land-Sea Mask Adjustments
+### Land-Sea Mask Adjustments
+
+```{r lsm_adj}
+westcoords <- matrix(c(1, 2,
+                   2, 4,
+                   3, 5, 
+                   4, 6,
+                   5, 7,
+                   6, 8,
+                   7, 8,
+                   8, 9,
+                   9, 10,
+                   10,11), 
+                 byrow = TRUE, ncol = 2)
+
+#partial east coordiantes
+eastcoords <- matrix(c( 61, 5,
+                        60, 6,
+                        59, 8,
+                        58, 9,
+                        57, 10,
+                        59, 11,
+                        60, 10,
+                        61, 9,
+                        ),
+                      byrow = TRUE, ncol=2) 
+
+
+for (k in 1:dim(sst.anom.mean)[3]) {
+  for (i in 1:nrow(westcoords)) {
+    row_i <- westcoords[i, 1]
+    col_i <- westcoords[i, 2]
+    sst.anom.mean[row_i, col_i, k] <- NaN
+  }
+  for (j in 1:nrow(eastcoords)) {
+    row_j <- eastcoords[j, 1]
+    col_j <- eastcoords[j, 2]
+    sst.anom.mean[row_j, col_j, k] <- NaN
+  }
+}
+
+sst.anom <- aperm(sst.anom.mean, c(3, 2, 1))
+dim(sst.anom)
+```
+
+
+```{r save_sstanoms}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(sst.anom.mean, file = "sst_anoms.rda")
+```
+
+
+
+### Test code
 
 ```{r lsm_adjustments}
 #TODO: finalize this with respect to the eastern LSM, and make this all better
