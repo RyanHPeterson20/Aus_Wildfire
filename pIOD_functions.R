@@ -71,8 +71,9 @@ sst.anoms <- function(A, son.only = FALSE, quadratic = FALSE){
 }
 
 #pca/eof analysis function:
+##sst.anom as [time, lat, lon]
 sst.eof <- function(sst.anom, kmode){
-  #sst.anom as [time, lat, lon]
+
   nt <- dim(sst.anom)[1]
   ny <- dim(sst.anom)[2]
   nx <- dim(sst.anom)[3]

@@ -1653,6 +1653,8 @@ save(GODAS.anom, OISST.anom, ORAS.anom, SODA.anom, file = "sstinterp.rda")
 
 
 ```{r interp_sstavg}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+load("sstinterp.rda")
 
 mat_list <- list(GODAS.anom, ORAS.anom,
                 OISST.anom, SODA.anom)
@@ -1669,7 +1671,6 @@ dim(mean_sst)
 
 ```{r lsm_adjustments}
 #TODO: finalize this with respect to the eastern LSM, and make this all better
-
 
 #shave some pixels off
 IOD_maxLon <- 100
