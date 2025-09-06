@@ -34,28 +34,140 @@ setwd("~/CO_AUS/Aus_CO-main/pIOD")
 source("pIOD_functions.R") #sst.anom and eof functions
 
 #load in preped data products
-load("sstGODAS.rda") #load sst.GODAS data
+load("sstGODAS.rda")
 load("sstOISST.rda")
 load("sstORAS.rda")
 load("sstSODA.rda")
 ```
+
+```{r setup}
+#indian ocean region
+wide_maxLon <- 120
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+#pIOD (40, -5) X (100, 5), EIO region
+pIOD_maxLon <- 100
+pIOD_minLon <- 40 
+pIOD_maxLat <- 5
+pIOD_minLat <- -5
+
+#indian ocean grid
+lon.wide <- seq(wide_minLon, wide_maxLon, by = 1)
+lat.wide <- seq(wide_minLat, wide_maxLat, by = 1)
+
+#grid list from 
+grid.list <- list(x = lon.wide,
+                  y = lat.wide)
+
+#define pIOD range
+
+
+```
+
 
 Let's try this again for the nth time, reproducing results from Cai et al (2021) and Wang et al (2025).
 
 Our aim is to *exactly* reproduce the S- and M-indices that describe positive IOD events in the Equatorial Indian Ocean (EIO).
 
 Outline/Notes:
-1. Get SST anomalies for each data product with respect to a full-period mean.
-  a. Get full-period mean 
-2. Detrend anomalies (for each data product)
-  a.
+1. Get SST anomalies for each data product
+  a. Get full-period mean and de-meaned anomally
+    i. Visualization of spatial means 
+  b. Detrend anomalies (w/ linear fit)
+    i. 
 
 
 # SST Anomalies 
 
+```{r functions}
+#pass in sst.A as [nx, ny, nt]
+sst.fullperiod <- function(sst.A){
+  sst.A <- aperm(sst.A, c(3,2,1)) #arragne as [nt, ny, nx]
+
+  dim.sst <- dim(sst.A)
+  nt <- dim.sst[1]
+  ny <- dim.sst[2]
+  nx <- dim.sst[3]
+  
+  sst.mat <- matrix(sst.A, nrow = ny * nx, ncol = nt, byrow = TRUE)
+  
+  sst.means <- rowMeans(sst.mat)
+  sst.anoms <- sweep(sst.mat, 1, rowMeans(sst.mat), "-")
+  
+  #convert back to [nx, ny]
+  out.mean <- matrix(sst.means, nrow = nx, ncol = ny, byrow = TRUE)
+  
+  #convert back to [nx, ny, nt]
+  temp.anom <- array(sst.anoms, dim = c(ny, nx, nt))
+  out.anom <- aperm(temp.anom, c(2,1,3))
+  
+  return(list(mean = out.mean,
+              anom = out.anom))
+  
+}
+```
+
 ## Full-Period Mean
 
-```{r}
+```{r mean_base}
+#determining anomalies from cai et al code
+sst.GODAS.new2 <- sst.GODAS.new2[ ,dim(sst.GODAS.new2)[2]:1, ] #flip lat for godas data set
+
+#dim checks
+dim(sst.GODAS.new2)
+dim(sst.ORAS.new3)
+dim(sst.OISST.new2)
+dim(sst.SODA.new2)
+
+temp.godas.out <- sst.fullperiod(sst.GODAS.new2)
+sst.godas.mean <- temp.godas.out$mean
+sst.godas.anom <- temp.godas.out$anom
+
+temp.oras.out <- sst.fullperiod(sst.ORAS.new3)
+sst.oras.mean <- temp.oras.out$mean
+sst.oras.anom <- temp.oras.out$anom
+
+temp.oisst.out <- sst.fullperiod(sst.OISST.new2)
+sst.oisst.mean <- temp.oisst.out$mean
+sst.oisst.anom <- temp.oisst.out$anom
+
+temp.soda.out <- sst.fullperiod(sst.SODA.new2)
+sst.soda.mean <- temp.soda.out$mean
+sst.soda.anom <- temp.soda.out$anom
+
+rm(temp.godas.out, temp.oras.out, temp.oisst.out, temp.soda.out)
+
+```
+
+### Visualization - Spatial Means
+
+(TODO: get full mean field, and change between times)
+
+```{r means_fig}
+
+#TODO: update with better figures after we finalize
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.godas.mean),
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+
+```
+
+## Linear Fit and De-trend
+
+```{r detrend}
+ 
+sst.anom1 <- sst.godas.anom
+dim.anom <- dim(sst.anom1)
+
+nx <- dim.anom[1]
+ny <- dim.anom[2]
+nt <- dim.anom[3]
 
 ```
 
