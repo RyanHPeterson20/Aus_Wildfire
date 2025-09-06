@@ -663,7 +663,7 @@ nc.ORAS.2015n <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_
 ```
 
 ```{r expanded_oras_import}
-#TODO: expand this to include all months between 1982-2015
+#include all months between 1982-2015
 setwd("~/CO_AUS/Aus_CO-main")
 
 #ORAS5
@@ -1673,6 +1673,15 @@ nc.ORAS.2015ex <- list(nc.ORAS.2015jan, nc.ORAS.2015feb, nc.ORAS.2015mar,
                                         
 ```
 
+```{r organize_orasdata}
+oras.full <- c(nc.ORAS.1982ex, nc.ORAS.1983ex, nc.ORAS.1984ex, nc.ORAS.1985ex, nc.ORAS.1986ex, nc.ORAS.1987ex, nc.ORAS.1988ex,
+               nc.ORAS.1989ex, nc.ORAS.1990ex, nc.ORAS.1991ex, nc.ORAS.1992ex, nc.ORAS.1993ex, nc.ORAS.1994ex, nc.ORAS.1995ex, 
+               nc.ORAS.1996ex, nc.ORAS.1997ex, nc.ORAS.1998ex, nc.ORAS.1999ex, nc.ORAS.2000ex, nc.ORAS.2001ex, nc.ORAS.2002ex,
+               nc.ORAS.2003ex, nc.ORAS.2004ex, nc.ORAS.2005ex, nc.ORAS.2006ex, nc.ORAS.2007ex, nc.ORAS.2008ex, nc.ORAS.2009ex,
+               nc.ORAS.2010ex, nc.ORAS.2011ex, nc.ORAS.2012ex, nc.ORAS.2013ex, nc.ORAS.2014ex, nc.ORAS.2015ex)
+```
+
+
 ## ORA-S5 Functions
 
 ```{r oras_functions}
@@ -1988,9 +1997,35 @@ rm(nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n,
 dim(sst.ORAS.new2) #[lon, lat, son_months]
 ```
 
+### ORA-S5 Extended
+
+```{r raw_ext}
+#sst array setup
+sst.ORAS.new3 <- NULL
+#TODO: get lon, lat (unique) output:
+
+for (j in 1:length(oras.full)) {
+  temp.nc <- oras.full[[j]]
+  
+  out.temp <- array_setup(temp.nc, wide.lon, wide.lat)
+  
+  temp.sst <- reformat_oras(out.temp$lon, out.temp$lat, 
+                     out.temp$sst)
+  
+  oras.lon <- temp.sst$lon
+  oras.lat <- temp.sst$lat
+  
+  sst.ORAS.new3 <- abind(sst.ORAS.new3, temp.sst$sst, along = 3)
+}
+
+dim(sst.ORAS.new3)
+
+```
+
+
 ```{r save_oras}
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-save(sst.ORAS.new, sst.ORAS.new2, oras.lon, oras.lat, file = "sstORAS.rda")
+save(sst.ORAS.new, sst.ORAS.new2, sst.ORAS.new3, oras.lon, oras.lat, file = "sstORAS.rda")
 ```
 
 ## Get ORA-S5 Land-Sea Mask

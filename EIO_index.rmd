@@ -46,12 +46,14 @@ Our aim is to *exactly* reproduce the S- and M-indices that describe positive IO
 
 Outline/Notes:
 1. Get SST anomalies for each data product with respect to a full-period mean.
-  a. 
+  a. Get full-period mean 
 2. Detrend anomalies (for each data product)
   a.
 
 
+# SST Anomalies 
 
+## Full-Period Mean
 
 ```{r}
 
