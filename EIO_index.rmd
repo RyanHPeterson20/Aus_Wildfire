@@ -77,14 +77,24 @@ Outline/Notes:
     i. Visualization of spatial means 
   b. Detrend anomalies (w/ linear fit)
     i. 
+  c. Seasonal Average
+    i. SON (Sept, Oct, Nov)
+  d. Alternative SST Anomalies (from previous work that has been very close in the past)
+2. Multi-Product Average
+  a. Interpolate to grid
+    i. Visualization - SON SST Anom for each data product
+  b. Product Average
+    i. Visualization - SON SST Anom by year (focus on pIOD years)
 
+TODO:
+-Double check the godas data from previous files for lat flips
 
 # SST Anomalies 
 
 ```{r functions}
 #pass in sst.A as [nx, ny, nt]
 sst.fullperiod <- function(sst.A){
-  sst.A <- aperm(sst.A, c(3,2,1)) #arragne as [nt, ny, nx]
+  sst.A <- aperm(sst.A, c(3,2,1)) #arrange as [nt, ny, nx]
 
   dim.sst <- dim(sst.A)
   nt <- dim.sst[1]
@@ -107,6 +117,66 @@ sst.fullperiod <- function(sst.A){
               anom = out.anom))
   
 }
+
+
+sst.detrend <- function(sst.anom1, quadratic = FALSE){
+  
+  sst.anom1 <- aperm(sst.anom1, c(3,2,1)) # as [nt, ny, nx]
+  dim.anom <- dim(sst.anom1)
+  
+  nx <- dim.anom[3]
+  ny <- dim.anom[2]
+  nt <- dim.anom[1]
+  
+  anom.mat <- matrix(sst.anom1, nrow = ny * nx, ncol = nt, byrow = TRUE)
+  
+  test.na <- which(!is.na(anom.mat), arr.ind = TRUE) 
+  true.index <- unique(test.na[,1]) #select rows (locations) without NA
+  
+  
+  anom.x <- seq_len(nt) #time "covariates"
+  anom.y <- t(anom.mat[true.index, ])
+  
+  anom.resid <- matrix(NA, nrow = nt, ncol = ny*nx)
+  if (quadratic) {
+    anom.fit <- lm(anom.y ~ anom.x + I(anom.x^2))
+    anom.coef <- matrix(NA, nrow = 3, ncol = ny*nx)
+  } else {
+    anom.fit <- lm(anom.y ~ anom.x)
+    anom.coef <- matrix(NA, nrow = 2, ncol = ny*nx)
+  }
+  
+  anom.coef[,true.index] <- anom.fit$coefficients
+  anom.resid[,true.index] <- anom.fit$residuals
+  
+  temp.coef <- array(anom.coef, dim = c(nrow(anom.coef), ny, nx))
+  out.coef <- aperm(temp.coef, c(3,2,1))
+  
+  temp.resid <- array(anom.resid, dim = c(nt, ny, nx))
+  out.resid <- aperm(temp.resid, c(3,2,1))
+  
+  return(list(coefs = out.coef,
+              resid = out.resid))
+}
+
+son.avg <- function(sst.anom2){
+  
+  sst.anom2 <- aperm(sst.anom2, c(3, 2, 1))  # reorder data as [nt, ny, nx]
+  dim.anom <- dim(sst.anom2)
+  
+  nx <- dim.anom[3]
+  ny <- dim.anom[2]
+  nt <- dim.anom[1]
+  
+  nyears <- nt %/% 12
+  #reshape data array
+  sst.temp <- array(sst.anom2, dim = c(12, nyears, ny, nx))
+  sst.son <- apply(sst.temp[9:11, , , ], c(2,3,4), mean, na.rm = TRUE) #already at correct subset
+  
+  out.son <- aperm(sst.son, c(3,2,1))
+  return(out.son)
+}
+
 ```
 
 ## Full-Period Mean
@@ -161,14 +231,157 @@ world(add = TRUE)
 ## Linear Fit and De-trend
 
 ```{r detrend}
- 
-sst.anom1 <- sst.godas.anom
-dim.anom <- dim(sst.anom1)
+temp.godas.out <- sst.detrend(sst.godas.anom)
+sst.godas.coef <- temp.godas.out$coefs
+sst.godas.resid <- temp.godas.out$resid
 
-nx <- dim.anom[1]
-ny <- dim.anom[2]
-nt <- dim.anom[3]
+temp.oras.out <- sst.detrend(sst.oras.anom)
+sst.oras.coef <- temp.oras.out$coefs
+sst.oras.resid <- temp.oras.out$resid
 
+temp.oisst.out <- sst.detrend(sst.oisst.anom)
+sst.oisst.coef <- temp.oisst.out$coefs
+sst.oisst.resid <- temp.oisst.out$resid
+
+temp.soda.out <- sst.detrend(sst.soda.anom)
+sst.soda.coef <- temp.soda.out$coefs
+sst.soda.resid <- temp.soda.out$resid
+
+rm(temp.godas.out, temp.oras.out, temp.oisst.out, temp.soda.out)
+```
+
+
+### Visualization - SST Anoms (De-Trended)
+
+```{r temp_viz}
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = out.resid[,,11]),
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SST Anom November 1982", adj = 0)
+world(add = TRUE)
+```
+
+
+## Seasonal Averages
+
+### SON Averages
+
+```{r son_avg}
+
+#get son averages for residual data
+son.godas <- son.avg(sst.godas.resid)
+son.oras <- son.avg(sst.oras.resid)
+son.oisst <- son.avg(sst.oisst.resid)
+son.soda <- son.avg(sst.soda.resid)
+
+```
+
+## Alternate SST Anomalies
+
+```{r alt_sst_anoms}
+#using sst.anoms() function
+```
+
+
+
+# Multi-Product Average
+
+```{r functions}
+sst.interp <- function(sst, sst.lon, sst.lat, grid.list){
+  
+  #get dime
+  dim.sst <- dim(sst)
+  
+  nx <- dim.sst[1]
+  ny <- dim.sst[2]
+  nt <- dim.sst[3]
+  
+  #interpolate 
+  sst.interp <- NULL
+  for (j in seq_len(nt)) {
+    sst.obj <-  list(x = sst.lon, y = sst.lat, z = sst[,,j])
+  
+    temp.interp <- interp.surface.grid(sst.obj, grid.list)
+    sst.interp <- abind(sst.interp, temp.interp$z, along = 3)
+  }
+  
+  return(sst.interp)
+}
+```
+
+## Interpolat to Grid
+
+```{r interpolation}
+son.GODAS.interp <- sst.interp(son.godas, GODAS.lon, GODAS.lat, grid.list)
+son.ORAS.interp <- sst.interp(son.oras, oras.lon, oras.lat, grid.list)
+son.OISST.interp <- sst.interp(son.oisst, lon.values.base, lat.values.base, grid.list)
+son.SODA.interp <- sst.interp(son.soda, lon.values.soda, lat.values.soda, grid.list)
+
+#dim check
+dim(son.GODAS.interp)
+dim(son.ORAS.interp)
+dim(son.OISST.interp)
+dim(son.SODA.interp)
+
+son.GODAS.interp <- son.GODAS.interp[,dim(son.GODAS.interp)[2]:1, ]
+
+```
+
+### Visualization - SON SST Anomalies
+
+```{r Visualization}
+#TODO: get unified ryb colors and range
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.GODAS.interp[,,1]),
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON SST Anom 1982", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.ORAS.interp[,,1]),
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: SON SST Anom 1982", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.OISST.interp[,,1]),
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: SON SST Anom 1982", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.SODA.interp[,,1]),
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: SON SST Anom 1982", adj = 0)
+world(add = TRUE)
+
+```
+
+## Product Avg
+
+```{r son.sst.avg}
+son.sst.anom <- (son.GODAS.interp + son.ORAS.interp + 
+                   son.OISST.interp+ son.SODA.interp)/4
+```
+
+### Visualization
+
+```{r col_range}
+abs.max <- max(abs(son.sst.anom), na.rm = TRUE)
+sst.range <- c(-abs.max, abs.max)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.sst <- c(sst.range[1], seq(-1,1, by = 0.2), sst.range[2])
+```
+
+
+```{r moderate}
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.sst.anom[,,1]),
+          col = cols.ryb, breaks = breaks.sst, zlim =  sst.range,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("1982: SST Anomalies", adj = 0)
+world(add = TRUE)
 ```
 
 
