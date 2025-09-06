@@ -45,6 +45,16 @@ Let's try this again for the nth time, reproducing results from Cai et al (2021)
 Our aim is to *exactly* reproduce the S- and M-indices that describe positive IOD events in the Equatorial Indian Ocean (EIO).
 
 Outline/Notes:
-1. 
+1. Get SST anomalies for each data product with respect to a full-period mean.
+  a. 
+2. Detrend anomalies (for each data product)
+  a.
+
+
+
+
+```{r}
+
+```
 
 

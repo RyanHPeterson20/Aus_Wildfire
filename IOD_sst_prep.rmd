@@ -667,6 +667,7 @@ nc.ORAS.2015n <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_
 setwd("~/CO_AUS/Aus_CO-main")
 
 #ORAS5
+
 ##1982
 #jan 1982
 nc.ORAS.1982jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198201_CONS_v0.1.nc")
@@ -676,9 +677,295 @@ nc.ORAS.1982feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_contro
 nc.ORAS.1982mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198203_CONS_v0.1.nc")
 #apr 1982
 nc.ORAS.1982apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198204_CONS_v0.1.nc")
+#may 1982
+nc.ORAS.1982may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198205_CONS_v0.1.nc")
+#june 1982
+nc.ORAS.1982jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198206_CONS_v0.1.nc")
+#july 1982
+nc.ORAS.1982jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198207_CONS_v0.1.nc")
+#august 1982
+nc.ORAS.1982aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198208_CONS_v0.1.nc")
+#december 1982
+nc.ORAS.1982dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198212_CONS_v0.1.nc")
+
+nc.ORAS.1982ex <- list(nc.ORAS.1982jan, nc.ORAS.1982feb, nc.ORAS.1982mar, nc.ORAS.1982apr, nc.ORAS.1982may, nc.ORAS.1982jun, 
+                       nc.ORAS.1982jul, nc.ORAS.1982aug, nc.ORAS.1982s, nc.ORAS.1982o, nc.ORAS.1982n, nc.ORAS.1982dec)
+
+rm(nc.ORAS.1982jan, nc.ORAS.1982feb, nc.ORAS.1982mar, nc.ORAS.1982apr, nc.ORAS.1982may, nc.ORAS.1982jun, 
+                       nc.ORAS.1982jul, nc.ORAS.1982aug, nc.ORAS.1982dec)
 
 
-#TODO: finish this if needed, it will take a lot of time.
+
+##1983
+#jan 1983
+nc.ORAS.1983jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198301_CONS_v0.1.nc")
+#feb 1983
+nc.ORAS.1983feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198302_CONS_v0.1.nc")
+#mar 1983
+nc.ORAS.1983mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198303_CONS_v0.1.nc")
+#apr 1983
+nc.ORAS.1983apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198304_CONS_v0.1.nc")
+#may 1983
+nc.ORAS.1983may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198305_CONS_v0.1.nc")
+#jun 1983
+nc.ORAS.1983jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198306_CONS_v0.1.nc")
+#jul 1983
+nc.ORAS.1983jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198307_CONS_v0.1.nc")
+#aug 1983
+nc.ORAS.1983aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198308_CONS_v0.1.nc")
+#dec 1983
+nc.ORAS.1983dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198312_CONS_v0.1.nc")
+
+nc.ORAS.1983ex <- list(nc.ORAS.1983jan, nc.ORAS.1983feb, nc.ORAS.1983mar, nc.ORAS.1983apr, nc.ORAS.1983may, nc.ORAS.1983jun, 
+                       nc.ORAS.1983jul, nc.ORAS.1983aug, nc.ORAS.1983s, nc.ORAS.1983o, nc.ORAS.1983n, nc.ORAS.1983dec)
+
+rm(nc.ORAS.1983jan, nc.ORAS.1983feb, nc.ORAS.1983mar, nc.ORAS.1983apr, nc.ORAS.1983may, nc.ORAS.1983jun, 
+                       nc.ORAS.1983jul, nc.ORAS.1983aug, nc.ORAS.1983dec)
+
+
+##1984
+#jan 1984
+nc.ORAS.1984jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198401_CONS_v0.1.nc")
+#feb 1984
+nc.ORAS.1984feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198402_CONS_v0.1.nc")
+#mar 1984
+nc.ORAS.1984mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198403_CONS_v0.1.nc")
+#apr 1984
+nc.ORAS.1984apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198404_CONS_v0.1.nc")
+#may 1984
+nc.ORAS.1984may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198405_CONS_v0.1.nc")
+#jun 1984
+nc.ORAS.1984jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198406_CONS_v0.1.nc")
+#jul 1984
+nc.ORAS.1984jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198407_CONS_v0.1.nc")
+#aug 1984
+nc.ORAS.1984aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198408_CONS_v0.1.nc")
+#dec 1984
+nc.ORAS.1984dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198412_CONS_v0.1.nc")
+
+nc.ORAS.1984ex <- list(nc.ORAS.1984jan, nc.ORAS.1984feb, nc.ORAS.1984mar, 
+                       nc.ORAS.1984apr, nc.ORAS.1984may, nc.ORAS.1984jun, 
+                       nc.ORAS.1984jul, nc.ORAS.1984aug, nc.ORAS.1984s, 
+                       nc.ORAS.1984o,   nc.ORAS.1984n,   nc.ORAS.1984dec)
+
+rm(nc.ORAS.1984jan, nc.ORAS.1984feb, nc.ORAS.1984mar, 
+   nc.ORAS.1984apr, nc.ORAS.1984may, nc.ORAS.1984jun, 
+   nc.ORAS.1984jul, nc.ORAS.1984aug, nc.ORAS.1984dec)
+
+
+
+##1985
+#jan 
+nc.ORAS.1985jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198501_CONS_v0.1.nc")
+#feb
+nc.ORAS.1985feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198502_CONS_v0.1.nc")
+#mar
+nc.ORAS.1985mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198503_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1985apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198504_CONS_v0.1.nc")
+#may 
+nc.ORAS.1985may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198505_CONS_v0.1.nc")
+#jun
+nc.ORAS.1985jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198506_CONS_v0.1.nc")
+#jul
+nc.ORAS.1985jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198507_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1985aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198508_CONS_v0.1.nc")
+#dec 
+nc.ORAS.1985dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198512_CONS_v0.1.nc")
+
+nc.ORAS.1985ex <- list(nc.ORAS.1985jan, nc.ORAS.1985feb, nc.ORAS.1985mar, 
+                       nc.ORAS.1985apr, nc.ORAS.1985may, nc.ORAS.1985jun, 
+                       nc.ORAS.1985jul, nc.ORAS.1985aug, nc.ORAS.1985s, 
+                       nc.ORAS.1985o,   nc.ORAS.1985n,   nc.ORAS.1985dec)
+
+rm(nc.ORAS.1985jan, nc.ORAS.1985feb, nc.ORAS.1985mar, 
+   nc.ORAS.1985apr, nc.ORAS.1985may, nc.ORAS.1985jun, 
+   nc.ORAS.1985jul, nc.ORAS.1985aug, nc.ORAS.1985dec)
+
+
+##1986
+#jan 
+nc.ORAS.1986jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198601_CONS_v0.1.nc")
+#feb
+nc.ORAS.1986feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198602_CONS_v0.1.nc")
+#mar
+nc.ORAS.1986mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198603_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1986apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198604_CONS_v0.1.nc")
+#may 
+nc.ORAS.1986may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198605_CONS_v0.1.nc")
+#jun
+nc.ORAS.1986jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198606_CONS_v0.1.nc")
+#jul
+nc.ORAS.1986jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198607_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1986aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198608_CONS_v0.1.nc")
+#dec 
+nc.ORAS.1986dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198612_CONS_v0.1.nc")
+
+nc.ORAS.1986ex <- list(nc.ORAS.1986jan, nc.ORAS.1986feb, nc.ORAS.1986mar, 
+                       nc.ORAS.1986apr, nc.ORAS.1986may, nc.ORAS.1986jun, 
+                       nc.ORAS.1986jul, nc.ORAS.1986aug, nc.ORAS.1986s, 
+                       nc.ORAS.1986o,   nc.ORAS.1986n,   nc.ORAS.1986dec)
+
+rm(nc.ORAS.1986jan, nc.ORAS.1986feb, nc.ORAS.1986mar, 
+   nc.ORAS.1986apr, nc.ORAS.1986may, nc.ORAS.1986jun, 
+   nc.ORAS.1986jul, nc.ORAS.1986aug, nc.ORAS.1986dec)
+
+
+
+##1987
+#jan 
+nc.ORAS.1987jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198701_CONS_v0.1.nc")
+#feb
+nc.ORAS.1987feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198702_CONS_v0.1.nc")
+#mar
+nc.ORAS.1987mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198703_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1987apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198704_CONS_v0.1.nc")
+#may 
+nc.ORAS.1987may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198705_CONS_v0.1.nc")
+#jun
+nc.ORAS.1987jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198706_CONS_v0.1.nc")
+#jul
+nc.ORAS.1987jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198707_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1987aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198708_CONS_v0.1.nc")
+#dec 
+nc.ORAS.1987dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198712_CONS_v0.1.nc")
+
+nc.ORAS.1987ex <- list(nc.ORAS.1987jan, nc.ORAS.1987feb, nc.ORAS.1987mar, 
+                       nc.ORAS.1987apr, nc.ORAS.1987may, nc.ORAS.1987jun, 
+                       nc.ORAS.1987jul, nc.ORAS.1987aug, nc.ORAS.1987s, 
+                       nc.ORAS.1987o,   nc.ORAS.1987n,   nc.ORAS.1987dec)
+
+rm(nc.ORAS.1987jan, nc.ORAS.1987feb, nc.ORAS.1987mar, 
+   nc.ORAS.1987apr, nc.ORAS.1987may, nc.ORAS.1987jun, 
+   nc.ORAS.1987jul, nc.ORAS.1987aug, nc.ORAS.1987dec)
+
+
+
+##1988
+#jan 
+nc.ORAS.1988jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198801_CONS_v0.1.nc")
+#feb
+nc.ORAS.1988feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198802_CONS_v0.1.nc")
+#mar
+nc.ORAS.1988mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198803_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1988apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198804_CONS_v0.1.nc")
+#may 
+nc.ORAS.1988may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198805_CONS_v0.1.nc")
+#jun
+nc.ORAS.1988jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198806_CONS_v0.1.nc")
+#jul
+nc.ORAS.1988jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198807_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1988aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198808_CONS_v0.1.nc")
+#dec 
+nc.ORAS.1988dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198812_CONS_v0.1.nc")
+
+nc.ORAS.1988ex <- list(nc.ORAS.1988jan, nc.ORAS.1988feb, nc.ORAS.1988mar, 
+                       nc.ORAS.1988apr, nc.ORAS.1988may, nc.ORAS.1988jun, 
+                       nc.ORAS.1988jul, nc.ORAS.1988aug, nc.ORAS.1988s, 
+                       nc.ORAS.1988o,   nc.ORAS.1988n,   nc.ORAS.1988dec)
+
+rm(nc.ORAS.1988jan, nc.ORAS.1988feb, nc.ORAS.1988mar, 
+   nc.ORAS.1988apr, nc.ORAS.1988may, nc.ORAS.1988jun, 
+   nc.ORAS.1988jul, nc.ORAS.1988aug, nc.ORAS.1988dec)
+
+
+
+##1989
+#jan 
+nc.ORAS.1989jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198901_CONS_v0.1.nc")
+#feb
+nc.ORAS.1989feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198902_CONS_v0.1.nc")
+#mar
+nc.ORAS.1989mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198903_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1989apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198904_CONS_v0.1.nc")
+#may 
+nc.ORAS.1989may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198905_CONS_v0.1.nc")
+#jun
+nc.ORAS.1989jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198906_CONS_v0.1.nc")
+#jul
+nc.ORAS.1989jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198907_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1989aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198908_CONS_v0.1.nc")
+#dec 
+nc.ORAS.1989dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_198912_CONS_v0.1.nc")
+
+nc.ORAS.1989ex <- list(nc.ORAS.1989jan, nc.ORAS.1989feb, nc.ORAS.1989mar, 
+                       nc.ORAS.1989apr, nc.ORAS.1989may, nc.ORAS.1989jun, 
+                       nc.ORAS.1989jul, nc.ORAS.1989aug, nc.ORAS.1989s, 
+                       nc.ORAS.1989o,   nc.ORAS.1989n,   nc.ORAS.1989dec)
+
+rm(nc.ORAS.1989jan, nc.ORAS.1989feb, nc.ORAS.1989mar, 
+   nc.ORAS.1989apr, nc.ORAS.1989may, nc.ORAS.1989jun, 
+   nc.ORAS.1989jul, nc.ORAS.1989aug, nc.ORAS.1989dec)
+
+
+##1990
+#jan 
+nc.ORAS.1990jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199001_CONS_v0.1.nc")
+#feb
+nc.ORAS.1990feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199002_CONS_v0.1.nc")
+#mar
+nc.ORAS.1990mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199003_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1990apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199004_CONS_v0.1.nc")
+#may 
+nc.ORAS.1990may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199005_CONS_v0.1.nc")
+#jun
+nc.ORAS.1990jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199006_CONS_v0.1.nc")
+#jul
+nc.ORAS.1990jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199007_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1990aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199008_CONS_v0.1.nc")
+#dec
+nc.ORAS.1990dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199012_CONS_v0.1.nc")
+
+nc.ORAS.1990ex <- list(nc.ORAS.1990jan, nc.ORAS.1990feb, nc.ORAS.1990mar, 
+                       nc.ORAS.1990apr, nc.ORAS.1990may, nc.ORAS.1990jun, 
+                       nc.ORAS.1990jul, nc.ORAS.1990aug, nc.ORAS.1990s, 
+                       nc.ORAS.1990o,   nc.ORAS.1990n,   nc.ORAS.1990dec)
+
+rm(nc.ORAS.1990jan, nc.ORAS.1990feb, nc.ORAS.1990mar, 
+   nc.ORAS.1990apr, nc.ORAS.1990may, nc.ORAS.1990jun, 
+   nc.ORAS.1990jul, nc.ORAS.1990aug, nc.ORAS.1990dec)
+
+
+##1991
+#jan 
+nc.ORAS.1991jan <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199101_CONS_v0.1.nc")
+#feb
+nc.ORAS.1991feb <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199102_CONS_v0.1.nc")
+#mar
+nc.ORAS.1991mar <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199103_CONS_v0.1.nc")
+#apr 
+nc.ORAS.1991apr <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199104_CONS_v0.1.nc")
+#may 
+nc.ORAS.1991may <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199105_CONS_v0.1.nc")
+#jun
+nc.ORAS.1991jun <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199106_CONS_v0.1.nc")
+#jul
+nc.ORAS.1991jul <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199107_CONS_v0.1.nc")
+#aug 
+nc.ORAS.1991aug <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199108_CONS_v0.1.nc")
+#dec
+nc.ORAS.1991dec <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/ORAS5/sosstsst_control_monthly_highres_2D_199112_CONS_v0.1.nc")
+
+nc.ORAS.1991ex <- list(nc.ORAS.1991jan, nc.ORAS.1991feb, nc.ORAS.1991mar, 
+                       nc.ORAS.1991apr, nc.ORAS.1991may, nc.ORAS.1991jun, 
+                       nc.ORAS.1991jul, nc.ORAS.1991aug, nc.ORAS.1991s, 
+                       nc.ORAS.1991o,   nc.ORAS.1991n,   nc.ORAS.1991dec)
+
+rm(nc.ORAS.1991jan, nc.ORAS.1991feb, nc.ORAS.1991mar, 
+   nc.ORAS.1991apr, nc.ORAS.1991may, nc.ORAS.1991jun, 
+   nc.ORAS.1991jul, nc.ORAS.1991aug, nc.ORAS.1991dec)
+
 ```
 
 ## ORA-S5 Functions
