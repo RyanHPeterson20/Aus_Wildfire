@@ -79,13 +79,14 @@ Outline/Notes:
     i. 
   c. Seasonal Average
     i. SON (Sept, Oct, Nov)
--> 2. Alternative SST Anomalies (from previous work that has been very close in the past)
-    a. 
-3. Multi-Product Average
+2. Multi-Product Average
   a. Interpolate to grid
     i. Visualization - SON SST Anom for each data product
   b. Product Average
     i. Visualization - SON SST Anom by year (focus on pIOD years)
+
+-> 3. Alternative SST Anomalies (from previous work that has been very close in the past)
+    a. 
 
 TODO:
 -Double check the godas data from previous files for lat flips
@@ -277,97 +278,6 @@ son.soda <- son.avg(sst.soda.resid)
 
 ```
 
-# Alternate SST Anomalies
-
-```{r alt_sst_anoms}
-#using sst.anoms() function
-#sst anomalies SON, for 
-##OISST
-sst.anom.oisst <- sst.anoms(sst.OISST.new2, quadratic = FALSE)
-#GODAS
-sst.anom.godas <- sst.anoms(sst.GODAS.new2, quadratic = FALSE)
-#SODA
-sst.anom.soda <- sst.anoms(sst.SODA.new2, quadratic = FALSE)
-#ORA-S5
-sst.anom.oras <- sst.anoms(sst.ORAS.new3, quadratic = FALSE)
-```
-
-```{r fix_array}
-dim.GODAS <- dim(sst.GODAS.new2)
-dim.OISST <- dim(sst.OISST.new2)
-dim.SODA <- dim(sst.SODA.new2)
-dim.ORAS <- dim(sst.ORAS.new3)
-
-godas.mean <- matrix(sst.anom.godas$mean, nrow = dim.GODAS[1], ncol = dim.GODAS[2], byrow = TRUE)
-#flip godas lat
-godas.mean <- godas.mean[,ncol(godas.mean):1]
-
-oras.mean <- matrix(sst.anom.oras$mean, nrow = dim.ORAS[1], ncol = dim.ORAS[2], byrow = TRUE)
-
-oisst.mean <- matrix(sst.anom.oisst$mean, nrow = dim.OISST[1], ncol = dim.OISST[2], byrow = TRUE)
-
-soda.mean <- matrix(sst.anom.soda$mean, nrow = dim.SODA[1], ncol = dim.SODA[2], byrow = TRUE)
-
-```
-
-
-## Interpolate
-
-```{r interp}
-
-#interpolate to common grid
-
-```
-
-
-### Visualization
-
-```{r ryb_range}
-#setup col and range
-cols.ryb12 <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
-
-#mean 
-mean.range <- range(godas.mean, oras.mean, oisst.mean, soda.mean, na.rm = TRUE)
-breaks.mean <- seq(mean.range[1], mean.range[2], length.out = length(cols.ryb12)+1)
-
-```
-
-
-```{r viz}
-#mean visualization on base grid
-
-imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = godas.mean),
-          col = cols.ryb12, breaks = breaks.mean, 
-          xlim = c(30, 120), ylim = c(-20,20),
-          xlab = "Lon", ylab = "Lat")
-title("GODAS: Mean 1982-2015", adj = 0)
-world(add = TRUE)
-
-
-imagePlot(list(x = oras.lon, y = oras.lat, z = oras.mean),
-          col = cols.ryb12, breaks = breaks.mean,
-          xlim = c(30, 120), ylim = c(-20,20),
-          xlab = "Lon", ylab = "Lat")
-title("ORAS: Mean 1982-2015", adj = 0)
-world(add = TRUE)
-
-imagePlot(list(x = lon.values.base, y = lat.values.base, z = oisst.mean),
-          col = cols.ryb12, breaks = breaks.mean,
-          xlim = c(30, 120), ylim = c(-20,20),
-          xlab = "Lon", ylab = "Lat")
-title("OISST: Mean 1982-2015", adj = 0)
-world(add = TRUE)
-
-
-imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = soda.mean),
-          col = cols.ryb12, breaks = breaks.mean,
-          xlim = c(30, 120), ylim = c(-20,20),
-          xlab = "Lon", ylab = "Lat")
-title("SODA: Mean 1982-2015", adj = 0)
-world(add = TRUE)
-
-```
-
 
 # Multi-Product Average
 
@@ -469,4 +379,785 @@ title("1982: SST Anomalies", adj = 0)
 world(add = TRUE)
 ```
 
+
+# Alternate SST Anomalies
+
+(repeating everything but in a single spot)
+
+```{r alt_sst_anoms}
+#using sst.anoms() function
+#sst anomalies SON, for 
+##OISST
+sst.anom.oisst <- sst.anoms(sst.OISST.new2, quadratic = FALSE)
+#GODAS
+sst.anom.godas <- sst.anoms(sst.GODAS.new2, quadratic = FALSE)
+#SODA
+sst.anom.soda <- sst.anoms(sst.SODA.new2, quadratic = FALSE)
+#ORA-S5
+sst.anom.oras <- sst.anoms(sst.ORAS.new3, quadratic = FALSE)
+```
+
+```{r fix_array}
+dim.GODAS <- dim(sst.GODAS.new2)
+dim.OISST <- dim(sst.OISST.new2)
+dim.SODA <- dim(sst.SODA.new2)
+dim.ORAS <- dim(sst.ORAS.new3)
+
+#means
+godas.mean <- matrix(sst.anom.godas$mean, nrow = dim.GODAS[1], ncol = dim.GODAS[2], byrow = TRUE)
+#flip godas lat
+#godas.mean <- godas.mean[,ncol(godas.mean):1]
+
+oras.mean <- matrix(sst.anom.oras$mean, nrow = dim.ORAS[1], ncol = dim.ORAS[2], byrow = TRUE)
+
+oisst.mean <- matrix(sst.anom.oisst$mean, nrow = dim.OISST[1], ncol = dim.OISST[2], byrow = TRUE)
+
+soda.mean <- matrix(sst.anom.soda$mean, nrow = dim.SODA[1], ncol = dim.SODA[2], byrow = TRUE)
+
+
+#anoms
+godas.anom <- array(sst.anom.godas$anom, c(34, dim.GODAS[2], dim.GODAS[1]))
+godas.anom <- aperm(godas.anom, c(3, 2, 1))
+#godas.anom <- godas.anom[ ,dim.GODAS[2]:1,] #flip godas lat
+
+oras.anom <- array(sst.anom.oras$anom, c(34, dim.ORAS[2], dim.ORAS[1]))
+oras.anom <- aperm(oras.anom, c(3, 2, 1))
+
+oisst.anom <- array(sst.anom.oisst$anom, c(34, dim.OISST[2], dim.OISST[1]))
+oisst.anom <- aperm(oisst.anom, c(3, 2, 1))
+
+soda.anom <- array(sst.anom.soda$anom, c(34, dim.SODA[2], dim.SODA[1]))
+soda.anom <- aperm(soda.anom, c(3, 2, 1))
+
+```
+
+## Interpolate
+
+```{r interp}
+son.GODAS.mean <- sst.interp(abind(godas.mean, along = 3), GODAS.lon, GODAS.lat, grid.list)
+son.ORAS.mean <- sst.interp(abind(oras.mean, along = 3), oras.lon, oras.lat, grid.list)
+son.OISST.mean <- sst.interp(abind(oisst.mean, along = 3), lon.values.base, lat.values.base, grid.list)
+son.SODA.mean <- sst.interp(abind(soda.mean, along = 3), lon.values.soda, lat.values.soda, grid.list)
+
+
+#interpolate to common grid
+son.GODAS.anom <- sst.interp(godas.anom, GODAS.lon, GODAS.lat, grid.list)
+son.ORAS.anom <- sst.interp(oras.anom, oras.lon, oras.lat, grid.list)
+son.OISST.anom <- sst.interp(oisst.anom, lon.values.base, lat.values.base, grid.list)
+son.SODA.anom <- sst.interp(soda.anom, lon.values.soda, lat.values.soda, grid.list)
+
+```
+
+
+### Visualization
+
+```{r ryb_range}
+#setup col and range
+cols.ryb12 <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+
+#mean 
+mean.range <- range(son.GODAS.mean, son.ORAS.mean, son.OISST.mean, son.SODA.mean, na.rm = TRUE)
+breaks.mean <- seq(floor(mean.range[1]), ceiling(mean.range[2]), length.out = length(cols.ryb12)+1)
+
+#anom
+anom.max <- max(abs(c(son.GODAS.anom, son.ORAS.anom, son.OISST.anom, son.SODA.anom)), na.rm = TRUE)
+anom.range <- c(-anom.max, anom.max)
+breaks.anom <- c(anom.range[1], seq(-1, 1, by = 0.2), anom.range[2])
+
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+```
+
+
+```{r viz_dissimilar}
+#mean visualization on base grid
+
+imagePlot(list(x = GODAS.lon, y = rev(GODAS.lat), z = godas.mean),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+
+imagePlot(list(x = oras.lon, y = oras.lat, z = oras.mean),
+          col = cols.ryb12, breaks = breaks.mean,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORAS: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.values.base, y = lat.values.base, z = oisst.mean),
+          col = cols.ryb12, breaks = breaks.mean,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+
+imagePlot(list(x = lon.values.soda, y = lat.values.soda, z = soda.mean),
+          col = cols.ryb12, breaks = breaks.mean,
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r viz_mean}
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.GODAS.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.ORAS.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("ORA-S5: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.OISST.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("OISST: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+imagePlot(list(x = lon.wide, y = lat.wide, z = son.SODA.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat")
+title("SODA: Mean 1982-2015", adj = 0)
+world(add = TRUE)
+
+
+
+```
+
+
+```{r viz_anom_moderate}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#moderate 
+#1982
+k <- 1
+
+#GODAS anoms
+png(filename = "sst1982anom_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.GODAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1982anom_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.ORAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: ORA-S5 SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#OISST anoms
+png(filename = "sst1982anom_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.OISST.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: OISST SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1982anom_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.SODA.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: SODA SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#1987
+k <- 6
+
+#GODAS anoms
+png(filename = "sst1987anom_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.GODAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1987anom_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.ORAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: ORA-S5 SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#OISST anoms
+png(filename = "sst1987anom_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.OISST.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: OISST SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1987anom_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.SODA.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: SODA SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#2015
+k <- 34
+
+#GODAS anoms
+png(filename = "sst2015anom_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.GODAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2015anom_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.ORAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: ORA-S5 SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#OISST anoms
+png(filename = "sst2015anom_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.OISST.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: OISST SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2015anom_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.SODA.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: SODA SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+```{r viz_anom_moderate}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#strong 
+#1994
+k <- 13
+
+#GODAS anoms
+png(filename = "sst1994anom_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.GODAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1994anom_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.ORAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: ORA-S5 SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#OISST anoms
+png(filename = "sst1994anom_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.OISST.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: OISST SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1994anom_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.SODA.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: SODA SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#1997
+k <- 16
+
+#GODAS anoms
+png(filename = "sst1997anom_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.GODAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1997anom_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.ORAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: ORA-S5 SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#OISST anoms
+png(filename = "sst1997anom_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.OISST.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: OISST SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1997anom_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.SODA.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: SODA SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#2006
+k <- 25
+
+#GODAS anoms
+png(filename = "sst2006anom_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.GODAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2006anom_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.ORAS.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: ORA-S5 SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#OISST anoms
+png(filename = "sst2006anom_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.OISST.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: OISST SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2006anom_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.SODA.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: SODA SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
+## Multi-Product Average
+
+```{r multiprod}
+sst.son.mean <- (son.GODAS.mean + son.ORAS.mean + 
+                   son.OISST.mean + son.SODA.mean)/4
+
+
+#multi-product averages
+mat_list <- list(son.GODAS.anom, son.ORAS.anom,
+                 son.OISST.anom, son.SODA.anom)
+
+
+array_new <- abind(mat_list, along = 4)
+
+sst.son.anom <- apply(array_new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(sst.son.anom) <- NULL
+
+dim(sst.son.anom)
+
+#sst.son.anom <- (son.GODAS.anom + son.ORAS.anom + 
+#                   son.OISST.anom + son.SODA.anom)/4
+
+```
+
+
+### Visualization : SON Avg SST Anom
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#moderate 
+#1982
+k <- 1
+
+png(filename = "sst1982anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = sst.son.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#1987
+k <- 6
+
+png(filename = "sst1987anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = sst.son.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1987: SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#2015
+k <- 34
+
+png(filename = "sst2015anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = sst.son.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2015: SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#strong
+#1994
+k <- 13
+
+png(filename = "sst1994anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = sst.son.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1994: SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#1997
+k <- 16
+
+png(filename = "sst1997anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = sst.son.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1997: SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#2006
+k <- 25
+
+png(filename = "sst2006anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = sst.son.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2006: SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+```
 
