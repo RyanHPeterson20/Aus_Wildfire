@@ -1,0 +1,49 @@
+---
+title: "IOD_dmi.rmd"
+author: "Ryan Peterson"
+date: "2025-09-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+#.nc files
+suppressMessages(library(ncdf4))
+suppressMessages(library(terra))
+
+# date/data mgmt
+suppressMessages(library(lubridate))
+suppressMessages(library(abind))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+suppressMessages(library(colorspace))
+suppressMessages(library(RColorBrewer))
+suppressMessages(library(scales)) #for adjusting opacity
+```
+
+
+
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#WTIO
+wtio <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/wtio.nc")
+
+#SETIO
+setio <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/setio.nc")
+```
+
+
+```{r}
+sst.wtio <- ncvar_get(wtio, "WTIO")
+
+sst.setio <- ncvar_get(setio, "SETIO")
+```
+
+

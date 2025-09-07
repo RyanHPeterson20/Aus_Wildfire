@@ -481,22 +481,13 @@ dim(son.SODA.interp2)
 ```
 
 
-## Get SST Anoms
+## Get SST Anoms (GODAS 2019)
 
 (get sst anomalies)
 
 ```{r get_anoms}
 #use sst.anom function
 sst.anom.godas2 <- sst.anoms(sst.GODAS.w2019, quadratic = FALSE)
-
-```
-
-
-### Alt. SST Anoms
-
-```{r alt_anoms}
-#
-
 
 ```
 
