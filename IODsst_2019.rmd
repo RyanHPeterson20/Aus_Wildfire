@@ -297,7 +297,8 @@ rm(nc.GODAS.1982, nc.GODAS.1983, nc.GODAS.1984, nc.GODAS.1985, nc.GODAS.1986,
                    nc.GODAS.1997, nc.GODAS.1998, nc.GODAS.1999, nc.GODAS.2000, nc.GODAS.2001,
                    nc.GODAS.2002, nc.GODAS.2003, nc.GODAS.2004, nc.GODAS.2005, nc.GODAS.2006,
                    nc.GODAS.2007, nc.GODAS.2008, nc.GODAS.2009, nc.GODAS.2010, nc.GODAS.2011,
-                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015)
+                   nc.GODAS.2012, nc.GODAS.2013, nc.GODAS.2014, nc.GODAS.2015, nc.GODAS.2016,
+                   nc.GODAS.2017, nc.GODAS.2018, nc.GODAS.2019)
 
 dim(sst.GODAS.w2019)
 
@@ -533,10 +534,19 @@ abs.range <- c(-abs.max, abs.max)
 cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(14))
 breaks.dumb <- c(abs.range[1], seq(-2.4,2.4, 0.4), abs.range[2])
 
-
 imagePlot(list(x = grid.list$x, y = grid.list$y, z = anom.temp[,,38]),
           col = cols.ryb, breaks = breaks.dumb, zlim =  range(abs.range),
-          xlim = c(40, 120), ylim = c(-10,10),
+          xlim = c(40, 120), ylim = c(-15,10),
+          xlab = "Lon", ylab = "Lat")
+title("GODAS: SON 2019", adj = 0)
+world(add = TRUE)
+
+
+
+#with original locations
+imagePlot(list(x = new.lon, y = rev(new.lat), z = GODAS.new[ ,dim.GODAS[2]:1, 38]),
+          col = cols.ryb, breaks = breaks.dumb, 
+          xlim = c(40, 120), ylim = c(-15,10),
           xlab = "Lon", ylab = "Lat")
 title("GODAS: SON 2019", adj = 0)
 world(add = TRUE)

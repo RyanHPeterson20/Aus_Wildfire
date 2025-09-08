@@ -445,6 +445,1202 @@ soda.coef <- aperm(soda.coef, c(3, 2, 1))
 
 ```
 
+## Raw Monthly Data
+
+```{r data_prep}
+
+monthly.sst <- function(sst.new) {
+  nx <- dim(sst.new)[1]
+  ny <- dim(sst.new)[2]
+  nt <- dim(sst.new)[3]
+  
+  nyears <- nt %/% 12
+  
+  sst.temp <- array(sst.new, dim = c(nx, ny, nyears, 12))
+  
+  sept.temp <- sst.temp[,,,9]
+  oct.temp <- sst.temp[,,,10]
+  nov.temp <- sst.temp[,,,11]
+  
+  return(list(sept = sept.temp,
+              oct = oct.temp,
+              nov = nov.temp))
+}
+
+```
+
+
+```{r sst.monthly}
+
+sst.month.godas <- monthly.sst(sst.GODAS.new2)
+sst.month.godas$sept <- sst.month.godas$sept[,dim(sst.month.godas$sept)[2]:1,]
+sst.month.godas$oct <- sst.month.godas$oct[,dim(sst.month.godas$oct)[2]:1,]
+sst.month.godas$nov <- sst.month.godas$nov[,dim(sst.month.godas$nov)[2]:1,]
+
+sst.month.oras <- monthly.sst(sst.ORAS.new3)
+sst.month.oisst <- monthly.sst(sst.OISST.new2)
+sst.month.soda <- monthly.sst(sst.SODA.new2)
+
+```
+
+### Visualization - Monthly SST
+
+```{r}
+
+#setup col and range
+cols.ryb48 <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(48))
+
+#mean 
+month.range <- range(sst.month.godas, sst.month.oras, sst.month.oisst, sst.month.soda, na.rm = TRUE)
+breaks.month <- seq(floor(month.range[1]), ceiling(month.range[2]), length.out = length(cols.ryb48)+1)
+
+
+```
+
+```{r monthly_1982}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
+
+#moderate 
+#1982
+k <- 1
+
+#september
+#GODAS anoms
+png(filename = "sst1982sept_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1982: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1982sept_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1982: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1982sept_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1982sept_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1982: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#october
+#GODAS anoms
+png(filename = "sst1982oct_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1982: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1982oct_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1982: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1982oct_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1982oct_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1982: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+
+#november
+#GODAS anoms
+png(filename = "sst1982nov_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1982: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1982nov_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1982: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1982nov_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1982nov_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1982: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
+```{r monthly_1987}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
+
+#moderate 
+#1987
+k <- 6
+
+#september
+#GODAS anoms
+png(filename = "sst1987sept_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1987: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1987sept_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1987: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1987sept_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1987: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1987sept_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1987: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#october
+#GODAS anoms
+png(filename = "sst1987oct_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1987: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1987oct_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1987: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1987oct_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1987: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1987oct_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1987: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+
+#november
+#GODAS anoms
+png(filename = "sst1987nov_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1987: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1987nov_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1987: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1987nov_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1987: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1987nov_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1987: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
+
+
+```{r monthly_2015}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
+
+#moderate 
+#2015
+k <- 34
+
+#september
+#GODAS anoms
+png(filename = "sst2015sept_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2015: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2015sept_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2015: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst2015sept_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2015: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2015sept_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2015: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#october
+#GODAS anoms
+png(filename = "sst2015oct_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2015: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2015oct_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2015: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst2015oct_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2015: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2015oct_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2015: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+
+#november
+#GODAS anoms
+png(filename = "sst2015nov_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2015: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2015nov_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2015: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst2015nov_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2015: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2015nov_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2015: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
+```{r monthly_1994}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
+
+#moderate 
+#1994
+k <- 13
+
+#september
+#GODAS anoms
+png(filename = "sst1994sept_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1994: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1994sept_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1994: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1994sept_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1994: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1994sept_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1994: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#october
+#GODAS anoms
+png(filename = "sst1994oct_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1994: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1994oct_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1994: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1994oct_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1994: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1994oct_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1994: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+
+#november
+#GODAS anoms
+png(filename = "sst1994nov_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1994: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1994nov_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1994: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1994nov_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1994: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1994nov_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1994: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
+
+```{r monthly_1994}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
+
+#moderate 
+#1997
+k <- 16
+
+#september
+#GODAS anoms
+png(filename = "sst1997sept_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1997: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1997sept_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1997: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1997sept_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1997: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1997sept_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1997: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#october
+#GODAS anoms
+png(filename = "sst1997oct_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1997: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1997oct_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1997: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1997oct_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1997: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1997oct_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1997: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+
+#november
+#GODAS anoms
+png(filename = "sst1997nov_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1997: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst1997nov_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1997: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst1997nov_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1997: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst1997nov_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1997: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
+
+```{r monthly_2006}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
+
+#moderate 
+#2006
+k <- 25
+
+#september
+#GODAS anoms
+png(filename = "sst2006sept_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2006: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2006sept_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2006: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst2006sept_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2006: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2006sept_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$sept[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 2006: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+#october
+#GODAS anoms
+png(filename = "sst2006oct_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2006: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2006oct_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2006: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst2006oct_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2006: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2006oct_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$oct[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 2006: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+
+#november
+#GODAS anoms
+png(filename = "sst2006nov_godas.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = GODAS.lon, y = rev(GODAS.lat), z = sst.month.godas$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2006: GODAS SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#ORAS anoms
+png(filename = "sst2006nov_oras.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = oras.lon, y = oras.lat, z = sst.month.oras$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2006: ORA-S5 SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+#OISST anoms
+png(filename = "sst2006nov_oisst.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.base, y = lat.values.base, z = sst.month.oisst$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2006: OISST SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+#SODA anoms
+png(filename = "sst2006nov_soda.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image.plot(list(x = lon.values.soda, y = lat.values.soda, z = sst.month.soda$nov[,,k]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 2006: SODA SST ", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+```
+
+
 ### Visualize - Detrend Coefs
 
 
@@ -832,7 +2028,7 @@ dev.off()
 
 ```
 
-```{r viz_anom_moderate}
+```{r viz_anom_strong}
 setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
 
 #strong 
@@ -1274,6 +2470,11 @@ abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
 PC1[16]
 PC2[16]
 
+plot(1:34, PC1, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, PC2, col = "darkgreen")
+abline(h=c(1, 0.5), lty = 2, col = c("firebrick", "darkgreen"))
+
+
 plot(PC1, PC2, pch = 19, col = "navyblue", xlim = c(-2,4), ylim = c(-3, 5),
      xlab = "PC1", ylab = "PC2", cex = 1)
 points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 19, col = "red1", cex =1)
@@ -1286,11 +2487,411 @@ abline(v = 1, lty = 2, lwd = 1)
 ```
 
 
+```{r manual_svd}
+#manual svd for D matrix
+kmode <- 2
+nt <- dim(sst.anom.pIOD)[1]
+ny <- dim(sst.anom.pIOD)[2]
+nx <- dim(sst.anom.pIOD)[3]
+
+X <- matrix(sst.anom.pIOD, nrow = nt, ncol = ny * nx)
+
+#get rid of NA's (masked locs)
+keep <- colSums(is.finite(X)) == nt
+X.new  <- X[, keep]
+
+svd.temp <- svd(X.new)
+
+#svd outputs
+U <- svd.temp$u[ ,1:kmode]
+D <- svd.temp$d[1:kmode]
+V <- svd.temp$v[ ,1:kmode]
+```
+
+
 ```{r spatial_eof}
-#TODO: get spatial eofs again for PC1 and PC2
+#get spatial eofs again for PC1 and PC2
+
+sst.eof <- pca.pIOD$EOF
+
+nx <- dim(sst.son.anom)[1]
+ny <- dim(sst.son.anom)[2]
+nt <- dim(sst.son.anom)[3]
+
+sst.piod.mat <- matrix(sst.son.anom, nrow =  ny * nx, ncol = nt)
+
+pc1.son <- sst.piod.mat %*% PC1
+pc2.son <- sst.piod.mat %*% PC2
+
+
+eof1.son <- matrix(pc1.son/D[1], nrow = nx, ncol = ny)
+eof2.son <- matrix(pc2.son/D[1], nrow = nx, ncol = ny)
+
+
+#spatial eof for strong and weak
+strong.son <- (eof1.son + eof2.son/0.5)/sqrt(2)
+moderate.son <- (eof1.son - eof2.son/0.5)/sqrt(2)
+
+```
+
+
+## Visualizations
+
+```{r pca_index}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#first two pc's
+png(filename = "pc1pc2.png", width = 2000, height = 2000, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(PC1, PC2, pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5),  col = "navyblue",
+     xlab = "PC1", ylab = "PC2")
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 16, col = "firebrick")
+text(PC1[25], PC2[25], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(PC1[16], PC2[16], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(PC1[13], PC2[13], "1994", pos = 3, cex = 0.9, col = "firebrick")
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 16, col = "darkgreen")
+text(PC1[34], PC2[34], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC1[6], PC2[6], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC1[1], PC2[1], "1982", pos = 4, cex = 0.9, col = "darkgreen")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+dev.off()
+
+years <- 1982:2015
+son_dates <- make_date(years, 1, 1) 
+
+
+#s and m index
+png(filename = "pIODindex_new.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 5))
+plot(son_dates, s.index, type = "l", col = "firebrick", ylim = range(s.index, m.index),
+     xlab = "Year", ylab = "Index", lwd = 2, xaxt = "n")
+axis.Date(1, at = seq(min(son_dates), max(son_dates), by = "5 years"), format = "%Y")
+box()
+title("SON pIOD Indices", adj = 0)
+lines(son_dates, m.index, col = "darkgreen", lwd = 2)
+text(son_dates[25], s.index[25], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(son_dates[16], s.index[16], "1997", pos = 4, cex = 0.9, col = "firebrick")
+text(son_dates[13], s.index[13], "1994", pos = 3, cex = 0.9, col = "firebrick")
+text(son_dates[34], m.index[34]+0.1, "2015", pos = 3, cex = 0.9, col = "darkgreen")
+text(son_dates[6], m.index[6], "1987", pos = 3, cex = 0.9, col = "darkgreen")
+text(son_dates[1], m.index[1]+0.2, "1982", pos = 3, cex = 0.9, col = "darkgreen")
+legend("topright",
+       legend = c("S-Index", "M-Index"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "darkgreen"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = 0.01)
+abline(h=1.5, col ="red3", lty = 2)
+abline(h=1.25, col = "darkgreen", lty = 2)
+dev.off()
 
 
 
+
+
+```
+
+```{r eof}
+
+eof.range <- range(eof1.son, eof2.son, na.rm = TRUE)
+eof.absmax <- max(abs(eof.range))
+eof.range <- c(-eof.absmax, eof.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
+leg.brks2 <- seq(-0.6, 0.6, 0.1) 
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#extended fig1a
+png(filename = "eof1_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = eof1.son), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("SST Anomalies: PC1", adj = 0)
+title("PVE 52%", adj = 1)
+dev.off()
+
+
+png(filename = "eof2_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = eof2.son), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("SST Anomalies: PC2", adj = 0)
+title("PVE 28%", adj = 1)
+dev.off()
+```
+
+```{r pIOD}
+
+pIOD.range <- range(strong.son, moderate.son, na.rm = TRUE)
+pIOD.absmax <- max(abs(pIOD.range))
+pIOD.range <- c(-pIOD.absmax, pIOD.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.pIOD <- c(pIOD.range[1], seq(-1, 1, 0.2), pIOD.range[2])
+leg.brks3 <- seq(-1.2, 1.2, 0.2) 
+
+
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = strong.son), 
+           col = cols.ryb, breaks = breaks.pIOD, zlim = pIOD.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks3, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+
+
+
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = moderate.son), 
+           col = cols.ryb, breaks = breaks.pIOD, zlim = pIOD.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks3, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+
+
+```
+
+
+### Overlays
+
+```{r pc_overlays}
+#TODO: redo the pc and index plots with overlays
+
+
+```
+
+
+# Beyond 2015
+
+```{r alt_GODAS2019}
+#get different anoms for 2019
+#sst.GODAS.w2019, godas.mean (sst.anom.godas$mean), godas.coef
+dim.GODAS <- dim(sst.GODAS.w2019)
+
+#GODAS Interpolat
+nx <- dim.GODAS[1]
+ny <- dim.GODAS[2]
+
+anom.GODAS <- son.avg(sst.GODAS.w2019)
+
+nt <- dim(anom.GODAS)[3]
+
+anom.GODAS <- aperm(anom.GODAS, perm = c(3, 2, 1))
+  
+#remove mean
+var.GODAS <- matrix(anom.GODAS, nrow = nt, ncol = ny * nx) #from earlier work on detrend
+  
+var.GODAS <- sweep(var.GODAS, 2, sst.anom.godas$mean, "-") #TODO: check how this might hold up with irregular spatial masks
+  
+GODAS.2019 <- var.GODAS[38,]
+
+#anom.GODAS.2019 <- GODAS.2019 - sst.anom.godas$coef[1,]
+anom.GODAS.2019 <- GODAS.2019 - (sst.anom.godas$coef[2,]*35)
+
+GODAS.mat <- matrix(anom.GODAS.2019, nrow = nx, ncol = ny, byrow = TRUE)
+```
+
+
+```{r interp}
+GODAS.obj <-  list(x = new.lon, y = new.lat, z = GODAS.mat)
+
+GODAS.interp <- interp.surface.grid(GODAS.obj, grid.list)
+
+
+dim(GODAS.interp$z)
+```
+
+
+```{r viz_2019}
+#get dimensions
+nx <- dim(GODAS.interp$z)[1]
+ny <- dim(GODAS.interp$z)[2]
+
+anom.temp <- GODAS.interp$z
+
+#sst.temp <- matrix(anom.temp, nrow = ny, ncol = nx)
+
+abs.max <- max(abs(anom.temp), na.rm = TRUE)
+abs.range <- c(-abs.max, abs.max)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(14))
+breaks.dumb <- c(abs.range[1], seq(-2.4,2.4, 0.4), abs.range[2])
+
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#2019
+png(filename = "sst2019anom_new.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = grid.list$x, y = grid.list$y, z = anom.temp),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20, 20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("2019: GODAS SST Anomalies", adj = 0)
+world(add = TRUE)
+dev.off()
+
+
+
+```
+
+
+(extending to 2019)
+
+
+```{r regress_setup}
+#TODO: load in GODAS.anom2 first
+
+#select 2019 sst anoms
+#anom.2019 <- GODAS.anom2[,,38] #full regional 
+
+#sst.anom2 <- aperm(GODAS.anom2, c(3, 2, 1))
+#sst.2019.pIOD <- sst.anom2[38, lat.range.IOD[1]:lat.range.IOD[2], lon.range.IOD[1]:lon.range.IOD[2]] #pIOD (equitorial IOD)
+
+#alternate pIOD (equitorial IOD)
+#sst.2019.iod <- GODAS.anom2[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], 38] #[lon, lat, year = 2019]
+
+
+sst.2019.iod <- GODAS.interp$z[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2]]
+nx <- dim(sst.2019.iod)[1]
+ny <- dim(sst.2019.iod)[2]
+
+#setup eof and anom vectors
+iod.eof <- pca.pIOD$EOF
+
+#temp matrix (for comparison to sst.2019.iod, sst.anom matrix)
+eof1.mat <- matrix(iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+eof2.mat <- matrix(iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+
+#move back to vector
+sst.2019.vec <- as.vector(sst.2019.iod)
+eof1.vec <- as.vector(eof1.mat)
+eof2.vec <- as.vector(eof2.mat)
+
+test.na <- is.finite(sst.2019.vec) & is.finite(eof1.vec) & is.finite(eof2.vec)
+
+y <- sst.2019.vec[test.na]
+X <- cbind(eof1.vec[test.na], eof2.vec[test.na])
+
+a1 <- sum(y * eof1.vec[test.na])
+a2 <- sum(y * eof2.vec[test.na])
+
+#get pc mean and std dev
+pc.iod <- pca.pIOD$PC
+#pc.iod <- pca.iod.2019$PC
+#pc.mean <- mean(rbind(pc.iod, c(a1, a2)))
+#pc.std <- sd(rbind(pc.iod, c(a1, a2)))
+
+pc.mean <- mean(pc.iod)
+pc.std <- sd(pc.iod)
+
+pc1.2019 <- -(a1-pc.mean)/pc.std
+pc2.2019 <- (a2-pc.mean)/pc.std
+
+plot(PC1, PC2, pch = 19, col = "navyblue", xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 1)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 19, col = "red1", cex =1)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 19, col = "darkgreen", cex = 1)
+points(pc1.2019, pc2.2019, pch = 19, col = "black", cex =1.25)
+abline(h = 0.5, lty = 2, lwd = 1)
+abline(v = 1, lty = 2, lwd = 1)
+
+```
+
+```{r}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#first two pc's
+png(filename = "pc2019.png", width = 2000, height = 2000, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(PC1, PC2, pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5),  col = "navyblue",
+     xlab = "PC1", ylab = "PC2")
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 16, col = "firebrick")
+text(PC1[25], PC2[25], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(PC1[16], PC2[16], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(PC1[13], PC2[13], "1994", pos = 4, cex = 0.9, col = "firebrick")
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 16, col = "darkgreen")
+text(PC1[34], PC2[34], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC1[6], PC2[6], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC1[1], PC2[1], "1982", pos = 4, cex = 0.9, col = "darkgreen")
+points(pc1.2019, pc2.2019, pch = 19, col = "black", cex = 1)
+text(pc1.2019, pc2.2019, "2019", pos = 3, cex = 0.9, col = "black")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+dev.off()
+```
+
+```{r overlays}
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
+
+#adjusted colors for overlay
+png("PCoverlay_new.png", width = 2000, height = 2000, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(PC1, PC2, pch = 21, col = "black",
+     bg = alpha("cyan",.65), xlim = c(-2,4), ylim = c(-3, 5),
+     xlab = "PC1", ylab = "PC2", cex = 5)
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 21, col = "black",
+       bg = alpha("red1",.75), cex = 5)
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 21, col = "black",
+       bg = alpha("seagreen1",.65), cex = 5)
+points(pc1.2019, pc2.2019, pch = 21, col = "black",
+       bg = alpha("plum4",.75), cex = 5)
+abline(h = 0.5, lty = 2, lwd = 4)
+abline(v = c(-2, 1, 4), lty = 2, lwd = c(1,4,1))
+dev.off()
+
+
+#adjusted colors for overlay
+png("pIODoverlay_new.png", width = 2000, height = 1200, bg = "transparent", type = "cairo") 
+par(mar = c(0,0,0,0), oma = c(0,0,0,0), xaxs = "i", yaxs = "i")
+plot(1:34, s.index, type = "l", col = "orange", ylim=c(-2,5),
+     axes = FALSE, xlab = "", ylab = "", frame.plot = FALSE, lwd = 7, lty = 1)
+lines(1:34, m.index, col = "lawngreen", lwd = 7, lty = 1)
+abline(h=c(1.5, 1.25), lty = 2, col = c("violetred4", "seagreen4"), lwd = 6)
+dev.off()
 
 ```
 
