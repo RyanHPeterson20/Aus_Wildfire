@@ -2862,6 +2862,26 @@ text(pc1.2019, pc2.2019, "2019", pos = 3, cex = 0.9, col = "black")
 abline(h = 0.5, lty = 2)
 abline(v = 1, lty = 2)
 dev.off()
+
+#first two pc's
+png(filename = "pc2019_new.png", width = 2000, height = 2000, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(PC1, PC2, pch = 16, xlim = c(-2,4), ylim = c(-3, 4.5),  col = "navyblue",
+     xlab = "PC1", ylab = "PC2")
+points(PC1[c(13,16,25)], PC2[c(13,16,25)], pch = 16, col = "firebrick")
+text(PC1[25], PC2[25], "2006", pos = 3, cex = 0.9, col = "firebrick")
+text(PC1[16], PC2[16], "1997", pos = 3, cex = 0.9, col = "firebrick")
+text(PC1[13], PC2[13], "1994", pos = 3, cex = 0.9, col = "firebrick")
+points(PC1[c(1,6,34)], PC2[c(1,6,34)], pch = 16, col = "darkgreen")
+text(PC1[34], PC2[34], "2015", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC1[6], PC2[6], "1987", pos = 4, cex = 0.9, col = "darkgreen")
+text(PC1[1], PC2[1], "1982", pos = 4, cex = 0.9, col = "darkgreen")
+points(pc1.2019, pc2.2019, pch = 19, col = "black", cex = 1)
+text(pc1.2019, pc2.2019, "2019", pos = 3, cex = 0.9, col = "black")
+abline(h = 0.5, lty = 2)
+abline(v = 1, lty = 2)
+dev.off()
+
 ```
 
 ```{r overlays}
