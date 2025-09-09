@@ -2483,7 +2483,10 @@ abline(h = 0.5, lty = 2, lwd = 1)
 abline(v = 1, lty = 2, lwd = 1)
 
 
+#save pc's and
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
 
+save(PC1, PC2, GODAS.lon, s.index, m.index, file = "piod_index.rda")
 ```
 
 

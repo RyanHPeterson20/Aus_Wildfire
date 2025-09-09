@@ -27,23 +27,209 @@ suppressMessages(library(scales)) #for adjusting opacity
 ```
 
 
+```{r other_dataloads}
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
 
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
 
-```{r}
 setwd("~/CO_AUS/Aus_CO-main")
+
+#anomaly only response with week data
+response_anoms <- read.csv("Data/response_anoms.csv", header = TRUE, stringsAsFactors = FALSE)
+
+#predictors with week data
+predictor_anoms <- read.csv("Data/predictor_anoms.csv", header = TRUE, stringsAsFactors = FALSE)
+
+
+```
+
+
+```{r nc_load}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#dmi 
+dmi.monthly <- read.csv("pIOD/Data/dmi.had.long.csv", header = TRUE, stringsAsFactors = FALSE)
+
+#dmi longer anom
+dmi.anom <- read.csv("Data/dmi_weekly_avg.csv", header = TRUE, stringsAsFactors = FALSE)
+
+#DMI
+dmi.nc <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/dmi.nc")
 
 #WTIO
 wtio <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/wtio.nc")
 
 #SETIO
 setio <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/setio.nc")
+
+
+#note this is the correct old data!
+#old data??
+#sst.nc <- nc_open("~/CO_AUS/Aus_CO-main/Data/sst.wkmean.1990-present.nc")
+#DMI
+dmi.old <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/dmi(2).nc")
+
+#WTIO
+wtio.old <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/wtio(1).nc")
+
+#SETIO
+setio.old <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/setio(2).nc")
+
+
 ```
 
 
-```{r}
+```{r nc_prep}
+
+#weeks (time)
+time.dmi <- ncvar_get(dmi.nc, "TIME") # days since 1800-01-01 00:00:0.0
+time.dmi <- as_datetime("1800-01-01T00:00:00") + days(time.dmi)
+
+time.wtio <- ncvar_get(wtio, "TIME") # days since 1800-01-01 00:00:0.0
+time.wtio <- as_datetime("1800-01-01T00:00:00") + days(time.wtio)
+
+time.setio <- ncvar_get(setio, "TIME") # days since 1800-01-01 00:00:0.0
+time.setio <- as_datetime("1800-01-01T00:00:00") + days(time.setio)
+
+#weekly data
+sst.dmi <- ncvar_get(dmi.nc, "DMI")
+
 sst.wtio <- ncvar_get(wtio, "WTIO")
 
 sst.setio <- ncvar_get(setio, "SETIO")
+
+#get week of the year
+#shift 3 days to Wednesday
+time.dmi <- time.dmi + days(3)
+time.wtio <- time.wtio + days(3)
+time.setio <- time.setio + days(3)
+
+#get df
+dmi.new.df <- data.frame(sst = sst.dmi, date = time.dmi, week = epiweek(time.dmi))
+
+wtio.df <- data.frame(sst = sst.wtio, date = time.wtio, week = epiweek(time.wtio))
+
+setio.df <- data.frame(sst = sst.setio, date = time.setio, week = epiweek(time.setio))
+
+
+
+
+
+#get specific dates 
+time.dmi[748]
+time.dmi[2013]
+```
+
+```{r testing}
+
+#weeks (time)
+time.dmi <- ncvar_get(dmi.old, "WEDCEN2") # days since 1800-01-01 00:00:0.0
+time.dmi <- as_datetime("1900-01-01T00:00:00") + days(time.dmi)
+
+time.wtio <- ncvar_get(wtio.old, "WEDCEN2") # days since 1800-01-01 00:00:0.0
+time.wtio <- as_datetime("1900-01-01T00:00:00") + days(time.wtio)
+
+time.setio <- ncvar_get(setio.old, "WEDCEN2") # days since 1800-01-01 00:00:0.0
+time.setio <- as_datetime("1900-01-01T00:00:00") + days(time.setio)
+
+#weekly data
+sst.dmi <- ncvar_get(dmi.old, "DMI")
+
+sst.wtio <- ncvar_get(wtio.old, "WTIO")
+
+sst.setio <- ncvar_get(setio.old, "SETIO")
+
+#get week of the year
+#shift 3 days to Wednesday
+#time.dmi <- time.dmi + days(3)
+#time.wtio <- time.wtio + days(3)
+#time.setio <- time.setio + days(3)
+
+#get df
+dmi.new.df <- data.frame(sst = sst.dmi, date = time.dmi, week = epiweek(time.dmi))
+
+wtio.df <- data.frame(sst = sst.wtio, date = time.wtio, week = epiweek(time.wtio))
+
+setio.df <- data.frame(sst = sst.setio, date = time.setio, week = epiweek(time.setio))
+
+
+#get specific dates 
+time.dmi[740]
+time.dmi[2005]
+```
+
+
+
+```{r eio_dataprep}
+
+
+
+```
+
+
+
+```{r other_data_prep}
+dmi.anom$anomaly <- dmi.anom$time
+
+dmi.anom$time <- as_date(rownames(dmi.anom))
+
+rownames(dmi.anom) <- NULL
+```
+
+
+```{r naive_plot}
+#from 1996-01-03 to 2020-04-01
+time.domain <- which(dmi.new.df$date >= time.dmi[740] & dmi.new.df$date <= time.dmi[2005])
+ 
+dmi.new2.df <- dmi.new.df[time.domain,]
+wtio2.df <- wtio.df[time.domain,]
+setio2.df <- setio.df[time.domain,]
+
+
+dmi.diff <-  scale(dmi.new2.df$sst) - scale(predictor_anoms$dmi.anomaly)
+
+
+plot(1:1266, dmi.diff, type = "l")
+
+#week 1
+wtio.week1 <- wtio2.df[which(wtio2.df$week == 1), ]
+setio.week1 <- setio2.df[which(setio2.df$week == 1), ]
+
+dmi.test.week1 <- wtio.week1$sst - setio.week1$sst
+
+#select weeks
+dmi.week1 <- dmi.new2.df[which(dmi.new2.df$week == 1), ]
+pred.dmi.week1 <- predictor_anoms[which(predictor_anoms$week == 1), ]
+
+length(dmi.week1$sst)
+
+plot(1:25, dmi.week1$sst, type = "l")
+lines(1:25, scale(pred.dmi.week1$dmi.anomaly, scale = FALSE), lty = 2)
+lines(1:25, dmi.test.week1, lty = 3)
+
+plot(1:25, scale(dmi.test.week1, center = TRUE, scale = FALSE), lty = 3, type = "l")
+
+
+#other weeks
+#week 41
+wtio.week40 <- wtio2.df[which(wtio2.df$week == 41), ]
+setio.week40 <- setio2.df[which(setio2.df$week == 41), ]
+
+dmi.test.week40 <- wtio.week40$sst - setio.week40$sst
+
+#select weeks
+dmi.week40 <- dmi.new2.df[which(dmi.new2.df$week == 41), ]
+pred.dmi.week40 <- predictor_anoms[which(predictor_anoms$week == 41), ]
+
+length(dmi.week40$sst)
+
+plot(1:24, scale(dmi.week40$sst,center = TRUE, scale = FALSE), type = "l")
+lines(1:24, scale(pred.dmi.week40$dmi.anomaly, scale = FALSE), lty = 2)
+lines(1:24, dmi.test.week40, lty = 3)
 ```
 
 
