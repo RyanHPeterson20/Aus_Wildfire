@@ -372,7 +372,8 @@ plot(wtio.son.avg, mindex.new, pch = 19)
 abline(wtiomod.fit)
 
 #s-index vs etio
-plot(etio.son.avg, sindex.new, pch = 19)
+plot(etio.son.avg, sindex.new, pch = 19,
+     xlim = c(-1.5,1.2), ylim = c(-2, 4.25))
 abline(etiostr.fit)
 
 ```
