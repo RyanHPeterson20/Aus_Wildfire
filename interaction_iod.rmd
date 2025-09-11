@@ -1,0 +1,544 @@
+---
+title: "interaction_iod"
+author: "Ryan Peterson"
+date: "2025-09-11"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+suppressMessages( library(hierNet)) #yes
+suppressMessages( library(glmnet)) #test ridge regression for coefs
+suppressMessages( library(RAMP)) #maybe
+suppressMessages( library(MASS)) #for lm.ridge
+
+suppressMessages( library(foreach)) #parallelization setup
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
+
+suppressMessages( library( lubridate)) #you know why
+suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages( library( fields)) #for set.panel() and others 
+suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
+
+suppressMessages( library( caret)) #for confusion matrix
+
+suppressMessages( library( tictoc)) #some timing
+```
+
+```{r data_load}
+#and functions
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+#source("group_functions.R") #grouping/clustering
+source("group_functionsNew.R") #new groupings
+source("refit_functions.R") #coef/refit functions
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+load( "IOD_lag.rda")
+```
+
+
+```{r data_setup}
+#season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#Below includes removal of weeks 35-37 (adjust grouping functions if we need to change this.)
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+
+#full model
+NEpreds <- NElag_3group(NE_laglist = NE_iodlag, j = 1:19)
+NEresp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+SEpreds <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
+SEresp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+
+#partial model
+NEpreds_part <- NElag_3group(NE_laglist = NE_iodlag, j = -c(19))
+NEresp_part <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(19))
+
+SEpreds_part <- SElag_3group(SE_laglist = SE_iodlag, j = -c(19))
+SEresp_part <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
+
+
+```
+
+# Initial Fits
+
+## NE Aus
+ 
+```{r group1}
+#ramp fit
+y_1 <- as.numeric(NEresp[[1]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds[[1]][ ,1:260]))
+
+test.ramp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 250)
+
+main.terms <- test.ramp$mainInd
+main.terms <- colnames(X_1)[main.terms]
+
+interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+main.terms
+interactions
+test.ramp$cri.list[test.ramp$cri.loc]
+
+#refit with lm
+if (!is.null(interactions)){
+  model.string <- paste( paste(main.terms, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+} else {
+  model.string <- paste(main.terms, collapse = " + ")
+}
+
+model.string <- paste0("co ~ ", model.string)
+      
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.string), lm.data.matrix)
+summary(test.lm)
+```
+
+
+```{r group2}
+#ramp fit
+y_1 <- as.numeric(NEresp[[2]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds[[2]][ ,1:260]))
+
+test.ramp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 250)
+
+main.terms <- test.ramp$mainInd
+main.terms <- colnames(X_1)[main.terms]
+
+interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+main.terms
+interactions
+test.ramp$cri.list[test.ramp$cri.loc]
+
+#refit with lm
+if (!is.null(interactions)){
+  model.string <- paste( paste(main.terms, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+} else {
+  model.string <- paste(main.terms, collapse = " + ")
+}
+
+model.string <- paste0("co ~ ", model.string)
+      
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.string), lm.data.matrix)
+summary(test.lm)
+```
+
+
+```{r group3}
+#ramp fit
+y_1 <- as.numeric(NEresp[[3]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds[[3]][ ,1:260]))
+
+test.ramp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 250)
+
+main.terms <- test.ramp$mainInd
+main.terms <- colnames(X_1)[main.terms]
+
+interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+main.terms
+interactions
+test.ramp$cri.list[test.ramp$cri.loc]
+
+#refit with lm
+if (!is.null(interactions)){
+  model.string <- paste( paste(main.terms, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+} else {
+  model.string <- paste(main.terms, collapse = " + ")
+}
+
+model.string <- paste0("co ~ ", model.string)
+      
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.string), lm.data.matrix)
+summary(test.lm)
+```
+
+
+
+## SE Aus
+
+```{r group2}
+lambda_seq <- seq(400, 120, length.out = 12)
+
+y_1 <- as.numeric(SEresp[[2]])
+
+X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+  
+SE2path_with <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+```
+
+```{r refits}
+
+SEcoefs2_with <- get_coefs(SE2path_with, max_index = 12, 
+                      resp = SEresp[[2]], preds = SEpreds[[2]], 
+                      preds_quant = SEpreds[[2]])
+
+
+SErefit2_with <- refit_bic(SE2path_with, max_index = 12, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SEresp[[2]], preds = SEpreds[[2]], 
+                      preds_quant =SEpreds[[2]])
+
+se2_ic <- SErefit2_with[[5]]
+
+SErefit2_with[[5]][,c(1,5,6)]
+SErefit2_with[[5]][,c(1,8,9)]
+
+se2_ic
+which.min(SErefit2_with[[5]][ , 5]) #ridge BIC 
+which.min(SErefit2_with[[5]][ , 6]) #lasso BIC 
+which.min(SErefit2_with[[5]][ , 2]) #lasso AIC 
+
+i <- 5
+ridge_coef <- SErefit2_with[[4]][[i]]
+SEridge2_wo <- ridge_coef
+ridge_coef
+length(ridge_coef)
+```
+
+
+```{r test_wo}
+lambda_seq <- seq(146, 60, length.out = 15)
+
+y_1 <- as.numeric(SEresp_part[[2]])
+
+X_1 <- cbind(as.matrix(SEpreds_part[[2]][ ,1:312]))
+  
+SE2path_wo <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
+                              diagonal = TRUE, trace = 0) 
+```
+
+
+```{r}
+
+SEcoefs2_wo <- get_coefs(SE2path_wo, max_index = 15, 
+                      resp = SEresp_part[[2]], preds = SEpreds_part[[2]], 
+                      preds_quant = SEpreds_part[[2]])
+
+
+SErefit2_wo <- refit_bic(SE2path_wo, max_index = 15, ebic.gamma = 0.25, gic.gamma = 2.15,
+                      lambda.min = FALSE, AIC.c = FALSE,
+                      intercept = FALSE,
+                      resp = SEresp_part[[2]], preds = SEpreds_part[[2]], 
+                      preds_quant =SEpreds_part[[2]])
+
+se2_ic <- SErefit2_wo[[5]]
+
+#SErefit2_with[[5]][,c(1,5,6)]
+#SErefit2_with[[5]][,c(1,8,9)]
+
+se2_ic
+
+which.min(SErefit2_wo[[5]][ , 5]) #ridge BIC 
+which.min(SErefit2_wo[[5]][ , 6]) #lasso BIC 
+which.min(SErefit2_wo[[5]][ , 2]) #lasso AIC 
+
+i <- 12
+ridge_coef <- SErefit2_wo[[4]][[i]]
+SEridge2_wo <- ridge_coef
+ridge_coef
+length(ridge_coef)
+
+```
+
+
+### Try RAMP
+
+
+```{r group1}
+
+y_1 <- as.numeric(SEresp[[1]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(SEpreds[[1]][ ,1:260]))
+
+test.ramp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 250)
+
+main.terms <- test.ramp$mainInd
+main.terms <- colnames(X_1)[main.terms]
+
+interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+main.terms
+interactions
+test.ramp$cri.list[test.ramp$cri.loc]
+
+#refit with lm
+if (!is.null(interactions)){
+  model.string <- paste( paste(main.terms, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+} else {
+  model.string <- paste(main.terms, collapse = " + ")
+}
+
+model.string <- paste0("co ~ ", model.string)
+      
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.string), lm.data.matrix)
+summary(test.lm)
+```
+
+
+```{r group2}
+
+y_1 <- as.numeric(SEresp[[2]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:260]))
+
+test.ramp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 250)
+
+main.terms <- test.ramp$mainInd
+main.terms <- colnames(X_1)[main.terms]
+
+interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+main.terms
+interactions
+test.ramp$cri.list[test.ramp$cri.loc]
+
+#refit with lm
+if (!is.null(interactions)){
+  model.string <- paste( paste(main.terms, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+} else {
+  model.string <- paste(main.terms, collapse = " + ")
+}
+
+model.string <- paste0("co ~ ", model.string)
+      
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.string), lm.data.matrix)
+summary(test.lm)
+```
+
+
+```{r}
+y_1 <- as.numeric(SEresp_part[[2]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds_part[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(SEpreds_part[[2]][ ,1:260]))
+
+test.ramp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 250)
+
+main.terms <- test.ramp$mainInd
+main.terms <- colnames(X_1)[main.terms]
+
+interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+main.terms
+interactions
+test.ramp$cri.list[test.ramp$cri.loc]
+
+#refit with lm
+if (!is.null(interactions)){
+  model.string <- paste( paste(main.terms, collapse = " + "),
+                         paste(interactions, collapse = " + "),
+                         sep = " + ")
+} else {
+  model.string <- paste(main.terms, collapse = " + ")
+}
+
+model.string <- paste0("co ~ ", model.string)
+      
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.string), lm.data.matrix)
+summary(test.lm)
+
+
+```
+
+

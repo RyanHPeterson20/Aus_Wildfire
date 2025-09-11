@@ -44,7 +44,8 @@ response_anoms <- read.csv("Data/response_anoms.csv", header = TRUE, stringsAsFa
 #predictors with week data
 predictor_anoms <- read.csv("Data/predictor_anoms.csv", header = TRUE, stringsAsFactors = FALSE)
 
-
+#add in OLR data
+load( "olr_anom.rda")
 ```
 
 ```{r pIOD_load}
@@ -207,7 +208,6 @@ setio3.df$month <- month(setio3.df$date)
 ```
 
 
-
 ```{r other_data_prep}
 dmi.anom$anomaly <- dmi.anom$time
 
@@ -319,10 +319,6 @@ rownames(son2.avg) <- years
 ```
 
 
-```{r son_avg_larger}
-
-```
-
 
 ```{r pIOD_compare}
 dmi.son.avg <- son2.avg$dmi
@@ -362,27 +358,251 @@ summary(etiostr.fit)
 
 
 ```{r plots}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
 
 #PC1 vs DMI
-plot(dmi.son.avg, PC1.new, pch = 19)
-abline(dmipc1.fit)
+png(filename = "dmipc1.png", width = 2000, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(dmi.son.avg, PC1.new, pch = 19,
+     xlab = "DMI", ylab = "PC1")
+abline(dmipc1.fit, col = "red", lty = 2)
+title("", adj = 0)
+text(-0.75, 2, paste0("Cor = ", round(dmipc1.cor,3)), adj = 0 )
+dev.off()
 
 #m-index vs wtio
-plot(wtio.son.avg, mindex.new, pch = 19)
-abline(wtiomod.fit)
+png(filename = "wtiomindex.png", width = 2000, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
+plot(wtio.son.avg, mindex.new, pch = 19,
+     xlab = "WTIO", ylab = "M-index")
+abline(wtiomod.fit, col = "red", lty = 2)
+title("", adj =0)
+text(-0.4, 2, paste0("Cor = ", round(wtiomod.cor, 3)), adj = 0 )
+dev.off()
 
 #s-index vs etio
+png(filename = "etiosindex.png", width = 2000, height = 1200, res = 300)
+par(mar = c(5, 5, 3, 5))
 plot(etio.son.avg, sindex.new, pch = 19,
+     xlab = "ETIO", ylab = "S-index",
      xlim = c(-1.5,1.2), ylim = c(-2, 4.25))
-abline(etiostr.fit)
+abline(etiostr.fit, col = "red", lty = 2)
+title("", adj = 0)
+text(0.5, 3.5, paste0("Cor = ", round(etiostr.cor, 3)), adj = 0 )
+dev.off()
 
+```
+
+# Data Cleaning
+
+```{r setup}
+season_weeks <- c(35:52, 1:14)
+
+#get years from bounded_resp
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+
+
+rm(i, season_years, temp_season)
 ```
 
 
 ```{r data_cleaning}
 #TODO prep wtio and etio for use in modeling
+#update to predictor anom data frame with wtio and etio
+
+pred.dmi.anoms <- data.frame(time = dmi.new2.df$date, 
+                             dmi.anomaly = dmi.new2.df$sst,
+                             wtio.anomaly = wtio2.df$sst,
+                             etio.anomaly = setio2.df$sst,
+                             week = dmi.new2.df$week,
+                             year = dmi.new2.df$year)
+
+#repeating some work from data_cleaning.rmd
+week <- 1
+
+predictor <- pred.dmi.anoms
+
+#resp_dates <- as_date(response[response$week == week, ]$time) #not needed, 
+pred_dates <- as_date(predictor[predictor$week == week, ]$time)
+
+#get minimum prediction date from response data
+#low_bound <- pred_dates[which(pred_dates == min(resp_dates)) - 1]
+low_bound <- pred_dates[5]
+
+#get maximum response date from predictor data
+upper_bound <- max(as_date(predictor$time)) + days(7)
+
+#this requires week being set correctly above, that req should be fixed
+bounded_pred_df <- predictor[predictor$time >= low_bound & predictor$time <= upper_bound, ]
+
+#2019 boundary (week 14 2019: end of 2018/2019 season)
+max_date <- as_date(response_anoms[response_anoms$week == 14 & 
+                                     response_anoms$year == 2020, ]$time)
+
+max_date <- as_date(bounded_pred_df[bounded_pred_df$week == 14 & bounded_pred_df$year == 2020, ]$time)
+
+bounded_pred_df <- bounded_pred_df[bounded_pred_df$time <= max_date, ]
+
+
+#fix for the correct columns
+week_53pred <- which(bounded_pred_df$week == 53, )
+for (j in week_53pred) {
+  bounded_pred_df[j-1, 2] <- mean(c(bounded_pred_df[j-1, 2], 
+                                    bounded_pred_df[j, 2]))
+  bounded_pred_df[j-1, 3] <- mean(c(bounded_pred_df[j-1, 3],
+                                    bounded_pred_df[j, 3]))
+  bounded_pred_df[j-1, 4] <- mean(c(bounded_pred_df[j-1, 4],
+                                    bounded_pred_df[j, 4]))
+}
+
+bounded_pred_df <- bounded_pred_df[-week_53pred, ]
+rm(j, week_53pred)
+
+bounded_pred_df <- bounded_pred_df[ ,-1]
+row.names(bounded_pred_df) <- NULL
+
+#rename bounded_pred_df
+bounded_pred2_df <- bounded_pred_df
+
+```
 
 
 
+```{r data_clean2}
+
+NE_laglist_std <- list()
+SE_laglist_std <- list()
+
+#for i in season_weeks
+for(i in season_weeks){
+  
+  temp_resp <- bounded_resp_df[bounded_resp_df$week == i, ]
+    
+  if (i <= 14) {
+    temp_resp <- temp_resp[-which(temp_resp$year == 2001), ]
+  }
+  
+  #TODO: use this to add the start of the weekly df's
+  tempNE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+  tempNE_df <- cbind(tempNE_df, temp_resp$NE_Aus_anomaly_co)
+  colnames(tempNE_df) <- c("Seasons", "NE_Aus")
+    
+  tempSE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+  tempSE_df <- cbind(tempSE_df, temp_resp$SE_Aus_anomaly_co)
+  colnames(tempSE_df) <- c("Seasons", "SE_Aus")
+  
+  #current
+  lag_resp <- temp_resp[which(temp_resp$week == i), ]
+  min_year <- min(lag_resp$year)
+  max_year <- max(lag_resp$year)
+  
+  #lag loop (inner loop)
+  #resp_week_lag <- as.data.frame(matrix())
+  dmi_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  wtio_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  etio_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+
+  nino_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  tsa_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  aao_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  
+  NEolr_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  SEolr_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  
+  week_vec <- c()
+  lag_vec <- c()
+  for (j in 1:52) {
+    lag <- j
+    lag_week <- i - lag
+    if (lag_week <= 0) {
+      lag_week <- 52 + lag_week
+      lag_year <- c(min_year - 1, max_year -1)
+    } else {
+      lag_year <- min_year
+      lag_year <- c(min_year, max_year)
+    }
+    
+    lag_pred <- bounded_pred_df[which(bounded_pred_df$week == lag_week), ]
+    lag_pred <- lag_pred[which(lag_pred$year >= lag_year[1] & lag_pred$year <= lag_year[2]), ]
+
+    lag_pred2 <- bounded_pred2_df[which(bounded_pred2_df$week == lag_week), ]
+    lag_pred2 <- lag_pred2[which(lag_pred2$year >= lag_year[1] & lag_pred2$year <= lag_year[2]), ]
+    
+    lag_olr <- bounded_olr_df[which(bounded_olr_df$Week == lag_week), ]
+    lag_olr <- lag_olr[which(lag_olr$Year >= lag_year[1] & lag_olr$Year <= lag_year[2]), ]
+    
+    nino_lag <- cbind(nino_lag, lag_pred$nino.anomaly)
+    tsa_lag <- cbind(tsa_lag, lag_pred$tsa.anomaly)
+    aao_lag <- cbind(aao_lag, lag_pred$aao.anomaly)
+    
+    NEolr_lag <- cbind(NEolr_lag, lag_olr$NE_anom)
+    SEolr_lag <- cbind(SEolr_lag, lag_olr$SE_anom) 
+    
+    dmi_lag <- cbind(dmi_lag, lag_pred2$dmi.anomaly)
+    wtio_lag <- cbind(wtio_lag, lag_pred2$wtio.anomaly)
+    etio_lag <- cbind(etio_lag, lag_pred2$etio.anomaly)
+
+    week_vec <- c(week_vec, lag_week)
+    lag_vec <- c(lag_vec, lag)
+  }
+  
+
+  dmi_lag <- dmi_lag[,-1]
+  colnames(dmi_lag) <- paste0("dmi_lag", lag_vec[1:52])
+  dmi_lag <- scale(dmi_lag, center = TRUE, scale = TRUE)
+  
+  wtio_lag <- wtio_lag[,-1]
+  colnames(wtio_lag) <- paste0("wtio_lag", lag_vec[1:52])
+  wtio_lag <- scale(wtio_lag, center = TRUE, scale = TRUE)
+  
+  etio_lag <- etio_lag[,-1]
+  colnames(etio_lag) <- paste0("etio_lag", lag_vec[1:52])
+  etio_lag <- scale(etio_lag, center = TRUE, scale = TRUE)
+    
+  nino_lag <- nino_lag[,-1]
+  colnames(nino_lag) <- paste0("nino_lag", lag_vec[1:52])
+  nino_lag <- scale(nino_lag, center = TRUE, scale = TRUE)
+  
+  
+  tsa_lag <- tsa_lag[,-1]
+  colnames(tsa_lag) <- paste0("tsa_lag", lag_vec[1:52])
+  tsa_lag <- scale(tsa_lag, center = TRUE, scale = TRUE)
+  
+  aao_lag <- aao_lag[,-1]
+  colnames(aao_lag) <- paste0("aao_lag", lag_vec[1:52])
+  aao_lag <- scale(aao_lag, center = TRUE, scale = TRUE)
+  
+  NEolr_lag <- NEolr_lag[ ,-1]
+  colnames(NEolr_lag) <- paste0("NEolr_lag", lag_vec[1:52])
+  NEolr_lag <- scale(NEolr_lag, center = TRUE, scale = TRUE)
+  
+  SEolr_lag <- SEolr_lag[ ,-1]
+  colnames(SEolr_lag) <- paste0("SEolr_lag", lag_vec[1:52])
+  SEolr_lag <- scale(SEolr_lag, center = TRUE, scale = TRUE)
+  
+  
+  NEweek_lag <- data.frame(tempNE_df, nino_lag, wtio_lag, etio_lag, tsa_lag, aao_lag, NEolr_lag)
+  SEweek_lag <- data.frame(tempSE_df, nino_lag, wtio_lag, etio_lag, tsa_lag, aao_lag, SEolr_lag)
+  
+  NE_laglist_std[[paste("Week ", i)]] <- NEweek_lag
+  SE_laglist_std[[paste("Week ", i)]] <- SEweek_lag
+}
+
+#rename laglist_std (and save)
+NE_iodlag <- NE_laglist_std
+SE_iodlag <- SE_laglist_std
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+
+save(NE_iodlag, SE_iodlag, file = "IOD_lag.rda")
 ```
 
