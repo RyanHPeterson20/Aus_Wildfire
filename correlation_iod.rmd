@@ -1,0 +1,68 @@
+---
+title: "correlation_iod"
+author: "Ryan Peterson"
+date: "2025-09-14"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages( library(hierNet)) #yes
+suppressMessages( library(glmnet)) #test ridge regression for coefs
+suppressMessages( library(RAMP)) #maybe
+suppressMessages( library(MASS)) #for lm.ridge
+
+suppressMessages( library(foreach)) #parallelization setup
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
+
+suppressMessages( library( lubridate)) #you know why
+suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages( library( fields)) #for set.panel() and others 
+suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
+
+suppressMessages( library( caret)) #for confusion matrix
+
+suppressMessages( library( tictoc)) #some timing
+```
+
+```{r data_load}
+#and functions
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+#source("group_functions.R") #grouping/clustering
+source("group_functionsNew.R") #new groupings
+source("refit_functions.R") #coef/refit functions
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+load( "IOD_lag.rda")
+```
+
+
+Repeat correlation work from earlier work
+
+
+# Correlation Work
+
+Comparison between climate 
+
+```{r}
+
+```
+
+
+
