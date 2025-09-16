@@ -603,6 +603,6 @@ SE_iodlag <- SE_laglist_std
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 
-save(NE_iodlag, SE_iodlag, file = "IOD_lag.rda")
+save(NE_iodlag, SE_iodlag, bounded_pred2_df, file = "IOD_lag.rda")
 ```
 
