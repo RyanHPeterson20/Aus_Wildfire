@@ -42,6 +42,7 @@ load( "Data/lag_list.rda")
 load( "Data/data_quantile.rda")
 
 #functions:
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
 #source("group_functions.R") #grouping/clustering
 source("group_functionsNew.R") #new groupings
 source("refit_functions.R") #coef/refit functions
@@ -135,18 +136,18 @@ SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
 rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
 
 #full model
-NEpreds <- NElag_3group(NE_laglist = NE_iodlag, j = 1:19)
-NEresp <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+NEpreds_new <- NElag_3group(NE_laglist = NE_iodlag, j = 1:19)
+NEresp_new <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
 
-SEpreds <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
-SEresp <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+SEpreds_new <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
+SEresp_new <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
 
 #partial model
-NEpreds_part <- NElag_3group(NE_laglist = NE_iodlag, j = -c(19))
-NEresp_part <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(19))
+NEpreds_newpart <- NElag_3group(NE_laglist = NE_iodlag, j = -c(19))
+NEresp_newpart <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(19))
 
-SEpreds_part <- SElag_3group(SE_laglist = SE_iodlag, j = -c(19))
-SEresp_part <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
+SEpreds_newpart <- SElag_3group(SE_laglist = SE_iodlag, j = -c(19))
+SEresp_newpart <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
 
 
 ```
@@ -154,7 +155,19 @@ SEresp_part <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
 
 ```{r partial_LOO}
 #leaving out a single year
-
+NEpartial_preds <- list()
+NEpratial_resp <- list()
+SEpartial_preds <- list()
+SEpratial_resp <- list()
+for (j in 1:length(seasons)) {
+  #NE Aus
+  NEpartial_preds[[seasons[j]]] <- NElag_3group(NE_laglist = NE_iodlag, j = -c(j))
+  NEpratial_resp[[seasons[j]]] <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(j))
+  
+  #SE Aus
+  SEpartial_preds[[seasons[j]]] <- SElag_3group(SE_laglist = SE_iodlag, j = -c(j))
+  SEpratial_resp[[seasons[j]]] <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(j))
+}
 ```
 
 
@@ -395,6 +408,7 @@ segroup2 <- RAMP(X = X_1, y = y_1,
                              tune = "BIC",
                              n.lambda = 450)
 
+segroup2$cri.loc
 
 model.ramp <- refit_ramp(segroup2, X_1)
 model.ramp
@@ -478,6 +492,297 @@ names(lm.data.matrix)[1] <- "co"
 test.lm <- lm(formula(model.ramp), lm.data.matrix)
 summary(test.lm)
 ```
+
+# Fits - with pIOD
+
+## NE Aus
+
+```{r group_1}
+y_1 <- as.numeric(NEresp_new[[1]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:260]))
+
+negroup1 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+
+model.ramp <- refit_ramp(negroup1, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+#wihout 2019
+y_1 <- as.numeric(NEresp_newpart[[1]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(NEpreds_newpart[[1]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_newpart[[1]][ ,1:260]))
+
+negroup1_part <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+
+model.ramp <- refit_ramp(negroup1_part, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+```
+
+```{r group_2}
+y_1 <- as.numeric(NEresp_new[[2]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:260]))
+
+negroup2_new <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+
+model.ramp <- refit_ramp(negroup2_new, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+#wihout 2019
+y_1 <- as.numeric(NEresp_newpart[[2]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(NEpreds_newpart[[2]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_newpart[[2]][ ,1:260]))
+
+negroup2_partnew <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+
+model.ramp <- refit_ramp(negroup2_partnew, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+```
+
+```{r group_3}
+y_1 <- as.numeric(NEresp_new[[3]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:260]))
+
+negroup3_new <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+
+model.ramp <- refit_ramp(negroup3_new, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+#wihout 2019
+y_1 <- as.numeric(NEresp_newpart[[3]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(NEpreds_newpart[[3]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_newpart[[3]][ ,1:260]))
+
+negroup3_partnew <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+
+model.ramp <- refit_ramp(negroup3_partnew, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+```
+
+## SE Aus
+
+```{r group_1}
+y_1 <- as.numeric(SEresp_new[[1]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:260]))
+
+segroup1 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+model.ramp <- refit_ramp(segroup1, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+#wihout 2019
+y_1 <- as.numeric(SEresp_newpart[[1]])
+
+#with OLR
+#X_1 <- cbind(as.matrix(SEpreds_newpart[[1]][ ,1:312]))
+#without OLR
+X_1 <- cbind(as.matrix(SEpreds_newpart[[1]][ ,1:260]))
+
+segroup1_part <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+model.ramp <- refit_ramp(segroup1_part, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+```
+
+```{r group_2}
+y_1 <- as.numeric(SEresp_new[[2]])
+
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:260]))
+
+segroup2 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+segroup2$lambda
+
+model.ramp <- refit_ramp(segroup2, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+#wihout 2019
+y_1 <- as.numeric(SEresp_newpart[[2]])
+
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:260]))
+
+segroup2_part <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+model.ramp <- refit_ramp(segroup2_part, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+```
+
+```{r group_3}
+y_1 <- as.numeric(SEresp_new[[3]])
+
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:260]))
+
+segroup3 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+model.ramp <- refit_ramp(segroup3, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+#wihout 2019
+y_1 <- as.numeric(SEresp_newpart[[3]])
+
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_newpart[[3]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(SEpreds_newpart[[3]][ ,1:260]))
+
+segroup3_part <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+model.ramp <- refit_ramp(segroup3_part, X_1)
+model.ramp
+
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+```
+
 
 
 
@@ -660,28 +965,41 @@ summary(test.lm)
 ## SE Aus
 
 ```{r group2}
-lambda_seq <- seq(400, 120, length.out = 12)
+lambda_seq <- seq(400, 120, length.out = 24)
 
-y_1 <- as.numeric(SEresp[[2]])
+y_1 <- as.numeric(SEresp_new[[2]])
 
-X_1 <- cbind(as.matrix(SEpreds[[2]][ ,1:312]))
+X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
   
 SE2path_with <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
                               diagonal = TRUE, trace = 0) 
 ```
 
+
+```{r sans_OLR}
+lambda_seq <- seq(400, 71, length.out = 24)
+
+y_1 <- as.numeric(SEresp_new[[2]])
+
+X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:260]))
+  
+SE2path_with <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq, #nlam = 24,
+                              diagonal = TRUE, trace = 0) 
+```
+
+
 ```{r refits}
 
-SEcoefs2_with <- get_coefs(SE2path_with, max_index = 12, 
-                      resp = SEresp[[2]], preds = SEpreds[[2]], 
-                      preds_quant = SEpreds[[2]])
+SEcoefs2_with <- get_coefs(SE2path_with, max_index = 24, 
+                      resp = SEresp[[2]], preds = SEpreds_new[[2]][ ,1:260], 
+                      preds_quant = SEpreds_new[[2]])
 
 
-SErefit2_with <- refit_bic(SE2path_with, max_index = 12, ebic.gamma = 0.25, gic.gamma = 2.15,
+SErefit2_with <- refit_bic(SE2path_with, max_index = 24, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = FALSE,
-                      resp = SEresp[[2]], preds = SEpreds[[2]], 
-                      preds_quant =SEpreds[[2]])
+                      intercept = TRUE,
+                      resp = SEresp_new[[2]], preds = SEpreds_new[[2]][ ,1:260], 
+                      preds_quant =SEpreds_new[[2]])
 
 se2_ic <- SErefit2_with[[5]]
 
@@ -689,42 +1007,47 @@ SErefit2_with[[5]][,c(1,5,6)]
 SErefit2_with[[5]][,c(1,8,9)]
 
 se2_ic
+which.min(SErefit2_with[[5]][ , 4]) #lm BIC
 which.min(SErefit2_with[[5]][ , 5]) #ridge BIC 
-which.min(SErefit2_with[[5]][ , 6]) #lasso BIC 
+which.min(SErefit2_with[[5]][ , 6])#lasso BIC 
 which.min(SErefit2_with[[5]][ , 2]) #lasso AIC 
 
-i <- 5
+i <- 7
 ridge_coef <- SErefit2_with[[4]][[i]]
 SEridge2_wo <- ridge_coef
 ridge_coef
 length(ridge_coef)
+
+i <- 4
+lm_refit <- SErefit2_with[[1]][[i]]
+summary(lm_refit)
 ```
 
 
 ```{r test_wo}
-lambda_seq <- seq(146, 60, length.out = 15)
+lambda_seq <- seq(146, 60, length.out = 24)
 
-y_1 <- as.numeric(SEresp_part[[2]])
+y_1 <- as.numeric(SEresp_newpart[[2]])
 
-X_1 <- cbind(as.matrix(SEpreds_part[[2]][ ,1:312]))
+X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:312]))
   
 SE2path_wo <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq,
                               diagonal = TRUE, trace = 0) 
 ```
 
 
-```{r}
+```{r refits_wo2019}
 
-SEcoefs2_wo <- get_coefs(SE2path_wo, max_index = 15, 
-                      resp = SEresp_part[[2]], preds = SEpreds_part[[2]], 
-                      preds_quant = SEpreds_part[[2]])
+SEcoefs2_wo <- get_coefs(SE2path_wo, max_index = 24, 
+                      resp = SEresp_newpart[[2]], preds = SEpreds_newpart[[2]], 
+                      preds_quant = SEpreds_newpart[[2]])
 
 
-SErefit2_wo <- refit_bic(SE2path_wo, max_index = 15, ebic.gamma = 0.25, gic.gamma = 2.15,
+SErefit2_wo <- refit_bic(SE2path_wo, max_index = 24, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
                       intercept = FALSE,
-                      resp = SEresp_part[[2]], preds = SEpreds_part[[2]], 
-                      preds_quant =SEpreds_part[[2]])
+                      resp = SEresp_newpart[[2]], preds = SEpreds_newpart[[2]], 
+                      preds_quant =SEpreds_newpart[[2]])
 
 se2_ic <- SErefit2_wo[[5]]
 
@@ -733,16 +1056,20 @@ se2_ic <- SErefit2_wo[[5]]
 
 se2_ic
 
+which.min(SErefit2_wo[[5]][ , 4]) #lm BIC
 which.min(SErefit2_wo[[5]][ , 5]) #ridge BIC 
 which.min(SErefit2_wo[[5]][ , 6]) #lasso BIC 
 which.min(SErefit2_wo[[5]][ , 2]) #lasso AIC 
 
-i <- 12
+i <- 4
 ridge_coef <- SErefit2_wo[[4]][[i]]
 SEridge2_wo <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
+i <- 3
+lm_refit <- SErefit2_wo[[1]][[i]]
+summary(lm_refit)
 ```
 
 
