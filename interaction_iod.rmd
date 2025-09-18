@@ -693,16 +693,16 @@ summary(test.lm)
 y_1 <- as.numeric(SEresp_new[[2]])
 
 #with OLR
-X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
+#X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
 #without OLR
-#X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:260]))
+X_1 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:260]))
 
 segroup2 <- RAMP(X = X_1, y = y_1,
                              penalty = "LASSO",
                              tune = "BIC",
                              n.lambda = 500)
 
-segroup2$lambda
+#segroup2$lambda
 
 model.ramp <- refit_ramp(segroup2, X_1)
 model.ramp
@@ -718,9 +718,9 @@ summary(test.lm)
 y_1 <- as.numeric(SEresp_newpart[[2]])
 
 #with OLR
-X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:312]))
+#X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:312]))
 #without OLR
-#X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:260]))
+X_1 <- cbind(as.matrix(SEpreds_newpart[[2]][ ,1:260]))
 
 segroup2_part <- RAMP(X = X_1, y = y_1,
                              penalty = "LASSO",
@@ -991,14 +991,14 @@ SE2path_with <- hierNet.path( X_1, y_1, strong = TRUE, lamlist = lambda_seq, #nl
 ```{r refits}
 
 SEcoefs2_with <- get_coefs(SE2path_with, max_index = 24, 
-                      resp = SEresp[[2]], preds = SEpreds_new[[2]][ ,1:260], 
+                      resp = SEresp[[2]], preds = SEpreds_new[[2]], 
                       preds_quant = SEpreds_new[[2]])
 
 
 SErefit2_with <- refit_bic(SE2path_with, max_index = 24, ebic.gamma = 0.25, gic.gamma = 2.15,
                       lambda.min = FALSE, AIC.c = FALSE,
-                      intercept = TRUE,
-                      resp = SEresp_new[[2]], preds = SEpreds_new[[2]][ ,1:260], 
+                      intercept = FALSE,
+                      resp = SEresp_new[[2]], preds = SEpreds_new[[2]], 
                       preds_quant =SEpreds_new[[2]])
 
 se2_ic <- SErefit2_with[[5]]
@@ -1012,13 +1012,13 @@ which.min(SErefit2_with[[5]][ , 5]) #ridge BIC
 which.min(SErefit2_with[[5]][ , 6])#lasso BIC 
 which.min(SErefit2_with[[5]][ , 2]) #lasso AIC 
 
-i <- 7
+i <- 10
 ridge_coef <- SErefit2_with[[4]][[i]]
 SEridge2_wo <- ridge_coef
 ridge_coef
 length(ridge_coef)
 
-i <- 4
+i <- 10
 lm_refit <- SErefit2_with[[1]][[i]]
 summary(lm_refit)
 ```
@@ -1061,7 +1061,7 @@ which.min(SErefit2_wo[[5]][ , 5]) #ridge BIC
 which.min(SErefit2_wo[[5]][ , 6]) #lasso BIC 
 which.min(SErefit2_wo[[5]][ , 2]) #lasso AIC 
 
-i <- 4
+i <- 3
 ridge_coef <- SErefit2_wo[[4]][[i]]
 SEridge2_wo <- ridge_coef
 ridge_coef
