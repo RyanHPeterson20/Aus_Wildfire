@@ -1,0 +1,83 @@
+---
+title: "pIODweekly_indices"
+author: "Ryan Peterson"
+date: "2025-09-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+#.nc files
+suppressMessages(library(ncdf4))
+suppressMessages(library(terra))
+
+# date/data mgmt
+suppressMessages(library(lubridate))
+suppressMessages(library(abind))
+
+#visualization and interpolation
+suppressMessages(library(fields))
+suppressMessages(library(colorspace))
+suppressMessages(library(RColorBrewer)) #colorRampPalette
+suppressMessages(library(scales)) #for adjusting opacity
+
+#matlab function (e.g. detrend)
+suppressMessages(library(pracma))
+```
+
+```{r functions_data}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+
+source("pIOD_functions.R") #sst.anom and eof functions
+
+#load in preped data products
+load("sstGODAS.rda")
+load("sstOISST.rda")
+load("sstORAS.rda")
+load("sstSODA.rda")
+```
+
+
+```{r setup}
+#indian ocean region
+wide_maxLon <- 120
+wide_minLon <- 30
+wide_maxLat <- 20
+wide_minLat <- -20
+
+#pIOD (40, -5) X (100, 5), EIO region
+pIOD_maxLon <- 100
+pIOD_minLon <- 40 
+pIOD_maxLat <- 5
+pIOD_minLat <- -5
+
+#indian ocean grid
+lon.wide <- seq(wide_minLon, wide_maxLon, by = 1)
+lat.wide <- seq(wide_minLat, wide_maxLat, by = 1)
+
+#grid list from 
+grid.list <- list(x = lon.wide,
+                  y = lat.wide)
+
+#define pIOD range
+
+
+```
+
+
+Steps (in some order):
+- repeat SON PCA & indices for DJF, MAM, and JJA
+- extend OISST/GODAS monthly out to 2019/2020
+- use seasonal mean/trend to get monthly and weekly anoms (OISST only)
+
+
+
+
+
+
+
+

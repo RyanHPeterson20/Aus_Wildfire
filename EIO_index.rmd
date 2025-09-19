@@ -1259,7 +1259,6 @@ dev.off()
 ```
 
 
-
 ```{r monthly_1994}
 setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New/Months")
 
@@ -1448,7 +1447,6 @@ dev.off()
 
 
 ```
-
 
 
 ```{r monthly_2006}

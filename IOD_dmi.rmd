@@ -208,6 +208,7 @@ setio3.df$month <- month(setio3.df$date)
 ```
 
 
+
 ```{r other_data_prep}
 dmi.anom$anomaly <- dmi.anom$time
 
@@ -358,7 +359,7 @@ summary(etiostr.fit)
 
 
 ```{r plots}
-setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+setwd("~/CO_AUS/Aus_CO-main/pIOD/Figures/New")
 
 
 #PC1 vs DMI
@@ -469,8 +470,39 @@ rm(j, week_53pred)
 bounded_pred_df <- bounded_pred_df[ ,-1]
 row.names(bounded_pred_df) <- NULL
 
-#rename bounded_pred_df
-bounded_pred2_df <- bounded_pred_df
+
+```
+
+
+```{r temp_blcok}
+i <- season_weeks[28]
+
+temp_resp <- bounded_resp_df[bounded_resp_df$week == i, ]
+  
+if (i <= 14) {
+  temp_resp <- temp_resp[-which(temp_resp$year == 2001), ]
+}
+
+#TODO: use this to add the start of the weekly df's
+tempNE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+tempNE_df <- cbind(tempNE_df, temp_resp$NE_Aus_anomaly_co)
+colnames(tempNE_df) <- c("Seasons", "NE_Aus")
+  
+tempSE_df <- as.data.frame(matrix(seasons, ncol = 1, byrow = TRUE))
+tempSE_df <- cbind(tempSE_df, temp_resp$SE_Aus_anomaly_co)
+colnames(tempSE_df) <- c("Seasons", "SE_Aus")
+
+#current
+lag_resp <- temp_resp[which(temp_resp$week == i), ]
+min_year <- min(lag_resp$year)
+max_year <- max(lag_resp$year)
+
+#lag loop (inner loop)
+#resp_week_lag <- as.data.frame(matrix())
+dmi_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+wtio_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+etio_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+
 
 ```
 
@@ -506,11 +538,8 @@ for(i in season_weeks){
   
   #lag loop (inner loop)
   #resp_week_lag <- as.data.frame(matrix())
-  dmi_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
-  wtio_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
-  etio_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
-
   nino_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
+  dmi_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
   tsa_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
   aao_lag <- matrix(NA, nrow = length(lag_resp$NE_Aus_anomaly_co))
   
@@ -532,45 +561,29 @@ for(i in season_weeks){
     
     lag_pred <- bounded_pred_df[which(bounded_pred_df$week == lag_week), ]
     lag_pred <- lag_pred[which(lag_pred$year >= lag_year[1] & lag_pred$year <= lag_year[2]), ]
-
-    lag_pred2 <- bounded_pred2_df[which(bounded_pred2_df$week == lag_week), ]
-    lag_pred2 <- lag_pred2[which(lag_pred2$year >= lag_year[1] & lag_pred2$year <= lag_year[2]), ]
     
     lag_olr <- bounded_olr_df[which(bounded_olr_df$Week == lag_week), ]
     lag_olr <- lag_olr[which(lag_olr$Year >= lag_year[1] & lag_olr$Year <= lag_year[2]), ]
     
     nino_lag <- cbind(nino_lag, lag_pred$nino.anomaly)
+    dmi_lag <- cbind(dmi_lag, lag_pred$dmi.anomaly)
     tsa_lag <- cbind(tsa_lag, lag_pred$tsa.anomaly)
     aao_lag <- cbind(aao_lag, lag_pred$aao.anomaly)
     
     NEolr_lag <- cbind(NEolr_lag, lag_olr$NE_anom)
     SEolr_lag <- cbind(SEolr_lag, lag_olr$SE_anom) 
     
-    dmi_lag <- cbind(dmi_lag, lag_pred2$dmi.anomaly)
-    wtio_lag <- cbind(wtio_lag, lag_pred2$wtio.anomaly)
-    etio_lag <- cbind(etio_lag, lag_pred2$etio.anomaly)
-
     week_vec <- c(week_vec, lag_week)
     lag_vec <- c(lag_vec, lag)
   }
   
-
-  dmi_lag <- dmi_lag[,-1]
-  colnames(dmi_lag) <- paste0("dmi_lag", lag_vec[1:52])
-  dmi_lag <- scale(dmi_lag, center = TRUE, scale = TRUE)
-  
-  wtio_lag <- wtio_lag[,-1]
-  colnames(wtio_lag) <- paste0("wtio_lag", lag_vec[1:52])
-  wtio_lag <- scale(wtio_lag, center = TRUE, scale = TRUE)
-  
-  etio_lag <- etio_lag[,-1]
-  colnames(etio_lag) <- paste0("etio_lag", lag_vec[1:52])
-  etio_lag <- scale(etio_lag, center = TRUE, scale = TRUE)
-    
   nino_lag <- nino_lag[,-1]
   colnames(nino_lag) <- paste0("nino_lag", lag_vec[1:52])
   nino_lag <- scale(nino_lag, center = TRUE, scale = TRUE)
   
+  dmi_lag <- dmi_lag[,-1]
+  colnames(dmi_lag) <- paste0("dmi_lag", lag_vec[1:52])
+  dmi_lag <- scale(dmi_lag, center = TRUE, scale = TRUE)
   
   tsa_lag <- tsa_lag[,-1]
   colnames(tsa_lag) <- paste0("tsa_lag", lag_vec[1:52])
@@ -589,20 +602,13 @@ for(i in season_weeks){
   SEolr_lag <- scale(SEolr_lag, center = TRUE, scale = TRUE)
   
   
-  NEweek_lag <- data.frame(tempNE_df, nino_lag, wtio_lag, etio_lag, tsa_lag, aao_lag, NEolr_lag)
-  SEweek_lag <- data.frame(tempSE_df, nino_lag, wtio_lag, etio_lag, tsa_lag, aao_lag, SEolr_lag)
+  NEweek_lag <- data.frame(tempNE_df, nino_lag, dmi_lag, tsa_lag, aao_lag, NEolr_lag)
+  SEweek_lag <- data.frame(tempSE_df, nino_lag, dmi_lag, tsa_lag, aao_lag, SEolr_lag)
   
   NE_laglist_std[[paste("Week ", i)]] <- NEweek_lag
   SE_laglist_std[[paste("Week ", i)]] <- SEweek_lag
 }
 
-#rename laglist_std (and save)
-NE_iodlag <- NE_laglist_std
-SE_iodlag <- SE_laglist_std
 
-
-setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
-
-save(NE_iodlag, SE_iodlag, bounded_pred2_df, file = "IOD_lag.rda")
 ```
 
