@@ -150,6 +150,28 @@ sst.anoms.new <- function(A, season = "son", quadratic = FALSE){
 
 
 
+sst.interp <- function(sst, sst.lon, sst.lat, grid.list){
+  
+  #get dime
+  dim.sst <- dim(sst)
+  
+  nx <- dim.sst[1]
+  ny <- dim.sst[2]
+  nt <- dim.sst[3]
+  
+  #interpolate 
+  sst.interp <- NULL
+  for (j in seq_len(nt)) {
+    sst.obj <-  list(x = sst.lon, y = sst.lat, z = sst[,,j])
+    
+    temp.interp <- interp.surface.grid(sst.obj, grid.list)
+    sst.interp <- abind(sst.interp, temp.interp$z, along = 3)
+  }
+  
+  return(sst.interp)
+}
+
+
 #pca/eof analysis function:
 ##sst.anom as [time, lat, lon]
 sst.eof <- function(sst.anom, kmode){

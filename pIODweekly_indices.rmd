@@ -77,7 +77,16 @@ Steps (in some order):
 
 # Seaonal pIOD Indices
 
-```{r }
+Create seasonal pIOD indices (e.g. S- and M-indices) for all seasons.
+
+```{r sst.anoms}
+#data dimension
+dim.GODAS <- dim(sst.GODAS.new2)
+dim.OISST <- dim(sst.OISST.new2)
+dim.SODA <- dim(sst.SODA.new2)
+dim.ORAS <- dim(sst.ORAS.new3)
+
+
 #for march, april, may (mam) season
 
 ##OISST
@@ -125,6 +134,268 @@ sst.djf.oras <- sst.anoms.new(sst.ORAS.new3, season = "djf", quadratic = FALSE)
 
 ```
 
+Repeat fixed arrays for each season.
+
+```{r fix_array_mam}
+#get mean, anoms, coef from mam-season
+
+#means
+godas.mam.mean <- matrix(sst.mam.godas$mean, nrow = dim.GODAS[1], ncol = dim.GODAS[2], byrow = TRUE)
+#flip godas lat (if needed)
+#godas.mean <- godas.mean[,ncol(godas.mean):1]
+
+oras.mam.mean <- matrix(sst.mam.oras$mean, nrow = dim.ORAS[1], ncol = dim.ORAS[2], byrow = TRUE)
+
+oisst.mam.mean <- matrix(sst.mam.oisst$mean, nrow = dim.OISST[1], ncol = dim.OISST[2], byrow = TRUE)
+
+soda.mam.mean <- matrix(sst.mam.soda$mean, nrow = dim.SODA[1], ncol = dim.SODA[2], byrow = TRUE)
+
+
+#anoms
+godas.mam.anom <- array(sst.mam.godas$anom, c(34, dim.GODAS[2], dim.GODAS[1]))
+godas.mam.anom <- aperm(godas.mam.anom, c(3, 2, 1))
+#godas.anom <- godas.anom[ ,dim.GODAS[2]:1,] #flip godas lat
+
+oras.mam.anom <- array(sst.mam.oras$anom, c(34, dim.ORAS[2], dim.ORAS[1]))
+oras.mam.anom <- aperm(oras.mam.anom, c(3, 2, 1))
+
+oisst.mam.anom <- array(sst.mam.oisst$anom, c(34, dim.OISST[2], dim.OISST[1]))
+oisst.mam.anom <- aperm(oisst.mam.anom, c(3, 2, 1))
+
+soda.mam.anom <- array(sst.mam.soda$anom, c(34, dim.SODA[2], dim.SODA[1]))
+soda.mam.anom <- aperm(soda.mam.anom, c(3, 2, 1))
+
+
+#coefs
+godas.mam.coef <- array(sst.mam.godas$coef, c(2, dim.GODAS[2], dim.GODAS[1]))
+godas.mam.coef <- aperm(godas.mam.coef, c(3, 2, 1))
+
+oras.mam.coef <- array(sst.mam.oras$coef, c(2, dim.ORAS[2], dim.ORAS[1]))
+oras.mam.coef <- aperm(oras.mam.coef, c(3, 2, 1))
+
+oisst.mam.coef <- array(sst.mam.oisst$coef, c(2, dim.OISST[2], dim.OISST[1]))
+oisst.mam.coef <- aperm(oisst.mam.coef, c(3, 2, 1))
+
+soda.mam.coef <- array(sst.mam.soda$coef, c(2, dim.SODA[2], dim.SODA[1]))
+soda.mam.coef <- aperm(soda.mam.coef, c(3, 2, 1))
+
+```
+
+```{r fix_array_jja}
+#get mean, anoms, coef from jja-season
+
+#means
+godas.jja.mean <- matrix(sst.jja.godas$mean, nrow = dim.GODAS[1], ncol = dim.GODAS[2], byrow = TRUE)
+#flip godas lat (if needed)
+#godas.mean <- godas.mean[,ncol(godas.mean):1]
+
+oras.jja.mean <- matrix(sst.jja.oras$mean, nrow = dim.ORAS[1], ncol = dim.ORAS[2], byrow = TRUE)
+
+oisst.jja.mean <- matrix(sst.jja.oisst$mean, nrow = dim.OISST[1], ncol = dim.OISST[2], byrow = TRUE)
+
+soda.jja.mean <- matrix(sst.jja.soda$mean, nrow = dim.SODA[1], ncol = dim.SODA[2], byrow = TRUE)
+
+
+#anoms
+godas.jja.anom <- array(sst.jja.godas$anom, c(34, dim.GODAS[2], dim.GODAS[1]))
+godas.jja.anom <- aperm(godas.jja.anom, c(3, 2, 1))
+#godas.anom <- godas.anom[ ,dim.GODAS[2]:1,] #flip godas lat
+
+oras.jja.anom <- array(sst.jja.oras$anom, c(34, dim.ORAS[2], dim.ORAS[1]))
+oras.jja.anom <- aperm(oras.jja.anom, c(3, 2, 1))
+
+oisst.jja.anom <- array(sst.jja.oisst$anom, c(34, dim.OISST[2], dim.OISST[1]))
+oisst.jja.anom <- aperm(oisst.jja.anom, c(3, 2, 1))
+
+soda.jja.anom <- array(sst.jja.soda$anom, c(34, dim.SODA[2], dim.SODA[1]))
+soda.jja.anom <- aperm(soda.jja.anom, c(3, 2, 1))
+
+
+#coefs
+godas.jja.coef <- array(sst.jja.godas$coef, c(2, dim.GODAS[2], dim.GODAS[1]))
+godas.jja.coef <- aperm(godas.jja.coef, c(3, 2, 1))
+
+oras.jja.coef <- array(sst.jja.oras$coef, c(2, dim.ORAS[2], dim.ORAS[1]))
+oras.jja.coef <- aperm(oras.jja.coef, c(3, 2, 1))
+
+oisst.jja.coef <- array(sst.jja.oisst$coef, c(2, dim.OISST[2], dim.OISST[1]))
+oisst.jja.coef <- aperm(oisst.jja.coef, c(3, 2, 1))
+
+soda.jja.coef <- array(sst.jja.soda$coef, c(2, dim.SODA[2], dim.SODA[1]))
+soda.jja.coef <- aperm(soda.jja.coef, c(3, 2, 1))
+
+```
+
+```{r fix_array_son}
+#get mean, anoms, coef from son-season
+
+#means
+godas.son.mean <- matrix(sst.son.godas$mean, nrow = dim.GODAS[1], ncol = dim.GODAS[2], byrow = TRUE)
+#flip godas lat (if needed)
+#godas.mean <- godas.mean[,ncol(godas.mean):1]
+
+oras.son.mean <- matrix(sst.son.oras$mean, nrow = dim.ORAS[1], ncol = dim.ORAS[2], byrow = TRUE)
+
+oisst.son.mean <- matrix(sst.son.oisst$mean, nrow = dim.OISST[1], ncol = dim.OISST[2], byrow = TRUE)
+
+soda.son.mean <- matrix(sst.son.soda$mean, nrow = dim.SODA[1], ncol = dim.SODA[2], byrow = TRUE)
+
+
+#anoms
+godas.son.anom <- array(sst.son.godas$anom, c(34, dim.GODAS[2], dim.GODAS[1]))
+godas.son.anom <- aperm(godas.son.anom, c(3, 2, 1))
+#godas.anom <- godas.anom[ ,dim.GODAS[2]:1,] #flip godas lat
+
+oras.son.anom <- array(sst.son.oras$anom, c(34, dim.ORAS[2], dim.ORAS[1]))
+oras.son.anom <- aperm(oras.son.anom, c(3, 2, 1))
+
+oisst.son.anom <- array(sst.son.oisst$anom, c(34, dim.OISST[2], dim.OISST[1]))
+oisst.son.anom <- aperm(oisst.son.anom, c(3, 2, 1))
+
+soda.son.anom <- array(sst.son.soda$anom, c(34, dim.SODA[2], dim.SODA[1]))
+soda.son.anom <- aperm(soda.son.anom, c(3, 2, 1))
+
+
+#coefs
+godas.son.coef <- array(sst.son.godas$coef, c(2, dim.GODAS[2], dim.GODAS[1]))
+godas.son.coef <- aperm(godas.son.coef, c(3, 2, 1))
+
+oras.son.coef <- array(sst.son.oras$coef, c(2, dim.ORAS[2], dim.ORAS[1]))
+oras.son.coef <- aperm(oras.son.coef, c(3, 2, 1))
+
+oisst.son.coef <- array(sst.son.oisst$coef, c(2, dim.OISST[2], dim.OISST[1]))
+oisst.son.coef <- aperm(oisst.son.coef, c(3, 2, 1))
+
+soda.son.coef <- array(sst.son.soda$coef, c(2, dim.SODA[2], dim.SODA[1]))
+soda.son.coef <- aperm(soda.son.coef, c(3, 2, 1))
+
+```
+
+```{r fix_array_djf}
+#get mean, anoms, coef from djf-season
+
+#means
+godas.djf.mean <- matrix(sst.djf.godas$mean, nrow = dim.GODAS[1], ncol = dim.GODAS[2], byrow = TRUE)
+#flip godas lat (if needed)
+#godas.mean <- godas.mean[,ncol(godas.mean):1]
+
+oras.djf.mean <- matrix(sst.djf.oras$mean, nrow = dim.ORAS[1], ncol = dim.ORAS[2], byrow = TRUE)
+
+oisst.djf.mean <- matrix(sst.djf.oisst$mean, nrow = dim.OISST[1], ncol = dim.OISST[2], byrow = TRUE)
+
+soda.djf.mean <- matrix(sst.djf.soda$mean, nrow = dim.SODA[1], ncol = dim.SODA[2], byrow = TRUE)
+
+
+#anoms
+godas.djf.anom <- array(sst.djf.godas$anom, c(33, dim.GODAS[2], dim.GODAS[1]))
+godas.djf.anom <- aperm(godas.djf.anom, c(3, 2, 1))
+#godas.anom <- godas.anom[ ,dim.GODAS[2]:1,] #flip godas lat
+
+oras.djf.anom <- array(sst.djf.oras$anom, c(33, dim.ORAS[2], dim.ORAS[1]))
+oras.djf.anom <- aperm(oras.djf.anom, c(3, 2, 1))
+
+oisst.djf.anom <- array(sst.djf.oisst$anom, c(33, dim.OISST[2], dim.OISST[1]))
+oisst.djf.anom <- aperm(oisst.djf.anom, c(3, 2, 1))
+
+soda.djf.anom <- array(sst.djf.soda$anom, c(33, dim.SODA[2], dim.SODA[1]))
+soda.djf.anom <- aperm(soda.djf.anom, c(3, 2, 1))
+
+
+#coefs
+godas.djf.coef <- array(sst.djf.godas$coef, c(2, dim.GODAS[2], dim.GODAS[1]))
+godas.djf.coef <- aperm(godas.djf.coef, c(3, 2, 1))
+
+oras.djf.coef <- array(sst.djf.oras$coef, c(2, dim.ORAS[2], dim.ORAS[1]))
+oras.djf.coef <- aperm(oras.djf.coef, c(3, 2, 1))
+
+oisst.djf.coef <- array(sst.djf.oisst$coef, c(2, dim.OISST[2], dim.OISST[1]))
+oisst.djf.coef <- aperm(oisst.djf.coef, c(3, 2, 1))
+
+soda.djf.coef <- array(sst.djf.soda$coef, c(2, dim.SODA[2], dim.SODA[1]))
+soda.djf.coef <- aperm(soda.djf.coef, c(3, 2, 1))
+
+```
+
+
+
+## Multi-Product Averages
+
+```{r inteprolate}
+#MAM-season
+#seasonal mean
+mam.GODAS.mean <- sst.interp(abind(godas.mam.mean, along = 3), GODAS.lon, GODAS.lat, grid.list)
+mam.ORAS.mean <- sst.interp(abind(oras.mam.mean, along = 3), oras.lon, oras.lat, grid.list)
+mam.OISST.mean <- sst.interp(abind(oisst.mam.mean, along = 3), lon.values.base, lat.values.base, grid.list)
+mam.SODA.mean <- sst.interp(abind(soda.mam.mean, along = 3), lon.values.soda, lat.values.soda, grid.list)
+
+#seasonal anom
+mam.GODAS.anom <- sst.interp(godas.mam.anom, GODAS.lon, GODAS.lat, grid.list)
+mam.ORAS.anom <- sst.interp(oras.mam.anom, oras.lon, oras.lat, grid.list)
+mam.OISST.anom <- sst.interp(oisst.mam.anom, lon.values.base, lat.values.base, grid.list)
+mam.SODA.anom <- sst.interp(soda.mam.anom, lon.values.soda, lat.values.soda, grid.list)
+
+
+#JJA-season
+#seasonal mean
+jja.GODAS.mean <- sst.interp(abind(godas.jja.mean, along = 3), GODAS.lon, GODAS.lat, grid.list)
+jja.ORAS.mean <- sst.interp(abind(oras.jja.mean, along = 3), oras.lon, oras.lat, grid.list)
+jja.OISST.mean <- sst.interp(abind(oisst.jja.mean, along = 3), lon.values.base, lat.values.base, grid.list)
+jja.SODA.mean <- sst.interp(abind(soda.jja.mean, along = 3), lon.values.soda, lat.values.soda, grid.list)
+
+#seasonal anom
+jja.GODAS.anom <- sst.interp(godas.jja.anom, GODAS.lon, GODAS.lat, grid.list)
+jja.ORAS.anom <- sst.interp(oras.jja.anom, oras.lon, oras.lat, grid.list)
+jja.OISST.anom <- sst.interp(oisst.jja.anom, lon.values.base, lat.values.base, grid.list)
+jja.SODA.anom <- sst.interp(soda.jja.anom, lon.values.soda, lat.values.soda, grid.list)
+
+
+#SON-season
+#seasonal mean
+son.GODAS.mean <- sst.interp(abind(godas.son.mean, along = 3), GODAS.lon, GODAS.lat, grid.list)
+son.ORAS.mean <- sst.interp(abind(oras.son.mean, along = 3), oras.lon, oras.lat, grid.list)
+son.OISST.mean <- sst.interp(abind(oisst.son.mean, along = 3), lon.values.base, lat.values.base, grid.list)
+son.SODA.mean <- sst.interp(abind(soda.son.mean, along = 3), lon.values.soda, lat.values.soda, grid.list)
+
+#seasonal anom
+son.GODAS.anom <- sst.interp(godas.son.anom, GODAS.lon, GODAS.lat, grid.list)
+son.ORAS.anom <- sst.interp(oras.son.anom, oras.lon, oras.lat, grid.list)
+son.OISST.anom <- sst.interp(oisst.son.anom, lon.values.base, lat.values.base, grid.list)
+son.SODA.anom <- sst.interp(soda.son.anom, lon.values.soda, lat.values.soda, grid.list)
+
+
+#DJF-season
+#seasonal mean
+djf.GODAS.mean <- sst.interp(abind(godas.djf.mean, along = 3), GODAS.lon, GODAS.lat, grid.list)
+djf.ORAS.mean <- sst.interp(abind(oras.djf.mean, along = 3), oras.lon, oras.lat, grid.list)
+djf.OISST.mean <- sst.interp(abind(oisst.djf.mean, along = 3), lon.values.base, lat.values.base, grid.list)
+djf.SODA.mean <- sst.interp(abind(soda.djf.mean, along = 3), lon.values.soda, lat.values.soda, grid.list)
+
+#seasonal anom
+djf.GODAS.anom <- sst.interp(godas.djf.anom, GODAS.lon, GODAS.lat, grid.list)
+djf.ORAS.anom <- sst.interp(oras.djf.anom, oras.lon, oras.lat, grid.list)
+djf.OISST.anom <- sst.interp(oisst.djf.anom, lon.values.base, lat.values.base, grid.list)
+djf.SODA.anom <- sst.interp(soda.djf.anom, lon.values.soda, lat.values.soda, grid.list)
+
+```
+
+
+```{r prod.avgs}
+#get multi-product averages for each season
+
+
+
+
+```
+
+
+## Seasonal Figures
+
+Create figures for each season
+-Begin as sanity check
+
+```{r }
+
+```
 
 
 
