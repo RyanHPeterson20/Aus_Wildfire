@@ -75,6 +75,56 @@ Steps (in some order):
 - use seasonal mean/trend to get monthly and weekly anoms (OISST only)
 
 
+# Seaonal pIOD Indices
+
+```{r }
+#for march, april, may (mam) season
+
+##OISST
+sst.mam.oisst <- sst.anoms.new(sst.OISST.new2, season = "mam", quadratic = FALSE)
+#GODAS
+sst.mam.godas <- sst.anoms.new(sst.GODAS.new2, season = "mam", quadratic = FALSE)
+#SODA
+sst.mam.soda <- sst.anoms.new(sst.SODA.new2, season = "mam", quadratic = FALSE)
+#ORA-S5
+sst.mam.oras <- sst.anoms.new(sst.ORAS.new3, season = "mam", quadratic = FALSE)
+
+
+#for june, july, august (jja) season
+##OISST
+sst.jja.oisst <- sst.anoms.new(sst.OISST.new2, season = "jja", quadratic = FALSE)
+#GODAS
+sst.jja.godas <- sst.anoms.new(sst.GODAS.new2, season = "jja", quadratic = FALSE)
+#SODA
+sst.jja.soda <- sst.anoms.new(sst.SODA.new2, season = "jja", quadratic = FALSE)
+#ORA-S5
+sst.jja.oras <- sst.anoms.new(sst.ORAS.new3, season = "jja", quadratic = FALSE)
+
+
+#for sept, oct, nov (son) season
+##OISST
+sst.son.oisst <- sst.anoms.new(sst.OISST.new2, season = "son", quadratic = FALSE)
+#GODAS
+sst.son.godas <- sst.anoms.new(sst.GODAS.new2, season = "son", quadratic = FALSE)
+#SODA
+sst.son.soda <- sst.anoms.new(sst.SODA.new2, season = "son", quadratic = FALSE)
+#ORA-S5
+sst.son.oras <- sst.anoms.new(sst.ORAS.new3, season = "son", quadratic = FALSE)
+
+
+#for dec, jan, feb (djf) season
+##OISST
+sst.djf.oisst <- sst.anoms.new(sst.OISST.new2, season = "djf", quadratic = FALSE)
+#GODAS
+sst.djf.godas <- sst.anoms.new(sst.GODAS.new2, season = "djf", quadratic = FALSE)
+#SODA
+sst.djf.soda <- sst.anoms.new(sst.SODA.new2, season = "djf", quadratic = FALSE)
+#ORA-S5
+sst.djf.oras <- sst.anoms.new(sst.ORAS.new3, season = "djf", quadratic = FALSE)
+
+
+```
+
 
 
 
