@@ -379,11 +379,75 @@ djf.SODA.anom <- sst.interp(soda.djf.anom, lon.values.soda, lat.values.soda, gri
 ```
 
 
-```{r prod.avgs}
-#get multi-product averages for each season
+```{r prod.avgs.anom}
+#get multi-product averages for sst anoms by season
+
+#for SON season
+son.anom.list <- list(son.GODAS.anom, son.ORAS.anom,
+                 son.OISST.anom, son.SODA.anom)
 
 
+son.anom.new <- abind(son.anom.list, along = 4)
 
+son.sst.anom <- apply(son.anom.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(son.sst.anom) <- NULL
+
+dim(son.sst.anom)
+
+
+```
+
+```{r prod.avgs.mean}
+
+#get multi-product averages for sst mean by season
+#for MAM season
+mam.mean.list <- list(mam.GODAS.mean, mam.ORAS.mean,
+                 mam.OISST.mean, mam.SODA.mean)
+
+
+mam.mean.new <- abind(mam.mean.list, along = 4)
+
+mam.sst.mean <- apply(mam.mean.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(mam.sst.mean) <- NULL
+
+dim(mam.sst.mean)
+
+#for JJA season
+jja.mean.list <- list(jja.GODAS.mean, jja.ORAS.mean,
+                 jja.OISST.mean, jja.SODA.mean)
+
+
+jja.mean.new <- abind(jja.mean.list, along = 4)
+
+jja.sst.mean <- apply(jja.mean.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(jja.sst.mean) <- NULL
+
+dim(jja.sst.mean)
+
+#for SON season
+son.mean.list <- list(son.GODAS.mean, son.ORAS.mean,
+                 son.OISST.mean, son.SODA.mean)
+
+
+son.mean.new <- abind(son.mean.list, along = 4)
+
+son.sst.mean <- apply(son.mean.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(son.sst.mean) <- NULL
+
+dim(son.sst.mean)
+
+
+#for DJF season
+djf.mean.list <- list(djf.GODAS.mean, djf.ORAS.mean,
+                 djf.OISST.mean, djf.SODA.mean)
+
+
+djf.mean.new <- abind(djf.mean.list, along = 4)
+
+djf.sst.mean <- apply(djf.mean.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(djf.sst.mean) <- NULL
+
+dim(djf.sst.mean)
 
 ```
 
@@ -393,12 +457,92 @@ djf.SODA.anom <- sst.interp(soda.djf.anom, lon.values.soda, lat.values.soda, gri
 Create figures for each season
 -Begin as sanity check
 
-```{r }
+```{r fig_setup}
+#setup col and range
+cols.ryb12 <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+
+#mean 
+mean.range <- range(mam.sst.mean, jja.sst.mean, son.sst.mean, djf.sst.mean, na.rm = TRUE)
+breaks.mean <- seq(floor(mean.range[1]), ceiling(mean.range[2]), length.out = length(cols.ryb12)+1)
+
+#anom
+anom.max <- max(abs(c(son.GODAS.anom, son.ORAS.anom, son.OISST.anom, son.SODA.anom)), na.rm = TRUE)
+anom.range <- c(-anom.max, anom.max)
+breaks.anom <- c(anom.range[1], seq(-1, 1, by = 0.2), anom.range[2])
+
+leg.brks2 <- seq(-1.2, 1.2, 0.2) 
+```
+
+
+```{r mean.figures}
+#MAM mean
+image.plot(list(x = lon.wide, y = lat.wide, z = mam.sst.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("MAM SST Mean", adj = 0)
+world(add = TRUE)
+
+#JJA mean
+image.plot(list(x = lon.wide, y = lat.wide, z = jja.sst.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("JJA SST Mean", adj = 0)
+world(add = TRUE)
+
+
+#SON mean
+image.plot(list(x = lon.wide, y = lat.wide, z = son.sst.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("SON SST Mean", adj = 0)
+world(add = TRUE)
+
+
+#djf mean
+image.plot(list(x = lon.wide, y = lat.wide, z = djf.sst.mean[,,1]),
+          col = cols.ryb12, breaks = breaks.mean, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("DJF SST Mean", adj = 0)
+world(add = TRUE)
+
+
 
 ```
 
 
+```{r anom.figures}
+#1982 son sst anom
+k <- 1
 
-
+image(list(x = lon.wide, y = lat.wide, z = son.sst.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982: SST Anomalies", adj = 0)
+world(add = TRUE)
+```
 
 
