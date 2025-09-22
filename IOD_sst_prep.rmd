@@ -208,7 +208,7 @@ nc.GODAS.1980 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1980.nc")
 #1981
 nc.GODAS.1981 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.1981.nc")
 
-#include up to 2019
+#include up to 2021
 #2016
 nc.GODAS.2016 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2016.nc")
 
@@ -220,6 +220,12 @@ nc.GODAS.2018 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2018.nc")
 
 #2019
 nc.GODAS.2019 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2019.nc")
+
+#2020
+nc.GODAS.2020 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2020.nc")
+
+#2021
+nc.GODAS.2021 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/pottmp.2021.nc")
 ```
 
 
@@ -2160,6 +2166,7 @@ lsm.IOD <- lsm_IOD[ ,ncol(lsm_IOD):1]
 #setup (land sea mask for OISST data)
 lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.base))
 
+#get lsm mask
 sst.OISST.new2 <- ifelse(lsm.IOD.array == 1, sst.OISST.base, NA)
 
 dim(sst.OISST.new2)
@@ -2171,6 +2178,114 @@ dim(sst.OISST.new2)
 
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
 save(sst.OISST.new, sst.OISST.new2, lat.values.base, lon.values.base, file = "sstOISST.rda")
+```
+
+
+# OISST v2 Weekly
+
+```{r load_data}
+setwd("~/CO_AUS/Aus_CO-main")
+
+#1990-present
+nc.OISST.weekly1 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.wkmean.1990-present.nc")
+
+#1981-1989
+nc.OISST.weekly2 <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/sst.wkmean.1981-1989.nc")
+
+#OISST land sea mask
+nc.OISST.lsm <- nc_open("~/CO_AUS/Aus_CO-main/pIOD/Data/lsmask.nc")
+```
+
+```{r data_clean}
+
+#weekly 1:1990-present (2023)
+#extract lon, lat
+lat.grid <- nc.OISST.weekly1[["dim"]][["lat"]][["vals"]]
+lon.grid <- nc.OISST.weekly1[["dim"]][["lon"]][["vals"]]
+
+#reorder lon
+lon.grid[lon.grid >= 180] <- lon.grid[lon.grid >= 180] - 360
+lon.order <- order(lon.grid)
+
+lon.grid <- lon.grid[lon.order]
+
+#reorder lat (maybe?)
+lat.order <- order(lat.grid)
+lat.grid <- lat.grid[lat.order]
+
+#time data (monday centered)
+times1 <- ncvar_get(nc.OISST.weekly1, "time") # days since 1800-01-01 00:00:0.0
+times1 <- as_datetime("1800-01-01T00:00:00") + days(times1)
+
+#sst data, as array (lon, lat, time)
+sst.oisst.weekly1 <- ncvar_get(nc.OISST.weekly1, "sst")
+sst.oisst.weekly1 <- sst.oisst.weekly1[lon.order, lat.order, ]
+
+
+#weekly 2:1981-1989
+lat.grid <- nc.OISST.weekly2[["dim"]][["lat"]][["vals"]]
+lon.grid <- nc.OISST.weekly2[["dim"]][["lon"]][["vals"]]
+
+#reorder lon
+lon.grid[lon.grid >= 180] <- lon.grid[lon.grid >= 180] - 360
+lon.order <- order(lon.grid)
+
+lon.grid <- lon.grid[lon.order]
+
+#reorder lat (maybe?)
+lat.order <- order(lat.grid)
+lat.grid <- lat.grid[lat.order]
+
+#time data (thursday centered)
+times2 <- ncvar_get(nc.OISST.weekly2, "time") # days since 1800-01-01 00:00:0.0
+times2 <- as_datetime("1800-01-01T00:00:00") + days(times2)
+
+#sst data, as array (lon, lat, time)
+sst.oisst.weekly2 <- ncvar_get(nc.OISST.weekly2, "sst")
+sst.oisst.weekly2 <- sst.oisst.weekly2[lon.order, lat.order, ]
+
+#combine 
+sst.oisst.weekly <- abind(sst.oisst.weekly2, sst.oisst.weekly1, along = 3)
+dim(sst.oisst.weekly)
+
+times <- c(times2, times1)
+
+
+#TODO: 
+```
+
+```{r lsm_mask}
+#lsm for sst.OISST.base 
+
+##Land Sea Mask
+#extract lon, lat
+lat.grid.lsm <- nc.OISST.lsm[["dim"]][["lat"]][["vals"]]
+lon.grid.lsm <- nc.OISST.lsm[["dim"]][["lon"]][["vals"]]
+
+#reorder lon for 
+lon.grid.lsm[lon.grid.lsm >= 180] <- lon.grid.lsm[lon.grid.lsm >= 180] - 360
+this.order.lsm <- order(lon.grid.lsm)
+
+lon.grid.lsm <- lon.grid.lsm[this.order.lsm]
+
+
+#setup (or find) a land sea mask.
+lsm <- ncvar_get(nc.OISST.lsm, "mask")
+lsm <- lsm[this.order.lsm, ]
+
+#TODO update lsm for reduced region
+#get lsm for IOD only
+lsm_IOD <- lsm[lon.range.base[1]:lon.range.base[2], lat.range.base[1]:lat.range.base[2]] 
+
+lsm.IOD <- lsm_IOD[ ,ncol(lsm_IOD):1]
+
+#setup (land sea mask for OISST data)
+lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.base))
+
+#get lsm mask
+sst.OISST.new2 <- ifelse(lsm.IOD.array == 1, sst.OISST.base, NA)
+
+dim(sst.OISST.new2)
 ```
 
 
@@ -2370,13 +2485,6 @@ save(sst.GODAS.anom2, sst.ORAS.anom2,
 
 ```
 
-## SON Multi-Product Averages
-
-```{r}
-#temp location for multi prod averages.
-
-
-```
 
 ## Alternative SST Anoms
 

@@ -64,7 +64,12 @@ grid.list <- list(x = lon.wide,
                   y = lat.wide)
 
 #define pIOD range
+#location range
+lon.values.IOD <- lon.wide[lon.wide <= pIOD_maxLon & lon.wide >= pIOD_minLon]
+lon.range.IOD <- range(which(lon.wide <= pIOD_maxLon & lon.wide >= pIOD_minLon))
 
+lat.values.IOD <- lat.wide[lat.wide <= pIOD_maxLat & lat.wide >= pIOD_minLat]
+lat.range.IOD <- range(which(lat.wide <= pIOD_maxLat & lat.wide >= pIOD_minLat))
 
 ```
 
@@ -317,6 +322,10 @@ soda.djf.coef <- aperm(soda.djf.coef, c(3, 2, 1))
 ```
 
 
+## Weekly pIOD Indices
+
+
+
 
 ## Multi-Product Averages
 
@@ -378,9 +387,32 @@ djf.SODA.anom <- sst.interp(soda.djf.anom, lon.values.soda, lat.values.soda, gri
 
 ```
 
-
 ```{r prod.avgs.anom}
 #get multi-product averages for sst anoms by season
+
+#for MAM season
+mam.anom.list <- list(mam.GODAS.anom, mam.ORAS.anom,
+                 mam.OISST.anom, mam.SODA.anom)
+
+
+mam.anom.new <- abind(mam.anom.list, along = 4)
+
+mam.sst.anom <- apply(mam.anom.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(mam.sst.anom) <- NULL
+
+dim(mam.sst.anom)
+
+#for JJA season
+jja.anom.list <- list(jja.GODAS.anom, jja.ORAS.anom,
+                 jja.OISST.anom, jja.SODA.anom)
+
+
+jja.anom.new <- abind(jja.anom.list, along = 4)
+
+jja.sst.anom <- apply(jja.anom.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(jja.sst.anom) <- NULL
+
+dim(jja.sst.anom)
 
 #for SON season
 son.anom.list <- list(son.GODAS.anom, son.ORAS.anom,
@@ -394,7 +426,17 @@ dimnames(son.sst.anom) <- NULL
 
 dim(son.sst.anom)
 
+#for DJF season
+djf.anom.list <- list(djf.GODAS.anom, djf.ORAS.anom,
+                 djf.OISST.anom, djf.SODA.anom)
 
+
+djf.anom.new <- abind(djf.anom.list, along = 4)
+
+djf.sst.anom <- apply(djf.anom.new, c(1,2,3), mean, na.rm = TRUE)
+dimnames(djf.sst.anom) <- NULL
+
+dim(djf.sst.anom)
 ```
 
 ```{r prod.avgs.mean}
@@ -452,7 +494,53 @@ dim(djf.sst.mean)
 ```
 
 
+## EOF Analysis
+
+```{r eof_pca}
+#set range of pIOD for each season
+sst.anom <- aperm(mam.sst.anom, c(3, 2, 1))
+mam.sst.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+dim(mam.sst.pIOD)
+
+sst.anom <- aperm(jja.sst.anom, c(3, 2, 1))
+jja.sst.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+dim(jja.sst.pIOD)
+
+sst.anom <- aperm(son.sst.anom, c(3, 2, 1))
+son.sst.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+dim(son.sst.pIOD)
+
+sst.anom <- aperm(djf.sst.anom, c(3, 2, 1))
+djf.sst.pIOD <- sst.anom[,lat.range.IOD[1]:lat.range.IOD[2],lon.range.IOD[1]:lon.range.IOD[2]]
+dim(djf.sst.pIOD)
+
+rm(sst.anom)
+
+#perform pca on each season sst anoms
+
+#mam season
+mam.pca.pIOD <- sst.eof(mam.sst.pIOD, kmode = 2)
+mam.pcstd <- scale(mam.pca.pIOD$PC, center = TRUE, scale = TRUE)
+
+#jja season
+jja.pca.pIOD <- sst.eof(jja.sst.pIOD, kmode = 2)
+jja.pcstd <- scale(jja.pca.pIOD$PC, center = TRUE, scale = TRUE)
+
+#son season
+son.pca.pIOD <- sst.eof(son.sst.pIOD, kmode = 2)
+son.pcstd <- scale(son.pca.pIOD$PC, center = TRUE, scale = TRUE)
+
+#djf season
+djf.pca.pIOD <- sst.eof(djf.sst.pIOD, kmode = 2)
+djf.pcstd <- scale(djf.pca.pIOD$PC, center = TRUE, scale = TRUE)
+
+```
+
+
+
 ## Seasonal Figures
+
+### IOD Spatial Mean and Anoms
 
 Create figures for each season
 -Begin as sanity check
@@ -466,7 +554,8 @@ mean.range <- range(mam.sst.mean, jja.sst.mean, son.sst.mean, djf.sst.mean, na.r
 breaks.mean <- seq(floor(mean.range[1]), ceiling(mean.range[2]), length.out = length(cols.ryb12)+1)
 
 #anom
-anom.max <- max(abs(c(son.GODAS.anom, son.ORAS.anom, son.OISST.anom, son.SODA.anom)), na.rm = TRUE)
+
+anom.max <- max(abs(c(mam.sst.anom, jja.sst.anom, son.sst.anom, djf.sst.anom)), na.rm = TRUE)
 anom.range <- c(-anom.max, anom.max)
 breaks.anom <- c(anom.range[1], seq(-1, 1, by = 0.2), anom.range[2])
 
@@ -530,6 +619,38 @@ world(add = TRUE)
 #1982 son sst anom
 k <- 1
 
+#mam anoms
+image(list(x = lon.wide, y = lat.wide, z = mam.sst.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982 MAM: SST Anomalies", adj = 0)
+world(add = TRUE)
+
+#jja anoms
+image(list(x = lon.wide, y = lat.wide, z = jja.sst.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982 JJA: SST Anomalies", adj = 0)
+world(add = TRUE)
+
+
+#son anoms
 image(list(x = lon.wide, y = lat.wide, z = son.sst.anom[,,k]),
           col = cols.ryb12, breaks = breaks.anom, 
           xlim = c(30, 120), ylim = c(-20,20),
@@ -541,8 +662,102 @@ image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
            breaks = leg.brks2, horizontal = TRUE, 
            axis.args = list(at = seq(-1, 1, 0.2)),
            smallplot = c(0.1, 0.9, 0.08, 0.10))
-title("1982: SST Anomalies", adj = 0)
+title("1982 SON: SST Anomalies", adj = 0)
+world(add = TRUE)
+
+#djf anoms
+image(list(x = lon.wide, y = lat.wide, z = djf.sst.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982-1983 DJF: SST Anomalies", adj = 0)
 world(add = TRUE)
 ```
 
+
+### IOD PCA and Indices
+
+```{r pIOD_index}
+#mam season
+PC1 <- -mam.pcstd[,1]
+PC2 <- mam.pcstd[,2]
+
+mam.s.index <- (PC1 + PC2)/sqrt(2)
+mam.m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, mam.s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, mam.m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("MAM pIOD Indices", adj=0)
+
+#jja season
+PC1 <- -jja.pcstd[,1]
+PC2 <- jja.pcstd[,2]
+
+jja.s.index <- (PC1 + PC2)/sqrt(2)
+jja.m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, jja.s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, jja.m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("JJA pIOD Indices", adj=0)
+
+#son season
+PC1 <- -son.pcstd[,1]
+PC2 <- son.pcstd[,2]
+
+son.s.index <- (PC1 + PC2)/sqrt(2)
+son.m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:34, son.s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:34, son.m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("SON pIOD Indices", adj=0)
+
+
+#djf season
+PC1 <- -djf.pcstd[,1]
+PC2 <- djf.pcstd[,2]
+
+djf.s.index <- (PC1 + PC2)/sqrt(2)
+djf.m.index <- (PC1 - PC2)/sqrt(2)
+
+plot(1:33, djf.s.index, type = "l", col = "firebrick", ylim=c(-2,5))
+lines(1:33, djf.m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("DJF pIOD Indices", adj=0)
+
+
+```
+
+
+```{r full_pIODindex}
+#pad djf
+djf.s.index <- c(djf.s.index, NA)
+djf.m.index <- c(djf.m.index, NA)
+
+#combine all seasons
+full.s.index <- as.vector(rbind(mam.s.index, jja.s.index, son.s.index, djf.s.index))
+full.s.index <- full.s.index[!is.na(full.s.index)]
+
+full.m.index <- as.vector(rbind(mam.m.index, jja.m.index, son.m.index, djf.m.index))
+full.m.index <- full.m.index[!is.na(full.m.index)]
+
+
+plot(1:135, full.s.index, type = "l",  col = "firebrick")
+plot(1:135, full.m.index, type = "l",  col = "darkgreen")
+
+
+plot(1:135, full.s.index, type = "l",  col = "firebrick",ylim=c(-2,5))
+lines(1:135, full.m.index, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+```
 
