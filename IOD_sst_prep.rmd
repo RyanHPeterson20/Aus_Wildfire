@@ -2213,9 +2213,13 @@ lon.grid <- lon.grid[lon.order]
 lat.order <- order(lat.grid)
 lat.grid <- lat.grid[lat.order]
 
-#time data (monday centered)
+#time data (sunday centered)
 times1 <- ncvar_get(nc.OISST.weekly1, "time") # days since 1800-01-01 00:00:0.0
 times1 <- as_datetime("1800-01-01T00:00:00") + days(times1)
+times1 <- times1 + days(3) #wedcen
+wday(times1, label = TRUE)
+
+
 
 #sst data, as array (lon, lat, time)
 sst.oisst.weekly1 <- ncvar_get(nc.OISST.weekly1, "sst")
@@ -2240,6 +2244,12 @@ lat.grid <- lat.grid[lat.order]
 times2 <- ncvar_get(nc.OISST.weekly2, "time") # days since 1800-01-01 00:00:0.0
 times2 <- as_datetime("1800-01-01T00:00:00") + days(times2)
 
+times2 <- times2 - days(1) #wedcen
+
+wday(times2, label = TRUE)
+
+
+
 #sst data, as array (lon, lat, time)
 sst.oisst.weekly2 <- ncvar_get(nc.OISST.weekly2, "sst")
 sst.oisst.weekly2 <- sst.oisst.weekly2[lon.order, lat.order, ]
@@ -2248,10 +2258,12 @@ sst.oisst.weekly2 <- sst.oisst.weekly2[lon.order, lat.order, ]
 sst.oisst.weekly <- abind(sst.oisst.weekly2, sst.oisst.weekly1, along = 3)
 dim(sst.oisst.weekly)
 
-times <- c(times2, times1)
+times.oisst <- c(times2, times1)
 
+ 
+sst.oisst.weekbase <- sst.oisst.weekly[lon.range.base[1]:lon.range.base[2], lat.range.base[1]:lat.range.base[2], ]
 
-#TODO: 
+dim(sst.oisst.weekbase)
 ```
 
 ```{r lsm_mask}
@@ -2268,24 +2280,28 @@ this.order.lsm <- order(lon.grid.lsm)
 
 lon.grid.lsm <- lon.grid.lsm[this.order.lsm]
 
-
 #setup (or find) a land sea mask.
 lsm <- ncvar_get(nc.OISST.lsm, "mask")
 lsm <- lsm[this.order.lsm, ]
 
-#TODO update lsm for reduced region
 #get lsm for IOD only
 lsm_IOD <- lsm[lon.range.base[1]:lon.range.base[2], lat.range.base[1]:lat.range.base[2]] 
 
 lsm.IOD <- lsm_IOD[ ,ncol(lsm_IOD):1]
 
 #setup (land sea mask for OISST data)
-lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.OISST.base))
+lsm.IOD.array <- array(lsm.IOD, dim = dim(sst.oisst.weekbase))
 
 #get lsm mask
-sst.OISST.new2 <- ifelse(lsm.IOD.array == 1, sst.OISST.base, NA)
+sst.oisst.weeklynew <- ifelse(lsm.IOD.array == 1, sst.oisst.weekbase, NA)
 
-dim(sst.OISST.new2)
+dim(sst.oisst.weeklynew)
+```
+
+
+```{r save_weekly}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(sst.oisst.weeklynew, times.oisst, file = "sstOISSTweekly.rda")
 ```
 
 

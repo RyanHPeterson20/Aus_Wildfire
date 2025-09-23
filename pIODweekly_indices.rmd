@@ -39,6 +39,8 @@ load("sstGODAS.rda")
 load("sstOISST.rda")
 load("sstORAS.rda")
 load("sstSODA.rda")
+#load in weekly oisst data
+load("sstOISSTweekly.rda")
 ```
 
 
@@ -320,11 +322,6 @@ soda.djf.coef <- array(sst.djf.soda$coef, c(2, dim.SODA[2], dim.SODA[1]))
 soda.djf.coef <- aperm(soda.djf.coef, c(3, 2, 1))
 
 ```
-
-
-## Weekly pIOD Indices
-
-
 
 
 ## Multi-Product Averages
@@ -758,6 +755,608 @@ plot(1:135, full.m.index, type = "l",  col = "darkgreen")
 plot(1:135, full.s.index, type = "l",  col = "firebrick",ylim=c(-2,5))
 lines(1:135, full.m.index, col = "darkgreen")
 abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+
+```
+
+
+# Weekly pIOD Indices
+
+Using OISST weekly data
+
+```{r data_setup}
+#for pIOD index
+#get min as 1982
+year1982 <- which(year(times.oisst) == 1982)
+minweek.ind <- min(year1982)
+min.week <- times.oisst[minweek.ind]
+
+#get max as 2015
+year2015 <- which(year(times.oisst) == 2015)
+maxweek.ind <- max(year2015)
+max.week <- times.oisst[maxweek.ind]
+
+#extend to April 2021 *week 14
+year2021 <- which(year(times.oisst) == 2021)
+#get isoweek/epiweek to check for week 14
+endweek.ind <- year2021[which(epiweek(times.oisst[year2021]) == 14)]
+end.week <- times.oisst[endweek.ind]
+
+#get 1982-2015
+times.base <- times.oisst[minweek.ind:maxweek.ind]
+sst.weekly.base <- sst.oisst.weeklynew[,,minweek.ind:maxweek.ind] 
+
+#get 1982-2021
+times.new <- times.oisst[minweek.ind:endweek.ind]
+sst.weekly.new <- sst.oisst.weeklynew[,,minweek.ind:endweek.ind] 
+
+```
+
+
+```{r select_season}
+#select for weeks in a given season (1982-2015) 
+#w/ index
+mam.weeks <- which(month(times.base) %in% c(3, 4, 5))
+jja.weeks <- which(month(times.base) %in% c(6, 7, 8))
+son.weeks <- which(month(times.base) %in% c(9, 10, 11))
+djf.weeks <- which(month(times.base) %in% c(12, 1, 2))
+
+#w/ dates
+mam.dates <- times.base[mam.weeks]
+jja.dates <- times.base[jja.weeks]
+son.dates <- times.base[son.weeks]
+djf.dates <- times.base[djf.weeks]
+
+#get list of years for each season
+mam.years <- year(mam.dates)
+jja.years <- year(jja.dates)
+son.years <- year(son.dates)
+djf.years <- year(djf.dates)
+
+#get seasonal weeks of sst data
+mam.sst.weekly <- sst.weekly.base[,,mam.weeks]
+jja.sst.weekly <- sst.weekly.base[,,jja.weeks]
+son.sst.weekly <- sst.weekly.base[,,son.weeks]
+djf.sst.weekly <- sst.weekly.base[,,djf.weeks]
+
+years.base <- 1982:2015
+
+
+#for new 1982-2021
+#w/ index
+mam.weeks.new <- which(month(times.new) %in% c(3, 4, 5))
+jja.weeks.new <- which(month(times.new) %in% c(6, 7, 8))
+son.weeks.new <- which(month(times.new) %in% c(9, 10, 11))
+djf.weeks.new <- which(month(times.new) %in% c(12, 1, 2))
+
+#w/ dates
+mam.dates.new <- times.new[mam.weeks.new]
+jja.dates.new <- times.new[jja.weeks.new]
+son.dates.new <- times.new[son.weeks.new]
+djf.dates.new <- times.new[djf.weeks.new]
+
+#get list of years for each season
+mam.years.new <- year(mam.dates.new)
+jja.years.new <- year(jja.dates.new)
+son.years.new <- year(son.dates.new)
+djf.years.new <- year(djf.dates.new)
+
+#get seasonal weeks of sst data
+mam.sstnew.weekly <- sst.weekly.new[,,mam.weeks.new]
+jja.sstnew.weekly <- sst.weekly.new[,,jja.weeks.new]
+son.sstnew.weekly <- sst.weekly.new[,,son.weeks.new]
+djf.sstnew.weekly <- sst.weekly.new[,,djf.weeks.new]
+
+years.new <- 1982:2021
+```
+
+
+## Weekly SST Anoms
+
+Method:
+1. subtract seasonal mean from data
+2. subtract seasonal trend from data
+
+```{r mam_anoms}
+#get seasonal means and coef
+#using oisst.mam.mean and oisst.mam.coef (or respective season)
+dim(mam.sst.weekly)
+
+#first anom (mean)
+dim(oisst.mam.mean)
+mam.anom.weekly <- sweep(mam.sst.weekly, MARGIN = c(1,2), STATS = oisst.mam.mean, FUN = "-")
+
+
+#second anom (trend)
+dim(oisst.mam.coef)
+mam.anom.weekly <- sweep(mam.anom.weekly,  MARGIN = c(1,2), STATS = oisst.mam.coef[,,1], FUN = "-")
+
+#get detrend
+mam.weekly.anom <- NULL
+for (j in 1:length(years.base)){
+  temp.years <- which(mam.years == years.base[j])
+  
+  temp.anom <- sweep(mam.anom.weekly[,,temp.years],  MARGIN = c(1,2), STATS = oisst.mam.coef[,,2]*j, FUN = "-")
+  mam.weekly.anom <- abind(mam.weekly.anom, temp.anom, along = 3)
+  
+}
+
+dim(mam.weekly.anom)
+
+```
+
+```{r jja_anoms}
+#get seasonal means and coef
+#using oisst.mam.mean and oisst.mam.coef (or respective season)
+dim(jja.sst.weekly)
+
+#first anom (mean)
+dim(oisst.jja.mean)
+jja.anom.weekly <- sweep(jja.sst.weekly, MARGIN = c(1,2), STATS = oisst.jja.mean, FUN = "-")
+
+
+#second anom (trend)
+dim(oisst.jja.coef)
+jja.anom.weekly <- sweep(jja.anom.weekly,  MARGIN = c(1,2), STATS = oisst.jja.coef[,,1], FUN = "-")
+
+#get detrend
+jja.weekly.anom <- NULL
+for (j in 1:length(years.base)){
+  temp.years <- which(jja.years == years.base[j])
+  
+  temp.anom <- sweep(jja.anom.weekly[,,temp.years],  MARGIN = c(1,2), STATS = oisst.jja.coef[,,2]*j, FUN = "-")
+  jja.weekly.anom <- abind(jja.weekly.anom, temp.anom, along = 3)
+  
+}
+
+dim(jja.weekly.anom)
+```
+
+```{r son_anoms}
+#get seasonal means and coef
+#using oisst.mam.mean and oisst.mam.coef (or respective season)
+dim(son.sst.weekly)
+
+#first anom (mean)
+dim(oisst.son.mean)
+son.anom.weekly <- sweep(son.sst.weekly, MARGIN = c(1,2), STATS = oisst.son.mean, FUN = "-")
+
+
+#second anom (trend)
+dim(oisst.son.coef)
+son.anom.weekly <- sweep(son.anom.weekly,  MARGIN = c(1,2), STATS = oisst.son.coef[,,1], FUN = "-")
+
+#get detrend
+son.weekly.anom <- NULL
+for (j in 1:length(years.base)){
+  temp.years <- which(son.years == years.base[j])
+  
+  temp.anom <- sweep(son.anom.weekly[,,temp.years],  MARGIN = c(1,2), STATS = oisst.son.coef[,,2]*j, FUN = "-")
+  son.weekly.anom <- abind(son.weekly.anom, temp.anom, along = 3)
+  
+}
+
+dim(son.weekly.anom)
+```
+
+```{r djf_anoms}
+#get seasonal means and coef
+#using oisst.mam.mean and oisst.mam.coef (or respective season)
+dim(djf.sst.weekly)
+
+#first anom (mean)
+dim(oisst.djf.mean)
+djf.anom.weekly <- sweep(djf.sst.weekly, MARGIN = c(1,2), STATS = oisst.djf.mean, FUN = "-")
+
+
+#second anom (trend)
+dim(oisst.djf.coef)
+djf.anom.weekly <- sweep(djf.anom.weekly,  MARGIN = c(1,2), STATS = oisst.djf.coef[,,1], FUN = "-")
+
+#get detrend
+djf.weekly.anom <- NULL
+for (j in 1:length(years.base)){
+  temp.years <- which(djf.years == years.base[j])
+  
+  temp.anom <- sweep(djf.anom.weekly[,,temp.years],  MARGIN = c(1,2), STATS = oisst.djf.coef[,,2]*j, FUN = "-")
+  djf.weekly.anom <- abind(djf.weekly.anom, temp.anom, along = 3)
+  
+}
+
+dim(djf.weekly.anom)
+```
+
+### Interpolate to Grid
+
+```{r interpolate}
+mam.weekly.sstanom <- sst.interp(mam.weekly.anom, lon.values.base, lat.values.base, grid.list)
+jja.weekly.sstanom <- sst.interp(jja.weekly.anom, lon.values.base, lat.values.base, grid.list)
+son.weekly.sstanom <- sst.interp(son.weekly.anom, lon.values.base, lat.values.base, grid.list)
+djf.weekly.sstanom <- sst.interp(djf.weekly.anom, lon.values.base, lat.values.base, grid.list)
+```
+
+
+
+## WeeklY EOF 
+
+Regress onto 
+
+
+## Weekly Figures
+
+Looking to compare SON, Monthly, and Weekly data
+
+### Raw SST
+
+```{r figs_setup}
+#select for 1982-2015 and 1982-2021 (4/7/2021)
+year1982 <- which(year(times.oisst) == 1982)
+month(times.oisst[year1982])
+sept1982 <- which(month(times.oisst[year1982]) == 9)
+sept1982.ind <-  year1982[sept1982]
+sept1982.dates <- times.oisst[sept1982.ind]
+
+oct1982 <- which(month(times.oisst[year1982]) == 10)
+oct1982.ind <-  year1982[oct1982]
+oct1982.dates <- times.oisst[oct1982.ind]
+
+nov1982 <- which(month(times.oisst[year1982]) == 11)
+nov1982.ind <-  year1982[nov1982]
+nov1982.dates <- times.oisst[nov1982.ind]
+
+year2015 <- which(year(times.oisst) == 2015)
+#times.oisst[year2015]
+
+year2021 <- which(year(times.oisst) == 2021)
+
+
+#monthly data
+oisst.son <- apply(sst.OISST.new2[ , ,9:11], c(1,2), mean, na.rm = TRUE)
+oisst.sept <- sst.OISST.new2[,,9]
+oisst.oct <- sst.OISST.new2[,,10]
+oisst.nov <- sst.OISST.new2[,,11]
+
+#weekly data
+oisst.sept1982 <- sst.oisst.weeklynew[,,sept1982.ind]
+oisst.oct1982 <- sst.oisst.weeklynew[,,oct1982.ind]
+oisst.nov1982 <- sst.oisst.weeklynew[,,nov1982.ind]
+
+oisst.sept1 <- sst.oisst.weeklynew[,,sept1982.ind[1]]
+oisst.sept2 <- sst.oisst.weeklynew[,,sept1982.ind[2]]
+oisst.sept3 <- sst.oisst.weeklynew[,,sept1982.ind[3]]
+oisst.sept4 <- sst.oisst.weeklynew[,,sept1982.ind[4]]
+oisst.sept5 <- sst.oisst.weeklynew[,,sept1982.ind[5]]
+
+dim(sst.oisst.weeklynew[,,oct1982.ind])
+
+
+#setup col and range
+cols.ryb48 <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(48))
+
+#oisst range
+month.range <- range(sst.OISST.new2[,,9:11], na.rm = TRUE)
+breaks.month <- seq(floor(month.range[1]), ceiling(month.range[2]), length.out = length(cols.ryb48)+1)
+```
+
+
+```{r testfigs_monthly}
+#compare 1982 SON, 1982 Sept, 1982 Oct, 1982 Nov, with weeks
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.son),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("SON 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.oct),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.nov),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+```
+
+```{r testfigs_weeklySept}
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("September 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept1982[,,1]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(sept1982.dates[1]),  "%B %d, %Y"), ": OISST SST"), adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept1982[,,2]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(sept1982.dates[2]),  "%B %d, %Y"), ": OISST SST") , adj = 0)
+world(add = TRUE)
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept1982[,,3]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(sept1982.dates[3]),  "%B %d, %Y"), ": OISST SST") , adj = 0)
+world(add = TRUE)
+
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept1982[,,4]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(sept1982.dates[4]),  "%B %d, %Y"), ": OISST SST")  , adj = 0)
+world(add = TRUE)
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.sept1982[,,5]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(sept1982.dates[5]),  "%B %d, %Y"), ": OISST SST")  , adj = 0)
+world(add = TRUE)
+
+```
+
+```{r testfigs_weeklyOct}
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.oct),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("October 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.oct1982[,,1]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(oct1982.dates[1]),  "%B %d, %Y"), ": OISST SST"), adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.oct1982[,,2]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(oct1982.dates[2]),  "%B %d, %Y"), ": OISST SST") , adj = 0)
+world(add = TRUE)
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.oct1982[,,3]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(oct1982.dates[3]),  "%B %d, %Y"), ": OISST SST") , adj = 0)
+world(add = TRUE)
+
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.oct1982[,,4]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(oct1982.dates[4]),  "%B %d, %Y"), ": OISST SST")  , adj = 0)
+world(add = TRUE)
+
+
+
+
+```
+
+```{r testfigs_weeklyNov}
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.nov),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("November 1982: OISST SST ", adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.nov1982[,,1]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(nov1982.dates[1]),  "%B %d, %Y"), ": OISST SST"), adj = 0)
+world(add = TRUE)
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.nov1982[,,2]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(nov1982.dates[2]),  "%B %d, %Y"), ": OISST SST") , adj = 0)
+world(add = TRUE)
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.nov1982[,,3]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(nov1982.dates[3]),  "%B %d, %Y"), ": OISST SST") , adj = 0)
+world(add = TRUE)
+
+
+
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.nov1982[,,4]),
+          col = cols.ryb48, breaks = breaks.month, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title(paste0(format(ymd(nov1982.dates[4]),  "%B %d, %Y"), ": OISST SST")  , adj = 0)
+world(add = TRUE)
+```
+
+### SST Anomalies
+
+
+```{r anomfig_setup}
+
+dim(oisst.mam.anom)
+dim(mam.weekly.anom)
+
+years.mam <- which(mam.years == 1982)
+
+temp.mean <- apply( mam.weekly.anom[,,years.mam], c(1,2), mean)
+
+#setup col and range
+cols.ryb48 <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(48))
+
+#oisst range
+#anom.range <- range(c(oisst.mam.anom[,,1], mam.weekly.anom[,,years.mam] ), na.rm = TRUE)
+anom.range <- range(c(oisst.mam.anom[,,1]), na.rm = TRUE)
+abs.anomrange <- max(abs(anom.range))
+#breaks.anom.new <- seq(floor(anom.range[1]), ceiling(anom.range[2]), length.out = length(cols.ryb48)+1)
+breaks.anom.new <- seq(anom.range[1], anom.range[2], length.out = length(cols.ryb48)+1)
+
+```
+
+
+```{r}
+#1982
+k <- 1
+
+#mam anoms (w/ all products)
+image(list(x = lon.wide, y = lat.wide, z = mam.sst.anom[,,k]),
+          col = cols.ryb12, breaks = breaks.anom, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+image.plot(zlim = c(-1.2, 1.2), legend.only = TRUE, col = cols.ryb12,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-1, 1, 0.2)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("1982 MAM: SST Anomalies", adj = 0)
+world(add = TRUE)
+
+#with oisst
+image.plot(list(x = lon.values.base, y = lat.values.base, z = oisst.mam.anom[,,k]),
+          col = cols.ryb48, breaks = breaks.anom.new, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+title("MAM 1982: OISST SST Anomalies ", adj = 0)
+world(add = TRUE)
+
+image.plot(list(x = lon.values.base, y = lat.values.base, z = temp.mean),
+          col = cols.ryb48, breaks = breaks.anom.new, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)
+box()
+world(add = TRUE)
+
+for (j in 1:length(years.mam)) {
+  image.plot(list(x = lon.values.base, y = lat.values.base, z = mam.weekly.anom[,,j]),
+          col = cols.ryb48, breaks = breaks.anom.new, 
+          xlim = c(30, 120), ylim = c(-20,20),
+          xlab = "Lon", ylab = "Lat", axes = FALSE)
+  axis(1, at = c(60, 90, 120))  
+  axis(2)                      
+  box()
+  title(paste0(format(ymd(mam.dates[j]),  "%B %d, %Y"), ": OISST SST Anomalies"), adj = 0)
+  world(add = TRUE)
+}
+
 
 ```
 
