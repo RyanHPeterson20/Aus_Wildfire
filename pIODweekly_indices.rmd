@@ -856,6 +856,12 @@ Method:
 1. subtract seasonal mean from data
 2. subtract seasonal trend from data
 
+```{r testing_block}
+#TODO: manually run some of these anomaly methods to make sure everything works correctly, especially if some values are sus.
+```
+
+Note/TODO: repeat (replace w/) of for the full 1982-2021 data set.
+
 ```{r mam_anoms}
 #get seasonal means and coef
 #using oisst.mam.mean and oisst.mam.coef (or respective season)
@@ -978,7 +984,203 @@ djf.weekly.sstanom <- sst.interp(djf.weekly.anom, lon.values.base, lat.values.ba
 
 ## WeeklY EOF 
 
-Regress onto 
+Regress onto spatial loadings
+
+```{r regressed_PCs}
+mam.piod <- mam.weekly.sstanom[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+jja.piod <- jja.weekly.sstanom[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+son.piod <- son.weekly.sstanom[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+djf.piod <- djf.weekly.sstanom[lon.range.IOD[1]:lon.range.IOD[2], lat.range.IOD[1]:lat.range.IOD[2], ]
+
+mam.dim <- dim(mam.piod)
+jja.dim <- dim(jja.piod)
+son.dim <- dim(son.piod)
+djf.dim <- dim(djf.piod)
+
+nx <- dim(mam.piod)[1]
+ny <- dim(mam.piod)[2]
+
+#get seasonal spatial loadings
+mam.iod.eof <- mam.pca.pIOD$EOF
+jja.iod.eof <- jja.pca.pIOD$EOF
+son.iod.eof <- son.pca.pIOD$EOF
+djf.iod.eof <- djf.pca.pIOD$EOF
+
+#get seasonal PCs
+mam.pc.iod <- mam.pca.pIOD$PC
+jja.pc.iod <- jja.pca.pIOD$PC
+son.pc.iod <- son.pca.pIOD$PC
+djf.pc.iod <- djf.pca.pIOD$PC
+
+#eof vector setup
+mam.eof1.mat <- matrix(mam.iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+mam.eof2.mat <- matrix(mam.iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+mam.eof1.vec <- as.vector(mam.eof1.mat)
+mam.eof2.vec <- as.vector(mam.eof2.mat)
+
+jja.eof1.mat <- matrix(jja.iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+jja.eof2.mat <- matrix(jja.iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+jja.eof1.vec <- as.vector(jja.eof1.mat)
+jja.eof2.vec <- as.vector(jja.eof2.mat)
+
+son.eof1.mat <- matrix(son.iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+son.eof2.mat <- matrix(son.iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+son.eof1.vec <- as.vector(son.eof1.mat)
+son.eof2.vec <- as.vector(son.eof2.mat)
+
+djf.eof1.mat <- matrix(djf.iod.eof[,1], nrow = nx, ncol = ny, byrow = TRUE)
+djf.eof2.mat <- matrix(djf.iod.eof[,2], nrow = nx, ncol = ny, byrow = TRUE)
+djf.eof1.vec <- as.vector(djf.eof1.mat)
+djf.eof2.vec <- as.vector(djf.eof2.mat)
+
+#for loop for every season (obviously, something else is more efficient)
+#mam weekly pcs
+mam.pc.mean <- mean(mam.pc.iod)
+mam.pc.std <- sd(mam.pc.iod)
+mam.weekly.pc <- matrix(NA, ncol = 2)
+colnames(mam.weekly.pc) <- c("PC1", "PC2")
+for (i in 1:mam.dim[3]) {
+  temp.vec <- as.vector(mam.piod[,,i])
+  temp.na <- is.finite(temp.vec) & is.finite(mam.eof1.vec) & is.finite(mam.eof2.vec)
+
+  temp.y <- temp.vec[temp.na]
+  #temp.X <- cbind(mam.eof1.vec[temp.na], mam.eof2.vec[temp.na])
+  
+  #regress onto eofs (loadings)
+  a1 <- sum(temp.y * mam.eof1.vec[temp.na])
+  a2 <- sum(temp.y * mam.eof2.vec[temp.na])
+
+  #standardized PCs
+  #temp.pc1 <- -scale(a1)
+  #temp.pc2 <- scale(a2)
+  
+  mam.weekly.pc <- rbind(mam.weekly.pc, c(a1, a2))
+}
+mam.weekly.pc <- mam.weekly.pc[-1, ]
+
+#jja weekly pcs
+jja.pc.mean <- mean(jja.pc.iod)
+jja.pc.std <- sd(jja.pc.iod)
+jja.weekly.pc <- matrix(NA, ncol = 2)
+colnames(jja.weekly.pc) <- c("PC1", "PC2")
+for (i in 1:jja.dim[3]) {
+  temp.vec <- as.vector(jja.piod[,,i])
+  temp.na <- is.finite(temp.vec) & is.finite(jja.eof1.vec) & is.finite(jja.eof2.vec)
+
+  temp.y <- temp.vec[temp.na]
+  #temp.X <- cbind(mam.eof1.vec[temp.na], mam.eof2.vec[temp.na])
+  
+  #regress onto eofs (loadings)
+  a1 <- sum(temp.y * jja.eof1.vec[temp.na])
+  a2 <- sum(temp.y * jja.eof2.vec[temp.na])
+
+  #standardized PCs
+  #temp.pc1 <- -scale(a1)
+  #temp.pc2 <- scale(a2)
+  
+  jja.weekly.pc <- rbind(jja.weekly.pc, c(a1, a2))
+}
+jja.weekly.pc <- jja.weekly.pc[-1, ]
+
+#son weekly pcs
+son.pc.mean <- mean(son.pc.iod)
+son.pc.std <- sd(son.pc.iod)
+son.weekly.pc <- matrix(NA, ncol = 2)
+colnames(son.weekly.pc) <- c("PC1", "PC2")
+for (i in 1:son.dim[3]) {
+  temp.vec <- as.vector(son.piod[,,i])
+  temp.na <- is.finite(temp.vec) & is.finite(son.eof1.vec) & is.finite(son.eof2.vec)
+
+  temp.y <- temp.vec[temp.na]
+  #temp.X <- cbind(mam.eof1.vec[temp.na], mam.eof2.vec[temp.na])
+  
+  #regress onto eofs (loadings)
+  a1 <- sum(temp.y * son.eof1.vec[temp.na])
+  a2 <- sum(temp.y * son.eof2.vec[temp.na])
+
+  #standardized PCs
+  #temp.pc1 <- -scale(a1)
+  #temp.pc2 <- scale(a2)
+  
+  son.weekly.pc <- rbind(son.weekly.pc, c(a1, a2))
+}
+son.weekly.pc <- son.weekly.pc[-1, ]
+
+
+#djf weekly pcs
+djf.pc.mean <- mean(djf.pc.iod)
+djf.pc.std <- sd(djf.pc.iod)
+djf.weekly.pc <- matrix(NA, ncol = 2)
+colnames(djf.weekly.pc) <- c("PC1", "PC2")
+for (i in 1:djf.dim[3]) {
+  temp.vec <- as.vector(djf.piod[,,i])
+  temp.na <- is.finite(temp.vec) & is.finite(djf.eof1.vec) & is.finite(djf.eof2.vec)
+
+  temp.y <- temp.vec[temp.na]
+  #temp.X <- cbind(mam.eof1.vec[temp.na], mam.eof2.vec[temp.na])
+  
+  #regress onto eofs (loadings)
+  a1 <- sum(temp.y * djf.eof1.vec[temp.na])
+  a2 <- sum(temp.y * djf.eof2.vec[temp.na])
+
+  #standardized PCs
+  #temp.pc1 <- -scale(a1)
+  #temp.pc2 <- scale(a2) 
+  
+  djf.weekly.pc <- rbind(djf.weekly.pc, c(a1, a2))
+}
+djf.weekly.pc <- djf.weekly.pc[-1, ]
+
+
+#standardize and... 
+mam.pc <- data.frame(PC1 = -scale(mam.weekly.pc[,1]), PC2 = scale(mam.weekly.pc[,2]))
+jja.pc <- data.frame(PC1 = -scale(jja.weekly.pc[,1]), PC2 = scale(jja.weekly.pc[,2]))
+son.pc <- data.frame(PC1 = -scale(son.weekly.pc[,1]), PC2 = scale(son.weekly.pc[,2]))
+djf.pc <- data.frame(PC1 = -scale(djf.weekly.pc[,1]), PC2 = scale(djf.weekly.pc[,2]))
+
+```
+
+
+```{r piod_indices}
+
+s.index.mam <- mam.pc$PC1 + mam.pc$PC2
+m.index.mam <- mam.pc$PC1 - mam.pc$PC2
+
+s.index.jja <- jja.pc$PC1 + jja.pc$PC2
+m.index.jja <- jja.pc$PC1 - jja.pc$PC2
+
+s.index.son <- son.pc$PC1 + son.pc$PC2
+m.index.son <- son.pc$PC1 - son.pc$PC2
+
+s.index.djf <- djf.pc$PC1 + djf.pc$PC2
+m.index.djf <- djf.pc$PC1 - djf.pc$PC2
+
+```
+
+```{r temp_figs}
+
+plot(1:length(s.index.mam), s.index.mam, type = "l",  col = "firebrick", ylim=range(s.index.mam, m.index.mam))
+lines(1:length(s.index.mam), m.index.mam, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("MAM- Weekly", adj = 0)
+
+
+plot(1:length(s.index.jja), s.index.jja, type = "l",  col = "firebrick",ylim=range(s.index.jja, m.index.jja))
+lines(1:length(s.index.jja), m.index.jja, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("JJA- Weekly", adj = 0)
+
+plot(1:length(s.index.son), s.index.son, type = "l",  col = "firebrick",ylim=range(s.index.son, m.index.son))
+lines(1:length(s.index.son), m.index.son, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("SON- Weekly", adj = 0)
+
+
+plot(1:length(s.index.djf), s.index.djf, type = "l",  col = "firebrick",ylim=range(s.index.djf, m.index.djf))
+lines(1:length(s.index.djf), m.index.djf, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("DJF- Weekly", adj = 0)
+```
 
 
 ## Weekly Figures
