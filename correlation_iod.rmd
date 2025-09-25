@@ -57,7 +57,23 @@ source("refit_functions.R") #coef/refit functions
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load( "IOD_lag.rda")
+
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+load( "weeklypIOD.rda")
 ```
+
+# Additional Data Cleaning
+
+```{r pIOD_cleaning}
+pIOD.df <- new.pIOD.df[which(new.pIOD.df$year >= 2000 & new.pIOD.df$year <= 2020), ]
+max.index <- which(pIOD.df$year == 2020 & pIOD.df$week == 14)
+pIOD.df <- pIOD.df[1:max.index,]
+
+pIOD.df <- pIOD.df[-which(pIOD.df$week == 53), ] #remove week 53
+rownames(pIOD.df) <- NULL
+
+```
+
 
 
 # Time-Series Work
@@ -477,6 +493,38 @@ for (i in 2:4){
 dev.off()
 ```
 
+
+### EDA w/ pIOD indices
+
+```{r pIOD}
+plot(1:1054, pIOD.df$s.index, type = "l")
+plot(1:1054, pIOD.df$m.index, type = "l")
+```
+
+
+Note: look at comparisons for SON, then the other seasons.
+
+```{r}
+wtio.cor <- cor(bounded_pred2_df$wtio.anomaly, scale(pIOD.df$m.index))
+etio.cor <- cor(bounded_pred2_df$etio.anomaly, scale(pIOD.df$s.index))
+
+plot(bounded_pred2_df$wtio.anomaly, scale(pIOD.df$m.index), pch = 19)
+plot(bounded_pred2_df$etio.anomaly, scale(pIOD.df$s.index), pch = 19)
+```
+
+```{r}
+
+#plot residuals
+#wtio - m.index
+west.resid <- bounded_pred2_df$wtio.anomaly - scale(pIOD.df$m.index)
+east.resid <- (-bounded_pred2_df$etio.anomaly) - scale(pIOD.df$s.index)
+
+plot(1:1054, west.resid, type = "l")
+plot(1:1054, east.resid, type = "l")
+
+
+#TODO: look at son only, then everything else
+```
 
 
 Repeat correlation work from earlier work

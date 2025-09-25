@@ -867,6 +867,12 @@ Note/TODO: repeat (replace w/) of for the full 1982-2021 data set.
 #using oisst.mam.mean and oisst.mam.coef (or respective season)
 dim(mam.sst.weekly)
 
+#Update for 2021 by overwritting 
+mam.sst.weekly <- mam.sstnew.weekly
+dim(mam.sst.weekly)
+years.base <- years.new
+mam.years <- mam.years.new
+
 #first anom (mean)
 dim(oisst.mam.mean)
 mam.anom.weekly <- sweep(mam.sst.weekly, MARGIN = c(1,2), STATS = oisst.mam.mean, FUN = "-")
@@ -895,6 +901,12 @@ dim(mam.weekly.anom)
 #using oisst.mam.mean and oisst.mam.coef (or respective season)
 dim(jja.sst.weekly)
 
+#overwrite
+jja.sst.weekly <- jja.sstnew.weekly
+dim(jja.sst.weekly)
+years.base <- years.new
+jja.years <- jja.years.new
+
 #first anom (mean)
 dim(oisst.jja.mean)
 jja.anom.weekly <- sweep(jja.sst.weekly, MARGIN = c(1,2), STATS = oisst.jja.mean, FUN = "-")
@@ -921,6 +933,10 @@ dim(jja.weekly.anom)
 #get seasonal means and coef
 #using oisst.mam.mean and oisst.mam.coef (or respective season)
 dim(son.sst.weekly)
+son.sst.weekly <- son.sstnew.weekly
+dim(son.sst.weekly)
+years.base <- years.new
+son.years <- son.years.new
 
 #first anom (mean)
 dim(oisst.son.mean)
@@ -948,6 +964,10 @@ dim(son.weekly.anom)
 #get seasonal means and coef
 #using oisst.mam.mean and oisst.mam.coef (or respective season)
 dim(djf.sst.weekly)
+djf.sst.weekly <- djf.sstnew.weekly
+dim(djf.sst.weekly)
+years.base <- years.new
+djf.years <- djf.years.new
 
 #first anom (mean)
 dim(oisst.djf.mean)
@@ -1143,19 +1163,45 @@ djf.pc <- data.frame(PC1 = -scale(djf.weekly.pc[,1]), PC2 = scale(djf.weekly.pc[
 
 ```{r piod_indices}
 
-s.index.mam <- mam.pc$PC1 + mam.pc$PC2
-m.index.mam <- mam.pc$PC1 - mam.pc$PC2
+s.index.mam <- (mam.pc$PC1 + mam.pc$PC2)/sqrt(2)
+m.index.mam <- (mam.pc$PC1 - mam.pc$PC2)/sqrt(2)
 
-s.index.jja <- jja.pc$PC1 + jja.pc$PC2
-m.index.jja <- jja.pc$PC1 - jja.pc$PC2
+s.index.jja <- (jja.pc$PC1 + jja.pc$PC2)/sqrt(2)
+m.index.jja <- (jja.pc$PC1 - jja.pc$PC2)/sqrt(2)
 
-s.index.son <- son.pc$PC1 + son.pc$PC2
-m.index.son <- son.pc$PC1 - son.pc$PC2
+s.index.son <- (son.pc$PC1 + son.pc$PC2)/sqrt(2)
+m.index.son <- (son.pc$PC1 - son.pc$PC2)/sqrt(2)
 
-s.index.djf <- djf.pc$PC1 + djf.pc$PC2
-m.index.djf <- djf.pc$PC1 - djf.pc$PC2
+s.index.djf <- (djf.pc$PC1 + djf.pc$PC2)/sqrt(2)
+m.index.djf <- (djf.pc$PC1 - djf.pc$PC2)/sqrt(2)
 
 ```
+
+
+```{r index_merge}
+#using index from earlier: mam.weeks.new, jja.weeks.new, son.weeks.new, djf.weeks.new
+mam.pIOD.df <- data.frame(index = mam.weeks.new, s.index = s.index.mam, m.index = m.index.mam)
+jja.pIOD.df <- data.frame(index = jja.weeks.new, s.index = s.index.jja, m.index = m.index.jja)
+son.pIOD.df <- data.frame(index = son.weeks.new, s.index = s.index.son, m.index = m.index.son)
+djf.pIOD.df <- data.frame(index = djf.weeks.new, s.index = s.index.djf, m.index = m.index.djf)
+
+new.pIOD.df <- rbind(djf.pIOD.df, mam.pIOD.df, jja.pIOD.df, son.pIOD.df)
+
+new.pIOD.df <- new.pIOD.df[order(new.pIOD.df$index), ]
+new.pIOD.df$time <- times.new
+new.pIOD.df$year <- year(times.new)
+new.pIOD.df$week <- epiweek(times.new)
+
+rownames(new.pIOD.df) <- NULL
+```
+
+
+```{r save}
+setwd("~/CO_AUS/Aus_CO-main/pIOD")
+save(new.pIOD.df, file = "weeklypIOD.rda")
+```
+
+
 
 ```{r temp_figs}
 
