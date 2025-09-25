@@ -1,0 +1,422 @@
+---
+title: "refit_cv"
+author: "Ryan Peterson"
+date: "2025-09-25"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library}
+suppressMessages( library(hierNet)) #yes
+suppressMessages( library(glmnet)) #test ridge regression for coefs
+suppressMessages( library(RAMP)) #maybe
+suppressMessages( library(MASS)) #for lm.ridge
+
+suppressMessages( library(foreach)) #parallelization setup
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
+
+suppressMessages( library( lubridate)) #you know why
+suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages( library( fields)) #for set.panel() and others 
+suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
+
+suppressMessages( library( caret)) #for confusion matrix
+
+suppressMessages( library( tictoc)) #some timing
+```
+
+```{r data_load}
+#and functions
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+#source("group_functions.R") #grouping/clustering
+source("group_functionsNew.R") #new groupings
+source("refit_functions.R") #coef/refit functions
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+load("IOD_lag.rda")
+```
+
+# Data Setup
+
+```{r data_setup_new}
+#season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#Below includes removal of weeks 35-37 (adjust grouping functions if we need to change this.)
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+
+#full model
+NEpreds_new <- NElag_3group(NE_laglist = NE_iodlag, j = 1:19)
+NEresp_new <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+SEpreds_new <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
+SEresp_new <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+
+#partial model
+NEpreds_newpart <- NElag_3group(NE_laglist = NE_iodlag, j = -c(19))
+NEresp_newpart <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(19))
+
+SEpreds_newpart <- SElag_3group(SE_laglist = SE_iodlag, j = -c(19))
+SEresp_newpart <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
+
+
+```
+
+
+```{r partial_LOO}
+#leaving out a single year
+NEpartial_preds <- list()
+NEpartial_resp <- list()
+SEpartial_preds <- list()
+SEpartial_resp <- list()
+for (j in 1:length(seasons)) {
+  #NE Aus
+  NEpartial_preds[[seasons[j]]] <- NElag_3group(NE_laglist = NE_iodlag, j = -c(j))
+  NEpartial_resp[[seasons[j]]] <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(j))
+  
+  #SE Aus
+  SEpartial_preds[[seasons[j]]] <- SElag_3group(SE_laglist = SE_iodlag, j = -c(j))
+  SEpartial_resp[[seasons[j]]] <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(j))
+}
+```
+
+
+# Functions (RAMP)
+
+```{r refit_functions}
+refit_ramp <- function(test.ramp, X_1){
+  
+  main.terms <- test.ramp$mainInd
+  main.terms <- colnames(X_1)[main.terms]
+  
+  interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+  
+  #refit with lm
+  if (!is.null(interactions)){
+    model.string <- paste( paste(main.terms, collapse = " + "),
+                           paste(interactions, collapse = " + "),
+                           sep = " + ")
+  } else {
+    model.string <- paste(main.terms, collapse = " + ")
+  }
+  
+  model.string <- paste0("co ~ ", model.string)
+  
+  return(model.string)
+}
+
+
+
+terms_only <- function(test.ramp, X_1){
+  main.terms <- test.ramp$mainInd
+  main.terms <- colnames(X_1)[main.terms]
+  
+  interactions <- test.ramp$interInd
+      if (!is.null(interactions)){
+        for (i in 1:length(interactions)){
+          
+          this.term <- interactions[i]
+          these.subterms <- as.integer(strsplit(this.term, "X")[[1]][2:3])
+          these.subterms <- colnames(X_1)[these.subterms]
+          
+          if (these.subterms[1] != these.subterms[2]){
+            this.term <- paste(these.subterms, collapse = ":")
+          } else {
+            this.term <- paste0("I(", these.subterms[1], "^2)")
+          }
+          
+          interactions[i] <- this.term
+        }
+      }
+  return(c(main.terms, interactions))
+}
+
+```
+
+
+
+# Refit Terms
+
+```{r NEAus_base}
+#NE Aus Group 1
+y_1 <- as.numeric(NEresp_new[[1]])
+
+#with OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:260]))
+
+negroup1 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+NE1.terms <- terms_only(negroup1, X_1)
+
+
+#NE Aus Group 2
+y_2 <- as.numeric(NEresp_new[[2]])
+
+#with OLR
+X_2 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:312]))
+#without OLR
+#X_2 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:260]))
+
+negroup2 <- RAMP(X = X_2, y = y_2,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+NE2.terms <- terms_only(negroup2, X_2)
+
+                        
+#NE Aus Group 3
+y_3 <- as.numeric(NEresp_new[[3]])
+
+#with OLR
+X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:312]))
+#without OLR
+#X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:260]))
+
+negroup3 <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+NE3.terms <- terms_only(negroup3, X_3)                      
+                  
+```
+
+```{r SEAus_base}
+#SE Aus Group 1
+y_1 <- as.numeric(SEresp_new[[1]])
+
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:260]))
+
+segroup1 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+SE1.terms <- terms_only(segroup1, X_1)
+
+
+#SE Aus Group 2
+y_2 <- as.numeric(SEresp_new[[2]])
+
+#with OLR
+X_2 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
+#without OLR
+#X_2 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:260]))
+
+segroup2 <- RAMP(X = X_2, y = y_2,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+SE2.terms <- terms_only(segroup2, X_2)
+
+
+#SE Aus Group 3
+y_3 <- as.numeric(SEresp_new[[3]])
+
+#with OLR
+X_3 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:312]))
+#without OLR
+#X_3 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:260]))
+
+segroup3 <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+SE3.terms <- terms_only(segroup3, X_3)
+
+```
+
+
+
+```{r NEAus_refit}
+#NE Aus 
+NE.term.list <- NULL
+for (j in 1:length(seasons)) {
+  temp.resp <- NEpartial_resp[[j]]
+  temp.preds <- NEpartial_preds[[j]]
+  
+  temp.list <- NULL
+  for (k in 1:length(temp.preds)) {
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:312]))
+    
+    temp.fit <- RAMP(X = temp.X, y = temp.y,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+    #terms only
+    temp.list[[k]] <- terms_only(temp.fit, temp.X)
+  }
+  NE.term.list[[seasons[j]]] <- temp.list
+}
+
+
+
+#test code
+#length(temp.preds)
+
+#temp.resp <- NEpartial_resp[[1]]
+#temp.y <- temp.resp[[1]]
+#temp.preds <- NEpartial_preds[[1]]
+#temp.X <- temp.preds[[1]]
+```
+
+
+```{r sEAus_refit}
+#sE Aus 
+SE.term.list <- NULL
+for (j in 1:length(seasons)) {
+  temp.resp <- SEpartial_resp[[j]]
+  temp.preds <- SEpartial_preds[[j]]
+  
+  temp.list <- NULL
+  for (k in 1:length(temp.preds)) {
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:312]))
+    
+    temp.fit <- RAMP(X = temp.X, y = temp.y,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+    #terms only
+    temp.list[[k]] <- terms_only(temp.fit, temp.X)
+  }
+  SE.term.list[[seasons[j]]] <- temp.list
+}
+
+
+
+```
+
+## Comparison to Base
+
+```{r NeAus_compare}
+#NE Aus Group 1
+
+#get frequency of each term 
+baseNE1 <- NE1.terms
+#refitNE1 <- NE.term.list[[2]][[1]]
+
+refitNE1 <- unlist(lapply(NE.term.list, function(x) x[[1]]))
+sapply(baseNE1, function(x) sum(x == refitNE1))
+#unique(refitNE1)
+
+#group 2
+baseNE2 <- NE2.terms
+#refitNE2 <- NE.term.list[[2]][[2]]
+
+refitNE2 <- unlist(lapply(NE.term.list, function(x) x[[2]]))
+sapply(baseNE2, function(x) sum(x == refitNE2))
+#unique(refitNE2)
+
+#group 3
+baseNE3 <- NE3.terms
+#refitNE3 <- NE.term.list[[2]][[3]]
+
+refitNE3 <- unlist(lapply(NE.term.list, function(x) x[[3]]))
+sapply(baseNE3, function(x) sum(x == refitNE3))
+#unique(refitNE3)
+
+```
+
+
+
+# Test Code
+
+```{r}
+y_1 <- as.numeric(NEresp_new[[1]])
+
+#with OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+#without OLR
+#X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:260]))
+
+negroup1 <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+NE1.terms <- terms_only(negroup1, X_1)
+
+
+```
+
+
