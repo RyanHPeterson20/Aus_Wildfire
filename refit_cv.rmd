@@ -245,7 +245,10 @@ negroup3 <- RAMP(X = X_3, y = y_3,
 
 #terms only
 NE3.terms <- terms_only(negroup3, X_3)                      
-                  
+    
+
+NEmodels <- list(negroup1, negroup2, negroup3)
+              
 ```
 
 ```{r SEAus_base}
@@ -299,6 +302,8 @@ segroup3 <- RAMP(X = X_3, y = y_3,
 #terms only
 SE3.terms <- terms_only(segroup3, X_3)
 
+SEmodels <- list(segroup1, segroup2, segroup3)
+
 ```
 
 
@@ -306,11 +311,15 @@ SE3.terms <- terms_only(segroup3, X_3)
 ```{r NEAus_refit}
 #NE Aus 
 NE.term.list <- NULL
+NE.model.list <- NULL
+NE.refit.list <- NULL #refit with base model
 for (j in 1:length(seasons)) {
   temp.resp <- NEpartial_resp[[j]]
   temp.preds <- NEpartial_preds[[j]]
   
   temp.list <- NULL
+  temp.model <- NULL
+  temp.refit <- NULL
   for (k in 1:length(temp.preds)) {
     temp.y <- as.numeric(temp.resp[[k]])
     #with OLR
@@ -322,30 +331,30 @@ for (j in 1:length(seasons)) {
                              n.lambda = 500)
     #terms only
     temp.list[[k]] <- terms_only(temp.fit, temp.X)
+    temp.model[[k]] <- refit_ramp(temp.fit, temp.X)
+    temp.refit[[k]] <- refit_ramp(NEmodels[[k]], temp.X)
   }
   NE.term.list[[seasons[j]]] <- temp.list
+  NE.model.list[[seasons[j]]] <- temp.model
+  NE.refit.list[[seasons[j]]] <- temp.refit
 }
 
 
-
-#test code
-#length(temp.preds)
-
-#temp.resp <- NEpartial_resp[[1]]
-#temp.y <- temp.resp[[1]]
-#temp.preds <- NEpartial_preds[[1]]
-#temp.X <- temp.preds[[1]]
 ```
 
 
 ```{r sEAus_refit}
 #sE Aus 
 SE.term.list <- NULL
+SE.model.list <- NULL
+SE.refit.list <- NULL #refit with base model
 for (j in 1:length(seasons)) {
   temp.resp <- SEpartial_resp[[j]]
   temp.preds <- SEpartial_preds[[j]]
   
   temp.list <- NULL
+  temp.model <- NULL
+  temp.refit <- NULL
   for (k in 1:length(temp.preds)) {
     temp.y <- as.numeric(temp.resp[[k]])
     #with OLR
@@ -357,13 +366,22 @@ for (j in 1:length(seasons)) {
                              n.lambda = 500)
     #terms only
     temp.list[[k]] <- terms_only(temp.fit, temp.X)
+    temp.model[[k]] <- refit_ramp(temp.fit, temp.X)
+    temp.refit[[k]] <- refit_ramp(SEmodels[[k]], temp.X)
   }
   SE.term.list[[seasons[j]]] <- temp.list
+  SE.model.list[[seasons[j]]] <- temp.model
+  SE.refit.list[[seasons[j]]] <- temp.refit
 }
 
-
-
 ```
+
+```{r save}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(SE.term.list, SE.model.list, SE.refit.list, 
+     NE.term.list, NE.model.list, NE.refit.list, file = "model_refits.rda")
+```
+
 
 ## Comparison to Base
 
@@ -377,6 +395,10 @@ baseNE1 <- NE1.terms
 refitNE1 <- unlist(lapply(NE.term.list, function(x) x[[1]]))
 sapply(baseNE1, function(x) sum(x == refitNE1))
 #unique(refitNE1)
+NErefit1.unique <- table(refitNE1)
+NErefit1.unique <- NErefit1.unique[!names(NErefit1.unique) %in% baseNE1]
+sort(NErefit1.unique, decreasing = TRUE)
+
 
 #group 2
 baseNE2 <- NE2.terms
@@ -385,6 +407,10 @@ baseNE2 <- NE2.terms
 refitNE2 <- unlist(lapply(NE.term.list, function(x) x[[2]]))
 sapply(baseNE2, function(x) sum(x == refitNE2))
 #unique(refitNE2)
+NErefit2.unique <- table(refitNE2)
+NErefit2.unique <- NErefit2.unique[!names(NErefit2.unique) %in% baseNE2]
+sort(NErefit2.unique, decreasing = TRUE)
+
 
 #group 3
 baseNE3 <- NE3.terms
@@ -393,8 +419,51 @@ baseNE3 <- NE3.terms
 refitNE3 <- unlist(lapply(NE.term.list, function(x) x[[3]]))
 sapply(baseNE3, function(x) sum(x == refitNE3))
 #unique(refitNE3)
+NErefit3.unique <- table(refitNE3)
+NErefit3.unique <- NErefit3.unique[!names(NErefit3.unique) %in% baseNE3]
+sort(NErefit3.unique, decreasing = TRUE)
 
 ```
+
+```{r seAus_compare}
+#sE Aus Group 1
+
+#get frequency of each term 
+baseSE1 <- SE1.terms
+#refitSE1 <- SE.term.list[[2]][[1]]
+
+refitSE1 <- unlist(lapply(SE.term.list, function(x) x[[1]]))
+sapply(baseSE1, function(x) sum(x == refitSE1))
+#unique(refitSE1)
+SErefit1.unique <- table(refitSE1)
+SErefit1.unique <- SErefit1.unique[!names(SErefit1.unique) %in% baseSE1]
+sort(SErefit1.unique, decreasing = TRUE)
+
+
+#group 2
+baseSE2 <- SE2.terms
+#refitSE2 <- SE.term.list[[2]][[2]]
+
+refitSE2 <- unlist(lapply(SE.term.list, function(x) x[[2]]))
+sapply(baseSE2, function(x) sum(x == refitSE2))
+#unique(refitSE2)
+SErefit2.unique <- table(refitSE2)
+SErefit2.unique <- SErefit2.unique[!names(SErefit2.unique) %in% baseSE2]
+sort(SErefit2.unique, decreasing = TRUE)
+
+#group 3
+baseSE3 <- SE3.terms
+#refitSE3 <- SE.term.list[[2]][[3]]
+
+refitSE3 <- unlist(lapply(SE.term.list, function(x) x[[3]]))
+sapply(baseSE3, function(x) sum(x == refitSE3))
+#unique(refitSE3)
+SErefit3.unique <- table(refitSE3)
+SErefit3.unique <- SErefit3.unique[!names(SErefit3.unique) %in% baseSE3]
+sort(SErefit3.unique, decreasing = TRUE)
+
+```
+
 
 
 
