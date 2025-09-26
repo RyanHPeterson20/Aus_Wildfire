@@ -120,6 +120,22 @@ for (j in 1:length(seasons)) {
   SEpartial_preds[[seasons[j]]] <- SElag_3group(SE_laglist = SE_iodlag, j = -c(j))
   SEpartial_resp[[seasons[j]]] <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(j))
 }
+
+#extracting a single year (validation data)
+NEvalid_preds <- list()
+NEvalid_resp <- list()
+SEvalid_preds <- list()
+SEvalid_resp <- list()
+for (k in 1:length(seasons)) {
+  #NE Aus
+  NEvalid_preds[[seasons[k]]] <- NElag_3group(NE_laglist = NE_iodlag, j = c(k))
+  NEvalid_resp[[seasons[k]]] <- NEresp_3group(NEAus_mat = NEAus_mat, j = c(k))
+  
+  #SE Aus
+  SEvalid_preds[[seasons[k]]] <- SElag_3group(SE_laglist = SE_iodlag, j = c(k))
+  SEvalid_resp[[seasons[k]]] <- SEresp_3group(SEAus_mat = SEAus_mat, j = c(k))
+}
+
 ```
 
 
@@ -211,7 +227,7 @@ negroup1 <- RAMP(X = X_1, y = y_1,
 
 #terms only
 NE1.terms <- terms_only(negroup1, X_1)
-
+NE1.refit <- refit_ramp(negroup1, X_1)
 
 #NE Aus Group 2
 y_2 <- as.numeric(NEresp_new[[2]])
@@ -228,7 +244,7 @@ negroup2 <- RAMP(X = X_2, y = y_2,
 
 #terms only
 NE2.terms <- terms_only(negroup2, X_2)
-
+NE2.refit <- refit_ramp(negroup2, X_2) 
                         
 #NE Aus Group 3
 y_3 <- as.numeric(NEresp_new[[3]])
@@ -245,9 +261,10 @@ negroup3 <- RAMP(X = X_3, y = y_3,
 
 #terms only
 NE3.terms <- terms_only(negroup3, X_3)                      
-    
+NE3.refit <- refit_ramp(negroup3, X_3)  
 
 NEmodels <- list(negroup1, negroup2, negroup3)
+
               
 ```
 
@@ -267,7 +284,7 @@ segroup1 <- RAMP(X = X_1, y = y_1,
 
 #terms only
 SE1.terms <- terms_only(segroup1, X_1)
-
+SE1.refit <- refit_ramp(segroup1, X_1)
 
 #SE Aus Group 2
 y_2 <- as.numeric(SEresp_new[[2]])
@@ -284,7 +301,7 @@ segroup2 <- RAMP(X = X_2, y = y_2,
 
 #terms only
 SE2.terms <- terms_only(segroup2, X_2)
-
+SE2.refit <- refit_ramp(segroup2, X_2)
 
 #SE Aus Group 3
 y_3 <- as.numeric(SEresp_new[[3]])
@@ -301,14 +318,39 @@ segroup3 <- RAMP(X = X_3, y = y_3,
 
 #terms only
 SE3.terms <- terms_only(segroup3, X_3)
+SE3.refit <- refit_ramp(segroup3, X_3)
 
 SEmodels <- list(segroup1, segroup2, segroup3)
 
 ```
 
+## Refit - Base w/o OLR
 
+```{r NEAus_noOLR}
+#NE Aus Group 1
+y_1 <- as.numeric(NEresp_new[[1]])
+
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:260]))
+
+negroup1.noOLR <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+NE1.terms.noOLR <- terms_only(negroup1.noOLR, X_1)
+NE1.refit.noOLR <- refit_ramp(negroup1.noOLR, X_1)
+
+
+```
+
+
+
+## Refit - LOO
 
 ```{r NEAus_refit}
+
 #NE Aus 
 NE.term.list <- NULL
 NE.model.list <- NULL
@@ -339,11 +381,10 @@ for (j in 1:length(seasons)) {
   NE.refit.list[[seasons[j]]] <- temp.refit
 }
 
-
 ```
 
-
 ```{r sEAus_refit}
+
 #sE Aus 
 SE.term.list <- NULL
 SE.model.list <- NULL
@@ -465,11 +506,88 @@ sort(SErefit3.unique, decreasing = TRUE)
 ```
 
 
+# Model Validation
+
+RMSE, ....
+
+```{r test_model_fits}
+#NE Aus Group 1
+y_1 <- as.numeric(NEresp_new[[1]])
+
+#with OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+
+
+lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+names(lm.data_1)[1] <- "co"
+
+NE1.lm <- lm(formula(NE1.refit), lm.data_1)
+summary(NE1.lm)
+
+NEvalid_preds[[1]][[1]]
+y.true <- NEvalid_resp[[1]][[1]]
+
+y.pred <- predict(NE1.lm, NEvalid_preds[[1]][[1]])
+
+y.true
+y.true - y.pred
+
+#without OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:260]))
+
+lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+names(lm.data_1)[1] <- "co"
+
+NE1.lm.noOLR <- lm(formula(NE1.refit.noOLR), lm.data_1)
+summary(NE1.lm.noOLR)
+
+test.X <- NEvalid_preds[[1]][[1]][ ,1:260]
+y.pred.noOLR <- predict(NE1.lm.noOLR, test.X)
+
+y.true - y.pred.noOLR
+```
+
+
+
+
+```{r loo_fits}
+
+
+for (i in 1:length(seasons)) {
+  fit.resp <- NEpartial_resp[[i]]
+  fit.preds <- NEpartial_preds[[i]]
+  
+  valid.resp <- NEvalid_resp[[i]]
+  valid.preds <- NEvalid_preds[[i]]
+  
+}
+```
+
+
+```{r }
+predict()
+```
+
+
+
+# Figures
+
+
+## Constant Structure
 
 
 # Test Code
 
 ```{r}
+lm.data.matrix <- as.data.frame(cbind(y_1, X_1))
+names(lm.data.matrix)[1] <- "co"
+
+test.lm <- lm(formula(model.ramp), lm.data.matrix)
+summary(test.lm)
+
+
+
+
 y_1 <- as.numeric(NEresp_new[[1]])
 
 #with OLR

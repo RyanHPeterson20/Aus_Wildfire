@@ -1,7 +1,7 @@
 #functions for testing predictions
 
 
-#CRPS 
+#CRPS (continuous rank probability score)
 CPRS <- function(pred, trueobs){
   z <- as.numeric((trueobs - pred$mean) / pred$sd)
   scores <- pred$sd * (z * (2 * pnorm(z,0,1) - 1) + 
