@@ -345,6 +345,12 @@ negroup1.noOLR <- RAMP(X = X_1, y = y_1,
 NE1.terms.noOLR <- terms_only(negroup1.noOLR, X_1)
 NE1.refit.noOLR <- refit_ramp(negroup1.noOLR, X_1)
 
+#TODO: refit 
+lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+names(lm.data_1)[1] <- "co"
+
+NE1.lm.noOLR <- lm(formula(NE1.refit.noOLR), lm.data_1)
+summary(NE1.lm.noOLR)
 
 #NE Aus Group 2
 y_2 <- as.numeric(NEresp_new[[2]])
@@ -598,6 +604,16 @@ names(lm.data_2)[1] <- "co"
 NE2.lm <- lm(formula(NE2.refit), lm.data_2)
 summary(NE2.lm)
 
+#without OLR
+X_2 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:260]))
+
+lm.data_2 <- as.data.frame(cbind(y_2, X_2))
+names(lm.data_2)[1] <- "co"
+
+NE2.lm.noOLR <- lm(formula(NE2.refit.noOLR), lm.data_2)
+summary(NE2.lm.noOLR)
+
+
 #NE Aus Group 3
 y_3 <- as.numeric(NEresp_new[[3]])
 
@@ -784,6 +800,43 @@ SEvary.rmse <- unlist(lapply(SE.rmse, function(x) x[[3]]))
 ```
 
 
+# ANOVAs
+
+Use to show the effect of including or excluding OLR
+
+```{r}
+#check on OLR
+
+#NE Aus 1
+NE1.temp <- NE1.terms[-c(7, 9)]
+NE1.model.string <- paste0("co ~ ", paste(NE1.temp, collapse = " + "))
+#NE Aus Group 1
+y_1 <- as.numeric(NEresp_new[[1]])
+#with OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+names(lm.data_1)[1] <- "co"
+
+NE1.lm.refit <- lm(formula(NE1.model.string), lm.data_1)
+#summary(NE1.lm.refit)
+
+anova(NE1.lm.refit, NE1.lm)
+anova(NE1.lm.noOLR, NE1.lm )
+
+#NE Aus 2
+NE2.temp <- NE2.terms[-c(9, 10)]
+
+
+NE3.terms[-c(8, 10, 17)]
+
+SE1.terms[-c(12:15)]
+SE2.terms[-c(6:8)]
+SE3.terms[-c(8:12)]
+```
+
+
+
+
 
 # Figures
 
@@ -804,7 +857,7 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
 
 png(filename = "NErmse.png", width = 3600, height = 1500, res = 300)
-par(mar = c(5, 5, 3, 4))
+par(mar = c(5, 5, 3, 7))
 plot(1:57, NEbase.rmse, pch = 16, col = colors.group, 
      ylab = "RMSE", ylim = c(0, max(NErmse.range)), xlab = "Year", axes = FALSE)
 box()
@@ -814,12 +867,13 @@ points(1:57, NEconst.rmse, pch = 15, col = colors.group)
 points(1:57, NEvary.rmse, pch = 17, col = alpha(colors.group, 0.75) )
 abline(v= year.div, lty = 2)
 title("NE Aus: RMSE", adj = 0)
-#legend()
+legend("topright", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("Group 1", "Group 2", "Group 3"), col = colors.group, pch = 16 )
 dev.off()
 
 
 png(filename = "SErmse.png", width = 3600, height = 1500, res = 300)
-par(mar = c(5, 5, 3, 4))
+par(mar = c(5, 5, 3, 7))
 plot(1:57, SEbase.rmse, pch = 16, col = colors.group,
      ylab = "RMSE", ylim = c(0, max(SErmse.range)), xlab = "Year", axes = FALSE)
 box()
@@ -829,10 +883,27 @@ points(1:57, SEconst.rmse, pch = 15, col = colors.group,)
 points(1:57, SEvary.rmse, pch = 17, col = alpha(colors.group, 0.75),)
 abline(v= year.div, lty = 2)
 title("SE Aus: RMSE", adj = 0)
-#legend()
+legend("topright", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("Group 1", "Group 2", "Group 3"), col = colors.group, pch = 16 )
 dev.off()
 
 ```
+
+
+## Model Fits
+
+```{r base_fits}
+#NE base fits
+plot(NE.lms[[1]])
+plot(NE.lms[[2]])
+plot(NE.lms[[3]])
+
+#SE base fits
+plot(SE.lms[[1]])
+plot(SE.lms[[2]])
+plot(SE.lms[[3]])
+```
+
 
 
 ## Constant Structure
