@@ -367,12 +367,285 @@ negroup2.noOLR <- RAMP(X = X_2, y = y_2,
 NE2.terms.noOLR <- terms_only(negroup2.noOLR, X_2)
 NE2.refit.noOLR <- refit_ramp(negroup2.noOLR, X_2)
 
+#refit 
+lm.data_2 <- as.data.frame(cbind(y_2, X_2))
+names(lm.data_2)[1] <- "co"
+
+NE2.lm.noOLR <- lm(formula(NE2.refit.noOLR), lm.data_2)
+summary(NE2.lm.noOLR)
+
+
+#NE Aus Group 3
+y_3 <- as.numeric(NEresp_new[[3]])
+
+#without OLR
+X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:260]))
+
+negroup3.noOLR <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+NE3.terms.noOLR <- terms_only(negroup3.noOLR, X_3)
+NE3.refit.noOLR <- refit_ramp(negroup3.noOLR, X_3)
+
+#refit 
+lm.data_3 <- as.data.frame(cbind(y_3, X_3))
+names(lm.data_3)[1] <- "co"
+
+NE3.lm.noOLR <- lm(formula(NE3.refit.noOLR), lm.data_3)
+summary(NE3.lm.noOLR)
 
 
 
 
 ```
 
+```{r SEAus_noOLR}
+#SE Aus Group 1
+y_1 <- as.numeric(SEresp_new[[1]])
+
+#without OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:260]))
+
+segroup1.noOLR <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+SE1.terms.noOLR <- terms_only(segroup1.noOLR, X_1)
+SE1.refit.noOLR <- refit_ramp(segroup1.noOLR, X_1)
+
+#TODO: refit 
+lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+names(lm.data_1)[1] <- "co"
+
+SE1.lm.noOLR <- lm(formula(SE1.refit.noOLR), lm.data_1)
+summary(SE1.lm.noOLR)
+
+#SE Aus Group 2
+y_2 <- as.numeric(SEresp_new[[2]])
+
+#without OLR
+X_2 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:260]))
+
+segroup2.noOLR <- RAMP(X = X_2, y = y_2,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+SE2.terms.noOLR <- terms_only(segroup2.noOLR, X_2)
+SE2.refit.noOLR <- refit_ramp(segroup2.noOLR, X_2)
+
+#refit 
+lm.data_2 <- as.data.frame(cbind(y_2, X_2))
+names(lm.data_2)[1] <- "co"
+
+SE2.lm.noOLR <- lm(formula(SE2.refit.noOLR), lm.data_2)
+summary(SE2.lm.noOLR)
+
+
+#SE Aus Group 3
+y_3 <- as.numeric(SEresp_new[[3]])
+
+#without OLR
+X_3 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:260]))
+
+segroup3.noOLR <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+#terms only
+SE3.terms.noOLR <- terms_only(segroup3.noOLR, X_3)
+SE3.refit.noOLR <- refit_ramp(segroup3.noOLR, X_3)
+
+#refit 
+lm.data_3 <- as.data.frame(cbind(y_3, X_3))
+names(lm.data_3)[1] <- "co"
+
+SE3.lm.noOLR <- lm(formula(SE3.refit.noOLR), lm.data_3)
+summary(SE3.lm.noOLR)
+
+
+
+
+```
+
+
+# Refit w/ eBIC
+
+```{r NEaus_ebic}
+#gamma
+gamma_seq <- seq(0, 1, length.out = 12)
+
+
+#NE Aus Group 1
+y_1 <- as.numeric(NEresp_new[[1]])
+#with OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+
+NEAus1.eBIC <- list()
+for (j in 2:length(gamma_seq)) {
+  negroup1.temp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = gamma_seq[j],
+                             n.lambda = 500)
+  
+  #terms only
+  NE1.refit.temp <- refit_ramp(negroup1.temp, X_1)
+  
+    #refit 
+  lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+  names(lm.data_1)[1] <- "co"
+  
+  NE1.lm.eBIC <- lm(formula(NE1.refit.temp), lm.data_1)
+  #summary(NE1.lm.eBIC)
+  NEAus1.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- NE1.lm.eBIC
+}
+
+
+#NE Aus Group 2
+y_2 <- as.numeric(NEresp_new[[2]])
+#with OLR
+X_2 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:312]))
+
+NEAus2.eBIC <- list()
+for (j in 2:length(gamma_seq)) {
+  negroup2.temp <- RAMP(X = X_2, y = y_2,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = gamma_seq[j],
+                             n.lambda = 500)
+  
+  #terms only
+  NE2.refit.temp <- refit_ramp(negroup2.temp, X_2)
+  
+  #refit 
+  lm.data_2 <- as.data.frame(cbind(y_2, X_2))
+  names(lm.data_2)[1] <- "co"
+  
+  NE2.lm.eBIC <- lm(formula(NE2.refit.temp), lm.data_2)
+  #summary(NE1.lm.eBIC)
+  NEAus2.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- NE2.lm.eBIC
+}
+
+
+#NE Aus Group 3
+y_3 <- as.numeric(NEresp_new[[3]])
+#with OLR
+X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:312]))
+
+NEAus3.eBIC <- list()
+for (j in 2:length(gamma_seq)) {
+  negroup3.temp <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = gamma_seq[j],
+                             n.lambda = 500)
+  
+  #terms only
+  NE3.refit.temp <- refit_ramp(negroup3.temp, X_3)
+  
+  #refit 
+  lm.data_3 <- as.data.frame(cbind(y_3, X_3))
+  names(lm.data_3)[1] <- "co"
+  
+  NE3.lm.eBIC <- lm(formula(NE3.refit.temp), lm.data_3)
+  #summary(NE1.lm.eBIC)
+  NEAus3.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- NE3.lm.eBIC
+}
+
+
+
+```
+
+```{r SEaus_ebic}
+
+
+#NE Aus Group 1
+y_1 <- as.numeric(SEresp_new[[1]])
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:312]))
+
+SEAus1.eBIC <- list()
+for (j in 2:length(gamma_seq)) {
+  segroup1.temp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = gamma_seq[j],
+                             n.lambda = 500)
+  
+  #terms only
+  SE1.refit.temp <- refit_ramp(segroup1.temp, X_1)
+  
+    #refit 
+  lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+  names(lm.data_1)[1] <- "co"
+  
+  SE1.lm.eBIC <- lm(formula(SE1.refit.temp), lm.data_1)
+  #summary(NE1.lm.eBIC)
+  SEAus1.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- SE1.lm.eBIC
+}
+
+
+#NE Aus Group 2
+y_2 <- as.numeric(SEresp_new[[2]])
+#with OLR
+X_2 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
+
+SEAus2.eBIC <- list()
+for (j in 2:length(gamma_seq)) {
+  segroup2.temp <- RAMP(X = X_2, y = y_2,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = gamma_seq[j],
+                             n.lambda = 500)
+  
+  #terms only
+  SE2.refit.temp <- refit_ramp(segroup2.temp, X_2)
+  
+  #refit 
+  lm.data_2 <- as.data.frame(cbind(y_2, X_2))
+  names(lm.data_2)[1] <- "co"
+  
+  SE2.lm.eBIC <- lm(formula(SE2.refit.temp), lm.data_2)
+  #summary(NE1.lm.eBIC)
+  SEAus2.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- SE2.lm.eBIC
+}
+
+
+#NE Aus Group 3
+y_3 <- as.numeric(SEresp_new[[3]])
+#with OLR
+X_3 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:312]))
+
+SEAus3.eBIC <- list()
+for (j in 2:length(gamma_seq)) {
+  segroup3.temp <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = gamma_seq[j],
+                             n.lambda = 500)
+  
+  #terms only
+  SE3.refit.temp <- refit_ramp(segroup3.temp, X_3)
+  
+  #refit 
+  lm.data_3 <- as.data.frame(cbind(y_3, X_3))
+  names(lm.data_3)[1] <- "co"
+  
+  SE3.lm.eBIC <- lm(formula(SE3.refit.temp), lm.data_3)
+  #summary(NE1.lm.eBIC)
+  SEAus3.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- SE3.lm.eBIC
+}
+
+
+```
 
 
 ## Refit - LOO
@@ -672,6 +945,11 @@ summary(SE3.lm)
 SE.lms <- list(SE1.lm, SE2.lm, SE3.lm)
 ```
 
+CPRS
+
+```{r}
+
+```
 
 
 ```{r model_fits_validation}
@@ -720,6 +998,8 @@ for (i in 1:length(seasons)) {
     y.pred.base <- predict(NE.lms[[j]], X.valid)
     y.pred.const <- predict(temp.lm.constant, X.valid)
     y.pred.vary <- predict(temp.lm.varying, X.valid)
+    
+    #predict( ,se.fit = TRUE)
     
     #rmse test
     rmse.base <-  rmse(y.valid, y.pred.base)
@@ -788,6 +1068,93 @@ for (i in 1:length(seasons)) {
 
 ```
 
+```{r kfold}
+k <- 5
+
+#NE aus
+NE.kcv <- NULL
+for(j in 1:3){ 
+  temp.pred <- NEpreds_new[[j]]
+  temp.resp <- NEresp_new[[j]]
+  
+  
+  nrow(temp.pred)
+  length(temp.resp)
+  
+  n <- nrow(temp.pred)
+  set.seed(156)
+  folds <- sample(rep(1:k, length.out = n))
+  # Store errors
+  mse <- numeric(k)
+  for (i in 1:k) {
+    # Split into training and test sets
+    test.id <- which(folds == i)
+    train.preds <- temp.pred[-test.id, ]
+    train.resp <- temp.resp[-test.id]
+    test.preds <- temp.pred[test.id, ]
+    test.resp <- temp.resp[test.id]
+    
+    # Fit model
+    train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+    names(train.data.fit)[1] <- "co"
+  
+    temp.model <- lm(formula(NErefits[[j]]), train.data.fit)
+    
+    # Predict
+    preds <- predict(temp.model, newdata = test.preds)
+    
+    # Compute Mean Squared Error
+    mse[i] <- mean((test.resp - preds)^2)
+  }
+  NE.kcv[[j]] <- mean(mse)
+}
+
+
+
+
+#SE aus
+SE.kcv <- NULL
+for(j in 1:3){ 
+  temp.pred <- SEpreds_new[[j]]
+  temp.resp <- SEresp_new[[j]]
+  
+  
+  nrow(temp.pred)
+  length(temp.resp)
+  
+  n <- nrow(temp.pred)
+  set.seed(157)
+  folds <- sample(rep(1:k, length.out = n))
+  # Store errors
+  mse <- numeric(k)
+  for (i in 1:k) {
+    # Split into training and test sets
+    test.id <- which(folds == i)
+    train.preds <- temp.pred[-test.id, ]
+    train.resp <- temp.resp[-test.id]
+    test.preds <- temp.pred[test.id, ]
+    test.resp <- temp.resp[test.id]
+    
+    # Fit model
+    train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+    names(train.data.fit)[1] <- "co"
+  
+    temp.model <- lm(formula(SErefits[[j]]), train.data.fit)
+    
+    # Predict
+    preds <- predict(temp.model, newdata = test.preds)
+    
+    # Compute Mean Squared Error
+    mse[i] <- mean((test.resp - preds)^2)
+  }
+  SE.kcv[[j]] <- mean(mse)
+}
+
+NE.kcv
+SE.kcv
+```
+
+
 
 ```{r rmse_extract}
 NEbase.rmse <- unlist(lapply(NE.rmse, function(x) x[[1]]))
@@ -804,36 +1171,17 @@ SEvary.rmse <- unlist(lapply(SE.rmse, function(x) x[[3]]))
 
 Use to show the effect of including or excluding OLR
 
-```{r}
-#check on OLR
-
-#NE Aus 1
-NE1.temp <- NE1.terms[-c(7, 9)]
-NE1.model.string <- paste0("co ~ ", paste(NE1.temp, collapse = " + "))
-#NE Aus Group 1
-y_1 <- as.numeric(NEresp_new[[1]])
-#with OLR
-X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
-lm.data_1 <- as.data.frame(cbind(y_1, X_1))
-names(lm.data_1)[1] <- "co"
-
-NE1.lm.refit <- lm(formula(NE1.model.string), lm.data_1)
-#summary(NE1.lm.refit)
-
-anova(NE1.lm.refit, NE1.lm)
+```{r }
 anova(NE1.lm.noOLR, NE1.lm )
+anova(NE2.lm.noOLR, NE2.lm )
+anova(NE3.lm.noOLR, NE3.lm )
 
-#NE Aus 2
-NE2.temp <- NE2.terms[-c(9, 10)]
 
 
-NE3.terms[-c(8, 10, 17)]
-
-SE1.terms[-c(12:15)]
-SE2.terms[-c(6:8)]
-SE3.terms[-c(8:12)]
+anova(SE1.lm.noOLR, SE1.lm )
+anova(SE2.lm.noOLR, SE2.lm )
+anova(SE3.lm.noOLR, SE3.lm )
 ```
-
 
 
 
@@ -939,4 +1287,33 @@ NE1.terms <- terms_only(negroup1, X_1)
 
 ```
 
+```{r woOLR_anovatest}
+#check on OLR
+
+#NE Aus 1
+NE1.temp <- NE1.terms[-c(7, 9)]
+NE1.model.string <- paste0("co ~ ", paste(NE1.temp, collapse = " + "))
+#NE Aus Group 1
+y_1 <- as.numeric(NEresp_new[[1]])
+#with OLR
+X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
+lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+names(lm.data_1)[1] <- "co"
+
+NE1.lm.refit <- lm(formula(NE1.model.string), lm.data_1)
+#summary(NE1.lm.refit)
+
+anova(NE1.lm.refit, NE1.lm)
+anova(NE1.lm.noOLR, NE1.lm )
+
+#NE Aus 2
+NE2.temp <- NE2.terms[-c(9, 10)]
+
+
+NE3.terms[-c(8, 10, 17)]
+
+SE1.terms[-c(12:15)]
+SE2.terms[-c(6:8)]
+SE3.terms[-c(8:12)]
+```
 
