@@ -1631,6 +1631,88 @@ load("weeklypIOD.rda")
 
 
 ```{r PC_index}
+#figure setup
+weekly.iodrange <- range(s.index.mam, m.index.mam, s.index.jja, m.index.jja,
+                         s.index.son, m.index.son, s.index.djf, m.index.djf)
+
+years.pIOD <- 1982:2020
+
+#mam pIOD indices
+mam.ind <- which(month(new.pIOD.df$time) %in% c(3,4,5))
+#length(mam.ind)
+#length(s.index.mam)
+mam.div <- which(diff(new.pIOD.df[mam.ind, ]$year) !=0 ) + 0.5
+
+plot(1:length(s.index.mam), s.index.mam, type = "l",  col = "firebrick", ylim=weekly.iodrange,
+     ylab = "Index", xlab = "")
+lines(1:length(s.index.mam), m.index.mam, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("MAM Weekly pIOD Indices", adj = 0)
+abline(v= mam.div, lty = 3, lwd = 0.75, col = "gray35")
+
+#jja pIOD indices
+jja.ind <- which(month(new.pIOD.df$time) %in% c(6,7,8))
+#length(jja.ind)
+#length(s.index.jja)
+jja.div <- which(diff(new.pIOD.df[jja.ind, ]$year) !=0 ) + 0.5
+
+plot(1:length(s.index.jja), s.index.jja, type = "l",  col = "firebrick", ylim=weekly.iodrange,
+     ylab = "Index", xlab = "")
+lines(1:length(s.index.jja), m.index.jja, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("JJA Weekly pIOD Indices", adj = 0)
+abline(v= jja.div, lty = 3, lwd = 0.75, col = "gray35")
+
+
+
+#son pIOD indices
+son.ind <- which(month(new.pIOD.df$time) %in% c(9,10,11))
+n.son <- length(son.ind)
+#length(s.index.son)
+son.div <- which(diff(new.pIOD.df[son.ind, ]$year) !=0 ) + 0.5
+son.div.full <-  c(0.5, son.div, n.son+0.5)
+
+year.loc <- (head(son.div.full, -1) + tail(son.div.full, -1))/2
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "pIODindex_son.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.son), s.index.son, type = "l",  col = "firebrick", ylim=weekly.iodrange,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(s.index.son), m.index.son, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("SON Weekly pIOD Indices", adj = 0)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+legend("topright",
+       legend = c("S-Index", "M-Index"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "darkgreen"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+dev.off()
+
+
+#djf pIOD indices
+djf.ind <- which(month(new.pIOD.df$time) %in% c(12,1,2))
+n.djf <- length(djf.ind)
+#length(s.index.son)
+djf.div <- which(diff(new.pIOD.df[djf.ind, ]$year) !=0 ) + 0.5
+
+
+#TODO: get output of this figure
+plot(1:length(s.index.djf), s.index.djf, type = "l",  col = "firebrick", ylim=weekly.iodrange,
+     ylab = "Index", xlab = "")
+lines(1:length(s.index.djf), m.index.djf, col = "darkgreen")
+abline(h=c(1.5, 1.25), lty = 2, col = c("firebrick", "darkgreen"))
+title("DJF Weekly pIOD Indices", adj = 0)
+abline(v= c(0.5, djf.div, n.djf+0.5), lty = 3, lwd = 0.75, col = "gray35")
 
 ```
 
