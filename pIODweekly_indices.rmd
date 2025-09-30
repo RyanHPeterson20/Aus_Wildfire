@@ -57,6 +57,19 @@ pIOD_minLon <- 40
 pIOD_maxLat <- 5
 pIOD_minLat <- -5
 
+
+#wtio
+wtio_maxLon <- 70
+wtio_minLon <- 50
+wtio_maxLat <- 10
+wtio_minLat <- -10
+
+#etio
+etio_maxLon <- 110
+etio_minLon <- 90
+etio_maxLat <- 0
+etio_minLat <- -10
+
 #indian ocean grid
 lon.wide <- seq(wide_minLon, wide_maxLon, by = 1)
 lat.wide <- seq(wide_minLat, wide_maxLat, by = 1)
@@ -533,9 +546,393 @@ djf.pcstd <- scale(djf.pca.pIOD$PC, center = TRUE, scale = TRUE)
 
 ```
 
+```{r spatial_loadings}
+#convert spatial loadings back into lon/lat
+ny <- dim(mam.sst.anom)[2]
+nx <- dim(mam.sst.anom)[1]
+
+#mam season
+sst.piod.mam <- matrix(mam.sst.anom, nrow =  ny * nx, ncol = dim(mam.sst.anom)[3])
+pc1.mam <- sst.piod.mam %*% mam.pcstd[,1]
+pc2.mam <- sst.piod.mam %*% mam.pcstd[,2]
+
+mam.eof1 <- matrix(-pc1.mam/mam.pca.pIOD$D[1], nrow = nx, ncol = ny)   
+mam.eof2 <- matrix(pc2.mam/mam.pca.pIOD$D[2], nrow = nx, ncol = ny)  
+
+#jja season
+sst.piod.jja <- matrix(jja.sst.anom, nrow =  ny * nx, ncol = dim(jja.sst.anom)[3])
+pc1.jja <- sst.piod.jja %*% jja.pcstd[,1]
+pc2.jja <- sst.piod.jja %*% jja.pcstd[,2]
+
+jja.eof1 <- matrix(-pc1.jja/jja.pca.pIOD$D[1], nrow = nx, ncol = ny)   
+jja.eof2 <- matrix(pc2.jja/jja.pca.pIOD$D[2], nrow = nx, ncol = ny) 
+
+#son season
+sst.piod.son <- matrix(son.sst.anom, nrow =  ny * nx, ncol = dim(son.sst.anom)[3])
+pc1.son <- sst.piod.son %*% son.pcstd[,1]
+pc2.son <- sst.piod.son %*% son.pcstd[,2]
+
+son.eof1 <- matrix(-pc1.son/son.pca.pIOD$D[1], nrow = nx, ncol = ny)   
+son.eof2 <- matrix(pc2.son/son.pca.pIOD$D[2], nrow = nx, ncol = ny)  
+
+#djf season
+sst.piod.djf <- matrix(djf.sst.anom, nrow =  ny * nx, ncol = dim(djf.sst.anom)[3])
+pc1.djf <- sst.piod.djf %*% djf.pcstd[,1]
+pc2.djf <- sst.piod.djf %*% djf.pcstd[,2]
+
+djf.eof1 <- matrix(-pc1.djf/djf.pca.pIOD$D[1], nrow = nx, ncol = ny)   
+djf.eof2 <- matrix(pc2.djf/djf.pca.pIOD$D[2], nrow = nx, ncol = ny)  
+```
+
+
+```{r seasonal_index}
+mam.sindex <- (mam.eof1 + mam.eof2)/sqrt(2)
+mam.mindex <- (mam.eof1 - mam.eof2)/sqrt(2)
+
+jja.sindex <- (jja.eof1 + jja.eof2)/sqrt(2)
+jja.mindex <- (jja.eof1 - jja.eof2)/sqrt(2)
+
+son.sindex <- (son.eof1 + son.eof2)/sqrt(2)
+son.mindex <- (son.eof1 - son.eof2)/sqrt(2)
+
+djf.sindex <- (djf.eof1 + djf.eof2)/sqrt(2)
+djf.mindex <- (djf.eof1 - djf.eof2)/sqrt(2)
+
+```
 
 
 ## Seasonal Figures
+
+
+### IOD PCs and Indices
+
+```{r eof_figs}
+eof.range <- range(son.eof1, son.eof2, na.rm = TRUE)
+eof.absmax <- max(abs(eof.range))
+eof.range <- c(-eof.absmax, eof.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.dumb <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
+leg.brks2 <- seq(-0.6, 0.6, 0.1) 
+
+
+#mam EOF/PCs
+image(list(x = lon.wide, y = lat.wide, z = mam.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("MAM SST Anomalies: PC1", adj = 0)
+
+
+image(list(x = lon.wide, y = lat.wide, z = mam.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("MAM SST Anomalies: PC2", adj = 0)
+
+
+#jja EOF/PCs
+image(list(x = lon.wide, y = lat.wide, z = jja.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("JJA SST Anomalies: PC1", adj = 0)
+
+
+image(list(x = lon.wide, y = lat.wide, z = jja.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("JJA SST Anomalies: PC2", adj = 0)
+
+
+
+#son EOF/PCs
+image(list(x = lon.wide, y = lat.wide, z = son.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("SON SST Anomalies: PC1", adj = 0)
+
+
+image(list(x = lon.wide, y = lat.wide, z = son.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("SON SST Anomalies: PC2", adj = 0)
+
+
+
+#djf EOF/PCs
+image(list(x = lon.wide, y = lat.wide, z = djf.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("DJF SST Anomalies: PC1", adj = 0)
+
+
+image(list(x = lon.wide, y = lat.wide, z = djf.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.1)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("DJF SST Anomalies: PC2", adj = 0)
+
+
+```
+
+```{r index_figs}
+son.ind.range <- range(son.sindex, son.mindex, na.rm = TRUE) 
+mam.ind.range <- range(mam.sindex, mam.mindex, na.rm = TRUE)
+jja.ind.range <- range(jja.sindex, jja.mindex, na.rm = TRUE)
+djf.ind.range <- range(djf.sindex, djf.mindex, na.rm = TRUE)
+
+index.range <- range(son.ind.range, mam.ind.range, jja.ind.range, djf.ind.range)
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(12))
+breaks.ind <- c(index.range[1], seq(-0.6, 0.6, length.out = 11), index.range[2])
+leg.brks2 <- seq(-0.72, 0.72, length.out = 13) 
+
+##pIOD indices
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+#mam pIOD index
+png(filename = "mam_sindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = mam.sindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+#rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+#text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("MAM S-Index", adj = 0)
+dev.off()
+
+png(filename = "mam_mindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = mam.mindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+#rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+#text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("MAM M-Index", adj = 0)
+dev.off()
+
+#jja pIOD index
+png(filename = "jja_sindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = jja.sindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("JJA S-Index", adj = 0)
+dev.off()
+
+png(filename = "jja_mindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = jja.mindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("JJA M-Index", adj = 0)
+dev.off()
+
+#son pIOD index
+png(filename = "son_sindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.sindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("SON S-Index", adj = 0)
+dev.off()
+
+png(filename = "son_mindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.mindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("SON M-Index", adj = 0)
+dev.off()
+
+#djf pIOD index
+png(filename = "djf_sindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = djf.sindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("DJF S-Index", adj = 0)
+dev.off()
+
+png(filename = "djf_mindex.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = djf.mindex), 
+           col = cols.ryb, breaks = breaks.ind, zlim = index.range, 
+           xlab = "Lon", ylab = "Lat",
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+image.plot(zlim = c(-0.72, 0.72), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.6, 0.6, length.out = 11)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+title("DJF M-Index", adj = 0)
+dev.off()
+
+
+```
+
+
 
 ### IOD Spatial Mean and Anoms
 

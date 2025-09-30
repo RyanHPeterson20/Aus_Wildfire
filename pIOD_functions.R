@@ -206,7 +206,8 @@ sst.eof <- function(sst.anom, kmode){
   
   return(list(EOF = V_eof,
               PC = PC.temp,
-              percent = per.temp))
+              percent = per.temp, 
+              D = D))
 }
 
 
