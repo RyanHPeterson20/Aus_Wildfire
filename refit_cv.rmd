@@ -51,7 +51,7 @@ source("refit_functions.R") #coef/refit functions
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load("IOD_lag.rda") #data
-load("predictionTest_functions.R") #predtest functions 
+source("predictionTest_functions.R") #predtest functions 
 ```
 
 # Data Setup
@@ -397,7 +397,7 @@ names(lm.data_3)[1] <- "co"
 NE3.lm.noOLR <- lm(formula(NE3.refit.noOLR), lm.data_3)
 summary(NE3.lm.noOLR)
 
-
+NErefit.noOLR <- list(NE1.refit.noOLR, NE2.refit.noOLR, NE3.refit.noOLR)
 
 
 ```
@@ -470,7 +470,7 @@ names(lm.data_3)[1] <- "co"
 SE3.lm.noOLR <- lm(formula(SE3.refit.noOLR), lm.data_3)
 summary(SE3.lm.noOLR)
 
-
+SErefit.noOLR <- list(SE1.refit.noOLR, SE2.refit.noOLR, SE3.refit.noOLR)
 
 
 ```
@@ -829,7 +829,13 @@ summary(NE1.lm)
 NEvalid_preds[[1]][[1]]
 y.true <- NEvalid_resp[[1]][[1]]
 
-y.pred <- predict(NE1.lm, NEvalid_preds[[1]][[1]])
+y.pred <- predict(NE1.lm, NEvalid_preds[[1]][[1]], se.fit = TRUE)
+
+y.pred$fit
+y.pred$se.fit
+
+CPRS(list(mean = y.pred$fit, sd = y.pred$se.fit), y.true)
+intscore(list(mean = y.pred$fit, sd = y.pred$se.fit), y.true)
 
 y.true
 y.pred
@@ -945,12 +951,8 @@ summary(SE3.lm)
 SE.lms <- list(SE1.lm, SE2.lm, SE3.lm)
 ```
 
-CPRS
 
-```{r}
-
-```
-
+## LOO Validation
 
 ```{r model_fits_validation}
 
@@ -960,8 +962,10 @@ CPRS
 ## LOO model w/ varying terms: NE.model.list
 
 #rmse 
-#TODO: add more later
+#TODO: functionalize this so I can repeat for other setups
 NE.rmse <- NULL
+NE.cprs <- NULL
+NE.ints <- NULL
 for (i in 1:length(seasons)) {
   fit.resp <- NEpartial_resp[[i]]
   fit.preds <- NEpartial_preds[[i]]
@@ -976,6 +980,10 @@ for (i in 1:length(seasons)) {
   #add in lists/matrices
   NErmse.yearly <- matrix(NA, ncol = 3)
   colnames(NErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NEcprs.yearly <- matrix(NA, ncol = 3)
+  colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NEis.yearly <- matrix(NA, ncol = 3)
+  colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
   #groups/clusters below
   for (j in 1:3) {
     #lm fit data setup
@@ -995,28 +1003,50 @@ for (i in 1:length(seasons)) {
     y.valid <- valid.resp[[j]]
     
     #prediction
-    y.pred.base <- predict(NE.lms[[j]], X.valid)
-    y.pred.const <- predict(temp.lm.constant, X.valid)
-    y.pred.vary <- predict(temp.lm.varying, X.valid)
+    pred.base <- predict(NE.lms[[j]], X.valid, se.fit = TRUE)
+    pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
+    pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
     
     #predict( ,se.fit = TRUE)
+    y.pred.base <- pred.base$fit 
+    y.pred.const <- pred.const$fit
+    y.pred.vary <- pred.vary$fit
     
     #rmse test
     rmse.base <-  rmse(y.valid, y.pred.base)
     rmse.const <- rmse(y.valid, y.pred.const)
     rmse.vary <- rmse(y.valid, y.pred.vary)
     
-    temp.mat <- cbind(rmse.base, rmse.const, rmse.vary)
-    NErmse.yearly <- rbind(NErmse.yearly, temp.mat) 
+    #cprs
+    cprs.base <- mean(CPRS(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    #IS95
+    is.base <- mean(intscore(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    #assign data
+    RMSE.temp.mat <- cbind(rmse.base, rmse.const, rmse.vary)
+    NErmse.yearly <- rbind(NErmse.yearly, RMSE.temp.mat) 
+    CPRS.temp.mat <- cbind(cprs.base, cprs.const, cprs.vary)
+    NEcprs.yearly <- rbind(NEcprs.yearly, CPRS.temp.mat)
+    IS.temp.mat <- cbind(is.base, is.const, is.vary)
+    NEis.yearly <- rbind(NEis.yearly, IS.temp.mat)
   }
   #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
   NE.rmse[[seasons[i]]] <- as.data.frame(NErmse.yearly[-1, ])
+  NE.cprs[[seasons[i]]] <- as.data.frame(NEcprs.yearly[-1, ])
+  NE.ints[[seasons[i]]] <- as.data.frame(NEis.yearly[-1, ])
 }
 
 
 #TODO: add more validation
 #rmse 
 SE.rmse <- NULL
+SE.cprs <- NULL
+SE.ints <- NULL
 for (i in 1:length(seasons)) {
   fit.resp <- SEpartial_resp[[i]]
   fit.preds <- SEpartial_preds[[i]]
@@ -1031,6 +1061,10 @@ for (i in 1:length(seasons)) {
   #add in lists/matrices
   SErmse.yearly <- matrix(NA, ncol = 3)
   colnames(SErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SEcprs.yearly <- matrix(NA, ncol = 3)
+  colnames(SEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SEis.yearly <- matrix(NA, ncol = 3)
+  colnames(SEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
   #groups/clusters below
   for (j in 1:3) {
     #lm fit data setup
@@ -1050,26 +1084,49 @@ for (i in 1:length(seasons)) {
     y.valid <- valid.resp[[j]]
     
     #prediction
-    y.pred.base <- predict(SE.lms[[j]], X.valid)
-    y.pred.const <- predict(temp.lm.constant, X.valid)
-    y.pred.vary <- predict(temp.lm.varying, X.valid)
+    pred.base <- predict(SE.lms[[j]], X.valid, se.fit = TRUE)
+    pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
+    pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
+    
+    y.pred.base <- pred.base$fit 
+    y.pred.const <- pred.const$fit
+    y.pred.vary <- pred.vary$fit
     
     #rmse test
     rmse.base <-  rmse(y.valid, y.pred.base)
     rmse.const <- rmse(y.valid, y.pred.const)
     rmse.vary <- rmse(y.valid, y.pred.vary)
     
+    #cprs
+    cprs.base <- mean(CPRS(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    #IS95
+    is.base <- mean(intscore(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
     temp.mat <- cbind(rmse.base, rmse.const, rmse.vary)
     SErmse.yearly <- rbind(SErmse.yearly, temp.mat) 
+    CPRS.temp.mat <- cbind(cprs.base, cprs.const, cprs.vary)
+    SEcprs.yearly <- rbind(SEcprs.yearly, CPRS.temp.mat)
+    IS.temp.mat <- cbind(is.base, is.const, is.vary)
+    SEis.yearly <- rbind(SEis.yearly, IS.temp.mat)
+    
   }
   #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
   SE.rmse[[seasons[i]]] <- as.data.frame(SErmse.yearly[-1, ])
+  SE.cprs[[seasons[i]]] <- as.data.frame(SEcprs.yearly[-1, ])
+  SE.ints[[seasons[i]]] <- as.data.frame(SEis.yearly[-1, ])
 }
 
 ```
 
+## K-Fold
+
 ```{r kfold}
-k <- 5
+k <- 10
 
 #NE aus
 NE.kcv <- NULL
@@ -1154,9 +1211,96 @@ NE.kcv
 SE.kcv
 ```
 
+```{r kfold_noOLR}
+k <- 10
+
+#NE aus
+NE.kcv.noOLR <- NULL
+for(j in 1:3){ 
+  temp.pred <- NEpreds_new[[j]][ ,1:260]
+  temp.resp <- NEresp_new[[j]]
+  
+  
+  nrow(temp.pred)
+  length(temp.resp)
+  
+  n <- nrow(temp.pred)
+  set.seed(156)
+  folds <- sample(rep(1:k, length.out = n))
+  # Store errors
+  mse <- numeric(k)
+  for (i in 1:k) {
+    # Split into training and test sets
+    test.id <- which(folds == i)
+    train.preds <- temp.pred[-test.id, ]
+    train.resp <- temp.resp[-test.id]
+    test.preds <- temp.pred[test.id, ]
+    test.resp <- temp.resp[test.id]
+    
+    # Fit model
+    train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+    names(train.data.fit)[1] <- "co"
+  
+    temp.model <- lm(formula(NErefit.noOLR[[j]]), train.data.fit)
+    
+    # Predict
+    preds <- predict(temp.model, newdata = test.preds)
+    
+    # Compute Mean Squared Error
+    mse[i] <- mean((test.resp - preds)^2)
+  }
+  NE.kcv.noOLR[[j]] <- mean(mse)
+}
 
 
-```{r rmse_extract}
+
+
+#SE aus
+SE.kcv.noOLR <- NULL
+for(j in 1:3){ 
+  temp.pred <- SEpreds_new[[j]][ ,1:260]
+  temp.resp <- SEresp_new[[j]]
+  
+  
+  nrow(temp.pred)
+  length(temp.resp)
+  
+  n <- nrow(temp.pred)
+  set.seed(157)
+  folds <- sample(rep(1:k, length.out = n))
+  # Store errors
+  mse <- numeric(k)
+  for (i in 1:k) {
+    # Split into training and test sets
+    test.id <- which(folds == i)
+    train.preds <- temp.pred[-test.id, ]
+    train.resp <- temp.resp[-test.id]
+    test.preds <- temp.pred[test.id, ]
+    test.resp <- temp.resp[test.id]
+    
+    # Fit model
+    train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+    names(train.data.fit)[1] <- "co"
+  
+    temp.model <- lm(formula(SErefit.noOLR[[j]]), train.data.fit)
+    
+    # Predict
+    preds <- predict(temp.model, newdata = test.preds)
+    
+    # Compute Mean Squared Error
+    mse[i] <- mean((test.resp - preds)^2)
+  }
+  SE.kcv.noOLR[[j]] <- mean(mse)
+}
+
+NE.kcv.noOLR
+SE.kcv.noOLR
+
+```
+
+
+```{r validation_extract}
+#rmse
 NEbase.rmse <- unlist(lapply(NE.rmse, function(x) x[[1]]))
 NEconst.rmse <- unlist(lapply(NE.rmse, function(x) x[[2]]))
 NEvary.rmse <- unlist(lapply(NE.rmse, function(x) x[[3]]))
@@ -1164,6 +1308,41 @@ NEvary.rmse <- unlist(lapply(NE.rmse, function(x) x[[3]]))
 SEbase.rmse <- unlist(lapply(SE.rmse, function(x) x[[1]]))
 SEconst.rmse <- unlist(lapply(SE.rmse, function(x) x[[2]]))
 SEvary.rmse <- unlist(lapply(SE.rmse, function(x) x[[3]]))
+
+#cprs
+NEbase.cprs <- unlist(lapply(NE.cprs, function(x) x[[1]]))
+NEconst.cprs <- unlist(lapply(NE.cprs, function(x) x[[2]]))
+NEvary.cprs <- unlist(lapply(NE.cprs, function(x) x[[3]]))
+
+SEbase.cprs <- unlist(lapply(SE.cprs, function(x) x[[1]]))
+SEconst.cprs <- unlist(lapply(SE.cprs, function(x) x[[2]]))
+SEvary.cprs <- unlist(lapply(SE.cprs, function(x) x[[3]]))
+
+#int score
+NEbase.int <- unlist(lapply(NE.ints, function(x) x[[1]]))
+NEconst.int <- unlist(lapply(NE.ints, function(x) x[[2]]))
+NEvary.int <- unlist(lapply(NE.ints, function(x) x[[3]]))
+
+SEbase.int <- unlist(lapply(SE.ints, function(x) x[[1]]))
+SEconst.int <- unlist(lapply(SE.ints, function(x) x[[2]]))
+SEvary.int <- unlist(lapply(SE.ints, function(x) x[[3]]))
+
+
+```
+
+
+```{r extract_byGroup}
+
+
+NEgroup1.rmse <- unlist(lapply(NE.rmse, function(x) x[[2]][1]))
+NEgroup2.rmse <- unlist(lapply(NE.rmse, function(x) x[[2]][2]))
+NEgroup3.rmse <- unlist(lapply(NE.rmse, function(x) x[[2]][3]))
+
+SEgroup1.rmse <- unlist(lapply(SE.rmse, function(x) x[[2]][1]))
+SEgroup2.rmse <- unlist(lapply(SE.rmse, function(x) x[[2]][2]))
+SEgroup3.rmse <- unlist(lapply(SE.rmse, function(x) x[[2]][3]))
+
+
 ```
 
 
@@ -1236,6 +1415,40 @@ legend("topright", inset = c(-0.12, 0), xpd = TRUE,
 dev.off()
 
 ```
+
+
+## CRPS Plots
+
+```{r}
+NEcprs.range <- range(NE.cprs)
+SEcprs.range <- range(SE.cprs)
+
+plot(1:57, NEconst.cprs, pch = 16,
+     ylim = NEcprs.range)
+plot(1:57, SEconst.cprs, pch = 16,
+     ylim = SEcprs.range)
+```
+
+```{r boxplots}
+#TODO: finalize these plots into a single plot (as before)
+boxplot(NEgroup1.rmse, NEgroup2.rmse, NEgroup3.rmse)
+boxplot(SEgroup1.rmse, SEgroup2.rmse, SEgroup3.rmse)
+```
+
+
+
+## Interval Score Plots
+
+```{r}
+NEints.range <- range(NE.ints)
+SEints.range <- range(SE.ints)
+
+plot(1:57, NEconst.int, pch = 16,
+     ylim = NEints.range)
+plot(1:57, SEconst.int, pch = 16,
+     ylim = SEints.range)
+```
+
 
 
 ## Model Fits
