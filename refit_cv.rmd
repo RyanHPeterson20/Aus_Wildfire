@@ -1447,17 +1447,42 @@ plot(1:57, SEconst.cprs, pch = 16,
 
 ```{r boxplots}
 #TODO: finalize these plots into a single plot (as before)
-boxplot(NEgroup1.rmse, NEgroup2.rmse, NEgroup3.rmse)
-boxplot(SEgroup1.rmse, SEgroup2.rmse, SEgroup3.rmse)
+#boxplot(NEgroup1.rmse, NEgroup2.rmse, NEgroup3.rmse)
+#boxplot(SEgroup1.rmse, SEgroup2.rmse, SEgroup3.rmse)
 
+rmse.range <- range(NEbase.rmse, NEconst.rmse, 
+                    NEbase.rmse, SEconst.rmse)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "base_rmse.png", width = 2000, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 5))
 #base (no split)
 boxplot(NEgroup1.base.rmse, NEgroup2.base.rmse, NEgroup3.base.rmse,
-        SEgroup1.base.rmse, SEgroup2.base.rmse, SEgroup3.base.rmse, pch = 16)
+        SEgroup1.base.rmse, SEgroup2.base.rmse, SEgroup3.base.rmse, pch = 19,
+        ylim = rmse.range, ylab = "RMSE", axes = FALSE)
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Full Model : RMSE", adj = 0)
+dev.off()
+
 
 #constant (loo (single year test split))
+png(filename = "constant_rmse.png", width = 2000, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 5))
 boxplot(NEgroup1.rmse, NEgroup2.rmse, NEgroup3.rmse, 
-        SEgroup1.rmse, SEgroup2.rmse, SEgroup3.rmse, pch = 19)
-
+        SEgroup1.rmse, SEgroup2.rmse, SEgroup3.rmse, pch = 19,
+         ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Model : RMSE", adj = 0)
+dev.off()
 ```
 
 

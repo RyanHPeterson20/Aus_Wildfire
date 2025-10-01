@@ -558,8 +558,13 @@ etio.mam.cor <- cor(dmi.mam$etio.anomaly, piod.mam$s.index)
 wtio.pc1 <- cor(bounded_pred2_df$wtio.anomaly, pIOD.df$PC1)
 etio.pc2 <- cor(bounded_pred2_df$etio.anomaly, pIOD.df$PC2)
 
-cor(bounded_pred2_df$etio.anomaly, pIOD.df$PC1)
-cor(bounded_pred2_df$wtio.anomaly, pIOD.df$PC2)
+wtio.pc1
+etio.pc2
+cor(bounded_pred2_df$etio.anomaly, scale(pIOD.df$PC1))
+cor(bounded_pred2_df$wtio.anomaly, scale(pIOD.df$PC2))
+
+cor(bounded_pred2_df$dmi.anomaly, scale(pIOD.df$PC1))
+cor(bounded_pred2_df$dmi.anomaly, scale(pIOD.df$PC2))
 
 wtio.cor <- cor(bounded_pred2_df$wtio.anomaly, scale(pIOD.df$m.index))
 etio.cor <- cor(bounded_pred2_df$etio.anomaly, scale(pIOD.df$s.index))
@@ -569,8 +574,12 @@ wtio.pc1.jja <- cor(dmi.jja$wtio.anomaly, scale(piod.jja$PC1))
 etio.pc2.jja <- cor(dmi.jja$etio.anomaly, scale(piod.jja$PC2))
 
 #son correlation
-wtio.pc1.son <- cor(dmi.son$wtio.anomaly, piod.son$PC1)
+wtio.pc1.son <- cor(dmi.son$wtio.anomaly, scale(piod.son$PC1))
 etio.pc2.son <- cor(dmi.son$etio.anomaly, piod.son$PC2)
+
+dmi.pc1.son <- cor(dmi.son$dmi.anomaly, piod.son$PC1)
+
+etio.pc1.son <- cor(dmi.son$etio.anomaly, piod.son$PC1)
 
 #djf cor
 wtio.pc1.djf <- cor(dmi.djf$wtio.anomaly, piod.djf$PC1)
@@ -644,7 +653,7 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
 png(filename = "wtio_mindexSON.png", width = 2000, height = 1200, res = 250)
 par(mar = c(5, 5, 3, 5))
-plot(dmi.son$wtio.anomaly, scale(piod.son$m.index), pch = 19, cex = 0.86,
+plot(dmi.son$wtio.anomaly, scale(piod.son$m.index), pch = 19, cex = 0.89,
      xlab = "WTIO", ylab = "M-Index")
 text(-0.45, 2, paste0("Cor = ", round(wtio.son.cor, 3)), adj = 0 )
 title("SON: WTIO and M-Index", adj = 0)
@@ -652,7 +661,7 @@ dev.off()
 
 png(filename = "etio_sindexSON.png", width = 2000, height = 1200, res = 250)
 par(mar = c(5, 5, 3, 5))
-plot(dmi.son$etio.anomaly, scale(piod.son$s.index), pch = 19, cex = 0.86,
+plot(dmi.son$etio.anomaly, scale(piod.son$s.index), pch = 19, cex = 0.89,
      xlab = "ETIO", ylab = "S-Index")
 text(-1.75, -1.5, paste0("Cor = ", round(etio.son.cor, 3)), adj = 0 )
 title("SON: ETIO and S-Index", adj = 0)
