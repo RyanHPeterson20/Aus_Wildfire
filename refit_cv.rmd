@@ -649,6 +649,13 @@ for (j in 2:length(gamma_seq)) {
 
 ```
 
+```{r save_ebic}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NEAus1.eBIC, NEAus2.eBIC, NEAus3.eBIC,
+      SEAus1.eBIC, SEAus2.eBIC, SEAus3.eBIC, file = "models_ebic.rda")
+```
+
+
 
 ## Refit - LOO
 
@@ -1329,7 +1336,6 @@ for (i in 1:length(seasons)) {
 
 ### Model Summaries
 
-
 ```{r summ_outputs}
 summ(SE.vary.LM$`2019-2020`[[2]], confint = TRUE, digits = 3)
 
@@ -1382,6 +1388,137 @@ export_summs(SE3, SE3.wo2019, scale = FALSE,
              to.file = "docx", file.name = "SE3models.docx", longtable = TRUE)
 
 ```
+
+
+```{r basic_sumaries}
+summ(NE.lms[[1]], confint = TRUE, digits = 3)
+summ(NE.lms[[2]], confint = TRUE, digits = 3)
+summ(NE.lms[[3]], confint = TRUE, digits = 3)
+
+summ(SE.lms[[1]], confint = TRUE, digits = 3)
+summ(SE.lms[[2]], confint = TRUE, digits = 3)
+summ(SE.lms[[3]], confint = TRUE, digits = 3)
+
+```
+
+
+### Seasonal Overlap
+
+Known WTIO/ETIO Lags:
+NE Aus Group 1: etio_lag42
+NE Aus Group 2: wtio_lag30, etio_lag4
+NE Aus Group 3: etio_lag19
+
+SE Aus Group 1: wtio_lag4, wtio_lag5, wtio_lag13, etio_lag31
+SE Aus Group 2: wtio_lag14, wtio_lag46, etio_lag7, etio_lag33
+SE Aus Group 3: wtio_lag1, etio_lag15
+
+```{r overlaps}
+#setup
+NEAus1_weeks <- season_weeks[4:12]
+NEAus2_weeks <- season_weeks[13:17]
+NEAus3_weeks <- season_weeks[18:32]
+
+SEAus1_weeks <- season_weeks[4:16]
+SEAus2_weeks <- season_weeks[17:20]
+SEAus3_weeks <- season_weeks[21:32]
+
+#TODO: make this more flexible
+
+# NE Aus 1
+#etio_lag42
+NEAus1_lag42 <- NEAus1_weeks - 42
+NEAus1_lag42 <- sapply(NEAus1_lag42, function(x) ifelse(x <=0, x + 52, x)) 
+NEAus1_lag42    
+
+#NE Aus 2
+#wtio_lag30
+NEAus2_lag30 <- NEAus2_weeks - 30
+NEAus2_lag30
+
+#etio_lag4
+NEAus2_lag4 <- NEAus2_weeks - 4
+NEAus2_lag4
+
+#NE Aus 3
+#etio_lag19
+NEAus3_lag19 <- NEAus3_weeks - 19
+NEAus3_lag19 <- sapply(NEAus3_lag19, function(x) ifelse(x <=0, x + 52, x)) 
+NEAus3_lag19  
+
+#SE Aus 1
+#wtio_lag4
+SEAus1_lag4 <- SEAus1_weeks - 4
+SEAus1_lag4
+
+#wtio_lag5
+SEAus1_lag5 <- SEAus1_weeks - 5
+SEAus1_lag5
+
+#wtio_lag13
+SEAus1_lag13 <- SEAus1_weeks - 13
+SEAus1_lag13
+
+#etio_lag31
+SEAus1_lag31 <- SEAus1_weeks - 31
+SEAus1_lag31
+
+#SE Aus 2
+#wtio_lag14
+SEAus2_lag14 <-  SEAus2_weeks - 14
+SEAus2_lag14 <- sapply(SEAus2_lag14, function(x) ifelse(x <=0, x + 52, x)) 
+SEAus2_lag14 
+
+#wtio_lag46
+SEAus2_lag46 <-  SEAus2_weeks - 46
+SEAus2_lag46 <- sapply(SEAus2_lag46, function(x) ifelse(x <=0, x + 52, x)) 
+SEAus2_lag46 
+
+#etio_lag7
+SEAus2_lag7 <-  SEAus2_weeks - 7
+SEAus2_lag7 <- sapply(SEAus2_lag7, function(x) ifelse(x <=0, x + 52, x)) 
+SEAus2_lag7 
+
+#etio_lag33
+SEAus2_lag33 <-  SEAus2_weeks - 33
+SEAus2_lag33 <- sapply(SEAus2_lag33, function(x) ifelse(x <=0, x + 52, x)) 
+SEAus2_lag33
+
+#SE Aus 3
+#wtio_lag1
+SEAus3_lag1 <- SEAus3_weeks -1 
+SEAus3_lag1
+
+#etio_lag15
+SEAus3_lag15 <- SEAus3_weeks - 15
+SEAus3_lag15 <- sapply(SEAus3_lag15, function(x) ifelse(x <=0, x + 52, x)) 
+SEAus3_lag15
+
+#organize data
+
+#wtio first
+wtio.names <- c("NEAus2:wtiolag30", "SEAus1:wtiolag4",  "SEAus1:wtiolag5", "SEAus1:wtiolag13") #,
+               # "SEAus2:wtiolag14", "SEAus2:wtiolag46", "SEAus3:wtiolag1")
+wtio.start <- c(NEAus2_lag30[1], min(SEAus1_lag4),  min(SEAus1_lag5),  min(SEAus1_lag13))
+wtio.end <- c(NEAus2_lag30[length(NEAus2_lag30)], max(SEAus1_lag4),  max(SEAus1_lag5),  max(SEAus1_lag13))
+wtio.lag.df <- data.frame(lag = wtio.names, start = wtio.start, end = wtio.end)
+
+```
+
+```{r overlap_figures}
+#TODO: test case, update later
+
+par(mar = c(4, 9, 3, 3))
+plot(NULL, xlim = c(1,52), ylim = c(1, length(wtio.names)),
+     yaxt = "n", xlab = "Week", ylab = "", main = "")
+axis(2, at = 1:length(wtio.lag.df$lag), labels = wtio.lag.df$lag, las = 1)
+segments(x0 = wtio.lag.df$start, y0 = 1:length(wtio.lag.df$start),
+         x1 = wtio.lag.df$end,  y1 = 1:length(wtio.lag.df$end),
+         lwd = 3, col = "firebrick3")
+abline(h = 1:length(wtio.lag.df$start), lty = 3, col = "gray70")
+abline(v = c(9.5, 22.5, 35.5, 48.9), lty = 2, col = "gray48")
+```
+
 
 
 ## K-Fold
