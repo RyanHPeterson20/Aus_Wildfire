@@ -732,13 +732,6 @@ load( "model_refits.rda")
 ```
 
 
-### Model Summary
-
-```{r}
-
-```
-
-
 
 ## Comparison to Base
 
@@ -819,12 +812,12 @@ baseSE3.count <- sapply(baseSE3, function(x) sum(x == refitSE3))
 #unique(refitSE3)
 SErefit3.unique <- table(refitSE3)
 SErefit3.unique <- SErefit3.unique[!names(SErefit3.unique) %in% baseSE3]
-refitSE.count <- sort(SErefit3.unique, decreasing = TRUE)
+refitSE3.count <- sort(SErefit3.unique, decreasing = TRUE)
 
 ```
 
 
-### Test Figures
+### Proportion/Count Figures
 
 ```{r setup}
 rateNE1.const <- sort(baseNE1.count, decreasing = FALSE)/19
@@ -851,74 +844,158 @@ temp.refitNE1 <- refitNE1.count[refitNE1.count > 1]
 NE1x_vals <- rep(seq_along(temp.refitNE1), times = temp.refitNE1)
 NE1y_vals <- unlist(lapply(temp.refitNE1, function(n) seq_len(n)))
 
-dumb.expansion <- rep(names(temp.refitNE1), times = temp.refitNE1)
+dumb.expansion <- factor(rep(names(temp.refitNE1), times = temp.refitNE1))
+is.factor(dumb.expansion)
 ```
 
 ```{r base.fits}
-
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
-png(filename = "NE1.const.png", width = 2400, height = 1200, res = 250)
+png(filename = "NE1.const.png", width = 2400, height = 1600, res = 250)
 par(mar = c(5, 10, 3, 3))
 barplot(height = rateNE1.const, xlim = c(0,1),
-        horiz=T, las = 1, col = col.NE1)
+        horiz=T, las = 1, col = col.NE1, xlab = "Proportion")
 title("NE Aus Group 1", adj = 0)
 dev.off()
 
-png(filename = "NE2.const.png", width = 2400, height = 1200, res = 250)
+png(filename = "NE2.const.png", width = 2400, height = 1600, res = 250)
 par(mar = c(5, 10, 3, 3))
 barplot(height = rateNE2.const, xlim = c(0,1),
-        horiz=T, las = 1, col = col.NE2)
+        horiz=T, las = 1, col = col.NE2, xlab = "Proportion")
 title("NE Aus Group 2", adj = 0)
 dev.off()
 
-png(filename = "NE3.const.png", width = 2400, height = 1200, res = 250)
+png(filename = "NE3.const.png", width = 2400, height = 1600, res = 250)
 par(mar = c(5, 10, 3, 3))
 barplot(height = rateNE3.const, xlim = c(0,1),
-        horiz=T, las = 1, col = col.NE3)
+        horiz=T, las = 1, col = col.NE3, xlab = "Proportion")
 title("NE Aus Group 3", adj = 0)
 dev.off()
 
-png(filename = "SE1.const.png", width = 2400, height = 1200, res = 250)
+png(filename = "SE1.const.png", width = 2400, height = 1600, res = 250)
 par(mar = c(5, 10, 3, 3))
 barplot(height = rateSE1.const, xlim = c(0,1),
-        horiz=T, las = 1, col = col.SE1)
+        horiz=T, las = 1, col = col.SE1, xlab = "Proportion")
 title("SE Aus Group 1", adj = 0)
 dev.off()
 
-png(filename = "SE2.const.png", width = 2400, height = 1200, res = 250)
+png(filename = "SE2.const.png", width = 2400, height = 1600, res = 250)
 par(mar = c(5, 10, 3, 3))
 barplot(height = rateSE2.const, xlim = c(0,1),
-        horiz=T, las = 1, col = col.SE2)
+        horiz=T, las = 1, col = col.SE2, xlab = "Proportion")
 title("SE Aus Group 2", adj = 0)
 dev.off()
 
-png(filename = "SE3.const.png", width = 2400, height = 1200, res = 250)
+png(filename = "SE3.const.png", width = 2400, height = 1600, res = 250)
 par(mar = c(5, 10, 3, 3))
 barplot(height = rateSE3.const, xlim = c(0,1),
-        horiz=T, las = 1, col = col.SE3)
+        horiz=T, las = 1, col = col.SE3, xlab = "Proportion")
 title("SE Aus Group 3", adj = 0)
 dev.off()
 
 ```
 
+```{r term_count}
+#NE 1
+temp.refitNE1 <- refitNE1.count[refitNE1.count > 1]
 
-```{r refits}
+NE1.expansion <- factor(rep(names(temp.refitNE1), times = temp.refitNE1)) #change to numbers than overwrite the labels
+NE1.levels <- levels(NE1.expansion)
+NE1.exp <- as.numeric(NE1.expansion)
 
-plot(NE1x_vals, NE1y_vals, 
-     pch = 19, col = "steelblue4", 
-     xaxt = "n", xlab = "", ylab = "Count")
-# Add x-axis labels
-axis(1, at = seq_along(temp.refitNE1), labels = names(temp.refitNE1), las = 2)
-title("NE Group 1: Varying Term Count")
+#NE 2
+temp.refitNE2 <- refitNE2.count[refitNE2.count > 1]
+
+NE2.expansion <- factor(rep(names(temp.refitNE2), times = temp.refitNE2)) #change to numbers than overwrite the labels
+NE2.levels <- levels(NE2.expansion)
+NE2.exp <- as.numeric(NE2.expansion)
+
+#NE 3
+temp.refitNE3 <- refitNE3.count[refitNE3.count > 1]
+
+NE3.expansion <- factor(rep(names(temp.refitNE3), times = temp.refitNE3)) #change to numbers than overwrite the labels
+NE3.levels <- levels(NE3.expansion)
+NE3.exp <- as.numeric(NE3.expansion)
 
 
-stripchart(dumb.expansion, method = "stack",  at = 0, offset = .5,
-           pch = 19, col = "steelblue", vertical = FALSE,
-           main = "Stacked Dot Plot", xlab = "Data Values")
+#SE 1
+temp.refitSE1 <- refitSE1.count[refitSE1.count > 1]
+
+SE1.expansion <- factor(rep(names(temp.refitSE1), times = temp.refitSE1)) #change to numbers than overwrite the labels
+SE1.levels <- levels(SE1.expansion)
+SE1.exp <- as.numeric(SE1.expansion)
+
+#SE 2
+temp.refitSE2 <- refitSE2.count[refitSE2.count > 1]
+
+SE2.expansion <- factor(rep(names(temp.refitSE2), times = temp.refitSE2)) #change to numbers than overwrite the labels
+SE2.levels <- levels(SE2.expansion)
+SE2.exp <- as.numeric(SE2.expansion)
+
+#SE 3
+temp.refitSE3 <- refitSE3.count[refitSE3.count > 1]
+
+SE3.expansion <- factor(rep(names(temp.refitSE3), times = temp.refitSE3)) #change to numbers than overwrite the labels
+SE3.levels <- levels(SE3.expansion)
+SE3.exp <- as.numeric(SE3.expansion)
+
+
 ```
 
+```{r refits}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
+png(filename = "NE1varyterms.png", width = 2400, height = 2000, res = 250)
+par(mar = c(5, 10.65, 3, 3))
+stripchart(NE1.exp, method = "stack", offset = 1.65, at = 0,
+           pch = 19, col = "steelblue", vertical = TRUE, xlab = "Count", yaxt = "n", xlim = c(0,0.5))
+axis(2, at = 1:length(NE1.levels), labels = NE1.levels, las = 1, cex = 0.75)
+title("NE Aus Group 1  ", adj = 0)
+dev.off()
+
+
+png(filename = "NE2varyterms.png", width = 2400, height = 2000, res = 250)
+par(mar = c(5, 10.65, 3, 3))
+stripchart(NE2.exp, method = "stack", offset = 1.65, at = 0,
+           pch = 19, col = "steelblue", vertical = TRUE, xlab = "Count", yaxt = "n", xlim = c(0,0.5))
+axis(2, at = 1:length(NE2.levels), labels = NE2.levels, las = 1, cex = 0.75)
+title("NE Aus Group 2  ", adj = 0)
+dev.off()
+
+
+png(filename = "NE3varyterms.png", width = 2400, height = 2000, res = 250)
+par(mar = c(5, 10.65, 3, 3))
+stripchart(NE3.exp, method = "stack", offset = 1.65, at = 0,
+           pch = 19, col = "steelblue", vertical = TRUE, xlab = "Count", yaxt = "n", xlim = c(0,0.5))
+axis(2, at = 1:length(NE3.levels), labels = NE3.levels, las = 1, cex = 0.75)
+title("NE Aus Group 3  ", adj = 0)
+dev.off()
+
+
+png(filename = "SE1varyterms.png", width = 2400, height = 2000, res = 250)
+par(mar = c(5, 10.65, 3, 3))
+stripchart(SE1.exp, method = "stack", offset = 1.65, at = 0,
+           pch = 19, col = "steelblue", vertical = TRUE, xlab = "Count", yaxt = "n", xlim = c(0,0.5))
+axis(2, at = 1:length(SE1.levels), labels = SE1.levels, las = 1, cex = 0.75)
+title("SE Aus Group 1  ", adj = 0)
+dev.off()
+
+png(filename = "SE2varyterms.png", width = 2400, height = 2000, res = 250)
+par(mar = c(5, 10.65, 3, 3))
+stripchart(SE2.exp, method = "stack", offset = 1.65, at = 0,
+           pch = 19, col = "steelblue", vertical = TRUE, xlab = "Count", yaxt = "n", xlim = c(0,0.5))
+axis(2, at = 1:length(SE2.levels), labels = SE2.levels, las = 1, cex = 0.75)
+title("SE Aus Group 2  ", adj = 0)
+dev.off()
+
+png(filename = "SE3varyterms.png", width = 2400, height = 2000, res = 250)
+par(mar = c(5, 10.65, 3, 3))
+stripchart(SE3.exp, method = "stack", offset = 1.65, at = 0,
+           pch = 19, col = "steelblue", vertical = TRUE, xlab = "Count", yaxt = "n", xlim = c(0,0.5))
+axis(2, at = 1:length(SE3.levels), labels = SE3.levels, las = 1, cex = 0.75)
+title("SE Aus Group 3  ", adj = 0)
+dev.off()
+```
 
 # Model Validation
 
@@ -1253,9 +1330,11 @@ for (i in 1:length(seasons)) {
 ### Model Summaries
 
 
-```{r}
+```{r summ_outputs}
 summ(SE.vary.LM$`2019-2020`[[2]], confint = TRUE, digits = 3)
 
+library( officer)
+library( flextable)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
@@ -1264,21 +1343,21 @@ NE1.wo2019 <- NE.const.LM$`2019-2020`[[1]]
 
 export_summs(NE1, NE1.wo2019, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]", model.names = c("NE Group 1","NE Group 1 (w/o 2019)"),
-             to.file = "pdf", file.name = "NE1models.pdf", longtable = TRUE)
+             to.file = "docx", file.name = "NE1models.docx")
 
 NE2 <- NE.lms[[2]]
 NE2.wo2019 <- NE.const.LM$`2019-2020`[[2]]
 
 export_summs(NE2, NE2.wo2019, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]", model.names = c("NE Group 2","NE Group 2 (w/o 2019)"),
-             to.file = "pdf", file.name = "NE2models.pdf", longtable = TRUE)
+             to.file = "docx", file.name = "NE2models.docx", longtable = TRUE)
 
 NE3 <- NE.lms[[3]]
 NE3.wo2019 <- NE.const.LM$`2019-2020`[[3]]
 
 export_summs(NE3, NE3.wo2019, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]", model.names = c("NE Group 3","NE Group 3 (w/o 2019)"),
-             to.file = "pdf", file.name = "NE3models.pdf", longtable = TRUE)
+             to.file = "docx", file.name = "NE3models.docx", longtable = TRUE)
 
 
 SE1 <- SE.lms[[1]]
@@ -1286,21 +1365,21 @@ SE1.wo2019 <- SE.const.LM$`2019-2020`[[1]]
 
 export_summs(SE1, SE1.wo2019, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]", model.names = c("SE Group 1","SE Group 1 (w/o 2019)"),
-             to.file = "pdf", file.name = "SE1models.pdf", longtable = TRUE)
+             to.file = "docx", file.name = "SE1models.docx", longtable = TRUE)
 
 SE2 <- SE.lms[[2]]
 SE2.wo2019 <- SE.const.LM$`2019-2020`[[2]]
 
 export_summs(SE2, SE2.wo2019, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]", model.names = c("SE Group 2","SE Group 2 (w/o 2019)"),
-             to.file = "pdf", file.name = "SE2models.pdf", longtable = TRUE)
+             to.file = "docx", file.name = "SE2models.docx", longtable = TRUE)
 
 SE3 <- SE.lms[[3]]
 SE3.wo2019 <- SE.const.LM$`2019-2020`[[3]]
 
 export_summs(SE3, SE3.wo2019, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]", model.names = c("SE Group 3","SE Group 3 (w/o 2019)"),
-             to.file = "pdf", file.name = "SE3models.pdf", longtable = TRUE)
+             to.file = "docx", file.name = "SE3models.docx", longtable = TRUE)
 
 ```
 
@@ -1534,6 +1613,46 @@ SEgroup2.rmse <- unlist(lapply(SE.rmse, function(x) x[[2]][2]))
 SEgroup3.rmse <- unlist(lapply(SE.rmse, function(x) x[[2]][3]))
 
 
+##CPRS
+#base terms (no splot)
+NEgroup1.base.cprs <- unlist(lapply(NE.cprs, function(x) x[[1]][1]))
+NEgroup2.base.cprs <- unlist(lapply(NE.cprs, function(x) x[[1]][2]))
+NEgroup3.base.cprs <- unlist(lapply(NE.cprs, function(x) x[[1]][3]))
+
+SEgroup1.base.cprs <- unlist(lapply(SE.cprs, function(x) x[[1]][1]))
+SEgroup2.base.cprs <- unlist(lapply(SE.cprs, function(x) x[[1]][2]))
+SEgroup3.base.cprs <- unlist(lapply(SE.cprs, function(x) x[[1]][3]))
+
+#constant terms (test/train split)
+NEgroup1.cprs <- unlist(lapply(NE.cprs, function(x) x[[2]][1]))
+NEgroup2.cprs <- unlist(lapply(NE.cprs, function(x) x[[2]][2]))
+NEgroup3.cprs <- unlist(lapply(NE.cprs, function(x) x[[2]][3]))
+
+SEgroup1.cprs <- unlist(lapply(SE.cprs, function(x) x[[2]][1]))
+SEgroup2.cprs <- unlist(lapply(SE.cprs, function(x) x[[2]][2]))
+SEgroup3.cprs <- unlist(lapply(SE.cprs, function(x) x[[2]][3]))
+
+
+
+##Int Score
+#base terms (no split)
+NEgroup1.base.ints <- unlist(lapply(NE.ints, function(x) x[[1]][1]))
+NEgroup2.base.ints <- unlist(lapply(NE.ints, function(x) x[[1]][2]))
+NEgroup3.base.ints <- unlist(lapply(NE.ints, function(x) x[[1]][3]))
+
+SEgroup1.base.ints <- unlist(lapply(SE.ints, function(x) x[[1]][1]))
+SEgroup2.base.ints <- unlist(lapply(SE.ints, function(x) x[[1]][2]))
+SEgroup3.base.ints <- unlist(lapply(SE.ints, function(x) x[[1]][3]))
+
+#constant terms (test/train split)
+NEgroup1.ints <- unlist(lapply(NE.ints, function(x) x[[2]][1]))
+NEgroup2.ints <- unlist(lapply(NE.ints, function(x) x[[2]][2]))
+NEgroup3.ints <- unlist(lapply(NE.ints, function(x) x[[2]][3]))
+
+SEgroup1.ints <- unlist(lapply(SE.ints, function(x) x[[2]][1]))
+SEgroup2.ints <- unlist(lapply(SE.ints, function(x) x[[2]][2]))
+SEgroup3.ints <- unlist(lapply(SE.ints, function(x) x[[2]][3]))
+
 ```
 
 
@@ -1611,19 +1730,6 @@ dev.off()
 
 ```
 
-
-## CRPS Plots
-
-```{r}
-NEcprs.range <- range(NE.cprs)
-SEcprs.range <- range(SE.cprs)
-
-plot(1:57, NEconst.cprs, pch = 16,
-     ylim = NEcprs.range)
-plot(1:57, SEconst.cprs, pch = 16,
-     ylim = SEcprs.range)
-```
-
 ```{r boxplots}
 #TODO: finalize these plots into a single plot (as before)
 #boxplot(NEgroup1.rmse, NEgroup2.rmse, NEgroup3.rmse)
@@ -1660,7 +1766,54 @@ boxplot(NEgroup1.rmse, NEgroup2.rmse, NEgroup3.rmse,
 axis(1, labels = model.names, at = 1:6, cex.axis = 1)
 axis(2)                      
 box()
-title("Constant Model : RMSE", adj = 0)
+title("Constant Term Model : RMSE", adj = 0)
+dev.off()
+```
+
+
+
+## CRPS Plots
+
+```{r}
+NEcprs.range <- range(NE.cprs)
+SEcprs.range <- range(SE.cprs)
+
+plot(1:57, NEconst.cprs, pch = 16,
+     ylim = NEcprs.range)
+plot(1:57, SEconst.cprs, pch = 16,
+     ylim = SEcprs.range)
+```
+
+```{r boxplot_cprs}
+cprs.range <- range(NEbase.cprs, NEconst.cprs, 
+                    NEbase.cprs, SEconst.cprs)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "base_cprs.png", width = 2000, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 5))
+#base (no split)
+boxplot(NEgroup1.base.cprs, NEgroup2.base.cprs, NEgroup3.base.cprs,
+        SEgroup1.base.cprs, SEgroup2.base.cprs, SEgroup3.base.cprs, pch = 19,
+        ylim = cprs.range, ylab = "CRPS", axes = FALSE)
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Full Model : CRPS", adj = 0)
+dev.off()
+
+png(filename = "constant_cprs.png", width = 2000, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.cprs, NEgroup2.cprs, NEgroup3.cprs, 
+        SEgroup1.cprs, SEgroup2.cprs, SEgroup3.cprs, pch = 19,
+         ylim = cprs.range, ylab = "CRPS")
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : CRPS", adj = 0)
 dev.off()
 ```
 
@@ -1678,6 +1831,43 @@ plot(1:57, SEconst.int, pch = 16,
      ylim = SEints.range)
 ```
 
+```{r boxplots_intscore}
+ints.range <- range(NEbase.int, NEconst.int, 
+                    NEbase.int, SEconst.int)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "base_int.png", width = 2000, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 5))
+#base (no split)
+boxplot(NEgroup1.base.ints, NEgroup2.base.ints, NEgroup3.base.ints,
+        SEgroup1.base.ints, SEgroup2.base.ints, SEgroup3.base.ints, pch = 19,
+        ylim = ints.range, ylab = "Interval Score", axes = FALSE)
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Full Model : 95% Interval Score", adj = 0)
+dev.off()
+
+
+png(filename = "constant_int.png", width = 2000, height = 1200, res = 250)
+#constant terms
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.ints, NEgroup2.ints, NEgroup3.ints,
+        SEgroup1.ints, SEgroup2.ints, SEgroup3.ints, pch = 19,
+        ylim = ints.range, ylab = "Interval Score", axes = FALSE)
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : 95% Interval Score", adj = 0)
+dev.off()
+
+```
+
+
 
 
 ## Model Fits
@@ -1693,10 +1883,6 @@ plot(SE.lms[[1]])
 plot(SE.lms[[2]])
 plot(SE.lms[[3]])
 ```
-
-
-
-## Constant Structure
 
 
 
