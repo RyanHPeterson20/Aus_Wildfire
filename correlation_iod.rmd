@@ -231,36 +231,100 @@ ccf(as.numeric(olrSE_ts), as.numeric(etio_ts), type = "correlation",
 
 ### OLR and Others
 
+x[t+k] and y[t]
+
 ```{r}
+ccf.lim <- c(-0.2, 0.4)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+#Ne OLr
+png(filename = "neolr_nino.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
 ccf(as.numeric(olrNE_ts), as.numeric(nino_ts), type = "correlation", 
-    lag = 52, plot = FALSE)
+    lag = 52, ylab = "cross-correlation", main = "",
+    xlim = c(0,52), ylim = ccf.lim)
+title("NE Aus : OLR & Nino", adj = 0)
+dev.off()
 
-ccf(as.numeric(olrNE_ts), as.numeric(nino_ts), type = "correlation", 
-    lag = 52, main = " NE Aus : OLR & Nino", ylab = "cross-correlation")
-    #xlim = c(0,52))
+png(filename = "neolr_dmi.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
+ccf(as.numeric(olrNE_ts), as.numeric(dmi_ts), type = "correlation", 
+    lag = 52, ylab = "cross-correlation", main = "",
+    xlim = c(0,52), ylim = ccf.lim)
+title("NE Aus : OLR & DMI", adj = 0)
+dev.off()
 
+png(filename = "neolr_tsa.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
+ccf(as.numeric(olrNE_ts), as.numeric(tsa_ts), type = "correlation", 
+    lag = 52, ylab = "cross-correlation", main = "",
+    xlim = c(0,52), ylim = ccf.lim)
+title("NE Aus : OLR & TSA", adj = 0)
+dev.off()
 
+png(filename = "neolr_aao.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
+ccf(as.numeric(olrNE_ts), as.numeric(aao_ts), type = "correlation", 
+    lag = 52, ylab = "cross-correlation", main = "",
+    xlim = c(0,52), ylim = ccf.lim)
+title("NE Aus : OLR & SAM (AAO)", adj = 0)
+dev.off()
+
+#se olr
+png(filename = "seolr_nino.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
 ccf(as.numeric(olrSE_ts), as.numeric(nino_ts), type = "correlation", 
-    lag = 52, main = " OLR:SE Aus & Nino",
-    xlim = c(0,52))
+    lag = 52, main = "",
+    ylab = "cross-correlation",
+    xlim = c(0,52), ylim = ccf.lim)
+title("SE Aus : OLR & Nino", adj = 0)
+dev.off()
 
+png(filename = "seolr_tsa.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
+ccf(as.numeric(olrSE_ts), as.numeric(tsa_ts), type = "correlation", 
+    lag = 52, main = "",
+    ylab = "cross-correlation",
+    xlim = c(0,52), ylim = ccf.lim)
+title("SE Aus : OLR & TSA", adj = 0)
+dev.off()
+
+png(filename = "seolr_aao.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
 ccf(as.numeric(olrSE_ts), as.numeric(aao_ts), type = "correlation", 
-    lag = 52, main = " OLR:SE Aus & SAM (AAO)",
-    xlim = c(0,52))
+    lag = 52, main = "",
+    ylab = "cross-correlation",
+    xlim = c(0,52), ylim = ccf.lim)
+title("SE Aus : OLR & SAM (AAO)", adj = 0)
+dev.off()
 
-
-ccf(as.numeric(olrSE_ts), as.numeric(etio_ts), type = "correlation", 
-    lag= 52, main = " OLR:SE Aus & ETIO",
-    xlim = c(0,52))
-
+png(filename = "seolr_dmi.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
 ccf(as.numeric(olrSE_ts), as.numeric(dmi_ts), type = "correlation", 
-    lag= 52, main = " OLR:SE Aus & DMI",
-    xlim = c(0,52))
+    lag = 52, main = "",
+    ylab = "cross-correlation",
+    xlim = c(0,52), ylim = ccf.lim)
+title("SE Aus : OLR & DMI", adj = 0)
+dev.off()
 
+png(filename = "seolr_wtio.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
 ccf(as.numeric(olrSE_ts), as.numeric(wtio_ts), type = "correlation", 
-    lag= 52, main = "SE Aus: OLR & WTIO", ylab = "cross-correlation")
-    #xlim = c(0,52))
+    lag = 52, main = "",
+    ylab = "cross-correlation",
+    xlim = c(0,52), ylim = ccf.lim)
+title("SE Aus : OLR & WTIO", adj = 0)
+dev.off()
 
+png(filename = "seolr_etio.png", width = 2400, height = 1200, res = 250)
+par(mar = c(5, 5, 3, 3))
+ccf(as.numeric(olrSE_ts), as.numeric(etio_ts), type = "correlation", 
+    lag = 52, main = "",
+    ylab = "cross-correlation",
+    xlim = c(0,52), ylim = ccf.lim)
+title("SE Aus : OLR & ETIO", adj = 0)
+dev.off()
 
 ```
 

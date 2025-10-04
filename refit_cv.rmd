@@ -674,7 +674,7 @@ save(NEAus1.eBIC, NEAus2.eBIC, NEAus3.eBIC,
 
 base, noOLR, and eBIC models
 
-```{r model_summaries}
+```{r model_summ_NEAus}
 #get eBIC gamma val 
 ##gamma_seq[2] #0.091
 
@@ -697,8 +697,45 @@ summ(NE1.eBIC.3, confint = TRUE, digits = 3)
 export_summs(NE1, NE1.eBIC.3, scale = FALSE, 
              error_format = "[{conf.low}, {conf.high}]")
 
+#NE Aus Group 2
+NE2 <- NE.lms[[2]]
+NE2.noOLR <- NE.lm.noOLR[[2]]
+
+export_summs(NE2, NE2.noOLR, scale = FALSE, 
+             error_format = "[{conf.low}, {conf.high}]")
+
+
+#NE Aus Group 3
+NE3 <- NE.lms[[3]]
+NE3.noOLR <- NE.lm.noOLR[[3]]
+
+export_summs(NE3, NE3.noOLR, scale = FALSE, 
+             error_format = "[{conf.low}, {conf.high}]")
 ```
 
+```{r model_summ_SEAus}
+#SE Aus Group 1
+SE1 <- SE.lms[[1]]
+SE1.noOLR <- SE.lm.noOLR[[1]]
+
+export_summs(SE1, SE1.noOLR, scale = FALSE, 
+             error_format = "[{conf.low}, {conf.high}]")
+
+
+#SE Aus Group 2
+SE2 <- SE.lms[[2]]
+SE2.noOLR <- SE.lm.noOLR[[2]]
+
+export_summs(SE2, SE2.noOLR, scale = FALSE, 
+             error_format = "[{conf.low}, {conf.high}]")
+
+#SE Aus Group 3
+SE3 <- SE.lms[[3]]
+SE3.noOLR <- SE.lm.noOLR[[3]]
+
+export_summs(SE3, SE3.noOLR, scale = FALSE, 
+             error_format = "[{conf.low}, {conf.high}]")
+```
 
 
 
@@ -783,6 +820,38 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load( "model_refits.rda")
 ```
 
+### Refit - LOO no OLR
+
+```{r NErefit_sansOLR}
+#Test work, finalize with loop when done.
+#TODO: finalize this for all years
+
+j <- 19
+seasons[j]
+temp.resp <- NEpartial_resp[[j]]
+temp.preds <- NEpartial_preds[[j]]
+
+#for (k in 1:length(temp.preds)) {
+k <- 2
+temp.y <- as.numeric(temp.resp[[k]])
+#without OLR
+temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:260]))
+
+    temp.fit <- RAMP(X = temp.X, y = temp.y,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+    #terms only
+terms_only(temp.fit, temp.X)
+refit_ramp(temp.fit, temp.X)
+#refit_ramp(NEmodels[[k]], temp.X)
+```
+
+### Refit - eBIC
+
+```{r NErefit_eBIC}
+
+```
 
 
 ## Comparison to Base
@@ -1051,7 +1120,6 @@ dev.off()
 
 # Model Validation
 
-RMSE, ....
 
 ```{r test_model_fits}
 #NE Aus Group 1
@@ -1195,6 +1263,10 @@ SE.lms <- list(SE1.lm, SE2.lm, SE3.lm)
 
 
 ## LOO Validation
+
+Includes:
+rmse, crps, Int score
+TODO: add in OOS adj. R^2
 
 ```{r model_fits_validation}
 
@@ -1378,6 +1450,12 @@ for (i in 1:length(seasons)) {
 }
 
 ```
+
+```{r test_oosR2}
+#TODO: get out of sample R2 working then merge it into previous block validation code.
+
+```
+
 
 ### Model Summaries
 
