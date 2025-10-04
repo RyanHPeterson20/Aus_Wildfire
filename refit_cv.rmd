@@ -400,7 +400,7 @@ NE3.lm.noOLR <- lm(formula(NE3.refit.noOLR), lm.data_3)
 summary(NE3.lm.noOLR)
 
 NErefit.noOLR <- list(NE1.refit.noOLR, NE2.refit.noOLR, NE3.refit.noOLR)
-
+NE.lm.noOLR <- list(NE1.lm.noOLR, NE2.lm.noOLR, NE3.lm.noOLR)
 
 ```
 
@@ -473,9 +473,16 @@ SE3.lm.noOLR <- lm(formula(SE3.refit.noOLR), lm.data_3)
 summary(SE3.lm.noOLR)
 
 SErefit.noOLR <- list(SE1.refit.noOLR, SE2.refit.noOLR, SE3.refit.noOLR)
-
+SE.lm.noOLR <- list(SE1.lm.noOLR, SE2.lm.noOLR, SE3.lm.noOLR)
 
 ```
+
+```{r save_noOLR}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NE.lm.noOLR, SE.lm.noOLR, 
+     NErefit.noOLR, SErefit.noOLR, file = "models_noOLR.rda")
+```
+
 
 
 # Refit w/ eBIC
@@ -654,6 +661,44 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NEAus1.eBIC, NEAus2.eBIC, NEAus3.eBIC,
       SEAus1.eBIC, SEAus2.eBIC, SEAus3.eBIC, file = "models_ebic.rda")
 ```
+
+# Refit w/ eBIC no OLR
+
+```{r NEaus_ebic_noOLR}
+
+```
+
+
+
+### Direct Comparison
+
+base, noOLR, and eBIC models
+
+```{r model_summaries}
+#get eBIC gamma val 
+##gamma_seq[2] #0.091
+
+#NE Aus Group 1
+NE1 <- NE.lms[[1]]
+NE1.noOLR <- NE.lm.noOLR[[1]]
+NE1.eBIC.1 <- NEAus1.eBIC[[1]] #gamma = 0.091
+NE1.eBIC.2 <- NEAus1.eBIC[[2]] #gamma = 0.182
+NE1.eBIC.3 <- NEAus1.eBIC[[3]] #gamma = 0.273
+
+summ(NE1, confint = TRUE, digits = 3, vifs = TRUE)
+summ(NE1.noOLR, confint = TRUE, digits = 3, vifs = TRUE)
+#summ(NE1.eBIC.1, confint = TRUE, digits = 3)
+summ(NE1.eBIC.3, confint = TRUE, digits = 3)
+
+#export_summs(NE1, NE1.noOLR, scale = FALSE, 
+#             error_format = "[{conf.low}, {conf.high}]", 
+#             model.names = c("NE Group 1","NE Group 1 (w/o OLR)"))
+
+export_summs(NE1, NE1.eBIC.3, scale = FALSE, 
+             error_format = "[{conf.low}, {conf.high}]")
+
+```
+
 
 
 
@@ -1429,7 +1474,7 @@ SEAus3_weeks <- season_weeks[21:32]
 #etio_lag42
 NEAus1_lag42 <- NEAus1_weeks - 42
 NEAus1_lag42 <- sapply(NEAus1_lag42, function(x) ifelse(x <=0, x + 52, x)) 
-NEAus1_lag42    
+NEAus1_lag42
 
 #NE Aus 2
 #wtio_lag30
@@ -1497,26 +1542,119 @@ SEAus3_lag15
 #organize data
 
 #wtio first
-wtio.names <- c("NEAus2:wtiolag30", "SEAus1:wtiolag4",  "SEAus1:wtiolag5", "SEAus1:wtiolag13") #,
-               # "SEAus2:wtiolag14", "SEAus2:wtiolag46", "SEAus3:wtiolag1")
-wtio.start <- c(NEAus2_lag30[1], min(SEAus1_lag4),  min(SEAus1_lag5),  min(SEAus1_lag13))
-wtio.end <- c(NEAus2_lag30[length(NEAus2_lag30)], max(SEAus1_lag4),  max(SEAus1_lag5),  max(SEAus1_lag13))
+wtio.names <- c("NEAus2:wtiolag30", "SEAus1:wtiolag4",  "SEAus1:wtiolag5", "SEAus1:wtiolag13",
+               "SEAus2:wtiolag14", "SEAus2:wtiolag46", "SEAus3:wtiolag1")
+wtio.start <- c(NEAus2_lag30[1], min(SEAus1_lag4),  min(SEAus1_lag5),  min(SEAus1_lag13), 
+                min(SEAus2_lag14), min(SEAus2_lag46), min(SEAus3_lag1))
+wtio.end <- c(NEAus2_lag30[length(NEAus2_lag30)], max(SEAus1_lag4),  max(SEAus1_lag5),  max(SEAus1_lag13), 
+              max(SEAus2_lag14), max(SEAus2_lag46), max(SEAus3_lag1))
 wtio.lag.df <- data.frame(lag = wtio.names, start = wtio.start, end = wtio.end)
+wtio.lag.df <- wtio.lag.df[nrow(wtio.lag.df):1, ]
+
+#etio lags
+etio.names <- c("NEAus1:etiolag42",  "NEAus2:etiolag4", "NEAus3:etiolag19", "SEAus1:etiolag31",
+                "SEAus2:etiolag7", "SEAus2:etiolag33", "SEAus3:etiolag15")
+etio.start <- c(NEAus1_lag42[1],  min(NEAus2_lag4), min(NEAus3_lag19), min(SEAus1_lag31),
+                min(SEAus2_lag7), min(SEAus2_lag33), min(SEAus3_lag15))
+etio.end <- c(max(NEAus1_lag42), max(NEAus2_lag4), max(NEAus3_lag19), max(SEAus1_lag31),
+              max(SEAus2_lag7), max(SEAus2_lag33), max(SEAus3_lag15))
+etio.lag.df <- data.frame(lag = etio.names, start = etio.start, end = etio.end)
+etio.lag.df <- etio.lag.df[nrow(etio.lag.df):1, ]
+
+etio.overlap <- c(length(etio.names), min(NEAus1_lag42), NEAus1_lag42[length(NEAus1_lag42)])
+
 
 ```
+
+```{r coef_setup}
+coef.etio <- NULL
+coef.etio <- NULL
+
+NE1 <- NE.lms[[1]]
+coef.etio <- NE1$coefficients[3] #etio_lag42 
+
+NE2 <- NE.lms[[2]]
+coef.wtio <- NE2$coefficients[5] #wtio_lag30 
+coef.etio <- c(coef.etio, NE2$coefficients[6] ) #etio_lag4 
+
+NE3 <- NE.lms[[3]]
+coef.etio <- c(coef.etio, NE3$coefficients[3] ) #etio_lag19 
+
+SE1 <- SE.lms[[1]]
+#SE1$coefficients
+coef.wtio <- c(coef.wtio, SE1$coefficients[4]) #wtio_lag4
+coef.wtio <- c(coef.wtio, SE1$coefficients[5]) #wtio_lag5 
+coef.wtio <- c(coef.wtio, SE1$coefficients[6]) #wtio_lag13            
+coef.etio <- c(coef.etio, SE1$coefficients[7]) #etio_lag31 
+
+SE2 <- SE.lms[[2]]
+#SE2$coefficients
+coef.wtio <- c(coef.wtio, SE2$coefficients[3]) #wtio_lag14
+coef.wtio <- c(coef.wtio, SE2$coefficients[4]) #wtio_lag46
+coef.etio <- c(coef.etio, SE2$coefficients[5]) #etio_lag7 
+coef.etio <- c(coef.etio, SE2$coefficients[6]) #etio_lag33 
+
+SE3 <- SE.lms[[3]]
+#SE3$coefficients
+coef.wtio <- c(coef.wtio, SE3$coefficients[5]) #wtio_lag1
+coef.etio <- c(coef.etio, SE3$coefficients[6]) #etio_lag15 
+
+#get colors
+coef.range <- range(coef.wtio, coef.etio)
+abs.max.coef <- max(abs(coef.range))
+#try PiYG
+cols.PiG48 <- rev(colorRampPalette(brewer.pal(11, "Spectral"))(36))
+col.seq.PiG48 <- c(-abs.max.coef, seq(-2.5,2.5, length.out =length(cols.PiG48) - 1), abs.max.coef )
+col.brks <- c(-2.5-0.1470588, seq(-2.5,2.5, length.out =length(cols.PiG48) - 1), 2.5+0.1470588)
+
+col.coef.etio <- cols.PiG48[findInterval(coef.etio, col.seq.PiG48)]
+col.coef.wtio <- cols.PiG48[findInterval(coef.wtio, col.seq.PiG48)]
+
+```
+
 
 ```{r overlap_figures}
 #TODO: test case, update later
 
-par(mar = c(4, 9, 3, 3))
-plot(NULL, xlim = c(1,52), ylim = c(1, length(wtio.names)),
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "wtio_lag.png", width = 2000, height = 1200, res = 250)
+par(mar = c(4, 9, 3, 6))
+plot(NULL, xlim = c(1,52), ylim = c(0.5, length(wtio.names)),
      yaxt = "n", xlab = "Week", ylab = "", main = "")
+image.plot(zlim = c(-2.75, 2.75), legend.only = TRUE, col = cols.PiG48,
+           breaks = col.brks, horizontal = FALSE,  legend.args = list( text = "Coef", side = 1),
+           axis.args = list(at = seq(-2.5, 2.5, 0.5)))
+           #smallplot = c(0.1, 0.9, 0.08, 0.10))
 axis(2, at = 1:length(wtio.lag.df$lag), labels = wtio.lag.df$lag, las = 1)
 segments(x0 = wtio.lag.df$start, y0 = 1:length(wtio.lag.df$start),
          x1 = wtio.lag.df$end,  y1 = 1:length(wtio.lag.df$end),
-         lwd = 3, col = "firebrick3")
+         lwd = 5, col = rev(col.coef.wtio))
 abline(h = 1:length(wtio.lag.df$start), lty = 3, col = "gray70")
 abline(v = c(9.5, 22.5, 35.5, 48.9), lty = 2, col = "gray48")
+text(x =c(4.75, 16, 29, 42 ), y = 0.5,  labels = c("DJF", "MAM", "JJA", "SON" ))
+title("WTIO Lags", adj = 0)
+dev.off()
+
+png(filename = "etio_lag.png", width = 2000, height = 1200, res = 250)
+par(mar = c(4, 9, 3, 6))
+plot(NULL, xlim = c(1,52), ylim = c(0.5, length(etio.names)),
+     yaxt = "n", xlab = "Week", ylab = "", main = "")
+image.plot(zlim = c(-2.75, 2.75), legend.only = TRUE, col = cols.PiG48,
+           breaks = col.brks, horizontal = FALSE, legend.args = list( text = "Coef", side = 1),
+           axis.args = list(at = seq(-2.5, 2.5, 0.5)))
+axis(2, at = 1:length(etio.lag.df$lag), labels = etio.lag.df$lag, las = 1)
+segments(x0 = etio.lag.df$start, y0 = 1:length(etio.lag.df$start),
+         x1 = etio.lag.df$end,  y1 = 1:length(etio.lag.df$end),
+         lwd = 5, col =rev(col.coef.etio))
+segments(x0 = etio.overlap[2], y0 = etio.overlap[1],
+         x1 = etio.overlap[3],  y1 = etio.overlap[1],
+         lwd = 5, col = col.coef.etio[1])
+abline(h = 1:length(etio.lag.df$start), lty = 3, col = "gray70")
+abline(v = c(9.5, 22.5, 35.5, 48.9), lty = 2, col = "gray48")
+text(x =c(4.75, 16, 29, 42 ), y = 0.5,  labels = c("DJF", "MAM", "JJA", "SON" ))
+title("ETIO Lags", adj = 0)
+dev.off()
 ```
 
 

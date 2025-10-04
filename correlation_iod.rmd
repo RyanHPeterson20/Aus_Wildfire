@@ -229,6 +229,40 @@ ccf(as.numeric(olrSE_ts), as.numeric(etio_ts), type = "correlation",
 
 ```
 
+### OLR and Others
+
+```{r}
+ccf(as.numeric(olrNE_ts), as.numeric(nino_ts), type = "correlation", 
+    lag = 52, plot = FALSE)
+
+ccf(as.numeric(olrNE_ts), as.numeric(nino_ts), type = "correlation", 
+    lag = 52, main = " NE Aus : OLR & Nino", ylab = "cross-correlation")
+    #xlim = c(0,52))
+
+
+ccf(as.numeric(olrSE_ts), as.numeric(nino_ts), type = "correlation", 
+    lag = 52, main = " OLR:SE Aus & Nino",
+    xlim = c(0,52))
+
+ccf(as.numeric(olrSE_ts), as.numeric(aao_ts), type = "correlation", 
+    lag = 52, main = " OLR:SE Aus & SAM (AAO)",
+    xlim = c(0,52))
+
+
+ccf(as.numeric(olrSE_ts), as.numeric(etio_ts), type = "correlation", 
+    lag= 52, main = " OLR:SE Aus & ETIO",
+    xlim = c(0,52))
+
+ccf(as.numeric(olrSE_ts), as.numeric(dmi_ts), type = "correlation", 
+    lag= 52, main = " OLR:SE Aus & DMI",
+    xlim = c(0,52))
+
+ccf(as.numeric(olrSE_ts), as.numeric(wtio_ts), type = "correlation", 
+    lag= 52, main = "SE Aus: OLR & WTIO", ylab = "cross-correlation")
+    #xlim = c(0,52))
+
+
+```
 
 
 ## Updated EDA TS Figures
