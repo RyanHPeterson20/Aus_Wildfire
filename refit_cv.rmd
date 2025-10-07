@@ -3791,9 +3791,9 @@ NE3.coef
 NE3.constcoef
 NE3.varycoef
 
-#setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
-#png(filename = "NE3_oct.png", width = 3000, height = 3200, res = 300)
+png(filename = "NE3_oct.png", width = 3000, height = 3200, res = 300)
 
 #TODO: add in an extra row of plots if needed
 layout(matrix(c(1, 6,
@@ -3856,6 +3856,512 @@ NEAus3_absmax <- max(abs(range(NE3.coef,
                       NE3.constcoef,
                       NE3.varycoef)))
 NEAus3_range <- c(-NEAus3_absmax, NEAus3_absmax)
+
+# --- Plot 1: Nino ---
+par(mar = c(4, 4, 2, 1))
+
+plot(NE3_ninolag, NE3_ninocoef, pch = 22, 
+     col = "grey4", bg =  alpha("green4",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = NEAus3_range,
+     xlab = "", ylab = "")
+points(NE32_ninolag, NE32_ninocoef, pch = 22, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.5)
+points(NE33_ninolag, NE33_ninocoef, pch = 24, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("Nino", adj = 0)
+
+## --- Nino Interaction
+#nino_lag41:etio_lag19
+## base: NE3.coef[14]
+links[[1]] <- list(
+  y_val = NE3_ninocoef[1],
+  from_x = grconvertX(NE3_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant: NE3.constcoef[14]
+links[[2]] <- list(
+  y_val = NE32_ninocoef[1],
+  from_x = grconvertX(NE32_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_ninocoef[1], from = "user", to = "ndc")
+)
+
+#nino_lag41:tsa_lag19 
+## base: NE3.coef[15]
+links[[3]] <- list(
+  y_val = NE3_ninocoef[1],
+  from_x = grconvertX(NE3_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant: NE3.constcoef[15]
+links[[4]] <- list(
+  y_val = NE32_ninocoef[1],
+  from_x = grconvertX(NE32_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_ninocoef[1], from = "user", to = "ndc")
+)
+
+#nino_lag41:tsa_lag1
+## base: NE3.coef[16]
+links[[5]] <- list(
+  y_val = NE3_ninocoef[1],
+  from_x = grconvertX(NE3_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant: NE3.constcoef[16]
+links[[6]] <- list(
+  y_val = NE32_ninocoef[1],
+  from_x = grconvertX(NE32_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_ninocoef[1], from = "user", to = "ndc")
+)
+
+
+# --- Plot 2: WTIO & ETIO ---
+par(mar = c(4, 4, 2, 1))
+
+plot(NE33_wtiolag, NE33_wtiocoef, pch = 24, col = "black",
+     bg =  alpha("palevioletred2",.65) , cex = 1.33, 
+     xlim = c(1,52), 
+     ylim = NEAus3_range,
+     xlab = "", ylab = "")
+points(NE3_etiolag, NE3_etiocoef, pch = 22, 
+      col = "grey4", bg =  alpha("royalblue4",.95), cex = 1.5)
+points(NE32_etiolag, NE32_etiocoef, pch = 22, col = "black",
+       bg =  alpha("royalblue2",.65) , cex = 1.5)
+points(NE33_etiolag, NE33_etiocoef, pch = 24, col = "black",
+       bg =  alpha("royalblue2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("WTIO & ETIO", adj = 0)
+
+
+## --- WTIO Interactions
+# wtio_lag31:tsa_lag2
+#vary: NE3.varycoef[15]
+links[[7]] <- list(
+  y_val = NE33_wtiocoef[1],
+  from_x = grconvertX(NE33_wtiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE33_wtiocoef[1], from = "user", to = "ndc")
+)
+
+#wtio_lag31:tsa_lag52 
+# varying: NE3.varycoef[16]
+links[[8]] <- list(
+  y_val = NE33_wtiocoef[1],
+  from_x = grconvertX(NE33_wtiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE33_wtiocoef[1], from = "user", to = "ndc")
+)
+
+
+## --- ETIO Interactions
+# nino_lag41:etio_lag19, 
+## base: NE3.coef[14]
+links[[9]] <- list(
+  y_val = NE3_etiocoef[1],
+  from_x = grconvertX(NE3_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_etiocoef[1], from = "user", to = "ndc")
+)
+
+## constant: NE3.constcoef[14]
+links[[10]] <- list(
+  y_val = NE32_etiocoef[1],
+  from_x = grconvertX(NE32_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_etiocoef[1], from = "user", to = "ndc")
+)
+
+
+# etio_lag19:tsa_lag37, 
+## base: NE3.coef[17]
+links[[11]] <- list(
+  y_val = NE3_etiocoef[1],
+  from_x = grconvertX(NE3_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_etiocoef[1], from = "user", to = "ndc")
+)
+
+## constant: NE3.constcoef[17]
+links[[12]] <- list(
+  y_val = NE32_etiocoef[1],
+  from_x = grconvertX(NE32_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_etiocoef[1], from = "user", to = "ndc")
+)
+
+
+# etio_lag19:tsa_lag52
+## base: NE3.coef[13]
+links[[13]] <- list(
+  y_val = NE3_etiocoef[1],
+  from_x = grconvertX(NE3_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_etiocoef[1], from = "user", to = "ndc")
+)
+
+## constant: NE3.constcoef[13]
+links[[14]] <- list(
+  y_val = NE32_etiocoef[1],
+  from_x = grconvertX(NE32_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_etiocoef[1], from = "user", to = "ndc")
+)
+
+
+# --- Plot 3: TSA ---
+par(mar = c(4, 4, 2, 1))
+
+plot(NE3_tsalag, NE3_tsacoef, pch = 22, col = "black",
+       bg =  alpha("darkorange3", 0.95), xlim = c(1,52), cex = 1.4,
+     ylim = NEAus3_range,
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
+points(NE32_tsalag, NE32_tsacoef, pch = 22, col = "black",
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.5)
+points(NE33_tsalag, NE33_tsacoef, pch = 24, col = "black",
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("TSA", adj = 0)
+
+## --- TSA Interaction
+# wtio_lag31:tsa_lag2
+# varying NE3.varycoef[15]
+links[[15]] <- list(
+  y_val = NE33_tsacoef[1],
+  from_x = grconvertX(NE33_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE33_tsacoef[1], from = "user", to = "ndc")
+)
+
+
+#wtio_lag31:tsa_lag52  
+# (varying)  NE3.varycoef[16]
+links[[16]] <- list(
+  y_val = NE33_tsacoef[3],
+  from_x = grconvertX(NE33_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE33_tsacoef[3], from = "user", to = "ndc")
+)
+
+##base/constant:
+#  I(tsa_lag19^2)
+# base: NE3.coef[12]
+links[[17]] <- list(
+  y_val = NE3_tsacoef[2],
+  from_x = grconvertX(NE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[2], from = "user", to = "ndc")
+)
+
+#constant: NE3.constcoef[12]
+links[[18]] <- list(
+  y_val = NE32_tsacoef[2],
+  from_x = grconvertX(NE32_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[2], from = "user", to = "ndc")
+)
+
+
+#etio_lag19:tsa_lag37,
+#base: NE3.coef[17]
+links[[19]] <- list(
+  y_val = NE3_tsacoef[3],
+  from_x = grconvertX(NE3_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[3], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[17]
+links[[20]] <- list(
+  y_val = NE32_tsacoef[3],
+  from_x = grconvertX(NE32_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[3], from = "user", to = "ndc")
+)
+
+#etio_lag19:tsa_lag52, 
+#base: NE3.coef[13]
+links[[21]] <- list(
+  y_val = NE3_tsacoef[4],
+  from_x = grconvertX(NE3_tsalag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[4], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[13]
+links[[22]] <- list(
+  y_val = NE32_tsacoef[4],
+  from_x = grconvertX(NE32_tsalag[4], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[4], from = "user", to = "ndc")
+)
+
+
+#nino_lag41:tsa_lag19, 
+#base: NE3.coef[15]
+links[[23]] <- list(
+  y_val = NE3_tsacoef[2],
+  from_x = grconvertX(NE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[2], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[15]
+links[[24]] <- list(
+  y_val = NE32_tsacoef[2],
+  from_x = grconvertX(NE32_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[2], from = "user", to = "ndc")
+)
+
+
+#nino_lag41:tsa_lag1, 
+#base: NE3.coef[16]
+links[[25]] <- list(
+  y_val = NE3_tsacoef[1],
+  from_x = grconvertX(NE3_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[1], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[16]
+links[[26]] <- list(
+  y_val = NE32_tsacoef[1],
+  from_x = grconvertX(NE32_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[1], from = "user", to = "ndc")
+)
+
+
+#tsa_lag19:tsa_lag1 
+#base: NE3.coef[18]
+links[[27]] <- list(
+  y_val = NE3_tsacoef[2],
+  from_x = grconvertX(NE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[2], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[18]
+links[[28]] <- list(
+  y_val = NE32_tsacoef[2],
+  from_x = grconvertX(NE32_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[2], from = "user", to = "ndc")
+)
+
+#base: NE3.coef[18]
+links[[29]] <- list(
+  y_val = NE3_tsacoef[1],
+  from_x = grconvertX(NE3_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[1], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[18]
+links[[30]] <- list(
+  y_val = NE32_tsacoef[1],
+  from_x = grconvertX(NE32_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[1], from = "user", to = "ndc")
+)
+
+# tsa_lag19:tsa_lag37  
+#base: NE3.coef[20]
+links[[31]] <- list(
+  y_val = NE3_tsacoef[2],
+  from_x = grconvertX(NE3_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[2], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[20]
+links[[32]] <- list(
+  y_val = NE32_tsacoef[3],
+  from_x = grconvertX(NE32_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[3], from = "user", to = "ndc")
+)
+
+#base: NE3.coef[20]
+links[[33]] <- list(
+  y_val = NE3_tsacoef[3],
+  from_x = grconvertX(NE3_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[3], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[20]
+links[[34]] <- list(
+  y_val = NE32_tsacoef[3],
+  from_x = grconvertX(NE32_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[3], from = "user", to = "ndc")
+)
+ 
+#tsa_lag37:aao_lag43   
+#base: NE3.coef[21]
+links[[35]] <- list(
+  y_val = NE3_tsacoef[3],
+  from_x = grconvertX(NE3_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[3], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[21]
+links[[36]] <- list(
+  y_val = NE32_tsacoef[3],
+  from_x = grconvertX(NE32_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[3], from = "user", to = "ndc")
+)
+
+#tsa_lag37:aao_lag44 
+#base: NE3.coef[22]
+links[[37]] <- list(
+  y_val = NE3_tsacoef[3],
+  from_x = grconvertX(NE3_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[3], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[22]
+links[[38]] <- list(
+  y_val = NE32_tsacoef[3],
+  from_x = grconvertX(NE32_tsalag[3], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[3], from = "user", to = "ndc")
+)
+
+## tsa_lag1:NEolr_lag32  
+#base: NE3.coef[19]
+links[[39]] <- list(
+  y_val = NE3_tsacoef[1],
+  from_x = grconvertX(NE3_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_tsacoef[1], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[19]
+links[[40]] <- list(
+  y_val = NE32_tsacoef[1],
+  from_x = grconvertX(NE32_tsalag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_tsacoef[1], from = "user", to = "ndc")
+)
+
+
+# --- Plot 4: SAM/AAO ---
+par(mar = c(4, 4, 2, 1))
+plot(NE3_aaolag, NE3_aaocoef, pch = 22,
+     col = "grey4",
+     bg =  alpha("red3",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = NEAus3_range,
+     xlab = "", ylab = "")
+points(NE32_aaolag, NE32_aaocoef, pch = 22, col = "black",
+       bg =  alpha("coral2",.65) , cex = 1.5)
+points(NE33_aaolag, NE33_aaocoef, pch = 24, col = "black",
+       bg =  alpha("coral2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("SAM (AAO)", adj = 0)
+
+## --- AAO Interactions
+# tsa_lag37:aao_lag43   
+#base: NE3.coef[21]
+links[[41]] <- list(
+  y_val = NE3_aaocoef[1],
+  from_x = grconvertX(NE3_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_aaocoef[1], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[21]
+links[[42]] <- list(
+  y_val = NE32_aaocoef[1],
+  from_x = grconvertX(NE32_aaolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_aaocoef[1], from = "user", to = "ndc")
+)
+
+# tsa_lag37:aao_lag44
+#base: NE3.coef[22]
+links[[43]] <- list(
+  y_val = NE3_aaocoef[2],
+  from_x = grconvertX(NE3_aaolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_aaocoef[2], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[21]
+links[[44]] <- list(
+  y_val = NE32_aaocoef[2],
+  from_x = grconvertX(NE32_aaolag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_aaocoef[2], from = "user", to = "ndc")
+)
+
+
+# --- Plot 5: OLR ---
+par(mar = c(4, 4, 2, 1))
+plot(NE3_olrlag, NE3_olrcoef, pch = 22, col = "black",
+       bg =  alpha("turquoise4", 0.95), xlim = c(1,52), cex = 1.4,
+     ylim = NEAus3_range,
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
+points(NE32_olrlag-0.125, NE32_olrcoef, pch = 22, col = "black",
+       bg =  alpha("paleturquoise3",.65) , cex = 1.5)
+abline(h = 0, lty = 2)
+title("OLR", adj = 0)
+
+## --- OLR Interactions
+# tsa_lag1:NEolr_lag32
+#base: NE3.coef[19]
+links[[45]] <- list(
+  y_val = NE3_olrcoef[2],
+  from_x = grconvertX(NE3_olrlag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE3_olrcoef[2], from = "user", to = "ndc")
+)
+
+#const: NE3.constcoef[19]
+links[[46]] <- list(
+  y_val = NE32_olrcoef[2],
+  from_x = grconvertX(NE32_olrlag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE32_olrcoef[2], from = "user", to = "ndc")
+)
+
+
+
+# --- Plot 6: Interaction Effects ---
+par(mar = c(4, 4, 2, 2))
+
+plot(NE3.coef[1], 0, type = "n", main = "", 
+     ylim = c(0,1), xlim = NEAus3_range,
+     xlab = "Coefficients", cex.lab = 1.33,
+     yaxt = "n",  ylab = "")
+abline(v= 0, lty = 2)
+
+
+
+
+
+#outer text and legends
+par(xpd = NA)
+legend("topright", inset = c(-0.45, 0.00),
+       title = "Nino",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("green4",  "chartreuse2", "chartreuse2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.45, 0.2),
+       title = "WTIO",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("magenta4",  "palevioletred2", "palevioletred2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.45, 0.3),
+       title = "ETIO",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("royalblue4",  "royalblue2", "royalblue2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("right", inset = c(-0.45, 0.00),
+       title = "TSA",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4","grey4", "grey4"),
+       pt.bg = c("darkorange3",  "darkgoldenrod2",  "darkgoldenrod2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.45, 0.26),
+       title = "SAM (AAO)",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4","grey4","grey4"),
+       pt.bg = c("red3",  "coral2",  "coral2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.45, 0.05),
+       title = "OLR",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("turquoise4",  "paleturquoise3", "paleturquoise3"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+mtext("NE Aus Group 3 (Weeks 52, 1-14)", outer = TRUE, cex = 1.5, font = 1)
+
+dev.off()
+
+
 ```
 
 
