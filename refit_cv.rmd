@@ -1439,12 +1439,12 @@ TODO: add in OOS adj. R^2
 ## LOO model w/ varying terms: NE.model.list
 
 #rmse 
-#TODO: functionalize this so I can repeat for other setups
 NE.rmse <- NULL
 NE.cprs <- NULL
 NE.ints <- NULL
 NE.const.LM <- NULL #linear models
 NE.vary.LM <- NULL
+NE.pred.int <- NULL
 for (i in 1:length(seasons)) {
   fit.resp <- NEpartial_resp[[i]]
   fit.preds <- NEpartial_preds[[i]]
@@ -1457,13 +1457,19 @@ for (i in 1:length(seasons)) {
   year.varying <- NE.model.list[[i]]
   
   #add in lists/matrices
-  NE.loo <- NULL #
+  NE.loo <- NULL #constant linear models
+  NE.var <- NULL #varying linear models
   NErmse.yearly <- matrix(NA, ncol = 3)
   colnames(NErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
   NEcprs.yearly <- matrix(NA, ncol = 3)
   colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
   NEis.yearly <- matrix(NA, ncol = 3)
   colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NE.intervals <- matrix(NA, ncol = 10)
+  colnames(NE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
+                              "const.fit", "const.lwr", "const.upr",
+                              "vary.fit", "vary.lwr", "vary.upr")
+  
   #groups/clusters below
   for (j in 1:3) {
     #lm fit data setup
@@ -1520,14 +1526,20 @@ for (i in 1:length(seasons)) {
     IS.temp.mat <- cbind(is.base, is.const, is.vary)
     NEis.yearly <- rbind(NEis.yearly, IS.temp.mat)
     
+    #assign models
     NE.loo[[j]] <- temp.lm.constant
+    NE.var[[j]] <- temp.lm.varying
+    
+    #assign predictions
+    NE.intervals <- rbind(NE.intervals, cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))
   }
   #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
   NE.rmse[[seasons[i]]] <- as.data.frame(NErmse.yearly[-1, ])
   NE.cprs[[seasons[i]]] <- as.data.frame(NEcprs.yearly[-1, ])
   NE.ints[[seasons[i]]] <- as.data.frame(NEis.yearly[-1, ])
   NE.const.LM[[seasons[i]]] <- NE.loo
-  
+  NE.vary.LM[[seasons[i]]] <- NE.var
+  NE.pred.int[[seasons[i]]] <- as.data.frame(NE.intervals[-1, ])
 }
 
 
@@ -1538,6 +1550,7 @@ SE.cprs <- NULL
 SE.ints <- NULL
 SE.const.LM <- NULL #linear models
 SE.vary.LM <- NULL
+SE.pred.int <- NULL
 for (i in 1:length(seasons)) {
   fit.resp <- SEpartial_resp[[i]]
   fit.preds <- SEpartial_preds[[i]]
@@ -1550,14 +1563,18 @@ for (i in 1:length(seasons)) {
   year.varying <- SE.model.list[[i]]
   
   #add in lists/matrices
-  SE.loo <- NULL #
-  SE.var <- NULL 
+  SE.loo <- NULL #constant linear models
+  SE.var <- NULL #varying linear models
   SErmse.yearly <- matrix(NA, ncol = 3)
   colnames(SErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
   SEcprs.yearly <- matrix(NA, ncol = 3)
   colnames(SEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
   SEis.yearly <- matrix(NA, ncol = 3)
   colnames(SEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SE.intervals <- matrix(NA, ncol = 10)
+  colnames(SE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
+                              "const.fit", "const.lwr", "const.upr",
+                              "vary.fit", "vary.lwr", "vary.upr")
   #groups/clusters below
   for (j in 1:3) {
     #lm fit data setup
@@ -1580,6 +1597,11 @@ for (i in 1:length(seasons)) {
     pred.base <- predict(SE.lms[[j]], X.valid, se.fit = TRUE)
     pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
     pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
+    
+    #prediction interval
+    pred.base.interval <- predict(SE.lms[[j]], X.valid, interval = "prediction")
+    pred.const.interval <- predict(temp.lm.constant, X.valid, interval = "prediction")
+    pred.vary.interval <- predict(temp.lm.varying, X.valid, interval = "prediction")    
     
     y.pred.base <- pred.base$fit 
     y.pred.const <- pred.const$fit
@@ -1609,6 +1631,9 @@ for (i in 1:length(seasons)) {
     
     SE.loo[[j]] <- temp.lm.constant
     SE.var[[j]] <- temp.lm.varying
+    
+    #assign predictions
+    SE.intervals <- rbind(SE.intervals, cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))    
   }
   #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
   SE.rmse[[seasons[i]]] <- as.data.frame(SErmse.yearly[-1, ])
@@ -1616,6 +1641,7 @@ for (i in 1:length(seasons)) {
   SE.ints[[seasons[i]]] <- as.data.frame(SEis.yearly[-1, ])
   SE.const.LM[[seasons[i]]] <- SE.loo
   SE.vary.LM[[seasons[i]]] <- SE.var
+  SE.pred.int[[seasons[i]]] <- as.data.frame(SE.intervals[-1, ])
 }
 
 ```
@@ -2384,6 +2410,35 @@ SE2.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[2]][2]))
 SE3.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[2]][3]))
 ```
 
+```{r cprs_noOLR}
+#point cprs 
+NEbase.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[1]]))
+NEconst.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[2]]))
+
+SEbase.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[1]]))
+SEconst.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[2]]))
+
+
+##CPRS
+#base terms (no splot)
+NE1.base.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[1]][1]))
+NE2.base.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[1]][2]))
+NE3.base.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[1]][3]))
+
+SE1.base.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[1]][1]))
+SE2.base.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[1]][2]))
+SE3.base.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[1]][3]))
+
+#constant terms (test/train split)
+NE1.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[2]][1]))
+NE2.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[2]][2]))
+NE3.cprs.noOLR <- unlist(lapply(NE.cprs.noOLR, function(x) x[[2]][3]))
+
+SE1.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[2]][1]))
+SE2.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[2]][2]))
+SE3.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[2]][3]))
+
+```
 
 
 ## ANOVAs
@@ -2406,6 +2461,180 @@ anova(SE3.lm.noOLR, SE3.lm )
 
 
 # Figures
+
+## Predictions (and intervals)
+
+```{r prediction_extract}
+#for: SE.pred.int, NE.pred.int
+
+unlist(lapply(NE.pred.int, function(x) x[ ,1])) #true values
+unlist(lapply(NE.pred.int, function(x) x[ ,5])) #const fit
+
+NEpred.2001 <- NE.pred.int[[1]]
+season_weeks[-c(1:3)]
+```
+
+```{r NEAus_fits}
+
+
+plot(1:29, NE.pred.int[[1]]$true, type = "l", ylim = range(NE.pred.int[[1]]))
+lines(1:29, NE.pred.int[[1]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[1]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[1]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+
+plot(1:29, NE.pred.int[[2]]$true, type = "l", ylim = range(NE.pred.int[[2]]))
+lines(1:29, NE.pred.int[[2]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[2]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[2]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+
+plot(1:29, NE.pred.int[[3]]$true, type = "l", ylim = range(NE.pred.int[[3]]))
+lines(1:29, NE.pred.int[[3]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[3]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[3]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+
+plot(1:29, NE.pred.int[[4]]$true, type = "l", ylim = range(NE.pred.int[[4]]))
+lines(1:29, NE.pred.int[[4]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[4]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[4]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[4]), adj = 0)
+
+plot(1:29, NE.pred.int[[5]]$true, type = "l", ylim = range(NE.pred.int[[5]]))
+lines(1:29, NE.pred.int[[5]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[5]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[5]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[5]), adj = 0)
+
+plot(1:29,  NE.pred.int[[6]]$true, type = "l", ylim = range(NE.pred.int[[6]]))
+lines(1:29, NE.pred.int[[6]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[6]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[6]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[6]), adj = 0)
+
+plot(1:29,  NE.pred.int[[7]]$true, type = "l", ylim = range(NE.pred.int[[7]]))
+lines(1:29, NE.pred.int[[7]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[7]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[7]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[7]), adj = 0)
+
+plot(1:29,  NE.pred.int[[8]]$true, type = "l", ylim = range(NE.pred.int[[8]]))
+lines(1:29, NE.pred.int[[8]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[8]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[8]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[8]), adj = 0)
+
+plot(1:29,  NE.pred.int[[9]]$true, type = "l", ylim = range(NE.pred.int[[9]]))
+lines(1:29, NE.pred.int[[9]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[9]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[9]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[9]), adj = 0)
+
+plot(1:29,  NE.pred.int[[10]]$true, type = "l", ylim = range(NE.pred.int[[10]]))
+lines(1:29, NE.pred.int[[10]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[10]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[10]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[10]), adj = 0)
+
+plot(1:29,  NE.pred.int[[11]]$true, type = "l", ylim = range(NE.pred.int[[11]]))
+lines(1:29, NE.pred.int[[11]]$const.fit, lty = 4)
+lines(1:29, NE.pred.int[[11]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, NE.pred.int[[11]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("NE Aus ", seasons[11]), adj = 0)
+
+
+for (k in 12:19) {
+  plot(1:29,  NE.pred.int[[k]]$true, type = "l", ylim = range(NE.pred.int[[k]]))
+  lines(1:29, NE.pred.int[[k]]$const.fit, lty = 4)
+  lines(1:29, NE.pred.int[[k]]$const.lwr, lty = 4, col = "royalblue3")
+  lines(1:29, NE.pred.int[[k]]$const.upr, lty = 4, col = "orangered3")
+  abline(h=0, lty = 2)
+  title(paste0("NE Aus ", seasons[k]), adj = 0)
+}
+
+#plot(1:29, NE.pred.int[[1]]$true, type = "l", ylim = range(NE.pred.int[[1]]))
+#lines(1:29, NE.pred.int[[1]]$base.fit, lty = 3)
+#lines(1:29, NE.pred.int[[1]]$base.lwr, lty = 3, col = "royalblue3")
+#lines(1:29, NE.pred.int[[1]]$base.upr, lty = 3, col = "orangered3")
+
+```
+
+
+```{r SEAus_preds}
+j <- 1
+plot(1:29,  SE.pred.int[[j]]$true, type = "l", ylim = range(SE.pred.int[[j]]))
+lines(1:29, SE.pred.int[[j]]$const.fit, lty = 4)
+lines(1:29, SE.pred.int[[j]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, SE.pred.int[[j]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("SE Aus ", seasons[j]), adj = 0)
+
+j <- 2
+plot(1:29,  SE.pred.int[[j]]$true, type = "l", ylim = range(SE.pred.int[[j]]))
+lines(1:29, SE.pred.int[[j]]$const.fit, lty = 4)
+lines(1:29, SE.pred.int[[j]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, SE.pred.int[[j]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("SE Aus ", seasons[j]), adj = 0)
+
+j <- 3
+plot(1:29,  SE.pred.int[[j]]$true, type = "l", ylim = range(SE.pred.int[[j]]))
+lines(1:29, SE.pred.int[[j]]$const.fit, lty = 4)
+lines(1:29, SE.pred.int[[j]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, SE.pred.int[[j]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("SE Aus ", seasons[j]), adj = 0)
+
+j <- 4
+plot(1:29,  SE.pred.int[[j]]$true, type = "l", ylim = range(SE.pred.int[[j]]))
+lines(1:29, SE.pred.int[[j]]$const.fit, lty = 4)
+lines(1:29, SE.pred.int[[j]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, SE.pred.int[[j]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("SE Aus ", seasons[j]), adj = 0)
+
+j <- 5
+plot(1:29,  SE.pred.int[[j]]$true, type = "l", ylim = range(SE.pred.int[[j]]))
+lines(1:29, SE.pred.int[[j]]$const.fit, lty = 4)
+lines(1:29, SE.pred.int[[j]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, SE.pred.int[[j]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("SE Aus ", seasons[j]), adj = 0)
+
+j <- 6
+plot(1:29,  SE.pred.int[[j]]$true, type = "l", ylim = range(SE.pred.int[[j]]))
+lines(1:29, SE.pred.int[[j]]$const.fit, lty = 4)
+lines(1:29, SE.pred.int[[j]]$const.lwr, lty = 4, col = "royalblue3")
+lines(1:29, SE.pred.int[[j]]$const.upr, lty = 4, col = "orangered3")
+abline(h=0, lty = 2)
+title(paste0("SE Aus ", seasons[j]), adj = 0)
+
+
+for (k in 7:19) {
+  plot(1:29,  SE.pred.int[[k]]$true, type = "l", ylim = range(SE.pred.int[[k]]))
+  lines(1:29, SE.pred.int[[k]]$const.fit, lty = 4)
+  lines(1:29, SE.pred.int[[k]]$const.lwr, lty = 4, col = "royalblue3")
+  lines(1:29, SE.pred.int[[k]]$const.upr, lty = 4, col = "orangered3")
+  abline(h=0, lty = 2)
+  title(paste0("SE Aus ", seasons[k]), adj = 0)
+}
+
+```
+
+```{r residuals}
+plot(1:29, NE.pred.int[[1]]$true-NE.pred.int[[1]]$const.fit, type = "l", ylim = range(NE.pred.int[[1]]))
+
+plot(1:29, SE.pred.int[[1]]$true-SE.pred.int[[1]]$const.fit, type = "l", ylim = range(SE.pred.int[[1]]))
+```
 
 
 ## RMSE Plots
@@ -2599,7 +2828,7 @@ plot(1:57, SEconst.cprs, pch = 16,
 
 ```{r boxplot_cprs}
 cprs.range <- range(NEbase.cprs, NEconst.cprs, 
-                    NEbase.cprs, SEconst.cprs)
+                    NEbase.cprs, SEconst.cprs) 
 
 model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
                  "SE Aus 1", "SE Aus 2", "SE Aus 3")
@@ -2633,6 +2862,72 @@ dev.off()
 ### CRPS - no OLR
 
 ```{r}
+cprs.range <- range(NEbase.cprs, NEconst.cprs,  NEbase.cprs.noOLR, NEconst.cprs.noOLR,
+                    NEbase.cprs, SEconst.cprs, SEbase.cprs.noOLR, SEconst.cprs.noOLR)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+NEmodel.names <- c("NE Aus 1", "NE Aus 1 - no OLR", 
+                   "NE Aus 2", "NE Aus 2 - no OLR",
+                   "NE Aus 3", "NE Aus 3 - no OLR")
+
+SEmodel.names <- c("SE Aus 1", "SE Aus 1 - no OLR", 
+                   "SE Aus 2", "SE Aus 2 - no OLR",
+                   "SE Aus 3", "SE Aus 3 - no OLR")
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NE1.cprs.noOLR, NE2.cprs.noOLR, NE3.cprs.noOLR, 
+        SE1.cprs.noOLR, SE2.cprs.noOLR, SE3.cprs.noOLR, pch = 19,
+         ylim = cprs.range, ylab = "CRPS")
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : CRPS", adj = 0)
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.cprs, NE1.cprs.noOLR, 
+        NEgroup2.cprs, NE2.cprs.noOLR, 
+        NEgroup3.cprs, NE3.cprs.noOLR, pch = 19,
+         ylim = cprs.range, ylab = "CRPS")
+axis(1, labels = NEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : NE Aus CRPS", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(SEgroup1.cprs, SE1.cprs.noOLR, 
+        SEgroup2.cprs, SE2.cprs.noOLR, 
+        SEgroup3.cprs, SE3.cprs.noOLR, pch = 19,
+        ylim = cprs.range, ylab = "CRPS")
+axis(1, labels = SEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : SE Aus CRPS", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.base.cprs, NE1.base.cprs.noOLR, 
+        NEgroup2.base.cprs, NE2.base.cprs.noOLR, 
+        NEgroup3.base.cprs, NE3.base.cprs.noOLR, pch = 19,
+         ylim = cprs.range, ylab = "CRPS")
+axis(1, labels = NEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Base Model : NE Aus CRPS", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(SEgroup1.base.cprs, SE1.base.cprs.noOLR, 
+        SEgroup2.base.cprs, SE2.base.cprs.noOLR, 
+        SEgroup3.base.cprs, SE3.base.cprs.noOLR, pch = 19,
+        ylim = cprs.range, ylab = "CRPS")
+axis(1, labels = SEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Base Model : SE Aus CRPS", adj = 0)
 
 ```
 
