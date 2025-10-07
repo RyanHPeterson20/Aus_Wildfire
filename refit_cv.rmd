@@ -1658,6 +1658,8 @@ NE.rmse.noOLR <- NULL
 NE.cprs.noOLR <- NULL
 NE.ints.noOLR <- NULL
 NE.const.noOLR <- NULL #linear models
+NE.vary.noOLR <- NULL
+NE.predint.noOLR <- NULL
 for (i in 1:length(seasons)) {
   fit.resp <- NEpartial_resp[[i]]
   fit.preds <- NEpartial_preds[[i]]
@@ -1694,11 +1696,13 @@ for (i in 1:length(seasons)) {
     X.valid <- valid.preds[[j]][ ,1:260]
     y.valid <- valid.resp[[j]]
     
-    #TODO: create output for the predict!!
     #prediction
     pred.base <- predict(NE.lm.noOLR[[j]], X.valid, se.fit = TRUE)
     pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
     pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
+    
+    
+    
     
     #predict( ,se.fit = TRUE)
     y.pred.base <- pred.base$fit 
