@@ -3274,7 +3274,7 @@ title("NE Aus Group 1 : eBIC", adj = 0)
 plot(NEAus2.eBIC.fig$gamma, NEAus2.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
      xlab = "gamma", ylab= "adj R2")
 par(new = TRUE)
-plot(NEAus2.eBIC.fig$gamma, NEAus2.eBIC.fig$terms, axes = FALSE, 
+plot(NEAus2.eBIC.fig$gamma, NEAus2.eBIC.fig$terms, axes = FALSE, pch = 17, col = "firebrick",
      xlab = "", ylab = "", ylim = c(0, max(NEAus2.eBIC.fig$terms)))
 axis(side = 4)    
 title("NE Aus Group 2 : eBIC", adj = 0)
@@ -3283,7 +3283,7 @@ title("NE Aus Group 2 : eBIC", adj = 0)
 plot(NEAus3.eBIC.fig$gamma, NEAus3.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
      xlab = "gamma", ylab= "adj R2")
 par(new = TRUE)
-plot(NEAus3.eBIC.fig$gamma, NEAus3.eBIC.fig$terms, axes = FALSE, 
+plot(NEAus3.eBIC.fig$gamma, NEAus3.eBIC.fig$terms, axes = FALSE, pch = 17, col = "firebrick",
      xlab = "", ylab = "", ylim = c(0, max(NEAus3.eBIC.fig$terms)))
 axis(side = 4)    
 #mtext("y2: 20 * log(x)", side = 4, line = 3, col = "red")
@@ -3790,20 +3790,86 @@ dev.off()
 NE3.coef
 NE3.constcoef
 NE3.varycoef
+
+#setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+#png(filename = "NE3_oct.png", width = 3000, height = 3200, res = 300)
+
+#TODO: add in an extra row of plots if needed
+layout(matrix(c(1, 6,
+                2, 6,
+                3, 6,
+                4, 6,
+                5, 6), ncol = 2, byrow = TRUE),
+       widths = c(1.5, 1), heights = c(1, 1, 1, 1, 1))
+
+par(oma = c(1, 1, 3, 9))
+
+# Store links
+links <- list()
+
+# --- Data Set-up --- 
+## Nino
+NE3_ninolag <- c(41)
+NE3_ninocoef <- NE3.coef[2]
+NE32_ninolag <- c(41)
+NE32_ninocoef <- NE3.constcoef[2]
+NE33_ninolag <- c(25)
+NE33_ninocoef <- NE3.varycoef[2]
+
+## WTIO
+NE33_wtiolag <- c(31)
+NE33_wtiocoef <- NE3.varycoef[3]
+
+## ETIO
+NE3_etiolag <- c(19)
+NE3_etiocoef <- NE3.coef[3]
+NE32_etiolag <- c(19)
+NE32_etiocoef <- NE3.constcoef[3]
+NE33_etiolag <- c(6, 16, 21)
+NE33_etiocoef <- NE3.varycoef[4:6]
+
+## TSA
+NE3_tsalag <- c(1, 19, 37, 52)
+NE3_tsacoef <- NE3.coef[c(10, 4, 5,6)]
+NE32_tsalag <- c(1, 19, 37, 52)
+NE32_tsacoef <- NE3.constcoef[c(10, 4, 5,6)]
+NE33_tsalag <- c(2, 28, 52)
+NE33_tsacoef <- NE3.varycoef[7:9]
+
+## SAM (AAO)
+NE3_aaolag <- c(43, 44)
+NE3_aaocoef <- NE3.coef[7:8]
+NE32_aaolag <- c(43, 44)
+NE32_aaocoef <- NE3.constcoef[7:8]
+NE33_aaolag <- c(5, 7, 29, 43, 44)
+NE33_aaocoef <- NE3.varycoef[10:14]
+
+## OLR
+NE3_olrlag <- c(1, 32)
+NE3_olrcoef <- NE3.coef[c(9,11)]
+NE32_olrlag <- c(1, 32)
+NE32_olrcoef <- NE3.constcoef[c(9,11)]
+
+# --- Range ---
+NEAus3_absmax <- max(abs(range(NE3.coef,
+                      NE3.constcoef,
+                      NE3.varycoef)))
+NEAus3_range <- c(-NEAus3_absmax, NEAus3_absmax)
 ```
 
 
 ### SE AUS Models
 
 ```{r SEAUS2_dearLORD}
-SE2.coef
-SE2.constcoef
-SE2.varycoef
+#SE2.coef
+#SE2.constcoef
+#SE2.varycoef
 
 
-#setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
-#png(filename = "SE2_oct.png", width = 3000, height = 3200, res = 300)
+png(filename = "SE2_oct.png", width = 3000, height = 3200, res = 300)
 
 #TODO: add in an extra row of plots if needed
 layout(matrix(c(1, 6,
@@ -3858,6 +3924,242 @@ SE22_olrlag <- c(10, 32, 40)
 SE22_olrcoef <- SE2.constcoef[c(7:9)]
 SE23_olrlag <- c(33)
 SE23_olrcoef <- SE2.varycoef[10]
+
+
+# --- Range ---
+SEAus2_absmax <- max(abs(range(SE2.coef,
+                      SE2.constcoef,
+                      SE2.varycoef)))
+SEAus2_range <- c(-SEAus2_absmax, SEAus2_absmax)
+
+# --- Plot 1: Nino ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE2_ninolag, SE2_ninocoef, pch = 22, 
+     col = "grey4", bg =  alpha("green4",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = SEAus2_range,
+     xlab = "", ylab = "")
+points(SE22_ninolag, SE22_ninocoef, pch = 22, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.5)
+points(SE23_ninolag, SE23_ninocoef, pch = 24, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("Nino", adj = 0)
+
+## --- Nino Interaction
+## nino_lag40:etio_lag7
+## base
+links[[1]] <- list(
+  y_val = SE2_ninocoef[1],
+  from_x = grconvertX(SE2_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE2_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[2]] <- list(
+  y_val = SE22_ninocoef[1],
+  from_x = grconvertX(SE22_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE22_ninocoef[1], from = "user", to = "ndc")
+)
+
+# --- Plot 2: WTIO & ETIO ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE2_wtiolag-0.125, SE2_wtiocoef, pch = 22, col = "black",
+     bg =  alpha("magenta4",.95) , cex = 1.5, 
+     xlim = c(1,52), 
+     ylim = SEAus2_range,
+     xlab = "", ylab = "")
+points(SE22_wtiolag, SE22_wtiocoef, pch = 22, col = "black",
+       bg =  alpha("palevioletred2",.65) , cex = 1.5)
+points(SE23_wtiolag+0.125, SE23_wtiocoef, pch = 24, col = "black",
+       bg =  alpha("palevioletred2",.65) , cex = 1.33)
+points(SE2_etiolag, SE2_etiocoef, pch = 22, 
+      col = "grey4", bg =  alpha("royalblue4",.95), cex = 1.5)
+points(SE22_etiolag, SE22_etiocoef, pch = 22, col = "black",
+       bg =  alpha("royalblue2",.65) , cex = 1.5)
+points(SE23_etiolag, SE23_etiocoef, pch = 24, col = "black",
+       bg =  alpha("royalblue2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("WTIO & ETIO", adj = 0)
+
+## --- WTIO Interaction
+## I(wtio_lag14^2) (varying terms)
+## varying
+links[[3]] <- list(
+  y_val = SE23_wtiocoef[1],
+  from_x = grconvertX(SE23_wtiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE23_wtiocoef[1], from = "user", to = "ndc")
+)
+
+
+## --- ETIO Interaction
+## nino_lag40:etio_lag7
+## base
+links[[4]] <- list(
+  y_val = SE2_etiocoef[1],
+  from_x = grconvertX(SE2_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE2_etiocoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[5]] <- list(
+  y_val = SE22_etiocoef[1],
+  from_x = grconvertX(SE22_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(SE22_etiocoef[1], from = "user", to = "ndc")
+)
+
+# --- Plot 3: TSA ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE23_tsalag, SE23_tsacoef, pch = 24, col = "black",
+       bg =  alpha("darkgoldenrod2",.65), xlim = c(1,52), cex = 1.33,
+     ylim = SEAus2_range,
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
+abline(h = 0, lty = 2)
+title("TSA", adj = 0)
+
+
+# --- Plot 4: SAM/AAO ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE23_aaolag, SE23_aaocoef, pch = 24,
+     col = "grey4",
+     bg =  alpha("coral2",.65) , cex = 1.33,
+     xlim = c(1,52), 
+     ylim = SEAus2_range,
+     xlab = "", ylab = "")
+abline(h = 0, lty = 2)
+title("SAM (AAO)", adj = 0)
+
+# --- Plot 5: OLR ---
+par(mar = c(4, 4, 2, 1))
+
+plot(SE2_olrlag+0.125, SE2_olrcoef, pch = 22, col = "black",
+       bg =  alpha("turquoise4", 0.95), xlim = c(1,52), cex = 1.4,
+     ylim = SEAus2_range,
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
+points(SE22_olrlag-0.125, SE22_olrcoef, pch = 22, col = "black",
+       bg =  alpha("paleturquoise3",.65) , cex = 1.5)
+points(SE23_olrlag, SE23_olrcoef, pch = 24, col = "black",
+       bg =  alpha("paleturquoise3",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("OLR", adj = 0)
+
+
+
+# --- Plot 6: Interaction Effects ---
+par(mar = c(4, 4, 2, 2))
+
+plot(SE2.coef[1], 0, type = "n", main = "", 
+     ylim = c(0,1), xlim = SEAus2_range,
+     xlab = "Coefficients", cex.lab = 1.33,
+     yaxt = "n",  ylab = "")
+abline(v= 0, lty = 2)
+
+#square terms
+int_1 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user") # I(wtio_lag14^2) (varying terms)
+
+#interactions
+int_2 <- grconvertY(links[[1]]$from_y, from = "ndc", to = "user") # nino_lag40:etio_lag7 #base
+int_3 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user") # nino_lag40:etio_lag7 
+int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user") # nino_lag40:etio_lag7 #base
+int_5 <- grconvertY(links[[5]]$from_y, from = "ndc", to = "user") # nino_lag40:etio_lag7
+
+#nino_lag40:etio_lag7
+int_pt1 <- (int_2 + int_4)/2
+segments(SE2.coef[10], int_2, SE2.coef[10], int_pt1, col = "green4", lty = 2, lwd = 1.5)
+segments(SE2.coef[10], int_4, SE2.coef[10], int_pt1, col = "royalblue4", lty = 2, lwd = 1.5)
+
+int_pt2 <- (int_3 + int_5)/2
+segments(SE2.constcoef[10], int_3, SE2.constcoef[10], int_pt2, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(SE2.constcoef[10], int_5, SE2.constcoef[10], int_pt2, col = "royalblue2", lty = 3, lwd = 1.5)
+
+#interaction points
+points(SE2.varycoef[11], int_1,  pch = 24, col = "grey4",
+        bg =  alpha("palevioletred2",.65), cex = 1.33,) 
+points(SE2.coef[10], int_pt1,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(SE2.constcoef[10], int_pt2,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.65), cex = 1.5,) 
+
+#link to x 
+links[[1]]$to_x <- grconvertX(SE2.coef[10], from = "user", to = "ndc")
+links[[2]]$to_x <- grconvertX(SE2.constcoef[10], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(SE2.varycoef[11], from = "user", to = "ndc")
+links[[4]]$to_x <- grconvertX(SE2.coef[10], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(SE2.constcoef[10], from = "user", to = "ndc")
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c("green4", "chartreuse2", "palevioletred3", "royalblue4", "royalblue2")
+linetypes <- c(2,3,3,2,3)
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
+
+
+#outer text and legends
+par(xpd = NA)
+legend("topright", inset = c(-0.45, 0.00),
+       title = "Nino",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("green4",  "chartreuse2", "chartreuse2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.45, 0.2),
+       title = "WTIO",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("magenta4",  "palevioletred2", "palevioletred2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.45, 0.3),
+       title = "ETIO",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("royalblue4",  "royalblue2", "royalblue2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("right", inset = c(-0.45, 0.00),
+       title = "TSA",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4","grey4", "grey4"),
+       pt.bg = c("darkorange3",  "darkgoldenrod2",  "darkgoldenrod2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.45, 0.26),
+       title = "SAM (AAO)",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4","grey4","grey4"),
+       pt.bg = c("red3",  "coral2",  "coral2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.45, 0.05),
+       title = "OLR",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("turquoise4",  "paleturquoise3", "paleturquoise3"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+mtext("SE Aus Group 2 (Weeks 51, 52, 1, & 2)", outer = TRUE, cex = 1.5, font = 1)
+
+dev.off()
 
 
 ```
