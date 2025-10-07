@@ -31,6 +31,9 @@ suppressMessages( library( caret)) #for confusion matrix
 suppressMessages( library( jtools)) #lm model summaries
 
 suppressMessages( library( tictoc)) #some timing
+
+suppressMessages(library(grid)) #gridlines between plots
+suppressMessages( library(scales)) #for adjusting opacity
 ```
 
 ```{r data_load}
@@ -3177,13 +3180,152 @@ title("Constant Term Model : SE Aus Interval Score", adj = 0)
 
 # eBIC models
 
-```{r }
+```{r temp_section}
+
+#NE Aus group 1
+
+NEAus1.eBIC.fig <- matrix(c(0, summary(NE.lms[[1]])$adj.r.squared, length(coef(NE.lms[[1]]))) , ncol = 3) 
+colnames(NEAus1.eBIC.fig) <- c("gamma", "adj.R2", "terms")
+for (i in 2:length(gamma_seq)) {
+  model.temp <- NEAus1.eBIC[[i-1]]
+  adj.R2 <- summary(model.temp)$adj.r.squared
+  num.terms <- length(coef(model.temp))
+  NEAus1.eBIC.fig <- rbind(NEAus1.eBIC.fig, c(gamma_seq[i], adj.R2, num.terms))
+}
+NEAus1.eBIC.fig <- as.data.frame(NEAus1.eBIC.fig)
+
+#NE Aus group 2
+NEAus2.eBIC.fig <- matrix(c(0, summary(NE.lms[[2]])$adj.r.squared, length(coef(NE.lms[[2]]))) , ncol = 3) 
+colnames(NEAus2.eBIC.fig) <- c("gamma", "adj.R2", "terms")
+for (i in 2:length(gamma_seq)) {
+  model.temp <- NEAus2.eBIC[[i-1]]
+  adj.R2 <- summary(model.temp)$adj.r.squared
+  num.terms <- length(coef(model.temp))
+  NEAus2.eBIC.fig <- rbind(NEAus2.eBIC.fig, c(gamma_seq[i], adj.R2, num.terms))
+}
+NEAus2.eBIC.fig <- as.data.frame(NEAus2.eBIC.fig)
+
+
+
+#NE Aus group 3
+NEAus3.eBIC.fig <- matrix(c(0, summary(NE.lms[[3]])$adj.r.squared, length(coef(NE.lms[[3]]))) , ncol = 3) 
+colnames(NEAus3.eBIC.fig) <- c("gamma", "adj.R2", "terms")
+for (i in 2:length(gamma_seq)) {
+  model.temp <- NEAus3.eBIC[[i-1]]
+  adj.R2 <- summary(model.temp)$adj.r.squared
+  num.terms <- length(coef(model.temp))
+  NEAus3.eBIC.fig <- rbind(NEAus3.eBIC.fig, c(gamma_seq[i], adj.R2, num.terms))
+}
+NEAus3.eBIC.fig <- as.data.frame(NEAus3.eBIC.fig)
+
+
+#SE Aus group 1
+
+SEAus1.eBIC.fig <- matrix(c(0, summary(SE.lms[[1]])$adj.r.squared, length(coef(SE.lms[[1]]))) , ncol = 3) 
+colnames(SEAus1.eBIC.fig) <- c("gamma", "adj.R2", "terms")
+for (i in 2:length(gamma_seq)) {
+  model.temp <- SEAus1.eBIC[[i-1]]
+  adj.R2 <- summary(model.temp)$adj.r.squared
+  num.terms <- length(coef(model.temp))
+  SEAus1.eBIC.fig <- rbind(SEAus1.eBIC.fig, c(gamma_seq[i], adj.R2, num.terms))
+}
+SEAus1.eBIC.fig <- as.data.frame(SEAus1.eBIC.fig)
+
+
+#SE Aus group 2
+
+SEAus2.eBIC.fig <- matrix(c(0, summary(SE.lms[[2]])$adj.r.squared, length(coef(SE.lms[[2]]))) , ncol = 3) 
+colnames(SEAus2.eBIC.fig) <- c("gamma", "adj.R2", "terms")
+for (i in 2:length(gamma_seq)) {
+  model.temp <- SEAus2.eBIC[[i-1]]
+  adj.R2 <- summary(model.temp)$adj.r.squared
+  num.terms <- length(coef(model.temp))
+  SEAus2.eBIC.fig <- rbind(SEAus2.eBIC.fig, c(gamma_seq[i], adj.R2, num.terms))
+}
+SEAus2.eBIC.fig <- as.data.frame(SEAus2.eBIC.fig)
+
+
+#SE Aus group 3
+
+SEAus3.eBIC.fig <- matrix(c(0, summary(SE.lms[[3]])$adj.r.squared, length(coef(SE.lms[[3]]))) , ncol = 3) 
+colnames(SEAus3.eBIC.fig) <- c("gamma", "adj.R2", "terms")
+for (i in 2:length(gamma_seq)) {
+  model.temp <- SEAus3.eBIC[[i-1]]
+  adj.R2 <- summary(model.temp)$adj.r.squared
+  num.terms <- length(coef(model.temp))
+  SEAus3.eBIC.fig <- rbind(SEAus3.eBIC.fig, c(gamma_seq[i], adj.R2, num.terms))
+}
+SEAus3.eBIC.fig <- as.data.frame(SEAus3.eBIC.fig)
+
+```
+
+```{r figures}
+plot(NEAus1.eBIC.fig$gamma, NEAus1.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
+     xlab = "gamma", ylab= "adj R2")
+par(new = TRUE)
+plot(NEAus1.eBIC.fig$gamma, NEAus1.eBIC.fig$terms, axes = FALSE, 
+     xlab = "", ylab = "", ylim = c(0, max(NEAus1.eBIC.fig$terms)))
+axis(side = 4)    
+#mtext("y2: 20 * log(x)", side = 4, line = 3, col = "red")
+title("NE Aus Group 1 : eBIC", adj = 0)
+
+
+#NE Aus 2 plot
+plot(NEAus2.eBIC.fig$gamma, NEAus2.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
+     xlab = "gamma", ylab= "adj R2")
+par(new = TRUE)
+plot(NEAus2.eBIC.fig$gamma, NEAus2.eBIC.fig$terms, axes = FALSE, 
+     xlab = "", ylab = "", ylim = c(0, max(NEAus2.eBIC.fig$terms)))
+axis(side = 4)    
+title("NE Aus Group 2 : eBIC", adj = 0)
+
+#NE Aus 3 plot
+plot(NEAus3.eBIC.fig$gamma, NEAus3.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
+     xlab = "gamma", ylab= "adj R2")
+par(new = TRUE)
+plot(NEAus3.eBIC.fig$gamma, NEAus3.eBIC.fig$terms, axes = FALSE, 
+     xlab = "", ylab = "", ylim = c(0, max(NEAus3.eBIC.fig$terms)))
+axis(side = 4)    
+#mtext("y2: 20 * log(x)", side = 4, line = 3, col = "red")
+title("NE Aus Group 3 : eBIC", adj = 0)
+
+
+#SE Aus 1 plot
+plot(SEAus1.eBIC.fig$gamma, SEAus1.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
+     xlab = "gamma", ylab= "adj R2")
+par(new = TRUE)
+plot(SEAus1.eBIC.fig$gamma, SEAus1.eBIC.fig$terms, axes = FALSE, 
+     xlab = "", ylab = "", ylim = c(0, max(SEAus1.eBIC.fig$terms)))
+axis(side = 4)    
+title("SE Aus Group 1 : eBIC", adj = 0)
+
+#SE Aus 2 plot
+plot(SEAus2.eBIC.fig$gamma, SEAus2.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
+     xlab = "gamma", ylab= "adj R2")
+par(new = TRUE)
+plot(SEAus2.eBIC.fig$gamma, SEAus2.eBIC.fig$terms, axes = FALSE, 
+     xlab = "", ylab = "", ylim = c(0, max(SEAus2.eBIC.fig$terms)))
+axis(side = 4)    
+title("SE Aus Group 2 : eBIC", adj = 0)
+
+#SE Aus 3 plot
+plot(SEAus3.eBIC.fig$gamma, SEAus3.eBIC.fig$adj.R2, pch = 19, ylim = c(0, 1),
+     xlab = "gamma", ylab= "adj R2")
+par(new = TRUE)
+plot(SEAus3.eBIC.fig$gamma, SEAus3.eBIC.fig$terms, axes = FALSE, 
+     xlab = "", ylab = "", ylim = c(0, max(SEAus3.eBIC.fig$terms)))
+axis(side = 4)    
+title("SE Aus Group 3 : eBIC", adj = 0)
+
+
+
 
 ```
 
 
 
-## Model Fits
+
+# Model Fits
 
 ```{r base_fits}
 #NE base fits
@@ -3197,6 +3339,528 @@ plot(SE.lms[[2]])
 plot(SE.lms[[3]])
 ```
 
+
+## Coefficient Models
+
+```{r get_coefs}
+#NE Aus group 1 (models wo 2019)
+NE1.coef <- coef(NE.lms[[1]])
+NE1.constcoef <- coef(NE.const.LM[[19]][[1]])
+NE1.varycoef <- coef(NE.vary.LM[[19]][[1]])
+length(NE1.constcoef)
+length(NE1.varycoef)
+
+#NE Aus group 2 (models wo 2019)
+NE2.coef <- coef(NE.lms[[2]])
+NE2.constcoef <- coef(NE.const.LM[[19]][[2]])
+NE2.varycoef <- coef(NE.vary.LM[[19]][[2]])
+length(NE2.constcoef)
+length(NE2.varycoef)
+
+#NE Aus group 3 (models wo 2019)
+NE3.coef <- coef(NE.lms[[3]])
+NE3.constcoef <- coef(NE.const.LM[[19]][[3]])
+NE3.varycoef <- coef(NE.vary.LM[[19]][[3]])
+length(NE3.constcoef)
+length(NE3.varycoef)
+
+#SE Aus group 1 (models wo 2019)
+SE1.coef <- coef(SE.lms[[1]])
+SE1.constcoef <- coef(SE.const.LM[[19]][[1]])
+SE1.varycoef <- coef(SE.vary.LM[[19]][[1]])
+length(SE1.constcoef)
+length(SE1.varycoef)
+
+#SE Aus group 2 (models wo 2019)
+SE2.coef <- coef(SE.lms[[2]])
+SE2.constcoef <- coef(SE.const.LM[[19]][[2]])
+SE2.varycoef <- coef(SE.vary.LM[[19]][[2]])
+length(SE2.constcoef)
+length(SE2.varycoef)
+
+
+#SE Aus group 3 (models wo 2019)
+SE3.coef <- coef(SE.lms[[3]])
+SE3.constcoef <- coef(SE.const.LM[[19]][[3]])
+SE3.varycoef <- coef(SE.vary.LM[[19]][[3]])
+length(SE3.constcoef)
+length(SE3.varycoef)
+
+```
+### NE AUS Models
+
+```{r NEAUS1_ohGOD}
+#NE1.coef
+#NE1.constcoef
+#NE1.varycoef
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "NE1_oct.png", width = 3000, height = 3200, res = 300)
+
+#TODO: add in an extra row of plots if needed
+layout(matrix(c(1, 6,
+                2, 6,
+                3, 6,
+                4, 6,
+                5, 6), ncol = 2, byrow = TRUE),
+       widths = c(1.5, 1), heights = c(1, 1, 1, 1, 1))
+
+par(oma = c(1, 1, 3, 9))
+
+# Store links
+links <- list()
+
+# --- Data Set-up --- 
+## Nino
+NE1_ninolag <- c(9)
+NE1_ninocoef <- NE1.coef[2]
+NE12_ninolag <- c(9)
+NE12_ninocoef <- NE1.constcoef[2]
+
+## WTIO
+NE13_wtiolag <- c(3,4,7,50,52)
+NE13_wtiocoef <- NE1.varycoef[2:6]
+
+## ETIO
+NE1_etiolag <- c(42)
+NE1_etiocoef <- NE1.coef[3]
+NE12_etiolag <- c(42)
+NE12_etiocoef <- NE1.constcoef[3]
+NE13_etiolag <- c(2, 42)
+NE13_etiocoef <- NE1.varycoef[7:8]
+
+## TSA
+NE1_tsalag <- c(19,32)
+NE1_tsacoef <- NE1.coef[4:5]
+NE12_tsalag <- c(19,32)
+NE12_tsacoef <- NE1.constcoef[4:5]
+NE13_tsalag <- c(11, 15, 17, 18)
+NE13_tsacoef <- NE1.varycoef[9:12]
+
+## SAM (AAO)
+NE1_aaolag <- c(2, 4)
+NE1_aaocoef <- NE1.coef[6:7]
+NE12_aaolag <- c(2, 4)
+NE12_aaocoef <- NE1.constcoef[6:7]
+NE13_aaolag <- c(2)
+NE13_aaocoef <- NE1.varycoef[13]
+
+## OLR
+NE1_olrlag <- c(19)
+NE1_olrcoef <- NE1.coef[8]
+NE12_olrlag <- c(19)
+NE12_olrcoef <- NE1.constcoef[8]
+NE13_olrlag <- c(19)
+NE13_olrcoef <- NE1.varycoef[14]
+
+
+# --- Range ---
+NEAus1_absmax <- max(abs(range(NE1.coef,
+                      NE1.constcoef,
+                      NE1.varycoef)))
+NEAus1_range <- c(-NEAus1_absmax, NEAus1_absmax)
+
+# --- Plot 1: Nino ---
+par(mar = c(4, 4, 2, 1))
+
+plot(NE1_ninolag-0.125, NE1_ninocoef, pch = 22, 
+     col = "grey4", bg =  alpha("green4",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = NEAus1_range,
+     xlab = "", ylab = "")
+points(NE12_ninolag+0.125, NE12_ninocoef, pch = 22, col = "black",
+       bg =  alpha("chartreuse2",.65) , cex = 1.5)
+abline(h = 0, lty = 2)
+title("Nino", adj = 0)
+
+## --- Nino Interaction
+## nino_lag9:etio_lag42
+## base
+links[[1]] <- list(
+  y_val = NE1_ninocoef[1],
+  from_x = grconvertX(NE1_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[2]] <- list(
+  y_val = NE12_ninocoef[1],
+  from_x = grconvertX(NE12_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE12_ninocoef[1], from = "user", to = "ndc")
+)
+
+## nino_lag9:tsa_lag32 
+## base
+links[[3]] <- list(
+  y_val = NE1_ninocoef[1],
+  from_x = grconvertX(NE1_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[4]] <- list(
+  y_val = NE12_ninocoef[1],
+  from_x = grconvertX(NE12_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE12_ninocoef[1], from = "user", to = "ndc")
+)
+
+## nino_lag9:NEolr_lag19 
+## base
+links[[5]] <- list(
+  y_val = NE1_ninocoef[1],
+  from_x = grconvertX(NE1_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_ninocoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[6]] <- list(
+  y_val = NE12_ninocoef[1],
+  from_x = grconvertX(NE12_ninolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE12_ninocoef[1], from = "user", to = "ndc")
+)
+
+
+# --- Plot 2: WTIO & ETIO ---
+par(mar = c(4, 4, 2, 1))
+
+plot(NE13_wtiolag, NE13_wtiocoef, pch = 24, col = "black",
+     bg =  alpha("palevioletred2",.65) , cex = 1.33, 
+     xlim = c(1,52), 
+     ylim = NEAus1_range,
+     xlab = "", ylab = "")
+points(NE1_etiolag, NE1_etiocoef, pch = 22, 
+      col = "grey4", bg =  alpha("royalblue4",.95), cex = 1.5)
+points(NE12_etiolag, NE12_etiocoef, pch = 22, col = "black",
+       bg =  alpha("royalblue2",.65) , cex = 1.5)
+abline(h = 0, lty = 2)
+title("WTIO & ETIO", adj = 0)
+
+
+## --- ETIO Interactions
+#nino_lag9:etio_lag42
+## base
+links[[7]] <- list(
+  y_val = NE1_etiocoef[1],
+  from_x = grconvertX(NE1_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_etiocoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[8]] <- list(
+  y_val = NE12_etiocoef[1],
+  from_x = grconvertX(NE12_etiolag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE12_etiocoef[1], from = "user", to = "ndc")
+)
+
+# --- Plot 3: TSA ---
+par(mar = c(4, 4, 2, 1))
+
+plot(NE1_tsalag, NE1_tsacoef, pch = 22, col = "black",
+       bg =  alpha("darkorange3", 0.95), xlim = c(1,52), cex = 1.4,
+     ylim = NEAus1_range,
+     xlab = "", ylab = "Coefficients", cex.lab = 1.33)
+points(NE12_tsalag, NE12_tsacoef, pch = 22, col = "black",
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.5)
+points(NE13_tsalag, NE13_tsacoef, pch = 24, col = "black",
+       bg =  alpha("darkgoldenrod2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("TSA", adj = 0)
+
+## --- TSA Interaction
+## nino_lag9:tsa_lag32
+## base
+links[[9]] <- list(
+  y_val = NE1_tsacoef[2],
+  from_x = grconvertX(NE1_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_tsacoef[2], from = "user", to = "ndc")
+)
+
+## constant
+links[[10]] <- list(
+  y_val = NE12_tsacoef[2],
+  from_x = grconvertX(NE12_tsalag[2], from = "user", to = "ndc"),
+  from_y = grconvertY(NE12_tsacoef[2], from = "user", to = "ndc")
+)
+
+# --- Plot 4: SAM/AAO ---
+par(mar = c(4, 4, 2, 1))
+plot(NE1_aaolag-0.125, NE1_aaocoef, pch = 22,
+     col = "grey4",
+     bg =  alpha("red3",.95), cex = 1.5,
+     xlim = c(1,52), 
+     ylim = NEAus1_range,
+     xlab = "", ylab = "")
+points(NE12_aaolag+0.125, NE12_aaocoef, pch = 22, col = "black",
+       bg =  alpha("coral2",.65) , cex = 1.5)
+points(NE13_aaolag+0.125, NE13_aaocoef, pch = 24, col = "black",
+       bg =  alpha("coral2",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("SAM (AAO)", adj = 0)
+
+
+# --- Plot 5: OLR ---
+par(mar = c(4, 4, 2, 1))
+plot(NE1_olrlag, NE1_olrcoef, pch = 22, col = "black",
+       bg =  alpha("turquoise4", 0.95), xlim = c(1,52), cex = 1.4,
+     ylim = NEAus1_range,
+     xlab = "Lag", ylab = "", cex.lab = 1.33)
+points(NE12_olrlag-0.125, NE12_olrcoef, pch = 22, col = "black",
+       bg =  alpha("paleturquoise3",.65) , cex = 1.5)
+points(NE13_olrlag+0.125, NE13_olrcoef, pch = 24, col = "black",
+       bg =  alpha("paleturquoise3",.65) , cex = 1.33)
+abline(h = 0, lty = 2)
+title("OLR", adj = 0)
+
+## --- OLR Interactions
+## nino_lag9:NEolr_lag19
+## base
+links[[11]] <- list(
+  y_val = NE1_olrcoef[1],
+  from_x = grconvertX(NE1_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE1_olrcoef[1], from = "user", to = "ndc")
+)
+
+## constant
+links[[12]] <- list(
+  y_val = NE12_olrcoef[1],
+  from_x = grconvertX(NE12_olrlag[1], from = "user", to = "ndc"),
+  from_y = grconvertY(NE12_olrcoef[1], from = "user", to = "ndc")
+)
+
+
+# --- Plot 6: Interaction Effects ---
+par(mar = c(4, 4, 2, 2))
+
+int_range <- range(NE1.coef,
+                      NE1.constcoef,
+                      NE1.varycoef)
+
+
+plot(NE1.coef[1], 0, type = "n", main = "", 
+     ylim = c(0,1), xlim = NEAus1_range,
+     xlab = "Coefficients", cex.lab = 1.33,
+     yaxt = "n",  ylab = "")
+abline(v= 0, lty = 2)
+
+#interactions
+int_1 <- grconvertY(links[[1]]$from_y, from = "ndc", to = "user") # nino_lag9:etio_lag42 #base
+int_2 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user") # nino_lag9:etio_lag42 
+int_3 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user") # nino_lag9:tsa_lag32 #base
+int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user") # nino_lag9:tsa_lag32 
+int_5 <- grconvertY(links[[5]]$from_y, from = "ndc", to = "user") # nino_lag9:NEolr_lag19 #base
+int_6 <- grconvertY(links[[6]]$from_y, from = "ndc", to = "user") # nino_lag9:NEolr_lag19 
+
+int_7 <- grconvertY(links[[7]]$from_y, from = "ndc", to = "user") # nino_lag9:etio_lag42 #base
+int_8 <- grconvertY(links[[8]]$from_y, from = "ndc", to = "user") # nino_lag9:etio_lag42 
+int_9 <- grconvertY(links[[9]]$from_y, from = "ndc", to = "user") # nino_lag9:tsa_lag32 #base
+int_10 <- grconvertY(links[[10]]$from_y, from = "ndc", to = "user") # nino_lag9:tsa_lag32 
+int_11 <- grconvertY(links[[11]]$from_y, from = "ndc", to = "user") # nino_lag9:NEolr_lag19 #base
+int_12 <- grconvertY(links[[12]]$from_y, from = "ndc", to = "user") # nino_lag9:NEolr_lag19 
+
+#nino_lag9:etio_lag42 
+int_pt1 <- (int_1 + int_7)/2
+segments(NE1.coef[11], int_1, NE1.coef[11], int_pt1, col = "green4", lty = 2, lwd = 1.5)
+segments(NE1.coef[11], int_7, NE1.coef[11], int_pt1, col = "royalblue4", lty = 2, lwd = 1.5)
+
+int_pt2 <- (int_2 + int_8)/2
+segments(NE1.constcoef[11], int_2, NE1.constcoef[11], int_pt2, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(NE1.constcoef[11], int_8, NE1.constcoef[11], int_pt2, col = "royalblue2", lty = 3, lwd = 1.5)
+
+# nino_lag9:tsa_lag32 
+int_pt3 <- (int_3 + int_9)/2
+segments(NE1.coef[9], int_3, NE1.coef[9], int_pt3, col = "green4", lty = 2, lwd = 1.5)
+segments(NE1.coef[9], int_9, NE1.coef[9], int_pt3, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt4 <- (int_4 + int_10)/2
+segments(NE1.constcoef[9], int_4, NE1.constcoef[9], int_pt4, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(NE1.constcoef[9], int_10, NE1.constcoef[9], int_pt4, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt5 <- (int_5 + int_11)/2
+segments(NE1.coef[10], int_5, NE1.coef[10], int_pt5, col = "green4", lty = 2, lwd = 1.5)
+segments(NE1.coef[10], int_11, NE1.coef[10], int_pt5, col = "turquoise4", lty = 2, lwd = 1.5)
+
+int_pt6 <- (int_6 + int_12)/2
+segments(NE1.constcoef[10], int_6, NE1.constcoef[10], int_pt6, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(NE1.constcoef[10], int_12, NE1.constcoef[10], int_pt6, col = "paleturquoise3", lty = 3, lwd = 1.5)
+
+#interaction points
+points(NE1.coef[11], int_pt1,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE1.constcoef[11], int_pt2,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE1.coef[9], int_pt3,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE1.constcoef[9], int_pt4,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE1.coef[10], int_pt5,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE1.constcoef[10], int_pt6,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+
+#link to x 
+links[[1]]$to_x <- grconvertX(NE1.coef[11], from = "user", to = "ndc")
+links[[2]]$to_x <- grconvertX(NE1.constcoef[11], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(NE1.coef[9], from = "user", to = "ndc")
+links[[4]]$to_x <- grconvertX(NE1.constcoef[9], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(NE1.coef[10], from = "user", to = "ndc")
+links[[6]]$to_x <- grconvertX(NE1.constcoef[10], from = "user", to = "ndc")
+links[[7]]$to_x <- grconvertX(NE1.coef[11], from = "user", to = "ndc")
+links[[8]]$to_x <- grconvertX(NE1.constcoef[11], from = "user", to = "ndc")
+links[[9]]$to_x <- grconvertX(NE1.coef[9], from = "user", to = "ndc")
+links[[10]]$to_x <- grconvertX(NE1.constcoef[9], from = "user", to = "ndc")
+links[[11]]$to_x <- grconvertX(NE1.coef[10], from = "user", to = "ndc")
+links[[12]]$to_x <- grconvertX(NE1.constcoef[10], from = "user", to = "ndc")
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c(rep(c("green4", "chartreuse2"), 3), "royalblue4", "royalblue2", 
+            "darkorange3",  "darkgoldenrod3",  "turquoise4",  "paleturquoise3")
+linetypes <- rep(c(2,3), 6)
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
+
+#outer text and legends
+par(xpd = NA)
+legend("topright", inset = c(-0.45, 0.00),
+       title = "Nino",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("green4",  "chartreuse2", "chartreuse2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.45, 0.2),
+       title = "WTIO",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("magenta4",  "palevioletred2", "palevioletred2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+legend("topright", inset = c(-0.45, 0.3),
+       title = "ETIO",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("royalblue4",  "royalblue2", "royalblue2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("right", inset = c(-0.45, 0.00),
+       title = "TSA",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4","grey4", "grey4"),
+       pt.bg = c("darkorange3",  "darkgoldenrod2",  "darkgoldenrod2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.45, 0.26),
+       title = "SAM (AAO)",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4","grey4","grey4"),
+       pt.bg = c("red3",  "coral2",  "coral2"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+legend("bottomright", inset = c(-0.45, 0.05),
+       title = "OLR",
+       legend = c("Base", "Constant", "Varying"),
+       pch = c(22, 22, 24),
+       col = c("grey4", "grey4", "grey4"),
+       pt.bg = c("turquoise4",  "paleturquoise3", "paleturquoise3"),
+       pt.cex = c(1.5, 1.5, 1.33))
+
+mtext("NE Aus Group 1 (Weeks 38-46)", outer = TRUE, cex = 1.5, font = 1)
+
+dev.off()
+
+```
+
+
+
+```{r NEAUS3_killME}
+NE3.coef
+NE3.constcoef
+NE3.varycoef
+```
+
+
+### SE AUS Models
+
+```{r SEAUS2_dearLORD}
+SE2.coef
+SE2.constcoef
+SE2.varycoef
+
+
+#setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+#png(filename = "SE2_oct.png", width = 3000, height = 3200, res = 300)
+
+#TODO: add in an extra row of plots if needed
+layout(matrix(c(1, 6,
+                2, 6,
+                3, 6,
+                4, 6,
+                5, 6), ncol = 2, byrow = TRUE),
+       widths = c(1.5, 1), heights = c(1, 1, 1, 1, 1))
+
+par(oma = c(1, 1, 3, 9))
+
+# Store links
+links <- list()
+
+# --- Data Set-up --- 
+## Nino
+SE2_ninolag <- c(40)
+SE2_ninocoef <- SE2.coef[2]
+SE22_ninolag <- c(40)
+SE22_ninocoef <- SE2.constcoef[2]
+SE23_ninolag <- c(28)
+SE23_ninocoef <- SE2.varycoef[2]
+
+## WTIO
+SE2_wtiolag <- c(14,46)
+SE2_wtiocoef <- SE2.coef[c(3:4)]
+SE22_wtiolag <- c(14,46)
+SE22_wtiocoef <- SE2.constcoef[c(3:4)]
+SE23_wtiolag <- c(14, 15)
+SE23_wtiocoef <- SE2.varycoef[c(3:4)]
+
+## ETIO
+SE2_etiolag <- c(7, 33)
+SE2_etiocoef <- SE2.coef[c(5,6)]
+SE22_etiolag <- c(7, 33)
+SE22_etiocoef <- SE2.constcoef[c(5,6)]
+SE23_etiolag  <- c(8)
+SE23_etiocoef <- SE2.varycoef[5]
+
+## TSA
+SE23_tsalag <- c(28)
+SE23_tsacoef <- SE2.varycoef[6]
+
+## AAO
+SE23_aaolag <- c(21, 42, 50)
+SE23_aaocoef <- SE2.varycoef[c(7:9)]
+
+## OLR
+SE2_olrlag <- c(10, 32, 40)
+SE2_olrcoef <- SE2.coef[c(7:9)]
+SE22_olrlag <- c(10, 32, 40)
+SE22_olrcoef <- SE2.constcoef[c(7:9)]
+SE23_olrlag <- c(33)
+SE23_olrcoef <- SE2.varycoef[10]
+
+
+```
 
 
 
