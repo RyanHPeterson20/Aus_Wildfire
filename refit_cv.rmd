@@ -1465,10 +1465,11 @@ for (i in 1:length(seasons)) {
   colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
   NEis.yearly <- matrix(NA, ncol = 3)
   colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
-  NE.intervals <- matrix(NA, ncol = 10)
+  NE.intervals <- matrix(NA, ncol = 12)
   colnames(NE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
                               "const.fit", "const.lwr", "const.upr",
-                              "vary.fit", "vary.lwr", "vary.upr")
+                              "vary.fit", "vary.lwr", "vary.upr", 
+                              "const.lwr99", "const.upr99")
   
   #groups/clusters below
   for (j in 1:3) {
@@ -1495,8 +1496,11 @@ for (i in 1:length(seasons)) {
     
     #prediction interval
     pred.base.interval <- predict(NE.lms[[j]], X.valid, interval = "prediction")
-    pred.const.interval <- predict(temp.lm.constant, X.valid, interval = "prediction")
+    pred.const.interval <- predict(temp.lm.constant, X.valid, interval = "prediction", level = 0.95, se.fit = TRUE)
     pred.vary.interval <- predict(temp.lm.varying, X.valid, interval = "prediction")
+    
+    #pred interval 90%
+    pred.const.interval.90 <- predict(temp.lm.constant, X.valid, interval = "prediction", level = 0.99, se.fit = TRUE)
     
     #predict( ,se.fit = TRUE)
     y.pred.base <- pred.base$fit 
@@ -1531,7 +1535,8 @@ for (i in 1:length(seasons)) {
     NE.var[[j]] <- temp.lm.varying
     
     #assign predictions
-    NE.intervals <- rbind(NE.intervals, cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))
+    NE.intervals <- rbind(NE.intervals, cbind(y.valid, pred.base.interval, pred.const.interval$fit, pred.vary.interval,
+                                              pred.const.interval.90$fit[,c(2,3)]))
   }
   #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
   NE.rmse[[seasons[i]]] <- as.data.frame(NErmse.yearly[-1, ])
@@ -1571,10 +1576,12 @@ for (i in 1:length(seasons)) {
   colnames(SEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
   SEis.yearly <- matrix(NA, ncol = 3)
   colnames(SEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
-  SE.intervals <- matrix(NA, ncol = 10)
+  SE.intervals <- matrix(NA, ncol = 12)
   colnames(SE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
                               "const.fit", "const.lwr", "const.upr",
-                              "vary.fit", "vary.lwr", "vary.upr")
+                              "vary.fit", "vary.lwr", "vary.upr", 
+                              "const.lwr99", "const.upr99")
+  
   #groups/clusters below
   for (j in 1:3) {
     #lm fit data setup
@@ -1600,8 +1607,11 @@ for (i in 1:length(seasons)) {
     
     #prediction interval
     pred.base.interval <- predict(SE.lms[[j]], X.valid, interval = "prediction")
-    pred.const.interval <- predict(temp.lm.constant, X.valid, interval = "prediction")
+    pred.const.interval <- predict(temp.lm.constant, X.valid, interval = "prediction", level = 0.95)
     pred.vary.interval <- predict(temp.lm.varying, X.valid, interval = "prediction")    
+    
+    #pred interval 90%
+    pred.const.interval.90 <- predict(temp.lm.constant, X.valid, interval = "prediction", level = 0.99, se.fit = TRUE)
     
     y.pred.base <- pred.base$fit 
     y.pred.const <- pred.const$fit
@@ -1633,7 +1643,8 @@ for (i in 1:length(seasons)) {
     SE.var[[j]] <- temp.lm.varying
     
     #assign predictions
-    SE.intervals <- rbind(SE.intervals, cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))    
+    SE.intervals <- rbind(SE.intervals, cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval,
+                                              pred.const.interval.90$fit[,c(2,3)]))   
   }
   #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
   SE.rmse[[seasons[i]]] <- as.data.frame(SErmse.yearly[-1, ])
@@ -2066,7 +2077,6 @@ col.coef.wtio <- cols.PiG48[findInterval(coef.wtio, col.seq.PiG48)]
 
 ```
 
-
 ```{r overlap_figures}
 #TODO: test case, update later
 
@@ -2444,6 +2454,35 @@ SE3.cprs.noOLR <- unlist(lapply(SE.cprs.noOLR, function(x) x[[2]][3]))
 
 ```
 
+```{r intscore_noOLR}
+#point cprs 
+NEbase.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[1]]))
+NEconst.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[2]]))
+
+SEbase.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[1]]))
+SEconst.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[2]]))
+
+##Int Score
+#base terms (no split)
+NE1.base.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[1]][1]))
+NE2.base.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[1]][2]))
+NE3.base.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[1]][3]))
+
+SE1.base.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[1]][1]))
+SE2.base.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[1]][2]))
+SE3.base.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[1]][3]))
+
+#constant terms (test/train split)
+NE1.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[2]][1]))
+NE2.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[2]][2]))
+NE3.ints.noOLR <- unlist(lapply(NE.ints.noOLR, function(x) x[[2]][3]))
+
+SE1.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[2]][1]))
+SE2.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[2]][2]))
+SE3.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[2]][3]))
+```
+
+
 
 ## ANOVAs
 
@@ -2736,16 +2775,18 @@ dev.off()
 
 ### RMSE - no OLR
 
-```{r rmse}
+```{r const_rmse}
 #get yearly lines
 year.div <- seq(0.5, 57.5, by = 3)
 year.mid <- seq(2, 56, by = 3)
 
-NErmse.range.noOLR <- range(NE.rmse.noOLR)
-SErmse.range.noOLR <- range(SE.rmse.noOLR)
+NErmse.range.noOLR <- range(NEconst.rmse.noOLR, NEconst.rmse)
+SErmse.range.noOLR <- range(SEconst.rmse.noOLR, SEconst.rmse)
 
 colors.group <- rep(c("firebrick", "forestgreen", "royalblue3"), 19)
 
+
+par(mar = c(5, 5, 3, 7))
 plot(1:57, NEconst.rmse.noOLR, pch = 19, col = colors.group, 
      ylab = "RMSE", ylim = c(0, max(NErmse.range.noOLR)), xlab = "Year", axes = FALSE)
 box()
@@ -2754,8 +2795,13 @@ axis(1, at = year.mid, labels = c(season_years[1:19]), tick = FALSE )
 points(1:57, NEconst.rmse, pch = 17, col = colors.group)
 abline(v= year.div, lty = 2)
 title("NE Aus: RMSE", adj = 0)
+legend("topright", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("Group 1", "Group 2", "Group 3"), col = colors.group, pch = 16 )
+legend("right", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("with OLR", "without OLR"), col = "black", pch = c(17,19) )
 
 
+par(mar = c(5, 5, 3, 7))
 plot(1:57, SEconst.rmse.noOLR, pch = 19, col = colors.group, 
      ylab = "RMSE", ylim = c(0, max(SErmse.range.noOLR)), xlab = "Year", axes = FALSE)
 box()
@@ -2764,10 +2810,13 @@ axis(1, at = year.mid, labels = c(season_years[1:19]), tick = FALSE )
 points(1:57, SEconst.rmse, pch = 17, col = colors.group)
 abline(v= year.div, lty = 2)
 title("SE Aus: RMSE", adj = 0)
+legend("topright", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("Group 1", "Group 2", "Group 3"), col = colors.group, pch = 16 )
+legend("right", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("with OLR", "without OLR"), col = "black", pch = c(17,19) )
 ```
 
-
-```{r boxplot}
+```{r const_boxplot}
 rmse.range <- range(NEbase.rmse, NEconst.rmse, NEconst.rmse.noOLR,
                     NEbase.rmse, SEconst.rmse, SEconst.rmse.noOLR)
 
@@ -2815,6 +2864,96 @@ title("Constant Term Model : SE Aus RMSE", adj = 0)
 
 
 ```
+
+```{r base_rmse}
+#get yearly lines
+year.div <- seq(0.5, 57.5, by = 3)
+year.mid <- seq(2, 56, by = 3)
+
+NErmse.range.noOLR <- range(NEbase.rmse.noOLR, NEbase.rmse)
+SErmse.range.noOLR <- range(SEbase.rmse.noOLR, SEbase.rmse)
+
+colors.group <- rep(c("firebrick", "forestgreen", "royalblue3"), 19)
+
+
+par(mar = c(5, 5, 3, 7))
+plot(1:57, NEbase.rmse.noOLR, pch = 19, col = colors.group, 
+     ylab = "RMSE", ylim = c(0, max(NErmse.range.noOLR)), xlab = "Year", axes = FALSE)
+box()
+axis(2)
+axis(1, at = year.mid, labels = c(season_years[1:19]), tick = FALSE )
+points(1:57, NEbase.rmse, pch = 17, col = colors.group)
+abline(v= year.div, lty = 2)
+title("NE Aus: RMSE", adj = 0)
+legend("topright", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("Group 1", "Group 2", "Group 3"), col = colors.group, pch = 16 )
+legend("right", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("with OLR", "without OLR"), col = "black", pch = c(17,19) )
+
+
+par(mar = c(5, 5, 3, 7))
+plot(1:57, SEbase.rmse.noOLR, pch = 19, col = colors.group, 
+     ylab = "RMSE", ylim = c(0, max(SErmse.range.noOLR)), xlab = "Year", axes = FALSE)
+box()
+axis(2)
+axis(1, at = year.mid, labels = c(season_years[1:19]), tick = FALSE )
+points(1:57, SEbase.rmse, pch = 17, col = colors.group)
+abline(v= year.div, lty = 2)
+title("SE Aus: RMSE", adj = 0)
+legend("topright", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("Group 1", "Group 2", "Group 3"), col = colors.group, pch = 16 )
+legend("right", inset = c(-0.12, 0), xpd = TRUE,
+       legend = c("with OLR", "without OLR"), col = "black", pch = c(17,19) )
+
+```
+
+```{r base_boxplot}
+rmse.range <- range(NEbase.rmse, NEbase.rmse.noOLR,
+                    NEbase.rmse, SEbase.rmse.noOLR)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+NEmodel.names <- c("NE Aus 1", "NE Aus 1 - no OLR", 
+                   "NE Aus 2", "NE Aus 2 - no OLR",
+                   "NE Aus 3", "NE Aus 3 - no OLR")
+
+SEmodel.names <- c("SE Aus 1", "SE Aus 1 - no OLR", 
+                   "SE Aus 2", "SE Aus 2 - no OLR",
+                   "SE Aus 3", "SE Aus 3 - no OLR")
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NE1.base.noOLR, NE2.base.noOLR, NE3.base.noOLR, 
+        SE1.base.noOLR, SE2.base.noOLR, SE3.base.noOLR, pch = 19,
+         ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Base (Full) Model : RMSE", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.base.rmse, NE1.base.noOLR, 
+        NEgroup2.base.rmse, NE2.base.noOLR, 
+        NEgroup3.base.rmse, NE3.base.noOLR, pch = 19,
+         ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = NEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Base (Full) Model : NE Aus RMSE", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(SEgroup1.base.rmse, SE1.base.noOLR, 
+        SEgroup2.base.rmse, SE2.base.noOLR, 
+        SEgroup3.base.rmse, SE3.base.noOLR, pch = 19,
+        ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = SEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Base (Full)  Model : SE Aus RMSE", adj = 0)
+```
+
 
 
 
@@ -2984,6 +3123,63 @@ dev.off()
 
 ```
 
+
+### IS - no OLR
+
+```{r constat_terms}
+ints.range <- range(NEbase.int, NEconst.int, NEbase.ints.noOLR, NEconst.ints.noOLR, 
+                    NEbase.int, SEconst.int, SEbase.ints.noOLR, SEconst.ints.noOLR)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+NEmodel.names <- c("NE Aus 1", "NE Aus 1 - no OLR", 
+                   "NE Aus 2", "NE Aus 2 - no OLR",
+                   "NE Aus 3", "NE Aus 3 - no OLR")
+
+SEmodel.names <- c("SE Aus 1", "SE Aus 1 - no OLR", 
+                   "SE Aus 2", "SE Aus 2 - no OLR",
+                   "SE Aus 3", "SE Aus 3 - no OLR")
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NE1.ints.noOLR, NE2.ints.noOLR, NE3.ints.noOLR, 
+        SE1.ints.noOLR, SE2.ints.noOLR, SE3.ints.noOLR, pch = 19,
+         ylim = ints.range, ylab = "Score")
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : Interval Score", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.ints, NE1.ints.noOLR, 
+        NEgroup2.ints, NE2.ints.noOLR, 
+        NEgroup3.ints, NE3.ints.noOLR, pch = 19,
+         ylim = ints.range, ylab = "Score")
+axis(1, labels = NEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : NE Aus Interval Score", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(SEgroup1.ints, SE1.ints.noOLR, 
+        SEgroup2.ints, SE2.ints.noOLR, 
+        SEgroup3.ints, SE3.ints.noOLR, pch = 19,
+        ylim = ints.range, ylab = "Score")
+axis(1, labels = SEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : SE Aus Interval Score", adj = 0)
+
+```
+
+
+# eBIC models
+
+```{r }
+
+```
 
 
 
