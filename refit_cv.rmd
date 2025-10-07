@@ -108,7 +108,6 @@ SEresp_newpart <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
 
 ```
 
-
 ```{r partial_LOO}
 #leaving out a single year
 NEpartial_preds <- list()
@@ -141,7 +140,6 @@ for (k in 1:length(seasons)) {
 }
 
 ```
-
 
 # Functions (RAMP)
 
@@ -210,8 +208,6 @@ terms_only <- function(test.ramp, X_1){
 }
 
 ```
-
-
 
 # Refit Terms
 
@@ -399,6 +395,7 @@ names(lm.data_3)[1] <- "co"
 NE3.lm.noOLR <- lm(formula(NE3.refit.noOLR), lm.data_3)
 summary(NE3.lm.noOLR)
 
+NEmodels.noOLR <- list(negroup1.noOLR, negroup2.noOLR, negroup3.noOLR)
 NErefit.noOLR <- list(NE1.refit.noOLR, NE2.refit.noOLR, NE3.refit.noOLR)
 NE.lm.noOLR <- list(NE1.lm.noOLR, NE2.lm.noOLR, NE3.lm.noOLR)
 
@@ -472,6 +469,8 @@ names(lm.data_3)[1] <- "co"
 SE3.lm.noOLR <- lm(formula(SE3.refit.noOLR), lm.data_3)
 summary(SE3.lm.noOLR)
 
+
+SEmodels.noOLR <- list(segroup1.noOLR, segroup2.noOLR, segroup3.noOLR)
 SErefit.noOLR <- list(SE1.refit.noOLR, SE2.refit.noOLR, SE3.refit.noOLR)
 SE.lm.noOLR <- list(SE1.lm.noOLR, SE2.lm.noOLR, SE3.lm.noOLR)
 
@@ -482,8 +481,6 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NE.lm.noOLR, SE.lm.noOLR, 
      NErefit.noOLR, SErefit.noOLR, file = "models_noOLR.rda")
 ```
-
-
 
 # Refit w/ eBIC
 
@@ -822,7 +819,6 @@ export_summs(SE3, SE3.noOLR, scale = FALSE,
 ```
 
 
-
 ## Refit - LOO
 
 ```{r NEAus_refit}
@@ -906,30 +902,113 @@ load( "model_refits.rda")
 
 ### Refit - LOO no OLR
 
-```{r NErefit_sansOLR}
-#Test work, finalize with loop when done.
-#TODO: finalize this for all years
+```{r refit_sansOLR}
 
-j <- 19
-seasons[j]
-temp.resp <- NEpartial_resp[[j]]
-temp.preds <- NEpartial_preds[[j]]
 
-#for (k in 1:length(temp.preds)) {
-k <- 2
-temp.y <- as.numeric(temp.resp[[k]])
-#without OLR
-temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:260]))
-
+#NE Aus 
+NE.terms.noOLR <- NULL
+NE.model.noOLR <- NULL
+#NE.refit.noOLR <- NULL #refit with base model
+for (j in 1:length(seasons)) {
+  temp.resp <- NEpartial_resp[[j]]
+  temp.preds <- NEpartial_preds[[j]]
+  
+  temp.list <- NULL
+  temp.model <- NULL
+  temp.refit <- NULL
+  for (k in 1:length(temp.preds)) {
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:260]))
+    
     temp.fit <- RAMP(X = temp.X, y = temp.y,
                              penalty = "LASSO",
                              tune = "BIC",
                              n.lambda = 500)
     #terms only
-terms_only(temp.fit, temp.X)
-refit_ramp(temp.fit, temp.X)
-#refit_ramp(NEmodels[[k]], temp.X)
+    temp.list[[k]] <- terms_only(temp.fit, temp.X)
+    temp.model[[k]] <- refit_ramp(temp.fit, temp.X)
+    #temp.refit[[k]] <- refit_ramp(NEmodels[[k]], temp.X)
+  }
+  NE.terms.noOLR[[seasons[j]]] <- temp.list
+  NE.model.noOLR[[seasons[j]]] <- temp.model
+  #NE.refit.noOLR[[seasons[j]]] <- temp.refit
+}
+
+
+#sE Aus 
+SE.terms.noOLR <- NULL
+SE.model.noOLR <- NULL
+#SE.refit.noOLR <- NULL #refit with base model
+for (j in 1:length(seasons)) {
+  temp.resp <- SEpartial_resp[[j]]
+  temp.preds <- SEpartial_preds[[j]]
+  
+  temp.list <- NULL
+  temp.model <- NULL
+  temp.refit <- NULL
+  for (k in 1:length(temp.preds)) {
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:260]))
+    
+    temp.fit <- RAMP(X = temp.X, y = temp.y,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+    #terms only
+    temp.list[[k]] <- terms_only(temp.fit, temp.X)
+    temp.model[[k]] <- refit_ramp(temp.fit, temp.X)
+    #temp.refit[[k]] <- refit_ramp(SEmodels[[k]], temp.X)
+  }
+  SE.terms.noOLR[[seasons[j]]] <- temp.list
+  SE.model.noOLR[[seasons[j]]] <- temp.model
+  #SE.refit.noOLR[[seasons[j]]] <- temp.refit
+}
+
 ```
+
+```{r save}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(SE.terms.noOLR, SE.model.noOLR, 
+     NE.terms.noOLR, NE.model.noOLR, file = "modelrefits_noOLR.rda")
+```
+
+```{r noOLR_constant}
+NE.refit.noOLR <- NULL #refit with base model
+for (j in 1:length(seasons)) {
+  temp.resp <- NEpartial_resp[[j]]
+  temp.preds <- NEpartial_preds[[j]]
+  
+  temp.refit <- NULL
+  for (k in 1:length(temp.preds)) {
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:260]))
+
+    temp.refit[[k]] <- refit_ramp(NEmodels.noOLR[[k]], temp.X)
+  }
+  NE.refit.noOLR[[seasons[j]]] <- temp.refit
+}
+
+
+SE.refit.noOLR <- NULL #refit with base model
+for (j in 1:length(seasons)) {
+  temp.resp <- SEpartial_resp[[j]]
+  temp.preds <- SEpartial_preds[[j]]
+  
+  temp.refit <- NULL
+  for (k in 1:length(temp.preds)) {
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:260]))
+    
+    temp.refit[[k]] <- refit_ramp(SEmodels.noOLR[[k]], temp.X)
+  }
+  SE.refit.noOLR[[seasons[j]]] <- temp.refit
+}
+```
+
 
 ### Refit - eBIC
 
@@ -1365,6 +1444,7 @@ NE.rmse <- NULL
 NE.cprs <- NULL
 NE.ints <- NULL
 NE.const.LM <- NULL #linear models
+NE.vary.LM <- NULL
 for (i in 1:length(seasons)) {
   fit.resp <- NEpartial_resp[[i]]
   fit.preds <- NEpartial_preds[[i]]
@@ -1406,6 +1486,11 @@ for (i in 1:length(seasons)) {
     pred.base <- predict(NE.lms[[j]], X.valid, se.fit = TRUE)
     pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
     pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
+    
+    #prediction interval
+    pred.base.interval <- predict(NE.lms[[j]], X.valid, interval = "prediction")
+    pred.const.interval <- predict(temp.lm.constant, X.valid, interval = "prediction")
+    pred.vary.interval <- predict(temp.lm.varying, X.valid, interval = "prediction")
     
     #predict( ,se.fit = TRUE)
     y.pred.base <- pred.base$fit 
@@ -1539,6 +1624,183 @@ for (i in 1:length(seasons)) {
 #TODO: get out of sample R2 working then merge it into previous block validation code.
 
 ```
+
+### LOO - Models w/o OLR
+
+```{r}
+NE.rmse.noOLR <- NULL
+NE.cprs.noOLR <- NULL
+NE.ints.noOLR <- NULL
+NE.const.noOLR <- NULL #linear models
+for (i in 1:length(seasons)) {
+  fit.resp <- NEpartial_resp[[i]]
+  fit.preds <- NEpartial_preds[[i]]
+  
+  valid.resp <- NEvalid_resp[[i]]
+  valid.preds <- NEvalid_preds[[i]]
+  
+  #get terms/model for year/season 
+  year.constant <- NE.refit.noOLR[[i]]
+  year.varying <- NE.model.noOLR[[i]] 
+  
+  #add in lists/matrices
+  NE.loo <- NULL #
+  NErmse.yearly <- matrix(NA, ncol = 3)
+  colnames(NErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NEcprs.yearly <- matrix(NA, ncol = 3)
+  colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NEis.yearly <- matrix(NA, ncol = 3)
+  colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  for (j in 1:3) {
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:260]))
+    
+    lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
+    names(lm.data.fit)[1] <- "co"
+
+    #fit lm models (w/o year/season)
+    temp.lm.constant <- lm(formula(year.constant[[j]]), lm.data.fit)
+    temp.lm.varying <- lm(formula(year.varying[[j]]), lm.data.fit)
+  
+    #predict/rmse
+    X.valid <- valid.preds[[j]][ ,1:260]
+    y.valid <- valid.resp[[j]]
+    
+    #TODO: create output for the predict!!
+    #prediction
+    pred.base <- predict(NE.lm.noOLR[[j]], X.valid, se.fit = TRUE)
+    pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
+    pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
+    
+    #predict( ,se.fit = TRUE)
+    y.pred.base <- pred.base$fit 
+    y.pred.const <- pred.const$fit
+    y.pred.vary <- pred.vary$fit
+    
+    #rmse test
+    rmse.base <-  rmse(y.valid, y.pred.base)
+    rmse.const <- rmse(y.valid, y.pred.const)
+    rmse.vary <- rmse(y.valid, y.pred.vary)
+    
+    #cprs
+    cprs.base <- mean(CPRS(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    #IS95
+    is.base <- mean(intscore(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    #assign data
+    RMSE.temp.mat <- cbind(rmse.base, rmse.const, rmse.vary)
+    NErmse.yearly <- rbind(NErmse.yearly, RMSE.temp.mat) 
+    CPRS.temp.mat <- cbind(cprs.base, cprs.const, cprs.vary)
+    NEcprs.yearly <- rbind(NEcprs.yearly, CPRS.temp.mat)
+    IS.temp.mat <- cbind(is.base, is.const, is.vary)
+    NEis.yearly <- rbind(NEis.yearly, IS.temp.mat)
+    
+    NE.loo[[j]] <- temp.lm.constant
+  }
+  #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
+  NE.rmse.noOLR[[seasons[i]]] <- as.data.frame(NErmse.yearly[-1, ])
+  NE.cprs.noOLR[[seasons[i]]] <- as.data.frame(NEcprs.yearly[-1, ])
+  NE.ints.noOLR[[seasons[i]]] <- as.data.frame(NEis.yearly[-1, ])
+  NE.const.noOLR[[seasons[i]]] <- NE.loo
+}  
+
+
+SE.rmse.noOLR <- NULL
+SE.cprs.noOLR <- NULL
+SE.ints.noOLR <- NULL
+SE.const.noOLR <- NULL #linear models
+SE.vary.noOLR <- NULL
+for (i in 1:length(seasons)) {
+  fit.resp <- SEpartial_resp[[i]]
+  fit.preds <- SEpartial_preds[[i]]
+  
+  valid.resp <- SEvalid_resp[[i]]
+  valid.preds <- SEvalid_preds[[i]]
+  
+  #get terms/model for year/season 
+  year.constant <- SE.refit.noOLR[[i]]
+  year.varying <- SE.model.noOLR[[i]]
+  
+  #add in lists/matrices
+  SE.loo <- NULL #
+  SE.var <- NULL 
+  SErmse.yearly <- matrix(NA, ncol = 3)
+  colnames(SErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SEcprs.yearly <- matrix(NA, ncol = 3)
+  colnames(SEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SEis.yearly <- matrix(NA, ncol = 3)
+  colnames(SEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  #groups/clusters below
+  for (j in 1:3) {
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:260]))
+    
+    lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
+    names(lm.data.fit)[1] <- "co"
+
+    #fit lm models (w/o year/season)
+    temp.lm.constant <- lm(formula(year.constant[[j]]), lm.data.fit)
+    temp.lm.varying <- lm(formula(year.varying[[j]]), lm.data.fit)
+    
+    #predict/rmse
+    X.valid <- valid.preds[[j]][ ,1:260]
+    y.valid <- valid.resp[[j]]
+    
+    #prediction
+    pred.base <- predict(SE.lm.noOLR[[j]], X.valid, se.fit = TRUE)
+    pred.const <- predict(temp.lm.constant, X.valid, se.fit = TRUE)
+    pred.vary <- predict(temp.lm.varying, X.valid, se.fit = TRUE)
+    
+    y.pred.base <- pred.base$fit 
+    y.pred.const <- pred.const$fit
+    y.pred.vary <- pred.vary$fit
+    
+    #rmse test
+    rmse.base <-  rmse(y.valid, y.pred.base)
+    rmse.const <- rmse(y.valid, y.pred.const)
+    rmse.vary <- rmse(y.valid, y.pred.vary)
+    
+    #cprs
+    cprs.base <- mean(CPRS(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    #IS95
+    is.base <- mean(intscore(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    
+    temp.mat <- cbind(rmse.base, rmse.const, rmse.vary)
+    SErmse.yearly <- rbind(SErmse.yearly, temp.mat) 
+    CPRS.temp.mat <- cbind(cprs.base, cprs.const, cprs.vary)
+    SEcprs.yearly <- rbind(SEcprs.yearly, CPRS.temp.mat)
+    IS.temp.mat <- cbind(is.base, is.const, is.vary)
+    SEis.yearly <- rbind(SEis.yearly, IS.temp.mat)
+    
+    SE.loo[[j]] <- temp.lm.constant
+    SE.var[[j]] <- temp.lm.varying
+  }
+  #NErmse.yearly <- as.data.frame(NErmse.yearly[-1, ])
+  SE.rmse.noOLR[[seasons[i]]] <- as.data.frame(SErmse.yearly[-1, ])
+  SE.cprs.noOLR[[seasons[i]]] <- as.data.frame(SEcprs.yearly[-1, ])
+  SE.ints.noOLR[[seasons[i]]] <- as.data.frame(SEis.yearly[-1, ])
+  SE.const.noOLR[[seasons[i]]] <- SE.loo
+  SE.vary.noOLR[[seasons[i]]] <- SE.var
+}
+
+
+
+```
+
 
 
 ### Model Summaries
@@ -1996,6 +2258,7 @@ SE.kcv.noOLR
 
 ```
 
+## Validation
 
 ```{r validation_extract}
 #rmse
@@ -2027,7 +2290,6 @@ SEvary.int <- unlist(lapply(SE.ints, function(x) x[[3]]))
 
 
 ```
-
 
 ```{r extract_byGroup}
 ##RMSE
@@ -2092,8 +2354,39 @@ SEgroup3.ints <- unlist(lapply(SE.ints, function(x) x[[2]][3]))
 
 ```
 
+```{r rmse_noOLR}
+#point rmse 
+NEbase.rmse.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[1]]))
+NEconst.rmse.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[2]]))
+NEvary.rmse.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[3]]))
 
-# ANOVAs
+SEbase.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[1]]))
+SEconst.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[2]]))
+SEvary.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[3]]))
+
+#boxplot rmse
+#base terms (no splot)
+NE1.base.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[1]][1]))
+NE2.base.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[1]][2]))
+NE3.base.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[1]][3]))
+
+SE1.base.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[1]][1]))
+SE2.base.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[1]][2]))
+SE3.base.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[1]][3]))
+
+#constant terms (test/train split)
+NE1.rmse.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[2]][1]))
+NE2.rmse.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[2]][2]))
+NE3.rmse.noOLR <- unlist(lapply(NE.rmse.noOLR, function(x) x[[2]][3]))
+
+SE1.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[2]][1]))
+SE2.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[2]][2]))
+SE3.rmse.noOLR <- unlist(lapply(SE.rmse.noOLR, function(x) x[[2]][3]))
+```
+
+
+
+## ANOVAs
 
 Use to show the effect of including or excluding OLR
 
@@ -2208,6 +2501,89 @@ dev.off()
 ```
 
 
+### RMSE - no OLR
+
+```{r rmse}
+#get yearly lines
+year.div <- seq(0.5, 57.5, by = 3)
+year.mid <- seq(2, 56, by = 3)
+
+NErmse.range.noOLR <- range(NE.rmse.noOLR)
+SErmse.range.noOLR <- range(SE.rmse.noOLR)
+
+colors.group <- rep(c("firebrick", "forestgreen", "royalblue3"), 19)
+
+plot(1:57, NEconst.rmse.noOLR, pch = 19, col = colors.group, 
+     ylab = "RMSE", ylim = c(0, max(NErmse.range.noOLR)), xlab = "Year", axes = FALSE)
+box()
+axis(2)
+axis(1, at = year.mid, labels = c(season_years[1:19]), tick = FALSE )
+points(1:57, NEconst.rmse, pch = 17, col = colors.group)
+abline(v= year.div, lty = 2)
+title("NE Aus: RMSE", adj = 0)
+
+
+plot(1:57, SEconst.rmse.noOLR, pch = 19, col = colors.group, 
+     ylab = "RMSE", ylim = c(0, max(SErmse.range.noOLR)), xlab = "Year", axes = FALSE)
+box()
+axis(2)
+axis(1, at = year.mid, labels = c(season_years[1:19]), tick = FALSE )
+points(1:57, SEconst.rmse, pch = 17, col = colors.group)
+abline(v= year.div, lty = 2)
+title("SE Aus: RMSE", adj = 0)
+```
+
+
+```{r boxplot}
+rmse.range <- range(NEbase.rmse, NEconst.rmse, NEconst.rmse.noOLR,
+                    NEbase.rmse, SEconst.rmse, SEconst.rmse.noOLR)
+
+model.names <- c("NE Aus 1", "NE Aus 2", "NE Aus 3",
+                 "SE Aus 1", "SE Aus 2", "SE Aus 3")
+
+NEmodel.names <- c("NE Aus 1", "NE Aus 1 - no OLR", 
+                   "NE Aus 2", "NE Aus 2 - no OLR",
+                   "NE Aus 3", "NE Aus 3 - no OLR")
+
+SEmodel.names <- c("SE Aus 1", "SE Aus 1 - no OLR", 
+                   "SE Aus 2", "SE Aus 2 - no OLR",
+                   "SE Aus 3", "SE Aus 3 - no OLR")
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NE1.rmse.noOLR, NE2.rmse.noOLR, NE3.rmse.noOLR, 
+        SE1.rmse.noOLR, SE2.rmse.noOLR, SE3.rmse.noOLR, pch = 19,
+         ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : RMSE", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(NEgroup1.rmse, NE1.rmse.noOLR, 
+        NEgroup2.rmse, NE2.rmse.noOLR, 
+        NEgroup3.rmse, NE3.rmse.noOLR, pch = 19,
+         ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = NEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : NE Aus RMSE", adj = 0)
+
+
+par(mar = c(5, 5, 3, 5))
+boxplot(SEgroup1.rmse, SE1.rmse.noOLR, 
+        SEgroup2.rmse, SE2.rmse.noOLR, 
+        SEgroup3.rmse, SE3.rmse.noOLR, pch = 19,
+        ylim = rmse.range, ylab = "RMSE")
+axis(1, labels = SEmodel.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+box()
+title("Constant Term Model : SE Aus RMSE", adj = 0)
+
+
+```
+
+
 
 ## CRPS Plots
 
@@ -2254,6 +2630,11 @@ title("Constant Term Model : CRPS", adj = 0)
 dev.off()
 ```
 
+### CRPS - no OLR
+
+```{r}
+
+```
 
 
 ## Interval Score Plots
