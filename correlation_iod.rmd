@@ -59,7 +59,7 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load( "IOD_lag.rda")
 
 setwd("~/CO_AUS/Aus_CO-main/pIOD")
-load( "weeklypIOD.rda")
+load( "weeklypIOD.rda") #new.pIOD.df
 ```
 
 # Additional Data Cleaning
@@ -77,6 +77,166 @@ rownames(pIOD.df) <- NULL
 
 
 # Time-Series Work
+
+
+## Time-Series Figures
+
+```{r TS_figs}
+jja.ind <- which(month(bounded_pred_df$time) %in% c(6,7,8))
+son.ind <- which(month(bounded_pred_df$time) %in% c(9,10,11))
+
+pIOD.df$s.index <- scale(pIOD.df$s.index)
+pIOD.df$m.index <- scale(pIOD.df$m.index)
+
+#jja
+dmi.jja <- bounded_pred2_df[jja.ind, ]
+piod.jja <- pIOD.df[jja.ind,]
+#son
+dmi.son <- bounded_pred2_df[son.ind, ]
+piod.son <- pIOD.df[son.ind,]
+
+s.index.son  <- piod.son$s.index
+etio.son <- dmi.son$etio.anomaly
+strong.range <- range(etio.son, s.index.son)
+
+m.index.son  <- piod.son$m.index
+wtio.son <- dmi.son$wtio.anomaly
+mod.range <- range(wtio.son, m.index.son)
+
+son.dmi <- dmi.son$dmi.anomaly
+
+#fig setup
+years.pIOD <- 2000:2019
+
+n.son <- length(son.ind)
+#length(s.index.son)
+son.div <- which(diff(piod.son$year) !=0 ) + 0.5
+son.div.full <-  c(0.5, son.div, n.son+0.5)
+
+year.loc <- (head(son.div.full, -1) + tail(son.div.full, -1))/2
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "son_strongIOD.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.son), s.index.son, type = "l",  col = "firebrick", ylim=strong.range,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.son), -etio.son, col = "royalblue4")
+title("SON Weekly - Strong pIOD", adj = 0)
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+legend("topright",
+       legend = c("S-Index", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+dev.off()
+
+png(filename = "son_modIOD.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(m.index.son), m.index.son, type = "l",  col = "forestgreen", ylim=mod.range,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(wtio.son), wtio.son, col = "magenta4")
+title("SON Weekly - Moderate pIOD", adj = 0)
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+legend("topright",
+       legend = c("M-Index", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+dev.off()
+```
+
+
+```{r}
+mod.range2 <- range(wtio.son, m.index.son, son.dmi)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+png(filename = "son_modIOD2.png", width = 2600, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(m.index.son), m.index.son, type = "l",  col = "forestgreen", ylim=mod.range2,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(wtio.son), wtio.son, col = "magenta4")
+lines(1:length(son.dmi), son.dmi, col = "orangered3", lty = 4)
+title("SON Weekly - Moderate pIOD", adj = 0)
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+legend("topright",
+       legend = c("M-Index", "WTIO", "DMI"),
+       lty    = c(1,1,4),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4", "orangered3"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+dev.off()
+```
+
+```{r jja_plots}
+s.index.jja  <- piod.jja$s.index
+etio.jja <- dmi.jja$etio.anomaly
+strong.rangejja <- range(etio.jja, s.index.jja)
+
+m.index.jja  <- piod.jja$m.index
+wtio.jja <- dmi.jja$wtio.anomaly
+mod.rangejja <- range(wtio.jja, m.index.jja)
+
+jja.dmi <- dmi.jja$dmi.anomaly
+
+#fig setup
+years.pIOD <- 2000:2019
+
+n.jja <- length(jja.ind)
+#length(s.index.son)
+jja.div <- which(diff(piod.jja$year) !=0 ) + 0.5
+jja.div.full <-  c(0.5, jja.div, n.jja+0.5)
+
+year.loc <- (head(jja.div.full, -1) + tail(jja.div.full, -1))/2
+
+
+
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.jja), s.index.jja, type = "l",  col = "firebrick", ylim=strong.rangejja,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.jja), -etio.jja, col = "royalblue4")
+title("JJA Weekly - Strong pIOD", adj = 0)
+abline(h = 0, lty  =2)
+abline(v=jja.div.full, lty = 3, lwd = 0.75, col = "gray35")
+legend("topright",
+       legend = c("S-Index", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+```
+
 
 
 ## ACF & CCF
@@ -787,12 +947,6 @@ plot(dmi.jja$etio.anomaly, scale(piod.jja$PC2), pch = 19)
 
 #abline(etio.jja.lm, lwd = 1.5, lty = 2, col = "firebrick")
 ```
-
-
-```{r djf_plots}
-
-```
-
 
 
 Note: look at comparisons for SON, then the other seasons.
