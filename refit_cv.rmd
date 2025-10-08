@@ -3787,9 +3787,9 @@ dev.off()
 
 
 ```{r NEAUS3_killME}
-NE3.coef
-NE3.constcoef
-NE3.varycoef
+#NE3.coef
+#NE3.constcoef
+#NE3.varycoef
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
@@ -4295,7 +4295,6 @@ links[[46]] <- list(
 )
 
 
-
 # --- Plot 6: Interaction Effects ---
 par(mar = c(4, 4, 2, 2))
 
@@ -4305,8 +4304,266 @@ plot(NE3.coef[1], 0, type = "n", main = "",
      yaxt = "n",  ylab = "")
 abline(v= 0, lty = 2)
 
+#square terms
+int_17 <- grconvertY(links[[17]]$from_y, from = "ndc", to = "user") #
+int_18 <- grconvertY(links[[18]]$from_y, from = "ndc", to = "user") #
 
+#interactions
+int_1 <- grconvertY(links[[1]]$from_y, from = "ndc", to = "user") # #nino_lag41:etio_lag19 #base
+int_2 <- grconvertY(links[[2]]$from_y, from = "ndc", to = "user") # #nino_lag41:etio_lag19 
+int_3 <- grconvertY(links[[3]]$from_y, from = "ndc", to = "user") # #nino_lag41:tsa_lag19 #base
+int_4 <- grconvertY(links[[4]]$from_y, from = "ndc", to = "user") # #nino_lag41:tsa_lag19  
+int_5 <- grconvertY(links[[5]]$from_y, from = "ndc", to = "user") #
+int_6 <- grconvertY(links[[6]]$from_y, from = "ndc", to = "user") #
+int_7 <- grconvertY(links[[7]]$from_y, from = "ndc", to = "user") #
+int_8 <- grconvertY(links[[8]]$from_y, from = "ndc", to = "user") #
+int_9 <- grconvertY(links[[9]]$from_y, from = "ndc", to = "user") #  
+int_10 <- grconvertY(links[[10]]$from_y, from = "ndc", to = "user") #
+int_11 <- grconvertY(links[[11]]$from_y, from = "ndc", to = "user") #
+int_12 <- grconvertY(links[[12]]$from_y, from = "ndc", to = "user") #
+int_13 <- grconvertY(links[[13]]$from_y, from = "ndc", to = "user") #
+int_14 <- grconvertY(links[[14]]$from_y, from = "ndc", to = "user") #
+int_15 <- grconvertY(links[[15]]$from_y, from = "ndc", to = "user") #
+int_16 <- grconvertY(links[[16]]$from_y, from = "ndc", to = "user") #
 
+int_18 <- grconvertY(links[[18]]$from_y, from = "ndc", to = "user") #
+int_19 <- grconvertY(links[[19]]$from_y, from = "ndc", to = "user") #  
+int_20 <- grconvertY(links[[20]]$from_y, from = "ndc", to = "user") #
+int_21 <- grconvertY(links[[21]]$from_y, from = "ndc", to = "user") #
+int_22 <- grconvertY(links[[22]]$from_y, from = "ndc", to = "user") #
+int_23 <- grconvertY(links[[23]]$from_y, from = "ndc", to = "user") #
+int_24 <- grconvertY(links[[24]]$from_y, from = "ndc", to = "user") #
+int_25 <- grconvertY(links[[25]]$from_y, from = "ndc", to = "user") #
+int_26 <- grconvertY(links[[26]]$from_y, from = "ndc", to = "user") #
+int_27 <- grconvertY(links[[27]]$from_y, from = "ndc", to = "user") #
+int_28 <- grconvertY(links[[28]]$from_y, from = "ndc", to = "user") #
+int_29 <- grconvertY(links[[29]]$from_y, from = "ndc", to = "user") #  
+int_30 <- grconvertY(links[[30]]$from_y, from = "ndc", to = "user") #
+int_31 <- grconvertY(links[[31]]$from_y, from = "ndc", to = "user") #
+int_32 <- grconvertY(links[[32]]$from_y, from = "ndc", to = "user") #
+int_33 <- grconvertY(links[[33]]$from_y, from = "ndc", to = "user") #
+int_34 <- grconvertY(links[[34]]$from_y, from = "ndc", to = "user") #
+int_35 <- grconvertY(links[[35]]$from_y, from = "ndc", to = "user") #
+int_36 <- grconvertY(links[[36]]$from_y, from = "ndc", to = "user") #
+int_37 <- grconvertY(links[[37]]$from_y, from = "ndc", to = "user") #
+int_38 <- grconvertY(links[[38]]$from_y, from = "ndc", to = "user") #
+int_39 <- grconvertY(links[[39]]$from_y, from = "ndc", to = "user") #  
+int_40 <- grconvertY(links[[40]]$from_y, from = "ndc", to = "user") #
+int_41 <- grconvertY(links[[41]]$from_y, from = "ndc", to = "user") #
+int_42 <- grconvertY(links[[42]]$from_y, from = "ndc", to = "user") #
+int_43 <- grconvertY(links[[43]]$from_y, from = "ndc", to = "user") #
+int_44 <- grconvertY(links[[44]]$from_y, from = "ndc", to = "user") #
+int_45 <- grconvertY(links[[45]]$from_y, from = "ndc", to = "user") #
+int_46 <- grconvertY(links[[46]]$from_y, from = "ndc", to = "user") #
+
+#interaction points
+int_pt1 <- (int_1 + int_9)/2
+segments(NE3.coef[14], int_1, NE3.coef[14], int_pt1, col = "green4", lty = 2, lwd = 1.5)
+segments(NE3.coef[14], int_9, NE3.coef[14], int_pt1, col = "royalblue4", lty = 2, lwd = 1.5)
+
+int_pt2 <- (int_2 + int_10)/2
+segments(NE3.constcoef[14], int_2, NE3.constcoef[14], int_pt2, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[14], int_10, NE3.constcoef[14], int_pt2, col = "royalblue2", lty = 3, lwd = 1.5)
+
+int_pt3 <- (int_3 + int_23)/2
+segments(NE3.coef[15], int_3, NE3.coef[15], int_pt3, col = "green4", lty = 2, lwd = 1.5)
+segments(NE3.coef[15], int_23, NE3.coef[15], int_pt3, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt4 <- (int_4 + int_24)/2
+segments(NE3.constcoef[15], int_4, NE3.constcoef[15], int_pt4, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[15], int_24, NE3.constcoef[15], int_pt4, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt5 <- (int_5 + int_25)/2
+segments(NE3.coef[16], int_5, NE3.coef[16], int_pt5, col = "green4", lty = 2, lwd = 1.5)
+segments(NE3.coef[16], int_25, NE3.coef[16], int_pt5, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt6 <- (int_6 + int_26)/2
+segments(NE3.constcoef[16], int_6, NE3.constcoef[16], int_pt6, col = "chartreuse2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[16], int_26, NE3.constcoef[16], int_pt6, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt7 <- (int_7 + int_15)/2
+segments(NE3.varycoef[15], int_7, NE3.varycoef[15], int_pt7, col = "palevioletred2", lty = 3, lwd = 1.5)
+segments(NE3.varycoef[15], int_15, NE3.varycoef[15], int_pt7, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt8 <- (int_8 + int_16)/2
+segments(NE3.varycoef[16], int_8, NE3.varycoef[16], int_pt8, col = "palevioletred2", lty = 3, lwd = 1.5)
+segments(NE3.varycoef[16], int_16, NE3.varycoef[16], int_pt8, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt9 <- (int_11 + int_19)/2
+segments(NE3.coef[17], int_11, NE3.coef[17], int_pt9, col = "royalblue4", lty = 2, lwd = 1.5)
+segments(NE3.coef[17], int_19, NE3.coef[17], int_pt9, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt10 <- (int_12 + int_20)/2
+segments(NE3.constcoef[17], int_12, NE3.constcoef[17], int_pt10, col = "royalblue2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[17], int_20, NE3.constcoef[17], int_pt10, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt11 <- (int_13 + int_21)/2
+segments(NE3.coef[13], int_13, NE3.coef[13], int_pt11, col = "royalblue4", lty = 2, lwd = 1.5)
+segments(NE3.coef[13], int_21, NE3.coef[13], int_pt11, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt12 <- (int_14 + int_22)/2
+segments(NE3.constcoef[13], int_14, NE3.constcoef[13], int_pt12, col = "royalblue2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[13], int_22, NE3.constcoef[13], int_pt12, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt13 <- (int_27 + int_29)/2
+segments(NE3.coef[18], int_27, NE3.coef[18], int_pt13, col = "darkorange3", lty = 2, lwd = 1.5)
+segments(NE3.coef[18], int_29, NE3.coef[18], int_pt13, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt14 <- (int_28 + int_30)/2
+segments(NE3.constcoef[18], int_28, NE3.constcoef[18], int_pt14, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[18], int_30, NE3.constcoef[18], int_pt14, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt15 <- (int_31 + int_33)/2
+segments(NE3.coef[20], int_31, NE3.coef[20], int_pt15, col = "darkorange3", lty = 2, lwd = 1.5)
+segments(NE3.coef[20], int_33, NE3.coef[20], int_pt15, col = "darkorange3", lty = 2, lwd = 1.5)
+
+int_pt16 <- (int_32 + int_34)/2
+segments(NE3.constcoef[20], int_32, NE3.constcoef[20], int_pt16, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[20], int_34, NE3.constcoef[20], int_pt16, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+
+int_pt17 <- (int_35 + int_41)/2
+segments(NE3.coef[21], int_35, NE3.coef[21], int_pt17, col = "darkorange3", lty = 2, lwd = 1.5)
+segments(NE3.coef[21], int_41, NE3.coef[21], int_pt17, col = "red3", lty = 2, lwd = 1.5)
+
+int_pt18 <- (int_36 + int_42)/2
+segments(NE3.constcoef[21], int_36, NE3.constcoef[21], int_pt18, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[21], int_42, NE3.constcoef[21], int_pt18, col = "coral2", lty = 3, lwd = 1.5)
+
+int_pt19 <- (int_37 + int_43)/2
+segments(NE3.coef[22], int_37, NE3.coef[22], int_pt19, col = "darkorange3", lty = 2, lwd = 1.5)
+segments(NE3.coef[22], int_43, NE3.coef[22], int_pt19, col = "red3", lty = 2, lwd = 1.5)
+
+int_pt20 <- (int_38 + int_44)/2
+segments(NE3.constcoef[22], int_38, NE3.constcoef[22], int_pt20, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[22], int_44, NE3.constcoef[22], int_pt20, col = "coral2", lty = 3, lwd = 1.5)
+
+int_pt21 <- (int_39 + int_45)/2
+segments(NE3.coef[19], int_39, NE3.coef[19], int_pt21, col = "darkorange3", lty = 2, lwd = 1.5)
+segments(NE3.coef[19], int_45, NE3.coef[19], int_pt21, col = "turquoise4", lty = 2, lwd = 1.5)
+
+int_pt22 <- (int_40 + int_46)/2
+segments(NE3.constcoef[19], int_40, NE3.constcoef[19], int_pt22, col = "darkgoldenrod2", lty = 3, lwd = 1.5)
+segments(NE3.constcoef[19], int_46, NE3.constcoef[19], int_pt22, col = "paleturquoise3", lty = 3, lwd = 1.5)
+
+#square points
+points(NE3.coef[12], int_17,  pch = 22, col = "grey4",
+        bg =  alpha("darkorange3",.95), cex = 1.5,) 
+points(NE3.constcoef[12], int_18,  pch = 22, col = "grey4",
+        bg =  alpha("darkgoldenrod2",.95), cex = 1.5,) 
+
+#interaction points
+points(NE3.coef[14], int_pt1,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[14], int_pt2,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[15], int_pt3,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[15], int_pt4,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[16], int_pt5,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[16], int_pt6,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.varycoef[15], int_pt7,  pch = 24, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.33,) 
+points(NE3.varycoef[16], int_pt8,  pch = 24, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.33,) 
+points(NE3.coef[17], int_pt9,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[17], int_pt10,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[13], int_pt11,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[13], int_pt12,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[18], int_pt13,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[18], int_pt14,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[20], int_pt15,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[20], int_pt16,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[21], int_pt17,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[21], int_pt18,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[22], int_pt19,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[22], int_pt20,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.coef[19], int_pt21,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+points(NE3.constcoef[19], int_pt22,  pch = 22, col = "grey4",
+        bg =  alpha("gray",.95), cex = 1.5,) 
+
+#link to x 
+links[[1]]$to_x <- grconvertX(NE3.coef[14], from = "user", to = "ndc")
+links[[2]]$to_x <- grconvertX(NE3.constcoef[14], from = "user", to = "ndc")
+links[[3]]$to_x <- grconvertX(NE3.coef[15], from = "user", to = "ndc")
+links[[4]]$to_x <- grconvertX(NE3.constcoef[15], from = "user", to = "ndc")
+links[[5]]$to_x <- grconvertX(NE3.coef[16], from = "user", to = "ndc")
+links[[6]]$to_x <- grconvertX(NE3.constcoef[16], from = "user", to = "ndc")
+links[[7]]$to_x <- grconvertX(NE3.varycoef[15], from = "user", to = "ndc")
+links[[8]]$to_x <- grconvertX(NE3.varycoef[16], from = "user", to = "ndc")
+links[[9]]$to_x <- grconvertX(NE3.coef[14], from = "user", to = "ndc")
+links[[10]]$to_x <- grconvertX(NE3.constcoef[14], from = "user", to = "ndc")
+links[[11]]$to_x <- grconvertX(NE3.coef[17], from = "user", to = "ndc")
+links[[12]]$to_x <- grconvertX(NE3.constcoef[17], from = "user", to = "ndc")
+links[[13]]$to_x <- grconvertX(NE3.coef[13], from = "user", to = "ndc")
+links[[14]]$to_x <- grconvertX(NE3.constcoef[13], from = "user", to = "ndc")
+links[[15]]$to_x <- grconvertX(NE3.varycoef[15], from = "user", to = "ndc")
+links[[16]]$to_x <- grconvertX(NE3.varycoef[16], from = "user", to = "ndc")
+links[[17]]$to_x <- grconvertX(NE3.coef[12], from = "user", to = "ndc")
+links[[18]]$to_x <- grconvertX(NE3.constcoef[12], from = "user", to = "ndc")
+links[[19]]$to_x <- grconvertX(NE3.coef[17], from = "user", to = "ndc")
+links[[20]]$to_x <- grconvertX(NE3.constcoef[17], from = "user", to = "ndc")
+links[[21]]$to_x <- grconvertX(NE3.coef[13], from = "user", to = "ndc")
+links[[22]]$to_x <- grconvertX(NE3.constcoef[13], from = "user", to = "ndc")
+links[[23]]$to_x <- grconvertX(NE3.coef[15], from = "user", to = "ndc")
+links[[24]]$to_x <- grconvertX(NE3.constcoef[15], from = "user", to = "ndc")
+links[[25]]$to_x <- grconvertX(NE3.coef[16], from = "user", to = "ndc")
+links[[26]]$to_x <- grconvertX(NE3.constcoef[16], from = "user", to = "ndc")
+links[[27]]$to_x <- grconvertX(NE3.coef[18], from = "user", to = "ndc")
+links[[28]]$to_x <- grconvertX(NE3.constcoef[18], from = "user", to = "ndc")
+links[[29]]$to_x <- grconvertX(NE3.coef[18], from = "user", to = "ndc")
+links[[30]]$to_x <- grconvertX(NE3.constcoef[18], from = "user", to = "ndc")
+links[[31]]$to_x <- grconvertX(NE3.coef[20], from = "user", to = "ndc")
+links[[32]]$to_x <- grconvertX(NE3.constcoef[20], from = "user", to = "ndc")
+links[[33]]$to_x <- grconvertX(NE3.coef[20], from = "user", to = "ndc")
+links[[34]]$to_x <- grconvertX(NE3.constcoef[20], from = "user", to = "ndc")
+links[[35]]$to_x <- grconvertX(NE3.coef[21], from = "user", to = "ndc")
+links[[36]]$to_x <- grconvertX(NE3.constcoef[21], from = "user", to = "ndc")
+links[[37]]$to_x <- grconvertX(NE3.coef[22], from = "user", to = "ndc")
+links[[38]]$to_x <- grconvertX(NE3.constcoef[22], from = "user", to = "ndc")
+links[[39]]$to_x <- grconvertX(NE3.coef[19], from = "user", to = "ndc")
+links[[40]]$to_x <- grconvertX(NE3.constcoef[19], from = "user", to = "ndc")
+links[[41]]$to_x <- grconvertX(NE3.coef[21], from = "user", to = "ndc")
+links[[42]]$to_x <- grconvertX(NE3.constcoef[21], from = "user", to = "ndc")
+links[[43]]$to_x <- grconvertX(NE3.coef[22], from = "user", to = "ndc")
+links[[44]]$to_x <- grconvertX(NE3.constcoef[22], from = "user", to = "ndc")
+links[[45]]$to_x <- grconvertX(NE3.coef[19], from = "user", to = "ndc")
+links[[46]]$to_x <- grconvertX(NE3.constcoef[19], from = "user", to = "ndc")
+
+for (i in 1:length(links)) {
+  links[[i]]$to_y <- links[[i]]$from_y  # same y to keep it horizontal
+}
+
+# --- Draw horizontal linking lines ---
+par(xpd = NA)  # allow drawing outside plot regions
+colors <- c(rep(c("green4", "chartreuse2"), 3),  "palevioletred2", "palevioletred2",
+            rep(c("royalblue4", "royalblue2"), 3),  "darkgoldenrod3", "darkgoldenrod3",
+            rep(c("darkorange3", "darkgoldenrod3"), 12), 
+            rep(c("red3", "coral2"), 2),  "turquoise4",  "paleturquoise3")
+linetypes <- c(rep(c(2,3), 3), 3, 3, rep(c(2,3), 3), 3 ,3,  rep(c(2,3), 15))
+
+for (i in 1:length(links)) {
+  grid.lines(
+    x = unit(c(links[[i]]$from_x, links[[i]]$to_x), "npc"),
+    y = unit(c(links[[i]]$from_y, links[[i]]$to_y), "npc"),
+    gp = gpar(col = colors[i], lwd = 1, lty = linetypes[i])
+  )
+}
 
 
 #outer text and legends
