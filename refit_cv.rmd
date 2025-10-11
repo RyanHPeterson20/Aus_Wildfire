@@ -498,6 +498,7 @@ y_1 <- as.numeric(NEresp_new[[1]])
 X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
 
 NEAus1.eBIC <- list()
+NE1.eBIC.terms <- list()
 for (j in 2:length(gamma_seq)) {
   negroup1.temp <- RAMP(X = X_1, y = y_1,
                              penalty = "LASSO",
@@ -661,6 +662,162 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NEAus1.eBIC, NEAus2.eBIC, NEAus3.eBIC,
       SEAus1.eBIC, SEAus2.eBIC, SEAus3.eBIC, file = "models_ebic.rda")
 ```
+
+## Refine Gamma, eBIC
+
+```{r get_termDiff}
+
+#gamma
+gamma_seq <- seq(0, 1, length.out = 12)
+gamma_seq
+
+#ne aus 1
+ne1.count <- unlist(lapply(NEAus1.eBIC, function(x) length(coef(x))))
+diff(ne1.count)
+min.loc <- which.min(diff(sne1.count))+1
+start.gamma1 <- gamma_seq[min.loc]
+end.gamma1 <- gamma_seq[min.loc+1]
+
+new.gamma1 <- seq(start.gamma1, end.gamma1, length.out = 8)
+
+unique(ne1.count)
+
+
+#ne aus 2
+ne2.count <- unlist(lapply(NEAus2.eBIC, function(x) length(coef(x))))
+diff(ne2.count)
+min.loc <- which.min(diff(ne2.count))+1
+start.gamma2 <- gamma_seq[min.loc]
+end.gamma2 <- gamma_seq[min.loc+1]
+
+new.gamma2 <- seq(start.gamma2, end.gamma2, length.out = 8)
+
+
+
+#ne aus 3
+ne3.count <- unlist(lapply(NEAus3.eBIC, function(x) length(coef(x))))
+diff(ne3.count)
+min.loc <- which.min(diff(ne3.count))+1
+start.gamma3 <- gamma_seq[min.loc]
+end.gamma3 <- gamma_seq[min.loc+1]
+
+new.gamma3 <- seq(start.gamma3, end.gamma3, length.out = 8)
+
+
+#NE Aus Group 3
+y_3 <- as.numeric(NEresp_new[[3]])
+#with OLR
+X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:312]))
+
+NEAus3.eBIC.new <- list()
+for (j in 1:length(new.gamma3)) {
+  negroup3.temp <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = new.gamma3[j],
+                             n.lambda = 500)
+  
+  #terms only
+  NE3.refit.temp <- refit_ramp(negroup3.temp, X_3)
+  
+  #refit 
+  lm.data_3 <- as.data.frame(cbind(y_3, X_3))
+  names(lm.data_3)[1] <- "co"
+  
+  NE3.lm.eBIC <- lm(formula(NE3.refit.temp), lm.data_3)
+  #summary(NE1.lm.eBIC)
+  NEAus3.eBIC.new[[paste0("Gamma:", new.gamma3[[j]])]] <- NE3.lm.eBIC
+}
+
+unlist(lapply(NEAus3.eBIC.new, function(x) length(coef(x))))
+
+#se aus 1
+se1.count <- unlist(lapply(SEAus1.eBIC, function(x) length(coef(x))))
+diff(se1.count)
+min.loc <- which.min(diff(se1.count))+1
+start.gamma1 <- gamma_seq[min.loc]
+end.gamma1 <- gamma_seq[min.loc+1]
+
+new.gamma1 <- seq(start.gamma1, end.gamma1, length.out = 8)
+
+
+#SE Aus Group 1
+y_1 <- as.numeric(SEresp_new[[1]])
+#with OLR
+X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:312]))
+
+SEAus1.eBIC.new <- list()
+for (j in 1:length(new.gamma1)) {
+  segroup1.temp <- RAMP(X = X_1, y = y_1,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = new.gamma1[j],
+                             n.lambda = 500)
+  
+  #terms only
+  SE1.refit.temp <- refit_ramp(segroup1.temp, X_1)
+  
+    #refit 
+  lm.data_1 <- as.data.frame(cbind(y_1, X_1))
+  names(lm.data_1)[1] <- "co"
+  
+  SE1.lm.eBIC <- lm(formula(SE1.refit.temp), lm.data_1)
+  #summary(NE1.lm.eBIC)
+  SEAus1.eBIC.new[[paste0("Gamma:", new.gamma1[[j]])]] <- SE1.lm.eBIC
+}
+
+unlist(lapply(SEAus1.eBIC.new, function(x) length(coef(x))))
+
+
+#se aus 2
+se2.count <- unlist(lapply(SEAus2.eBIC, function(x) length(coef(x))))
+diff(se2.count)
+#min.loc <- which.min(diff(se2.count))+1
+#start.gamma2 <- gamma_seq[min.loc]
+#end.gamma2 <- gamma_seq[min.loc+1]
+
+#new.gamma2 <- seq(start.gamma2, end.gamma2, length.out = 8)
+
+# se aus 3
+se3.count <- unlist(lapply(SEAus3.eBIC, function(x) length(coef(x))))
+diff(se3.count)
+min.loc <- which.min(diff(se3.count))+1
+start.gamma3 <- gamma_seq[min.loc]
+end.gamma3 <- gamma_seq[min.loc+1]
+
+new.gamma3 <- seq(start.gamma3, end.gamma3, length.out = 12)
+
+#NE Aus Group 3
+y_3 <- as.numeric(SEresp_new[[3]])
+#with OLR
+X_3 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:312]))
+
+SEAus3.eBIC.new <- list()
+for (j in 1:length(new.gamma3)) {
+  segroup3.temp <- RAMP(X = X_3, y = y_3,
+                             penalty = "LASSO",
+                             tune = "EBIC",
+                             ebic.gamma = new.gamma3[j],
+                             n.lambda = 500)
+  
+  #terms only
+  SE3.refit.temp <- refit_ramp(segroup3.temp, X_3)
+  
+  #refit 
+  lm.data_3 <- as.data.frame(cbind(y_3, X_3))
+  names(lm.data_3)[1] <- "co"
+  
+  SE3.lm.eBIC <- lm(formula(SE3.refit.temp), lm.data_3)
+  #summary(NE1.lm.eBIC)
+  SEAus3.eBIC.new[[paste0("Gamma:", new.gamma3[[j]])]] <- SE3.lm.eBIC
+}
+
+
+unlist(lapply(SEAus3.eBIC.new, function(x) length(coef(x))))
+
+```
+
+
 
 # Refit w/ eBIC no OLR
 
@@ -902,6 +1059,14 @@ save(SE.term.list, SE.model.list, SE.refit.list,
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load( "model_refits.rda")
 ```
+
+
+### Refit - LOO eBIC
+
+```{r eBIC_loo}
+
+```
+
 
 ### Refit - LOO no OLR
 
