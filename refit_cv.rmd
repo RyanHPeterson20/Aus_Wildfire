@@ -509,6 +509,9 @@ for (j in 2:length(gamma_seq)) {
   #terms only
   NE1.refit.temp <- refit_ramp(negroup1.temp, X_1)
   
+  NE1.eBIC.terms[[paste0("Gamma:", gamma_seq[[j]])]] <- NE1.refit.temp
+  
+  
     #refit 
   lm.data_1 <- as.data.frame(cbind(y_1, X_1))
   names(lm.data_1)[1] <- "co"
@@ -525,6 +528,7 @@ y_2 <- as.numeric(NEresp_new[[2]])
 X_2 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:312]))
 
 NEAus2.eBIC <- list()
+NE2.eBIC.terms <- list()
 for (j in 2:length(gamma_seq)) {
   negroup2.temp <- RAMP(X = X_2, y = y_2,
                              penalty = "LASSO",
@@ -534,6 +538,8 @@ for (j in 2:length(gamma_seq)) {
   
   #terms only
   NE2.refit.temp <- refit_ramp(negroup2.temp, X_2)
+  
+  NE2.eBIC.terms[[paste0("Gamma:", gamma_seq[[j]])]] <- NE2.refit.temp
   
   #refit 
   lm.data_2 <- as.data.frame(cbind(y_2, X_2))
@@ -551,6 +557,7 @@ y_3 <- as.numeric(NEresp_new[[3]])
 X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:312]))
 
 NEAus3.eBIC <- list()
+NE3.eBIC.terms <- list()
 for (j in 2:length(gamma_seq)) {
   negroup3.temp <- RAMP(X = X_3, y = y_3,
                              penalty = "LASSO",
@@ -560,6 +567,8 @@ for (j in 2:length(gamma_seq)) {
   
   #terms only
   NE3.refit.temp <- refit_ramp(negroup3.temp, X_3)
+  
+  NE3.eBIC.terms[[paste0("Gamma:", gamma_seq[[j]])]] <- NE3.refit.temp
   
   #refit 
   lm.data_3 <- as.data.frame(cbind(y_3, X_3))
@@ -1064,6 +1073,34 @@ load( "model_refits.rda")
 ### Refit - LOO eBIC
 
 ```{r eBIC_loo}
+#gamma
+gamma_seq <- seq(0, 1, length.out = 12)
+#NE Aus
+
+#season
+j <- 1
+  temp.resp <- NEpartial_resp[[j]]
+  temp.preds <- NEpartial_preds[[j]]
+  
+  #group
+  k <- 1 
+    temp.y <- as.numeric(temp.resp[[k]])
+    #with OLR
+    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:312]))
+
+    #ebic loop
+    for (i in 2:length(gamma_seq)) {
+        temp.fit <- RAMP(X = temp.X, y = temp.y,
+                       penalty = "LASSO",
+                       tune = "eBIC",
+                       gamma = gamma_seq[i],
+                       n.lambda = 500)
+        
+        #TODO: get terms from the above fit
+        
+        NE1.eBIC.terms[[i]] #terms for constant fit
+        
+    }
 
 ```
 
