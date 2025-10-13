@@ -490,7 +490,7 @@ save(NE.lm.noOLR, SE.lm.noOLR,
 ```{r NEaus_ebic}
 #gamma
 gamma_seq <- seq(0, 1, length.out = 12)
-
+#include gamma = 0 for "sanity" check with previous BIC fit.
 
 #NE Aus Group 1
 y_1 <- as.numeric(NEresp_new[[1]])
@@ -499,7 +499,7 @@ X_1 <- cbind(as.matrix(NEpreds_new[[1]][ ,1:312]))
 
 NEAus1.eBIC <- list()
 NE1.eBIC.terms <- list()
-for (j in 2:length(gamma_seq)) {
+for (j in 1:length(gamma_seq)) {
   negroup1.temp <- RAMP(X = X_1, y = y_1,
                              penalty = "LASSO",
                              tune = "EBIC",
@@ -529,7 +529,7 @@ X_2 <- cbind(as.matrix(NEpreds_new[[2]][ ,1:312]))
 
 NEAus2.eBIC <- list()
 NE2.eBIC.terms <- list()
-for (j in 2:length(gamma_seq)) {
+for (j in 1:length(gamma_seq)) {
   negroup2.temp <- RAMP(X = X_2, y = y_2,
                              penalty = "LASSO",
                              tune = "EBIC",
@@ -558,7 +558,7 @@ X_3 <- cbind(as.matrix(NEpreds_new[[3]][ ,1:312]))
 
 NEAus3.eBIC <- list()
 NE3.eBIC.terms <- list()
-for (j in 2:length(gamma_seq)) {
+for (j in 1:length(gamma_seq)) {
   negroup3.temp <- RAMP(X = X_3, y = y_3,
                              penalty = "LASSO",
                              tune = "EBIC",
@@ -579,7 +579,7 @@ for (j in 2:length(gamma_seq)) {
   NEAus3.eBIC[[paste0("Gamma:", gamma_seq[[j]])]] <- NE3.lm.eBIC
 }
 
-
+NE.eBIC.terms <- list(NE2.eBIC.terms, NE2.eBIC.terms, NE3.eBIC.terms)
 
 ```
 
@@ -592,6 +592,7 @@ y_1 <- as.numeric(SEresp_new[[1]])
 X_1 <- cbind(as.matrix(SEpreds_new[[1]][ ,1:312]))
 
 SEAus1.eBIC <- list()
+SE1.eBIC.terms <- list() ##TODO: finalize this in the below loop
 for (j in 2:length(gamma_seq)) {
   segroup1.temp <- RAMP(X = X_1, y = y_1,
                              penalty = "LASSO",
@@ -618,6 +619,7 @@ y_2 <- as.numeric(SEresp_new[[2]])
 X_2 <- cbind(as.matrix(SEpreds_new[[2]][ ,1:312]))
 
 SEAus2.eBIC <- list()
+SE2.eBIC.terms <- list() ##TODO: finalize this in the below loop
 for (j in 2:length(gamma_seq)) {
   segroup2.temp <- RAMP(X = X_2, y = y_2,
                              penalty = "LASSO",
@@ -644,6 +646,7 @@ y_3 <- as.numeric(SEresp_new[[3]])
 X_3 <- cbind(as.matrix(SEpreds_new[[3]][ ,1:312]))
 
 SEAus3.eBIC <- list()
+SE3.eBIC.terms <- list() ##TODO: finalize this in the below loop
 for (j in 2:length(gamma_seq)) {
   segroup3.temp <- RAMP(X = X_3, y = y_3,
                              penalty = "LASSO",
@@ -1073,35 +1076,92 @@ load( "model_refits.rda")
 ### Refit - LOO eBIC
 
 ```{r eBIC_loo}
+#combined refit and model validations
+
 #gamma
 gamma_seq <- seq(0, 1, length.out = 12)
 #NE Aus
 
 #season
-j <- 1
-  temp.resp <- NEpartial_resp[[j]]
-  temp.preds <- NEpartial_preds[[j]]
+NEebic.refit.years <- NULL
+for (j in 1:length(seasons)) {
+  
+  fit.resp <- NEpartial_resp[[j]]
+  fit.preds <- NEpartial_preds[[j]]
+  
+  valid.resp <- NEvalid_resp[[i]]
+  valid.preds <- NEvalid_preds[[i]]
   
   #group
-  k <- 1 
-    temp.y <- as.numeric(temp.resp[[k]])
+  NEebic.refit <- NULL
+  for (k in 1:3) {
+
+    fit.y <- as.numeric(fit.resp[[k]])
     #with OLR
-    temp.X <- cbind(as.matrix(temp.preds[[k]][ ,1:312]))
+    fit.X <- cbind(as.matrix(fit.preds[[k]][ ,1:312]))
+
+    lm.data.fit <- as.data.frame(cbind(fit.y, fit.X))
+    names(lm.data.fit)[1] <- "co"
+    
+    #predict/rmse
+    valid.y <- valid.resp[[k]]
+    valid.X <- valid.preds[[k]][ ,1:312]
+    
+    #ebic model terms
+    NE.eBIC <- NE.eBIC.terms[[k]]
+    
+    NEebic.valid <- matrix(NA, ncol = 7)
+    colnames(NEebic.valid) <- c("gamma", "const.rmse", "vary.rmse", "const.cprs", "vary.cprs",
+                                "const.is95", "vary.is95")
 
     #ebic loop
-    for (i in 2:length(gamma_seq)) {
-        temp.fit <- RAMP(X = temp.X, y = temp.y,
+    for (i in 1:length(gamma_seq)) {
+        vary.fit <- RAMP(X = fit.X, y = fit.y,
                        penalty = "LASSO",
-                       tune = "eBIC",
-                       gamma = gamma_seq[i],
-                       n.lambda = 500)
+                       tune = "EBIC",
+                       ebic.gamma = gamma_seq[i],
+                       n.lambda = 250)
         
-        #TODO: get terms from the above fit
+        #refit varying terms
+        vary.terms <- refit_ramp(vary.fit, fit.X)
         
-        NE1.eBIC.terms[[i]] #terms for constant fit
+        const.terms <- NE.eBIC[[i]] #terms for constant fit
+        
+        #fit lm models (w/o year/season)
+        temp.lm.constant <- lm(formula(const.terms), lm.data.fit)
+        temp.lm.varying <- lm(formula(vary.terms), lm.data.fit)
+        
+        #prediction
+        pred.const <- predict(temp.lm.constant, valid.X, se.fit = TRUE)
+        pred.vary <- predict(temp.lm.varying, valid.X, se.fit = TRUE)        
+        
+        #rmse
+        rmse.const <- rmse(valid.y, pred.const$fit)
+        rmse.vary <- rmse(valid.y, pred.vary$fit)
+        
+        #cprs    
+        cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), valid.y))
+        cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), valid.y))
+    
+        #IS95
+        is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), valid.y))
+        is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), valid.y))
+        
+        NEebic.valid <- rbind(NEebic.valid, c(gamma_seq[i], rmse.const, rmse.vary, cprs.const, cprs.vary,
+                                              is.const, is.vary))
         
     }
+    NEebic.refit[[k]] <- NEebic.valid[-1, ]
+  }
+  NEebic.refit.years[[seasons[j]]] <- NEebic.refit
+}  
+```
 
+
+```{r save_ebicrefit}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NEebic.refit.years,
+     file = "model_eBICrefits.rda")
 ```
 
 
@@ -1488,6 +1548,7 @@ dev.off()
 
 # Model Validation
 
+(Note: the model validation for eBIC is done above in the LOO work)
 
 ```{r test_model_fits}
 #NE Aus Group 1
@@ -2503,6 +2564,11 @@ SE.kcv.noOLR
 
 ```
 
+```{r kFold_eBIC}
+
+```
+
+
 ## Validation
 
 ```{r validation_extract}
@@ -2687,6 +2753,14 @@ SE2.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[2]][2]))
 SE3.ints.noOLR <- unlist(lapply(SE.ints.noOLR, function(x) x[[2]][3]))
 ```
 
+### eBIC Validation
+
+```{r ebic_listextract}
+#extract specific elements 
+lapply(NEebic.refit.years, function(x) x[[1]])
+unlist(lapply(NEebic.refit.years, function(x) x[[1]][1,2]))
+
+```
 
 
 ## ANOVAs
