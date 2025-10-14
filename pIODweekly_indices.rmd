@@ -616,7 +616,7 @@ breaks.dumb <- c(eof.range[1], seq(-0.5, 0.5, 0.1), eof.range[2])
 leg.brks2 <- seq(-0.6, 0.6, 0.1) 
 
 
-#TODO: output as figures
+#output as figures
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
 #mam EOF/PCs
@@ -954,6 +954,191 @@ dev.off()
 
 ```
 
+```{r new_eof}
+eof.range <- range(son.eof1, son.eof2, na.rm = TRUE)
+eof.absmax <- max(abs(eof.range))
+eof.range <- c(-eof.absmax, eof.absmax)
+#default breaks
+cols.ryb <- rev(colorRampPalette(brewer.pal(11, "RdYlBu"))(24))
+breaks.dumb <- c(eof.range[1], seq(-0.55, 0.55, 0.05), eof.range[2])
+leg.brks2 <- seq(-0.6, 0.6, 0.05) 
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
+
+#mam EOF/PCs
+png(filename = "mam_spatPC1.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = mam.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20,20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("MAM PC1", adj = 0)
+dev.off()
+
+png(filename = "mam_spatPC2.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = mam.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20,20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("MAM PC2", adj = 0)
+dev.off()
+
+
+
+#jja EOF/PCs
+png(filename = "jja_spatPC1.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = jja.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20,20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("JJA PC1", adj = 0)
+dev.off()
+
+
+png(filename = "jja_spatPC2.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = jja.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20,20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("JJA PC2", adj = 0)
+dev.off()
+
+
+
+#son EOF/PCs
+png(filename = "son_spatPC1.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20,20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("SON PC1", adj = 0)
+dev.off()
+
+
+png(filename = "son_spatPC2.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = son.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20, 20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("SON PC2", adj = 0)
+dev.off()
+
+
+
+#djf EOF/PCs
+png(filename = "djf_spatPC1.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = djf.eof1), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20, 20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(wtio_minLon, wtio_minLat, wtio_maxLon, wtio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(55, 8,  labels = "WTIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("DJF PC1", adj = 0)
+dev.off()
+
+
+png(filename = "djf_spatPC2.png", width = 2400, height = 1600, res = 250)
+par(mar = c(7, 5, 2, 5), mgp = c(2.25, 1, 0))
+image(list(x = lon.wide, y = lat.wide, z = djf.eof2), 
+           col = cols.ryb, breaks = breaks.dumb, zlim = eof.range, 
+           xlab = "Lon", ylab = "Lat", ylim = c(-20, 20),
+           axes = FALSE)
+axis(1, at = c(60, 90, 120))  
+axis(2)                      
+box()
+world(add=TRUE)
+image.plot(zlim = c(-0.6, 0.6), legend.only = TRUE, col = cols.ryb,
+           breaks = leg.brks2, horizontal = TRUE, 
+           axis.args = list(at = seq(-0.5, 0.5, 0.05)),
+           smallplot = c(0.1, 0.9, 0.08, 0.10))
+rect(etio_minLon, etio_minLat, etio_maxLon, etio_maxLat, lwd = 2, lty = 1, border  = "black")
+text(95, -2,  labels = "ETIO", col = "black")
+rect(pIOD_minLon, pIOD_minLat, pIOD_maxLon, pIOD_maxLat, lwd = 2, lty = 4, border  = "black")
+title("DJF PC2", adj = 0)
+dev.off()
+
+```
 
 
 ### IOD Spatial Mean and Anoms
