@@ -797,18 +797,28 @@ dmi.jja.corS <- cor(dmi.jja$dmi.anomaly, scale(piod.jja$s.index))
 wtio.jja.cor <- cor(dmi.jja$wtio.anomaly, scale(piod.jja$m.index))
 etio.jja.cor <- cor(dmi.jja$etio.anomaly, scale(piod.jja$s.index))
 
+cor(dmi.jja$wtio.anomaly, scale(piod.jja$PC1))
+
 #son cor
 dmi.son.corM <- cor(dmi.son$dmi.anomaly, scale(piod.son$m.index))
 dmi.son.corS <- cor(dmi.son$dmi.anomaly, scale(piod.son$s.index))
 wtio.son.cor <- cor(dmi.son$wtio.anomaly, piod.son$m.index)
 etio.son.cor <- cor(dmi.son$etio.anomaly, piod.son$s.index)
 
+cor(dmi.son$wtio.anomaly, scale(piod.son$PC1))
+
 #djf cor
 wtio.djf.cor <- cor(dmi.djf$wtio.anomaly, piod.djf$m.index)
 etio.djf.cor <- cor(dmi.djf$etio.anomaly, piod.djf$s.index)
+
+cor(dmi.djf$wtio.anomaly, scale(piod.djf$PC1))
+
 #mam cor
 wtio.mam.cor <- cor(dmi.mam$wtio.anomaly, piod.mam$m.index)
 etio.mam.cor <- cor(dmi.mam$etio.anomaly, piod.mam$s.index)
+
+cor(dmi.mam$wtio.anomaly, scale(piod.mam$PC1))
+
 ```
 
 
@@ -859,6 +869,72 @@ wtio.son.lm <- lm(dmi.son$wtio.anomaly ~ scale(piod.son$m.index))
 etio.son.lm <- lm(dmi.son$etio.anomaly ~ scale(piod.son$s.index))
 
 ```
+
+
+```{r seasonal_plots}
+#jja wtio and pc1
+plot(dmi.jja$wtio.anomaly, scale(piod.jja$PC1), pch = 16)
+title("JJA: WTIO and PC1", adj = 0)
+#etio and pc2
+plot(dmi.jja$etio.anomaly, scale(piod.jja$PC2), pch = 16)
+title("JJA: ETIO and PC2", adj = 0)
+
+#son wtio and pc1
+plot(dmi.son$wtio.anomaly, scale(piod.son$PC1), pch = 16)
+title("SON: WTIO and PC1", adj = 0)
+#etio and pc2
+plot(dmi.son$etio.anomaly, scale(piod.son$PC2), pch = 16)
+title("SON: ETIO and PC2", adj = 0)
+
+#djf wtio and pc1
+plot(dmi.djf$wtio.anomaly, scale(piod.djf$PC1), pch = 16)
+title("DJF: WTIO and PC1", adj = 0)
+#etio and pc2
+plot(dmi.djf$etio.anomaly, scale(piod.djf$PC2), pch = 16)
+title("DJF: ETIO and PC2", adj = 0)
+
+#mam wtio and pc1
+plot(dmi.mam$wtio.anomaly, scale(piod.mam$PC1), pch = 16)
+title("MAM: WTIO and PC1", adj = 0)
+#etio and pc2
+plot(dmi.mam$etio.anomaly, scale(piod.mam$PC2), pch = 16)
+title("MAM: ETIO and PC2", adj = 0)
+
+```
+
+
+```{r season_altplots}
+#jja wtio and pc2
+plot(dmi.jja$wtio.anomaly, scale(piod.jja$PC2), pch = 16)
+title("JJA: WTIO and PC2", adj = 0)
+#etio and pc1
+plot(dmi.jja$etio.anomaly, scale(piod.jja$PC1), pch = 16)
+title("JJA: ETIO and PC1", adj = 0)
+
+
+
+#son wtio and pc2
+plot(dmi.son$wtio.anomaly, scale(piod.son$PC2), pch = 16)
+title("SON: WTIO and PC2", adj = 0)
+#etio and pc1
+plot(dmi.son$etio.anomaly, scale(piod.son$PC1), pch = 16)
+title("SON: ETIO and PC1", adj = 0)
+
+#djf wtio and pc2
+plot(dmi.djf$wtio.anomaly, scale(piod.djf$PC2), pch = 16)
+title("DJF: WTIO and PC2", adj = 0)
+#etio and pc1
+plot(dmi.djf$etio.anomaly, scale(piod.djf$PC1), pch = 16)
+title("DJF: ETIO and PC1", adj = 0)
+
+#mam wtio and pc2
+plot(dmi.mam$wtio.anomaly, scale(piod.mam$PC2), pch = 16)
+title("MAM: WTIO and PC2", adj = 0)
+#etio and pc1
+plot(dmi.mam$etio.anomaly, scale(piod.mam$PC1), pch = 16)
+title("MAM: ETIO and PC1", adj = 0)
+```
+
 
 
 ```{r full_plots}

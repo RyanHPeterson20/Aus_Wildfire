@@ -1155,6 +1155,10 @@ for (j in 1:length(seasons)) {
   }
   NEebic.refit.years[[seasons[j]]] <- NEebic.refit
 }  
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NEebic.refit.years,
+     file = "model_eBICrefits.rda")
 ```
 
 
