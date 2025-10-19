@@ -4,6 +4,7 @@
 ##-add duplicate to finalproject_code folder
 ##-remove any code and place into refit_cv.rmd when not needed
 
+
 #TODO: add more libraries as needed
 #library 
 suppressMessages( library(glmnet)) #test ridge regression for coefs (might not be needed)
@@ -19,7 +20,7 @@ load( "Data/se_data.rda")
 load( "Data/bounded_data.rda")
 load( "Data/data_matrix.rda")
 load( "Data/lag_list.rda")
-load( "Data/data_quantile.rda")
+load( "Data/data_quantile.rda") #TODO: check to see if this completely defunct
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load("IOD_lag.rda") #IOD data
@@ -364,4 +365,7 @@ SErefits.eBIC <- list(SE1.eBIC.refit, SE2.eBIC.refit, SE3.eBIC.refit)
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NEmodels.eBIC, SEmodels.eBIC, 
      NErefits.eBIC, SErefits.eBIC, file = "eBIC_RAMPmodels.rda")
+
+
+#train/test refits (e.g. LOO and k-fold) done in `model_validation.R`
 
