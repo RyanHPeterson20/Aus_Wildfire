@@ -12,6 +12,11 @@ suppressMessages( library(RAMP)) #Lasso with efficient solution path.
 
 suppressMessages( library( Metrics)) #measurement metrics
 
+#parallelization setup
+suppressMessages( library(foreach)) 
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
+
 #data import
 #TODO: collect data into fewer locations
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
@@ -202,6 +207,8 @@ save(NEmodels, SEmodels,
 
 
 ##eBIC Model Fits
+#TODO: parallel (foreach) these model fits
+
 #gamma
 gamma.seq <- seq(0, 1, length.out = 12)
 
