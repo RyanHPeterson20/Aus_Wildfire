@@ -143,8 +143,6 @@ NE.pred.int <- NULL
 NE.vary.terms <- NULL
 NE.const.LM <- NULL 
 NE.vary.LM <- NULL
-#intervals
-NE.interval <- NULL
 for (i in 1:length(seasons)) {
   #data w/o season (train)
   fit.resp <- NEpartial_resp[[i]]
@@ -202,7 +200,7 @@ for (i in 1:length(seasons)) {
     y.valid <- as.numeric(valid.resp[[j]])
     X.valid <- valid.preds[[j]][ ,1:312]
     
-    pred.base <- predict(NEmodels[[j]], X.valid, se.fit = TRUE)
+    pred.base <- predict(NE.lm.base, X.valid, se.fit = TRUE)
     pred.const <- predict(NE.lm.const, X.valid, se.fit = TRUE)
     pred.vary <- predict(NE.lm.vary, X.valid, se.fit = TRUE)
     
@@ -225,16 +223,144 @@ for (i in 1:length(seasons)) {
     NEis.yearly <- rbind(NEis.yearly, cbind(is.base, is.const, is.vary))
     
     #intervals
-    pred.base.interval <- predict(NEmodels[[j]], X.valid, interval = "prediction")
+    pred.base.interval <- predict(NE.lm.base, X.valid, interval = "prediction")
     pred.const.interval <- predict(NE.lm.const, X.valid, interval = "prediction")
     pred.vary.interval <- predict(NE.lm.vary, X.valid, interval = "prediction")
     
     #assign intervals
-    
+    NE.intervals <- rbind(NE.intervals, 
+                          cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))
   }
+  NE.vary.terms[[seasons[i]]] <- NE.var.refit
+  NE.const.LM[[seasons[i]]] <- NE.con
+  NE.vary.LM[[seasons[i]]] <- NE.var
+  
+  NE.rmse[[seasons[i]]] <- as.data.frame(NErmse.yearly[-1, ])
+  NE.cprs[[seasons[i]]] <- as.data.frame(NEcprs.yearly[-1, ])
+  NE.ints[[seasons[i]]] <- as.data.frame(NEis.yearly[-1, ])
+  NE.pred.int[[seasons[i]]] <- as.data.frame(NE.intervals[-1, ])
   
 }
 
+
+NEvalid <- list(NE.rmse, NE.cprs, NE.ints, NE.pred.int)
+NErefit.new <- list(NE.vary.terms, NE.const.LM, NE.vary.LM)
+
+##SE Aus refits and validation
+#model validation
+SE.rmse <- NULL
+SE.cprs <- NULL
+SE.ints <- NULL
+SE.pred.int <- NULL
+#models (refit and lm)
+SE.vary.terms <- NULL
+SE.const.LM <- NULL 
+SE.vary.LM <- NULL
+for (i in 1:length(seasons)) {
+  #data w/o season (train)
+  fit.resp <- SEpartial_resp[[i]]
+  fit.preds <- SEpartial_preds[[i]]
+  
+  #data w/ only season (test)
+  valid.resp <- SEvalid_resp[[i]]
+  valid.preds <- SEvalid_preds[[i]]  
+  
+  #group data objects
+  SE.var.refit <- NULL #varying terms
+  SE.con <- NULL #constant linear models
+  SE.var <- NULL #varying linear models
+  SErmse.yearly <- matrix(NA, ncol = 3)
+  colnames(SErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SEcprs.yearly <- matrix(NA, ncol = 3)
+  colnames(SEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SEis.yearly <- matrix(NA, ncol = 3)
+  colnames(SEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  SE.intervals <- matrix(NA, ncol = 10)
+  colnames(SE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
+                              "const.fit", "const.lwr", "const.upr",
+                              "vary.fit", "vary.lwr", "vary.upr")
+  for (j in 1:3) {
+    #get base model terms (and fits)
+    SE.lm.base <- SEmodels[[j]] #lm model for SE group j 
+    SE.terms.base <- SErefits[[j]] #terms for SE group j
+    
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:312]))
+    
+    lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
+    names(lm.data.fit)[1] <- "co"
+    
+    #varying ramp fit
+    vary.fit <- RAMP(X = X.fit, y = y.fit,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+    
+    SE.terms.vary <- refit_ramp(vary.fit, X.fit)
+    
+    #refit
+    SE.lm.const <- lm(formula(SE.terms.base), lm.data.fit)
+    SE.lm.vary <- lm(formula(SE.terms.vary), lm.data.fit)
+    
+    #assign terms and models
+    SE.var.refit[[j]] <- SE.terms.vary
+    SE.con[[j]] <- SE.lm.const
+    SE.var[[j]] <- SE.lm.vary
+    
+    #prediction and validation 
+    y.valid <- as.numeric(valid.resp[[j]])
+    X.valid <- valid.preds[[j]][ ,1:312]
+    
+    pred.base <- predict(SE.lm.base, X.valid, se.fit = TRUE)
+    pred.const <- predict(SE.lm.const, X.valid, se.fit = TRUE)
+    pred.vary <- predict(SE.lm.vary, X.valid, se.fit = TRUE)
+    
+    #rmse
+    rmse.base <-  rmse(y.valid, pred.base$fit)
+    rmse.const <- rmse(y.valid, pred.const$fit)
+    rmse.vary <- rmse(y.valid, pred.vary$fit)
+    #cprs
+    cprs.base <- mean(CPRS(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    #IS95
+    is.base <- mean(intscore(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))    
+    
+    #assign validations
+    SErmse.yearly <- rbind(SErmse.yearly, cbind(rmse.base, rmse.const, rmse.vary))
+    SEcprs.yearly <- rbind(SEcprs.yearly, cbind(cprs.base, cprs.const, cprs.vary))
+    SEis.yearly <- rbind(SEis.yearly, cbind(is.base, is.const, is.vary))
+    
+    #intervals
+    pred.base.interval <- predict(SE.lm.base, X.valid, interval = "prediction")
+    pred.const.interval <- predict(SE.lm.const, X.valid, interval = "prediction")
+    pred.vary.interval <- predict(SE.lm.vary, X.valid, interval = "prediction")
+    
+    #assign intervals
+    SE.intervals <- rbind(SE.intervals, 
+                          cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))
+  }
+  SE.vary.terms[[seasons[i]]] <- SE.var.refit
+  SE.const.LM[[seasons[i]]] <- SE.con
+  SE.vary.LM[[seasons[i]]] <- SE.var
+  
+  SE.rmse[[seasons[i]]] <- as.data.frame(SErmse.yearly[-1, ])
+  SE.cprs[[seasons[i]]] <- as.data.frame(SEcprs.yearly[-1, ])
+  SE.ints[[seasons[i]]] <- as.data.frame(SEis.yearly[-1, ])
+  SE.pred.int[[seasons[i]]] <- as.data.frame(SE.intervals[-1, ])
+}
+
+
+SEvalid <- list(SE.rmse, SE.cprs, SE.ints, SE.pred.int)
+SErefit.new <- list(SE.vary.terms, SE.const.LM, SE.vary.LM)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NEvalid, NErefit.new, 
+     SEvalid, SErefit.new, file = "validation_refits.rda")
 
 
 #eBIC refits
@@ -243,6 +369,112 @@ for (i in 1:length(seasons)) {
 #gamma (for eBIC)
 gamma.seq <- seq(0, 1, length.out = 12)
 
+n.cores <- 12
+my.cluster <- parallel::makeCluster(
+  n.cores, 
+  type = "PSOCK"
+)
+doParallel::registerDoParallel(cl = my.cluster)
+
+NE.rmse.eBIC <- NULL
+NE.cprs.eBIC <- NULL
+NE.ints.eBIC <- NULL
+NE.pred.int.eBIC <- NULL
+#models (refit and lm)
+NE.vary.terms.eBIC <- NULL
+NE.const.LM.eBIC <- NULL 
+NE.vary.LMe.BIC <- NULL
+for (i in 1:2) { #
+  i <- 1
+  #data w/o season (train)
+  fit.resp <- NEpartial_resp[[i]]
+  fit.preds <- NEpartial_preds[[i]]
+  
+  #data w/ only season (test)
+  valid.resp <- NEvalid_resp[[i]]
+  valid.preds <- NEvalid_preds[[i]] 
+
+  # #group data objects
+  # NE.var.refit <- NULL #varying terms
+  # NE.con <- NULL #constant linear models
+  # NE.var <- NULL #varying linear models
+  # NErmse.yearly <- matrix(NA, ncol = 3)
+  # colnames(NErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  # NEcprs.yearly <- matrix(NA, ncol = 3)
+  # colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  # NEis.yearly <- matrix(NA, ncol = 3)
+  # colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  # NE.intervals <- matrix(NA, ncol = 10)
+  # colnames(NE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
+  #                             "const.fit", "const.lwr", "const.upr",
+  #                             "vary.fit", "vary.lwr", "vary.upr")
+  
+  #for (j in 1:3) {
+    j <- 1
+    #get base model terms (and fits)
+    NE.lm.base <- NEmodels[[j]] #lm model for NE group j 
+    NE.terms.base <- NErefits[[j]] #terms for NE group j
+    
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:312]))
+    
+    #for each model fit
+    eBIC.vary.fit <- foreach(k = 1:length(gamma.seq)) %dopar% {
+
+      #varying ramp fit (eBIC)
+      RAMP::RAMP(X = X.fit, y = y.fit,
+                            penalty = "LASSO",
+                            tune = "EBIC",
+                            ebic.gamma = gamma.seq[k],
+                            n.lambda = 500)
+    }
+    
+
+    lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
+    names(lm.data.fit)[1] <- "co"
+    
+    #prediction and validation 
+    y.valid <- as.numeric(valid.resp[[j]])
+    X.valid <- valid.preds[[j]][ ,1:312]
+    
+    # NE.var.refit <- NULL #varying terms
+    # NE.con <- NULL #constant linear models
+    # NE.var <- NULL #varying linear models
+    # NErmse.yearly <- matrix(NA, ncol = 3)
+    # colnames(NErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+    # NEcprs.yearly <- matrix(NA, ncol = 3)
+    # colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+    # NEis.yearly <- matrix(NA, ncol = 3)
+    # colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+    # NE.intervals <- matrix(NA, ncol = 10)
+    # colnames(NE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
+    #                             "const.fit", "const.lwr", "const.upr",
+    #                             "vary.fit", "vary.lwr", "vary.upr")
+    
+    for(k in 1:length(gamma.seq)) {
+      eBIC.lm.base <- NEmodels.eBIC[[j]][[k]] #for base lm model
+      eBIC.terms.base <- NErefits.eBIC[[j]][[k]] #terms from base lm model (constant terms)
+      
+      eBIC.terms.vary <- refit_ramp(eBIC.vary.fit[[k]], X.fit)
+      #refit
+      eBIC.lm.const <- lm(formula(eBIC.terms.base), lm.data.fit)
+      eBIC.lm.vary <- lm(formula(eBIC.terms.vary), lm.data.fit)
+      
+      
+      
+      
+    }
+    
+  }
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+
+
+#TODO: parallelize this:
 #TODO: setup data objects
 for (i in 1:length(seasons)) {
   #data w/o season (train)
@@ -252,7 +484,17 @@ for (i in 1:length(seasons)) {
   #data w/ only season (test)
   valid.resp <- NEvalid_resp[[i]]
   valid.preds <- NEvalid_preds[[i]]  
-  #TODO: parallelize this:
+  for (j in 1:3) {
+    
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:312]))
+    
+    lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
+    names(lm.data.fit)[1] <- "co"
+  
+
   for (k in 1:2) { #temp gamma/eBIC setup
     eBIC.lm.base <- NEmodels.eBIC[[j]][[k]] #for base lm model
     eBIC.terms.base <- NErefits.eBIC[[j]][[k]] #terms from base lm model (constant terms)
@@ -273,4 +515,5 @@ for (i in 1:length(seasons)) {
     #TODO: validation
     
   }
+  }  
 }
