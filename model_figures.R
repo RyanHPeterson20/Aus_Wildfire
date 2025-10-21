@@ -5,7 +5,10 @@
 
 #TODO: create sections for figures (e.g. numbered)
 #1. 
-#n. RMSE plots (see line ..)
+# . K-fold CV plots
+# . RMSE plots (see line ..)
+# . CRPS plots
+#n. Interval Score Plots
 
 
 #libraries
@@ -28,6 +31,8 @@ load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 
 
 ## --- Main --- ##
+
+
 
 
 
@@ -69,6 +74,9 @@ box()
 axis(1, labels = gamma.lab, at = 1:12, cex.axis = 0.67)
 axis(2)  
 title("SE Aus K-fold CV")
+
+
+
 
 # . (number.) RMSE plots
 ## RMSE setup
@@ -174,5 +182,153 @@ title("NE Aus Group 3 Constant Model : RMSE", adj = 0)
 
 # . (number.) CRPS plots
 ## CPRS setup
+NEcprs <- NEvalid[[2]]
+NEcprs.eBIC <- NEvalid.eBIC[[2]]
+
+
+## --- constant : model fits
+
+#NE Aus Group 1
+NEgroup1.const.cprs <- unlist(lapply(NEcprs, function(x) x[[2]][1]))
+#eBIC setup
+k <- 3
+NEgroup1.const.cprs.eBIC <- unlist(lapply(NEcprs.eBIC[[k]], function(x) x[[2]][1]))
+k <- 9
+NEgroup1.const.cprs.eBIC2 <- unlist(lapply(NEcprs.eBIC[[k]], function(x) x[[2]][1]))
+
+#boxplot
+cprs.range <- range(NEgroup1.const.cprs, NEgroup1.const.cprs.eBIC, NEgroup1.const.cprs.eBIC2)
+
+model.names <- c("NE Aus 1", paste0("Gamma: ", round(gamma.seq[3], 3)),
+                 paste0("Gamma: ", round(gamma.seq[9], 3)))
+
+#boxplot
+boxplot(NEgroup1.const.cprs, NEgroup1.const.cprs.eBIC, NEgroup1.const.cprs.eBIC2,
+        pch = 16, 
+        ylim = cprs.range, ylab = "CRPS", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:3, cex.axis = 1)
+axis(2)                      
+title("NE Aus Group 1 Constant Model : CRPS", adj = 0)
+
+
+#NE Aus Group 2
+NEgroup2.const.cprs <- unlist(lapply(NEcprs, function(x) x[[2]][2]))
+#eBIC setup
+k <- 7
+NEgroup2.const.cprs.eBIC <- unlist(lapply(NEcprs.eBIC[[k]], function(x) x[[2]][2]))
+
+#boxplot
+cprs.range <- range(NEgroup2.const.cprs, NEgroup2.const.cprs.eBIC)
+
+model.names <- c("NE Aus 2", paste0("Gamma: ", round(gamma.seq[7], 3)) )
+
+#boxplot
+boxplot(NEgroup2.const.cprs, NEgroup2.const.cprs.eBIC,
+        pch = 16, 
+        ylim = cprs.range, ylab = "CRPS", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:2, cex.axis = 1)
+axis(2)                      
+title("NE Aus Group 2 Constant Model : CRPS", adj = 0)
+
+
+#NE Aus Group 3
+NEgroup3.const.cprs <- unlist(lapply(NEcprs, function(x) x[[2]][3]))
+
+#eBIC setup
+k <- 8
+NEgroup3.const.cprs.eBIC <- unlist(lapply(NEcprs.eBIC[[k]], function(x) x[[2]][3]))
+
+#boxplot
+cprs.range <- range(NEgroup3.const.cprs, NEgroup3.const.cprs.eBIC)
+
+model.names <- c("NE Aus 3", paste0("Gamma: ", round(gamma.seq[8], 3)) )
+
+
+boxplot(NEgroup3.const.cprs, NEgroup3.const.cprs.eBIC,
+        pch = 16, 
+        ylim = cprs.range, ylab = "CRPS", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:2, cex.axis = 1)
+axis(2)                      
+title("NE Aus Group 3 Constant Model : CRPS", adj = 0)
+
+
+
+
+
+# . (number.) Interval Score plots
+## ints setup
+NEints <- NEvalid[[3]]
+NEints.eBIC <- NEvalid.eBIC[[3]]
+
+
+## --- constant : model fits
+
+#NE Aus Group 1
+NEgroup1.const.ints <- unlist(lapply(NEints, function(x) x[[2]][1]))
+#eBIC setup
+k <- 3
+NEgroup1.const.ints.eBIC <- unlist(lapply(NEints.eBIC[[k]], function(x) x[[2]][1]))
+k <- 9
+NEgroup1.const.ints.eBIC2 <- unlist(lapply(NEints.eBIC[[k]], function(x) x[[2]][1]))
+
+#boxplot
+ints.range <- range(NEgroup1.const.ints, NEgroup1.const.ints.eBIC, NEgroup1.const.ints.eBIC2)
+
+model.names <- c("NE Aus 1", paste0("Gamma: ", round(gamma.seq[3], 3)),
+                 paste0("Gamma: ", round(gamma.seq[9], 3)))
+
+#boxplot
+boxplot(NEgroup1.const.ints, NEgroup1.const.ints.eBIC, NEgroup1.const.ints.eBIC2,
+        pch = 16, 
+        ylim = ints.range, ylab = "Interval Score", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:3, cex.axis = 1)
+axis(2)                      
+title("NE Aus Group 1 Constant Model : Interval Score", adj = 0)
+
+
+#NE Aus Group 2
+NEgroup2.const.ints <- unlist(lapply(NEints, function(x) x[[2]][2]))
+#eBIC setup
+k <- 7
+NEgroup2.const.ints.eBIC <- unlist(lapply(NEints.eBIC[[k]], function(x) x[[2]][2]))
+
+#boxplot
+ints.range <- range(NEgroup2.const.ints, NEgroup2.const.ints.eBIC)
+
+model.names <- c("NE Aus 2", paste0("Gamma: ", round(gamma.seq[7], 3)) )
+
+#boxplot
+boxplot(NEgroup2.const.ints, NEgroup2.const.ints.eBIC,
+        pch = 16, 
+        ylim = ints.range, ylab = "Interval Score", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:2, cex.axis = 1)
+axis(2)                      
+title("NE Aus Group 2 Constant Model : Interval Score", adj = 0)
+
+
+#NE Aus Group 3
+NEgroup3.const.ints <- unlist(lapply(NEints, function(x) x[[2]][3]))
+#eBIC setup
+k <- 8
+NEgroup3.const.ints.eBIC <- unlist(lapply(NEints.eBIC[[k]], function(x) x[[2]][3]))
+
+#boxplot
+ints.range <- range(NEgroup3.const.ints, NEgroup3.const.ints.eBIC)
+
+model.names <- c("NE Aus 3", paste0("Gamma: ", round(gamma.seq[8], 3)) )
+
+
+boxplot(NEgroup3.const.ints, NEgroup3.const.ints.eBIC,
+        pch = 16, 
+        ylim = ints.range, ylab = "Interval Score", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:2, cex.axis = 1)
+axis(2)                      
+title("NE Aus Group 3 Constant Model : Interval Score", adj = 0)
 
 

@@ -554,7 +554,7 @@ save(NEvalid.eBIC, NErefit.new.eBIC,
      file = "validation_refitsEBIC.rda")
 
 
-#TODO: perform k-fold cv on both BIC and eBIC
+#perform k-fold cv on both BIC and eBIC
 k <- 10
 
 #NE aus
