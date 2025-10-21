@@ -243,7 +243,7 @@ for (i in 1:length(seasons)) {
 }
 
 
-NEvalid <- list(NE.rmse, NE.cprs, NE.ints, NE.pred.int)
+NEvalid <- list(rmse = NE.rmse, cprs = NE.cprs, ints = NE.ints, interval = NE.pred.int)
 NErefit.new <- list(NE.vary.terms, NE.const.LM, NE.vary.LM)
 
 ##SE Aus refits and validation
@@ -370,7 +370,7 @@ save(NEvalid, NErefit.new,
 gamma.seq <- seq(0, 1, length.out = 12)
 
 #fit first
-n.cores <- 12
+n.cores <- 10
 my.cluster <- parallel::makeCluster(
   n.cores, 
   type = "PSOCK"
@@ -414,6 +414,7 @@ parallel::stopCluster(cl = my.cluster)
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NE.eBIC.vary, file = "tempNEeBIC.rda")
 
+load("tempNEeBIC.rda")
 
 #NE Aus eBIC refits
 NE.rmse.eBIC <- NULL
@@ -544,8 +545,188 @@ for (k in 1:length(gamma.seq)) {
 NEvalid.eBIC <- list(NE.rmse.eBIC, NE.cprs.eBIC, NE.ints.eBIC, NE.pred.int.eBIC)
 NErefit.new.eBIC <- list(NE.vary.terms.eBIC, NE.const.LM.eBIC, NE.vary.LM.eBIC)
 
+#TODO: repeat above (varying fits and refits) but with SE Aus 
+
+
+
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NEvalid.eBIC, NErefit.new.eBIC, 
      file = "validation_refitsEBIC.rda")
 
-#TODO: repeat above (varying fits and refits) but with SE Aus 
+
+#TODO: perform k-fold cv on both BIC and eBIC
+k <- 10
+
+#NE aus
+NE.kcv <- NULL
+for(j in 1:3){ 
+  temp.pred <- NEpreds_new[[j]]
+  temp.resp <- NEresp_new[[j]]
+  
+  nrow(temp.pred)
+  length(temp.resp)
+  
+  n <- nrow(temp.pred)
+  set.seed(156)
+  folds <- sample(rep(1:k, length.out = n))
+  # Store errors
+  mse <- numeric(k)
+  for (i in 1:k) {
+    # Split into training and test sets
+    test.id <- which(folds == i)
+    train.preds <- temp.pred[-test.id, ]
+    train.resp <- temp.resp[-test.id]
+    test.preds <- temp.pred[test.id, ]
+    test.resp <- temp.resp[test.id]
+    
+    # Fit model
+    train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+    names(train.data.fit)[1] <- "co"
+    
+    temp.model <- lm(formula(NErefits[[j]]), train.data.fit)
+    
+    # Predict
+    preds <- predict(temp.model, newdata = test.preds)
+    
+    # Compute Mean Squared Error
+    mse[i] <- mean((test.resp - preds)^2)
+  }
+  NE.kcv[[j]] <- mean(mse)
+}
+
+
+#SE aus
+SE.kcv <- NULL
+for(j in 1:3){ 
+  temp.pred <- SEpreds_new[[j]]
+  temp.resp <- SEresp_new[[j]]
+  
+  
+  nrow(temp.pred)
+  length(temp.resp)
+  
+  n <- nrow(temp.pred)
+  set.seed(157)
+  folds <- sample(rep(1:k, length.out = n))
+  # Store errors
+  mse <- numeric(k)
+  for (i in 1:k) {
+    # Split into training and test sets
+    test.id <- which(folds == i)
+    train.preds <- temp.pred[-test.id, ]
+    train.resp <- temp.resp[-test.id]
+    test.preds <- temp.pred[test.id, ]
+    test.resp <- temp.resp[test.id]
+    
+    # Fit model
+    train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+    names(train.data.fit)[1] <- "co"
+    
+    temp.model <- lm(formula(SErefits[[j]]), train.data.fit)
+    
+    # Predict
+    preds <- predict(temp.model, newdata = test.preds)
+    
+    # Compute Mean Squared Error
+    mse[i] <- mean((test.resp - preds)^2)
+  }
+  SE.kcv[[j]] <- mean(mse)
+}
+
+NE.kcv
+SE.kcv
+
+
+#eBIC k-fold
+NE.kcv.ebic <- NULL
+for (l in 1:length(gamma.seq)) {
+  NE.kcv.temp <- NULL
+  for(j in 1:3){ 
+    temp.pred <- NEpreds_new[[j]]
+    temp.resp <- NEresp_new[[j]]
+    
+    nrow(temp.pred)
+    length(temp.resp)
+    
+    n <- nrow(temp.pred)
+    set.seed(156)
+    folds <- sample(rep(1:k, length.out = n))
+    # Store errors
+    mse <- numeric(k)
+    for (i in 1:k) {
+      # Split into training and test sets
+      test.id <- which(folds == i)
+      train.preds <- temp.pred[-test.id, ]
+      train.resp <- temp.resp[-test.id]
+      test.preds <- temp.pred[test.id, ]
+      test.resp <- temp.resp[test.id]
+      
+      # Fit model
+      train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+      names(train.data.fit)[1] <- "co"
+      
+      temp.model <- lm(formula(NErefits.eBIC[[j]][[l]]), train.data.fit)
+      
+      # Predict
+      preds <- predict(temp.model, newdata = test.preds)
+      
+      # Compute Mean Squared Error
+      mse[i] <- mean((test.resp - preds)^2)
+    }
+    NE.kcv.temp[[j]] <- mean(mse)
+  }
+  NE.kcv.ebic[[l]] <- NE.kcv.temp
+}
+
+SE.kcv.ebic <- NULL
+for (l in 1:length(gamma.seq)) {
+  SE.kcv.temp <- NULL
+  for(j in 1:3){ 
+    temp.pred <- SEpreds_new[[j]]
+    temp.resp <- SEresp_new[[j]]
+    
+    
+    nrow(temp.pred)
+    length(temp.resp)
+    
+    n <- nrow(temp.pred)
+    set.seed(157)
+    folds <- sample(rep(1:k, length.out = n))
+    # Store errors
+    mse <- numeric(k)
+    for (i in 1:k) {
+      # Split into training and test sets
+      test.id <- which(folds == i)
+      train.preds <- temp.pred[-test.id, ]
+      train.resp <- temp.resp[-test.id]
+      test.preds <- temp.pred[test.id, ]
+      test.resp <- temp.resp[test.id]
+      
+      # Fit model
+      train.data.fit <- as.data.frame(cbind(train.resp, train.preds))
+      names(train.data.fit)[1] <- "co"
+      
+      temp.model <- lm(formula(SErefits.eBIC[[j]][[l]]), train.data.fit)
+      
+      # Predict
+      preds <- predict(temp.model, newdata = test.preds)
+      
+      # Compute Mean Squared Error
+      mse[i] <- mean((test.resp - preds)^2)
+    }
+    SE.kcv.temp[[j]] <- mean(mse)
+  }
+  
+  SE.kcv.ebic[[l]] <- SE.kcv.temp
+  
+}
+
+SE.kcv.ebic[[1]]
+SE.kcv
+
+#output/save
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NE.kcv, NE.kcv.ebic, 
+     SE.kcv, SE.kcv.ebic,
+     file = "validation_kfold.rda")
+
