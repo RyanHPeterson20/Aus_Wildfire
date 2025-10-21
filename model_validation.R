@@ -369,12 +369,50 @@ save(NEvalid, NErefit.new,
 #gamma (for eBIC)
 gamma.seq <- seq(0, 1, length.out = 12)
 
+#fit first
 n.cores <- 12
 my.cluster <- parallel::makeCluster(
   n.cores, 
   type = "PSOCK"
 )
 doParallel::registerDoParallel(cl = my.cluster)
+
+NE.eBIC.vary <- NULL 
+for (i in 1:length(seasons)) { #
+  #data w/o season (train)
+  fit.resp <- NEpartial_resp[[i]]
+  fit.preds <- NEpartial_preds[[i]]
+
+  eBIC.vary.seasonal <- NULL
+  for (j in 1:3) {
+  
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:312]))
+    
+    #for each model fit
+    eBIC.vary.fit <- foreach(k = 1:length(gamma.seq)) %dopar% {
+      
+      #varying ramp fit (eBIC)
+      RAMP::RAMP(X = X.fit, y = y.fit,
+                 penalty = "LASSO",
+                 tune = "EBIC",
+                 ebic.gamma = gamma.seq[k],
+                 n.lambda = 500)
+    }
+    eBIC.vary.seasonal[[j]] <- eBIC.vary.fit
+
+  }
+  NE.eBIC.vary[[seasons[i]]] <- eBIC.vary.seasonal
+  
+}
+
+parallel::stopCluster(cl = my.cluster)  
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NE.eBIC.vary, file = "tempNEeBIC.rda")
 
 NE.rmse.eBIC <- NULL
 NE.cprs.eBIC <- NULL
@@ -383,7 +421,16 @@ NE.pred.int.eBIC <- NULL
 #models (refit and lm)
 NE.vary.terms.eBIC <- NULL
 NE.const.LM.eBIC <- NULL 
-NE.vary.LMe.BIC <- NULL
+NE.vary.LM.eBIC <- NULL
+#TODO: set outer loop for gamma values
+for (k in 1:length(gamma.seq)) {
+  #internal setup
+  for (i in 1:length(seasons)) {
+    
+    
+  }
+}
+
 for (i in 1:2) { #
   i <- 1
   #data w/o season (train)
@@ -419,17 +466,6 @@ for (i in 1:2) { #
     y.fit <- as.numeric(fit.resp[[j]])
     #with OLR
     X.fit <- cbind(as.matrix(fit.preds[[j]][ ,1:312]))
-    
-    #for each model fit
-    eBIC.vary.fit <- foreach(k = 1:length(gamma.seq)) %dopar% {
-
-      #varying ramp fit (eBIC)
-      RAMP::RAMP(X = X.fit, y = y.fit,
-                            penalty = "LASSO",
-                            tune = "EBIC",
-                            ebic.gamma = gamma.seq[k],
-                            n.lambda = 500)
-    }
     
 
     lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
@@ -470,7 +506,6 @@ for (i in 1:2) { #
   }
 }
 
-parallel::stopCluster(cl = my.cluster)  
 
 
 
