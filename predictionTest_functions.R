@@ -27,6 +27,14 @@ cvg <- function(x, y, alpha = 0.05){
 }
 
 
+#TODO: finalize or move elsewhere
+#press and pred R^2
+predR2 <- function(model, pred, trueobs){
+  
+  
+}
+
+
 #combination of previous metrics and lm creation.
 prediction_scores <- function(data_list, model_coefs, season_weeks,
                               loo = FALSE) {

@@ -5,6 +5,7 @@
 
 #TODO: create sections for figures (e.g. numbered)
 #1. 
+# . Adj. R^2 
 # . K-fold CV plots
 # . RMSE plots (see line ..)
 # . CRPS plots
@@ -26,14 +27,104 @@ load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 
 ## --- setup --- ##
 
+#TODO: move model fits up here, if needed (check later)
+
 #TODO: get the changes in the number of terms for eBIC models
 
 
 
 ## --- Main --- ##
 
+# . (n.) Predictions and Intervals
 
 
+
+
+# . (n.) adj R^2 (in-sample)
+#TODO: finalize the below figures
+
+#Get all seasons
+#NE Aus 
+NE.cons.adjR2 <- NULL
+NE.vary.adjR2 <- NULL
+for (j in 1:3) {
+  cons.adjR2 <- numeric(19)
+  vary.adjR2 <- numeric(19)
+  for (i in 1:19) {
+    cons.lm.temp <- NErefit.new[[2]][[i]]
+    vary.lm.temp <- NErefit.new[[3]][[i]]
+
+    cons.adjR2[i] <- summary(cons.lm.temp[[j]])$adj.r.squared
+    vary.adjR2[i] <- summary(vary.lm.temp[[j]])$adj.r.squared
+  }
+  NE.cons.adjR2[[j]] <- cons.adjR2
+  NE.vary.adjR2[[j]] <- vary.adjR2
+}
+
+#NE Aus group 1
+plot(1:19, NE.cons.adjR2[[1]], pch = 16, col = "firebrick", ylim = c(0,1))
+points(1:19, NE.vary.adjR2[[1]], pch = 17, col = "forestgreen")
+
+#NE Aus group 2
+plot(1:19, NE.cons.adjR2[[2]], pch = 16, col = "firebrick", ylim = c(0,1))
+points(1:19, NE.vary.adjR2[[2]], pch = 17, col = "forestgreen")
+
+#NE Aus group 3
+plot(1:19, NE.cons.adjR2[[3]], pch = 16, col = "firebrick", ylim = c(0,1))
+points(1:19, NE.vary.adjR2[[3]], pch = 17, col = "forestgreen")
+
+#SE Aus 
+SE.cons.adjR2 <- NULL
+SE.vary.adjR2 <- NULL
+for (j in 1:3) {
+  cons.adjR2 <- numeric(19)
+  vary.adjR2 <- numeric(19)
+  for (i in 1:19) {
+    cons.lm.temp <- SErefit.new[[2]][[i]]
+    vary.lm.temp <- SErefit.new[[3]][[i]]
+    
+    cons.adjR2[i] <- summary(cons.lm.temp[[j]])$adj.r.squared
+    vary.adjR2[i] <- summary(vary.lm.temp[[j]])$adj.r.squared
+  }
+  SE.cons.adjR2[[j]] <- cons.adjR2
+  SE.vary.adjR2[[j]] <- vary.adjR2
+}
+
+#SE Aus group 1
+plot(1:19, SE.cons.adjR2[[1]], pch = 16, col = "firebrick", ylim = c(0,1))
+points(1:19, SE.vary.adjR2[[1]], pch = 17, col = "forestgreen")
+
+#SE Aus group 2
+plot(1:19, SE.cons.adjR2[[2]], pch = 16, col = "firebrick", ylim = c(0,1))
+points(1:19, SE.vary.adjR2[[2]], pch = 17, col = "forestgreen")
+
+#SE Aus group 3
+plot(1:19, SE.cons.adjR2[[3]], pch = 16, col = "firebrick", ylim = c(0,1))
+points(1:19, SE.vary.adjR2[[3]], pch = 17, col = "forestgreen")
+
+
+## 2019-2020 Season only
+#NE Aus
+#Group 1
+NE.cons.adjR2[[1]][19]
+NE.vary.adjR2[[1]][19]
+#Group 2
+NE.cons.adjR2[[2]][19]
+NE.vary.adjR2[[2]][19]
+#Group 3
+NE.cons.adjR2[[3]][19]
+NE.vary.adjR2[[3]][19]
+
+#SE Aus
+#Group 1
+SE.cons.adjR2[[1]][19]
+SE.vary.adjR2[[1]][19]
+#Group 2
+SE.cons.adjR2[[2]][19]
+SE.vary.adjR2[[2]][19]
+#Group 3
+SE.cons.adjR2[[3]][19]
+SE.vary.adjR2[[3]][19]
 
 
 # . (n.) K-Fold CV

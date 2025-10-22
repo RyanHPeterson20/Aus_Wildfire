@@ -242,7 +242,6 @@ for (i in 1:length(seasons)) {
   
 }
 
-
 NEvalid <- list(rmse = NE.rmse, cprs = NE.cprs, ints = NE.ints, interval = NE.pred.int)
 NErefit.new <- list(NE.vary.terms, NE.const.LM, NE.vary.LM)
 
