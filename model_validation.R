@@ -204,6 +204,7 @@ for (i in 1:length(seasons)) {
     pred.const <- predict(NE.lm.const, X.valid, se.fit = TRUE)
     pred.vary <- predict(NE.lm.vary, X.valid, se.fit = TRUE)
     
+  
     #rmse
     rmse.base <-  rmse(y.valid, pred.base$fit)
     rmse.const <- rmse(y.valid, pred.const$fit)
@@ -728,4 +729,61 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NE.kcv, NE.kcv.ebic, 
      SE.kcv, SE.kcv.ebic,
      file = "validation_kfold.rda")
+
+
+#PRESS and p-squared
+#for overall (all years combined) by group
+NEpreds <- NEvalid[[4]]
+SEpreds <- NEvalid[[4]]
+
+#NE Aus group 1
+NE1.y.get <- unlist(lapply(NEpreds, function(x) x[c(1:9), 1])) #true
+NE1.y.const <- unlist(lapply(NEpreds, function(x) x[c(1:9),5])) #y_hat (const)
+NE1.y.vary <- unlist(lapply(NEpreds, function(x) x[c(1:9),8])) #y_hat (vary)
+
+#NE Aus group 2
+NE2.y.get <- unlist(lapply(NEpreds, function(x) x[c(10:14), 1])) #true
+NE2.y.const <- unlist(lapply(NEpreds, function(x) x[c(10:14),5])) #y_hat (const)
+NE2.y.vary <- unlist(lapply(NEpreds, function(x) x[c(10:14),8])) #y_hat (vary)
+
+#NE Aus group 3
+NE3.y.get <- unlist(lapply(NEpreds, function(x) x[c(15:29), 1])) #true
+NE3.y.const <- unlist(lapply(NEpreds, function(x) x[c(15:29),5])) #y_hat (const)
+NE3.y.vary <- unlist(lapply(NEpreds, function(x) x[c(15:29),8])) #y_hat (vary)
+
+#SE Aus group 1
+SE1.y.get <- unlist(lapply(SEpreds, function(x) x[c(1:13), 1])) #true
+SE1.y.const <- unlist(lapply(SEpreds, function(x) x[c(1:13),5])) #y_hat (const)
+SE1.y.vary <- unlist(lapply(SEpreds, function(x) x[c(1:13),8])) #y_hat (vary)
+
+#SE Aus group 2
+SE2.y.get <- unlist(lapply(SEpreds, function(x) x[c(14:17), 1])) #true
+SE2.y.const <- unlist(lapply(SEpreds, function(x) x[c(14:17),5])) #y_hat (const)
+SE2.y.vary <- unlist(lapply(SEpreds, function(x) x[c(14:17),8])) #y_hat (vary)
+
+#SE Aus group 3
+SE3.y.get <- unlist(lapply(SEpreds, function(x) x[c(18:29), 1])) #true
+SE3.y.const <- unlist(lapply(SEpreds, function(x) x[c(18:29),5])) #y_hat (const)
+SE3.y.vary <- unlist(lapply(SEpreds, function(x) x[c(18:29),8])) #y_hat (vary)
+
+#get PRESS
+NE1.press.const <- sum((NE1.y.get - NE1.y.const)^2)
+NE1.press.vary <- sum((NE1.y.get - NE1.y.vary)^2)
+NE2.press.const <- sum((NE2.y.get - NE2.y.const)^2)
+NE2.press.vary <- sum((NE2.y.get - NE2.y.vary)^2)
+NE3.press.const <- sum((NE3.y.get - NE3.y.const)^2)
+NE3.press.vary <- sum((NE3.y.get - NE3.y.vary)^2)
+
+#get TSS
+NE1.tss <- sum((NE1.y.get - mean(NE1.y.get))^2)
+NE2.tss <- sum((NE2.y.get - mean(NE2.y.get))^2)
+NE3.tss <- sum((NE3.y.get - mean(NE3.y.get))^2)
+
+#pred R2
+NE1.pR2.const <- 1 - (NE1.press.const/NE1.tss)
+NE1.pR2.vary <- 1 - (NE1.press.vary/NE1.tss)
+NE2.pR2.const <- 1 - (NE2.press.const/NE2.tss)
+NE2.pR2.vary <- 1 - (NE2.press.vary/NE2.tss)
+NE3.pR2.const <- 1 - (NE3.press.const/NE3.tss)
+NE3.pR2.vary <- 1 - (NE3.press.vary/NE3.tss)
 

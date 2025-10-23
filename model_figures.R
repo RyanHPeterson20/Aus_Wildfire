@@ -286,7 +286,6 @@ lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
 title("NE Aus : 2019-2020 Season", adj = 0)
 
-
 #SE Aus predictions
 SEpreds <- SEvalid[[4]]
 
@@ -537,6 +536,11 @@ lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
 title("SE Aus : 2019-2020 Season", adj = 0)
 
+
+#TODO: repeat with the points plots for the entire study period.
+## See either of the two preceding papers for examples.
+
+
 # . (n.) adj R^2 (in-sample)
 #TODO: finalize the below figures
 
@@ -623,6 +627,10 @@ SE.vary.adjR2[[2]][19]
 SE.cons.adjR2[[3]][19]
 SE.vary.adjR2[[3]][19]
 
+
+# . (n.) R^2 (out-of-sample/prediction)
+#TODO: update in `model_validation.R`
+#TODO: then create some outputs 
 
 # . (n.) K-Fold CV
 #TODO: add legend to each plot, then create output (.png)
