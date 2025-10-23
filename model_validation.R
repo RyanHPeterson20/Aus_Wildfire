@@ -774,10 +774,21 @@ NE2.press.vary <- sum((NE2.y.get - NE2.y.vary)^2)
 NE3.press.const <- sum((NE3.y.get - NE3.y.const)^2)
 NE3.press.vary <- sum((NE3.y.get - NE3.y.vary)^2)
 
+SE1.press.const <- sum((SE1.y.get - SE1.y.const)^2)
+SE1.press.vary  <- sum((SE1.y.get - SE1.y.vary)^2)
+SE2.press.const <- sum((SE2.y.get - SE2.y.const)^2)
+SE2.press.vary  <- sum((SE2.y.get - SE2.y.vary)^2)
+SE3.press.const <- sum((SE3.y.get - SE3.y.const)^2)
+SE3.press.vary  <- sum((SE3.y.get - SE3.y.vary)^2)
+
 #get TSS
 NE1.tss <- sum((NE1.y.get - mean(NE1.y.get))^2)
 NE2.tss <- sum((NE2.y.get - mean(NE2.y.get))^2)
 NE3.tss <- sum((NE3.y.get - mean(NE3.y.get))^2)
+
+SE1.tss <- sum((SE1.y.get - mean(SE1.y.get))^2)
+SE2.tss <- sum((SE2.y.get - mean(SE2.y.get))^2)
+SE3.tss <- sum((SE3.y.get - mean(SE3.y.get))^2)
 
 #pred R2
 NE1.pR2.const <- 1 - (NE1.press.const/NE1.tss)
@@ -786,4 +797,26 @@ NE2.pR2.const <- 1 - (NE2.press.const/NE2.tss)
 NE2.pR2.vary <- 1 - (NE2.press.vary/NE2.tss)
 NE3.pR2.const <- 1 - (NE3.press.const/NE3.tss)
 NE3.pR2.vary <- 1 - (NE3.press.vary/NE3.tss)
+
+SE1.pR2.const <- 1 - (SE1.press.const/SE1.tss)
+SE1.pR2.vary  <- 1 - (SE1.press.vary/SE1.tss)
+SE2.pR2.const <- 1 - (SE2.press.const/SE2.tss)
+SE2.pR2.vary  <- 1 - (SE2.press.vary/SE2.tss)
+SE3.pR2.const <- 1 - (SE3.press.const/SE3.tss)
+SE3.pR2.vary  <- 1 - (SE3.press.vary/SE3.tss)
+
+#setup for save
+NE.predR2 <- list(const = c(SE1.pR2.const, SE2.pR2.const, SE3.pR2.const), 
+                  vary = c(SE1.pR2.vary, SE2.pR2.vary, SE3.pR2.vary))
+SE.predR2 <- list(const = c(NE1.pR2.const, NE2.pR2.const, NE3.pR2.const),
+                  vary = c(NE1.pR2.vary, NE2.pR2.vary, NE3.pR2.vary))
+
+#eBIC PRESS and p-squared
+#TODO: repeat for eBIC
+
+
+#save the above 
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NE.predR2, SE.predR2, 
+     file = "validation_predR2.rda")
 
