@@ -30,15 +30,512 @@ load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 #TODO: move model fits up here, if needed (check later)
 
 #TODO: get the changes in the number of terms for eBIC models
-
-
+new.season.weeks <- season_weeks[-c(1:3)]
 
 ## --- Main --- ##
 
 # . (n.) Predictions and Intervals
+#TODO: get predictions and associated 95\% intervals
+#NE Aus predictions
+NEpreds <- NEvalid[[4]]
+
+#2001-2002 Season
+temp.2001.preds <- NEpreds$`2001-2002`
+plot(1:29, temp.2001.preds$true, type = "l", ylim = range(temp.2001.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2001.preds$const.fit, lty = 2)
+lines(1:29,  temp.2001.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2001.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2001-2002 Season", adj = 0)
+
+#2002-2003 Season
+temp.2002.preds <- NEpreds$`2002-2003`
+plot(1:29, temp.2002.preds$true, type = "l", ylim = range(temp.2002.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2002.preds$const.fit, lty = 2)
+lines(1:29,  temp.2002.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2002.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2002-2003 Season", adj = 0)
+
+#2003-2004 Season
+temp.2003.preds <- NEpreds$`2003-2004`
+plot(1:29, temp.2003.preds$true, type = "l", ylim = range(temp.2003.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2003.preds$const.fit, lty = 2)
+lines(1:29,  temp.2003.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2003.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2003-2004 Season", adj = 0)
+
+#2004-2005 Season
+temp.2004.preds <- NEpreds$`2004-2005`
+plot(1:29, temp.2004.preds$true, type = "l", ylim = range(temp.2004.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2004.preds$const.fit, lty = 2)
+lines(1:29,  temp.2004.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2004.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2004-2005 Season", adj = 0)
+
+#2005-2006 Season
+temp.2005.preds <- NEpreds$`2005-2006`
+plot(1:29, temp.2005.preds$true, type = "l", ylim = range(temp.2005.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2005.preds$const.fit, lty = 2)
+lines(1:29,  temp.2005.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2005.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2005-2006 Season", adj = 0)
+
+#2006-2007 Season
+temp.2006.preds <- NEpreds$`2006-2007`
+plot(1:29, temp.2006.preds$true, type = "l", ylim = range(temp.2006.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2006.preds$const.fit, lty = 2)
+lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2006-2007 Season", adj = 0)
+
+#2007-2008 Season
+temp.2007.preds <- NEpreds$`2007-2008`
+plot(1:29, temp.2007.preds$true, type = "l", ylim = range(temp.2007.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2007.preds$const.fit, lty = 2)
+lines(1:29,  temp.2007.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2007.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2007-2008 Season", adj = 0)
+
+#2008-2009 Season
+temp.2008.preds <- NEpreds$`2008-2009`
+plot(1:29, temp.2008.preds$true, type = "l", ylim = range(temp.2008.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2008.preds$const.fit, lty = 2)
+lines(1:29,  temp.2008.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2008.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2008-2009 Season", adj = 0)
+
+#2009-2010 Season
+temp.2009.preds <- NEpreds$`2009-2010`
+plot(1:29, temp.2009.preds$true, type = "l", ylim = range(temp.2009.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2009.preds$const.fit, lty = 2)
+lines(1:29,  temp.2009.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2009.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2009-2010 Season", adj = 0)
+
+#2010-2011 Season
+temp.2010.preds <- NEpreds$`2010-2011`
+plot(1:29, temp.2010.preds$true, type = "l", ylim = range(temp.2010.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2010.preds$const.fit, lty = 2)
+lines(1:29,  temp.2010.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2010.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2010-2011 Season", adj = 0)
+
+#2011-2012 Season
+temp.2011.preds <- NEpreds$`2011-2012`
+plot(1:29, temp.2011.preds$true, type = "l", ylim = range(temp.2011.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2011.preds$const.fit, lty = 2)
+lines(1:29,  temp.2011.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2011.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2011-2012 Season", adj = 0)
+
+#2012-2013 Season
+temp.2012.preds <- NEpreds$`2012-2013`
+plot(1:29, temp.2012.preds$true, type = "l", ylim = range(temp.2012.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2012.preds$const.fit, lty = 2)
+lines(1:29,  temp.2012.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2012.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2012-2013 Season", adj = 0)
+
+#2013-2014 Season
+temp.2013.preds <- NEpreds$`2013-2014`
+plot(1:29, temp.2013.preds$true, type = "l", ylim = range(temp.2013.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2013.preds$const.fit, lty = 2)
+lines(1:29,  temp.2013.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2013.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2013-2014 Season", adj = 0)
+
+#2014-2015 Season
+temp.2014.preds <- NEpreds$`2014-2015`
+plot(1:29, temp.2014.preds$true, type = "l", ylim = range(temp.2014.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2014.preds$const.fit, lty = 2)
+lines(1:29,  temp.2014.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2014.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2014-2015 Season", adj = 0)
+
+#2015-2016 Season
+temp.2015.preds <- NEpreds$`2015-2016`
+plot(1:29, temp.2015.preds$true, type = "l", ylim = range(temp.2015.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2015.preds$const.fit, lty = 2)
+lines(1:29,  temp.2015.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2015.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2015-2016 Season", adj = 0)
+
+#2016-2017 Season
+temp.2016.preds <- NEpreds$`2016-2017`
+plot(1:29, temp.2016.preds$true, type = "l", ylim = range(temp.2016.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2016.preds$const.fit, lty = 2)
+lines(1:29,  temp.2016.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2016.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2016-2017 Season", adj = 0)
+
+#2017-2018 Season
+temp.2017.preds <- NEpreds$`2017-2018`
+plot(1:29, temp.2017.preds$true, type = "l", ylim = range(temp.2017.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2017.preds$const.fit, lty = 2)
+lines(1:29,  temp.2017.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2017.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2017-2018 Season", adj = 0)
+
+#2018-2019 Season
+temp.2018.preds <- NEpreds$`2018-2019`
+plot(1:29, temp.2018.preds$true, type = "l", ylim = range(temp.2018.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2018.preds$const.fit, lty = 2)
+lines(1:29,  temp.2018.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2018.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2018-2019 Season", adj = 0)
+
+#2019-2020 Season
+temp.2019.preds <- NEpreds$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$const.fit, lty = 2)
+lines(1:29,  temp.2019.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2019-2020 Season", adj = 0)
 
 
+#SE Aus predictions
+SEpreds <- SEvalid[[4]]
 
+#2001-2002 Season
+temp.2001.preds <- SEpreds$`2001-2002`
+plot(1:29, temp.2001.preds$true, type = "l", ylim = range(temp.2001.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2001.preds$const.fit, lty = 2)
+lines(1:29,  temp.2001.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2001.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2001-2002 Season", adj = 0)
+
+#2002-2003 Season
+temp.2002.preds <- SEpreds$`2002-2003`
+plot(1:29, temp.2002.preds$true, type = "l", ylim = range(temp.2002.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2002.preds$const.fit, lty = 2)
+lines(1:29,  temp.2002.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2002.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2002-2003 Season", adj = 0)
+
+#2003-2004 Season
+temp.2003.preds <- SEpreds$`2003-2004`
+plot(1:29, temp.2003.preds$true, type = "l", ylim = range(temp.2003.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2003.preds$const.fit, lty = 2)
+lines(1:29,  temp.2003.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2003.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2003-2004 Season", adj = 0)
+
+#2004-2005 Season
+temp.2004.preds <- SEpreds$`2004-2005`
+plot(1:29, temp.2004.preds$true, type = "l", ylim = range(temp.2004.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2004.preds$const.fit, lty = 2)
+lines(1:29,  temp.2004.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2004.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2004-2005 Season", adj = 0)
+
+#2005-2006 Season
+temp.2005.preds <- SEpreds$`2005-2006`
+plot(1:29, temp.2005.preds$true, type = "l", ylim = range(temp.2005.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2005.preds$const.fit, lty = 2)
+lines(1:29,  temp.2005.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2005.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2005-2006 Season", adj = 0)
+
+#2006-2007 Season
+temp.2006.preds <- SEpreds$`2006-2007`
+plot(1:29, temp.2006.preds$true, type = "l", ylim = range(temp.2006.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2006.preds$const.fit, lty = 2)
+lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2006-2007 Season", adj = 0)
+
+#2007-2008 Season
+temp.2007.preds <- SEpreds$`2007-2008`
+plot(1:29, temp.2007.preds$true, type = "l", ylim = range(temp.2007.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2007.preds$const.fit, lty = 2)
+lines(1:29,  temp.2007.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2007.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2007-2008 Season", adj = 0)
+
+#2008-2009 Season
+temp.2008.preds <- SEpreds$`2008-2009`
+plot(1:29, temp.2008.preds$true, type = "l", ylim = range(temp.2008.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2008.preds$const.fit, lty = 2)
+lines(1:29,  temp.2008.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2008.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2008-2009 Season", adj = 0)
+
+#2009-2010 Season
+temp.2009.preds <- SEpreds$`2009-2010`
+plot(1:29, temp.2009.preds$true, type = "l", ylim = range(temp.2009.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2009.preds$const.fit, lty = 2)
+lines(1:29,  temp.2009.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2009.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2009-2010 Season", adj = 0)
+
+#2010-2011 Season
+temp.2010.preds <- SEpreds$`2010-2011`
+plot(1:29, temp.2010.preds$true, type = "l", ylim = range(temp.2010.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2010.preds$const.fit, lty = 2)
+lines(1:29,  temp.2010.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2010.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2010-2011 Season", adj = 0)
+
+#2011-2012 Season
+temp.2011.preds <- SEpreds$`2011-2012`
+plot(1:29, temp.2011.preds$true, type = "l", ylim = range(temp.2011.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2011.preds$const.fit, lty = 2)
+lines(1:29,  temp.2011.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2011.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2011-2012 Season", adj = 0)
+
+#2012-2013 Season
+temp.2012.preds <- SEpreds$`2012-2013`
+plot(1:29, temp.2012.preds$true, type = "l", ylim = range(temp.2012.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2012.preds$const.fit, lty = 2)
+lines(1:29,  temp.2012.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2012.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2012-2013 Season", adj = 0)
+
+#2013-2014 Season
+temp.2013.preds <- SEpreds$`2013-2014`
+plot(1:29, temp.2013.preds$true, type = "l", ylim = range(temp.2013.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2013.preds$const.fit, lty = 2)
+lines(1:29,  temp.2013.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2013.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2013-2014 Season", adj = 0)
+
+#2014-2015 Season
+temp.2014.preds <- SEpreds$`2014-2015`
+plot(1:29, temp.2014.preds$true, type = "l", ylim = range(temp.2014.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2014.preds$const.fit, lty = 2)
+lines(1:29,  temp.2014.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2014.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2014-2015 Season", adj = 0)
+
+#2015-2016 Season
+temp.2015.preds <- SEpreds$`2015-2016`
+plot(1:29, temp.2015.preds$true, type = "l", ylim = range(temp.2015.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2015.preds$const.fit, lty = 2)
+lines(1:29,  temp.2015.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2015.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2015-2016 Season", adj = 0)
+
+#2016-2017 Season
+temp.2016.preds <- SEpreds$`2016-2017`
+plot(1:29, temp.2016.preds$true, type = "l", ylim = range(temp.2016.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2016.preds$const.fit, lty = 2)
+lines(1:29,  temp.2016.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2016.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2016-2017 Season", adj = 0)
+
+#2017-2018 Season
+temp.2017.preds <- SEpreds$`2017-2018`
+plot(1:29, temp.2017.preds$true, type = "l", ylim = range(temp.2017.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2017.preds$const.fit, lty = 2)
+lines(1:29,  temp.2017.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2017.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2017-2018 Season", adj = 0)
+
+#2018-2019 Season
+temp.2018.preds <- SEpreds$`2018-2019`
+plot(1:29, temp.2018.preds$true, type = "l", ylim = range(temp.2018.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2018.preds$const.fit, lty = 2)
+lines(1:29,  temp.2018.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2018.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2018-2019 Season", adj = 0)
+
+#2019-2020 Season
+temp.2019.preds <- SEpreds$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$const.fit, lty = 2)
+lines(1:29,  temp.2019.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2019-2020 Season", adj = 0)
 
 # . (n.) adj R^2 (in-sample)
 #TODO: finalize the below figures
