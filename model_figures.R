@@ -5,6 +5,8 @@
 
 #TODO: create sections for figures (e.g. numbered)
 #1. 
+# . Predictors and Model Fits
+# . Predictions and Intervals
 # . Adj. R^2 
 # . K-fold CV plots
 # . RMSE plots (see line ..)
@@ -25,7 +27,51 @@ load("validation_refits.rda") #refits and validation (BIC)
 load("validation_refitsEBIC.rda") #refits and validation (eBIC)
 load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+source("group_functionsNew.R") #new groupings
+
+
 ## --- setup --- ##
+#normal/base 
+#season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#TODO: update below into a helper function
+#Below includes removal of weeks 35-37 (adjust grouping functions if we need to change this.)
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+
+#full model (uses `group_functionsNew.R`)
+NEpreds_new <- NElag_3group(NE_laglist = NE_iodlag, j = 1:19)
+NEresp_new <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+SEpreds_new <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
+SEresp_new <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
 
 #TODO: move model fits up here, if needed (check later)
 
@@ -34,8 +80,71 @@ new.season.weeks <- season_weeks[-c(1:3)]
 
 ## --- Main --- ##
 
+
+# . (n.) Predictors and Model Fits
+## Not sure what I hope to accomplish here, these are very complex models
+#Plot relationship between single predictor and response, holding all other vars const.
+#Start with only significant predictors
+#TODO: add interaction terms as x,y,z plot (fit surface according to interaction and each individual term)
+
+
+#NE Aus Group 1
+summary(NEmodels[[1]])
+NE.y1 <- NEresp_new[[1]]
+NE.X1 <- NEpreds_new[[1]]
+
+#NE Aus Group 2
+
+#NE Aus Group 3
+
+
+#SE Aus Group 1
+summary(SEmodels[[1]])
+SE.y1 <- SEresp_new[[1]]
+SE.X1 <- SEpreds_new[[1]]
+
+#wtio_lag13 (sig. w/ 0.016033)
+plot(SE.X1$wtio_lag13, SE.y1, pch = 16)
+#etio_lag31 (sig. w/ 0.035191 )
+plot(SE.X1$etio_lag31, SE.y1, pch = 16)
+#aao_lag24 (sig. w/ 1.3e-06)
+plot(SE.X1$aao_lag24, SE.y1, pch = 16)
+#aao_lag29 (sig. w/ )
+plot(SE.X1$aao_lag29, SE.y1, pch = 16)
+#aao_lag35 (sig. w/ )
+plot(SE.X1$aao_lag45, SE.y1, pch = 16)
+#SEolr_lag28 (sig. w/ )
+plot(SE.X1$SEolr_lag28, SE.y1, pch = 16)
+
+#SE Aus Group 2
+summary(SEmodels[[2]])
+SE.y2 <- SEresp_new[[2]]
+SE.X2 <- SEpreds_new[[2]]
+
+#nino_lag40 (sig. w/ )
+plot(SE.X2$nino_lag40, SE.y2, pch = 16)
+#etio_lag7 (sig. w/ )
+plot(SE.X2$etio_lag7, SE.y2, pch = 16)
+
+#SE Aus Group 3
+summary(SEmodels[[3]])
+SE.y3 <- SEresp_new[[3]]
+SE.X3 <- SEpreds_new[[3]]
+
+#wtio_lag1 (sig. w/ )
+plot(SE.X3$wtio_lag1, SE.y3, pch = 16)
+#etio_lag15 (sig. w/ )
+plot(SE.X3$etio_lag15, SE.y3, pch = 16)
+#tsa_lag22 (sig. w/ )
+plot(SE.X3$tsa_lag22, SE.y3, pch = 16)
+#SEolr_lag1 (sig. w/ )
+plot(SE.X3$SEolr_lag1, SE.y3, pch = 16)
+
 # . (n.) Predictions and Intervals
-#TODO: get predictions and associated 95\% intervals
+#get predictions and associated 95\% intervals
+
+#TODO: finalize plots with legends and output as .png
+
 #NE Aus predictions
 NEpreds <- NEvalid[[4]]
 
