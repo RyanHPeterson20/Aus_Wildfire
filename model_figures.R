@@ -93,10 +93,30 @@ summary(NEmodels[[1]])
 NE.y1 <- NEresp_new[[1]]
 NE.X1 <- NEpreds_new[[1]]
 
+#nino_lag9 (sig. w/  )
+plot(NE.X1$nino_lag9, NE.y1, pch = 16)
+#etio_lag42 (sig. w/  )
+plot(NE.X1$etio_lag42, NE.y1, pch = 16)
+#tsa_lag19 (sig. w/  )
+plot(NE.X1$tsa_lag19, NE.y1, pch = 16)
+#tsa_lag32 (sig. w/  )
+plot(NE.X1$tsa_lag32, NE.y1, pch = 16)
+#NEolr_lag19 (sig. w/  )
+plot(NE.X1$NEolr_lag19, NE.y1, pch = 16)
+
+
 #NE Aus Group 2
+summary(NEmodels[[2]])
+NE.y2 <- NEresp_new[[2]]
+NE.X2 <- NEpreds_new[[2]]
+
+
+
 
 #NE Aus Group 3
-
+summary(NEmodels[[3]])
+NE.y3 <- NEresp_new[[3]]
+NE.X3 <- NEpreds_new[[3]]
 
 #SE Aus Group 1
 summary(SEmodels[[1]])
