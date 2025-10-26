@@ -84,16 +84,19 @@ rownames(pIOD.df) <- NULL
 ```{r TS_figs}
 jja.ind <- which(month(bounded_pred_df$time) %in% c(6,7,8))
 son.ind <- which(month(bounded_pred_df$time) %in% c(9,10,11))
+djf.ind <- which(month(bounded_pred_df$time) %in% c(12,1,2))
+mam.ind <- which(month(bounded_pred_df$time) %in% c(3,4,5))
 
 pIOD.df$s.index <- scale(pIOD.df$s.index)
 pIOD.df$m.index <- scale(pIOD.df$m.index)
 
-#jja
-dmi.jja <- bounded_pred2_df[jja.ind, ]
-piod.jja <- pIOD.df[jja.ind,]
+
 #son
 dmi.son <- bounded_pred2_df[son.ind, ]
 piod.son <- pIOD.df[son.ind,]
+
+pc1.son <- piod.son$PC1
+pc2.son <- piod.son$PC2
 
 s.index.son  <- piod.son$s.index
 etio.son <- dmi.son$etio.anomaly
@@ -105,16 +108,83 @@ mod.range <- range(wtio.son, m.index.son)
 
 son.dmi <- dmi.son$dmi.anomaly
 
+#jja
+dmi.jja <- bounded_pred2_df[jja.ind, ]
+piod.jja <- pIOD.df[jja.ind,]
+
+pc1.jja <- piod.jja$PC1
+pc2.jja <- piod.jja$PC2
+
+s.index.jja  <- piod.jja$s.index
+etio.jja <- dmi.jja$etio.anomaly
+
+m.index.jja  <- piod.jja$m.index
+wtio.jja <- dmi.jja$wtio.anomaly
+
+#djf
+dmi.djf <- bounded_pred2_df[djf.ind, ]
+piod.djf <- pIOD.df[djf.ind,]
+
+pc1.djf <- piod.djf$PC1
+pc2.djf <- piod.djf$PC2
+
+s.index.djf  <- piod.djf$s.index
+etio.djf <- dmi.djf$etio.anomaly
+
+m.index.djf  <- piod.djf$m.index
+wtio.djf <- dmi.djf$wtio.anomaly
+
+#mam
+dmi.mam <- bounded_pred2_df[mam.ind, ]
+piod.mam <- pIOD.df[mam.ind,]
+
+pc1.mam <- piod.mam$PC1
+pc2.mam <- piod.mam$PC2
+
+s.index.mam  <- piod.mam$s.index
+etio.mam <- dmi.mam$etio.anomaly
+
+m.index.mam  <- piod.mam$m.index
+wtio.mam <- dmi.mam$wtio.anomaly
+
+
+
 #fig setup
 years.pIOD <- 2000:2019
+years.pIOD_alt <- 2000:2020
 
+#son setup
 n.son <- length(son.ind)
 #length(s.index.son)
 son.div <- which(diff(piod.son$year) !=0 ) + 0.5
 son.div.full <-  c(0.5, son.div, n.son+0.5)
 
-year.loc <- (head(son.div.full, -1) + tail(son.div.full, -1))/2
+#jja setup
+n.jja <- length(jja.ind)
+jja.div <- which(diff(piod.jja$year) !=0 ) + 0.5
+jja.div.full <-  c(0.5, jja.div, n.jja+0.5)
 
+#djf setup
+n.djf <- length(djf.ind)
+djf.div <- which(diff(piod.djf$year) !=0 ) + 0.5
+djf.div.full <-  c(0.5, djf.div, n.djf+0.5)
+
+#mam setup
+n.mam <- length(mam.ind)
+mam.div <- which(diff(piod.mam$year) !=0 ) + 0.5
+mam.div.full <-  c(0.5, mam.div, n.mam+0.5)
+
+year.loc <- (head(son.div.full, -1) + tail(son.div.full, -1))/2
+year.loc.jja <- (head(jja.div.full, -1) + tail(jja.div.full, -1))/2
+year.loc.djf <- (head(djf.div.full, -1) + tail(djf.div.full, -1))/2
+year.loc.mam <- (head(mam.div.full, -1) + tail(mam.div.full, -1))/2
+```
+
+
+```{r figs_ts}
+
+strong.range <- range(etio.son, s.index.son)
+mod.range <- range(wtio.son, m.index.son)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 
@@ -161,6 +231,408 @@ legend("topright",
        inset  = c(-0.17, 0 ),
        xpd = TRUE)
 dev.off()
+```
+
+```{r wtio_plots}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+#son
+pc1.range <- range(scale(wtio.son), scale(pc1.son))
+
+png(filename = "son_PC1wtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc1.son), scale(pc1.son), type = "l",  col = "forestgreen", ylim=pc1.range,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.67)
+axis(2)                      
+box()
+lines(1:length(wtio.son), scale(wtio.son), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("SON Weekly - PC1 & WTIO", adj = 0)
+legend("topright",
+       legend = c("PC1", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+
+mod.range <- range(scale(wtio.son), scale(m.index.son))
+
+png(filename = "son_modwtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(m.index.son), scale(m.index.son), type = "l",  col = "forestgreen", ylim=mod.range,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(wtio.son), scale(wtio.son), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("SON Weekly - M-Index & WTIO", adj = 0)
+legend("topright",
+       legend = c("M-Index", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+
+#jja
+pc1.range.jja <- range(scale(wtio.jja), scale(pc1.jja))
+
+png(filename = "jja_PC1wtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc1.jja), scale(pc1.jja), type = "l",  col = "forestgreen", ylim=pc1.range.jja,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.jja, labels = years.pIOD, tick = FALSE, cex.axis = 0.67)
+axis(2)                      
+box()
+lines(1:length(wtio.jja), scale(wtio.jja), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=jja.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("JJA Weekly - PC1 & WTIO", adj = 0)
+legend("topright",
+       legend = c("PC1", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+
+mod.range.jja <- range(scale(wtio.jja), scale(m.index.jja))
+
+png(filename = "jja_modwtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(m.index.jja), scale(m.index.jja), type = "l",  col = "forestgreen", ylim=mod.range.jja,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.jja, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(wtio.jja), scale(wtio.jja), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=jja.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("JJA Weekly - M-Index & WTIO", adj = 0)
+legend("topright",
+       legend = c("M-Index", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+#djf
+pc1.range.djf <- range(scale(wtio.djf), scale(pc1.djf))
+
+png(filename = "djf_PC1wtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc1.djf), scale(pc1.djf), type = "l",  col = "forestgreen", ylim=pc1.range.djf,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.djf, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.67)
+axis(2)                      
+box()
+lines(1:length(wtio.djf), scale(wtio.djf), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=djf.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("DJF Weekly - PC1 & WTIO", adj = 0)
+legend("topright",
+       legend = c("PC1", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+mod.range.djf <- range(scale(wtio.djf), scale(m.index.djf))
+
+png(filename = "djf_modwtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(m.index.djf), scale(m.index.djf), type = "l",  col = "forestgreen", ylim=mod.range.djf,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.djf, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(wtio.djf), scale(wtio.djf), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=djf.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("DJF Weekly - M-Index & WTIO", adj = 0)
+legend("topright",
+       legend = c("M-Index", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+
+#mam
+pc1.range.mam <- range(scale(wtio.mam), scale(pc1.mam))
+
+png(filename = "mam_PC1wtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc1.mam), scale(pc1.mam), type = "l",  col = "forestgreen", ylim=pc1.range.mam,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.mam, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.67)
+axis(2)                      
+box()
+lines(1:length(wtio.mam), scale(wtio.mam), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=mam.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("MAM Weekly - PC1 & WTIO", adj = 0)
+legend("topright",
+       legend = c("PC1", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+mod.range.mam <- range(scale(wtio.mam), scale(m.index.mam))
+
+png(filename = "mam_modwtio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(m.index.mam), scale(m.index.mam), type = "l",  col = "forestgreen", ylim=mod.range.mam,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.mam, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(wtio.mam), scale(wtio.mam), col = "magenta4")
+abline(h = 0, lty  =2)
+abline(v=mam.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("MAM Weekly - M-Index & WTIO", adj = 0)
+legend("topright",
+       legend = c("M-Index", "WTIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "forestgreen", "magenta4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+```
+
+```{r etio_plots}
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+#son
+pc2.range <- range(scale(etio.son), scale(pc2.son))
+
+png(filename = "son_PC2etio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc2.son), scale(pc2.son), type = "l",  col = "firebrick", ylim=pc2.range,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.son), scale(-etio.son), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("SON Weekly - PC2 & ETIO", adj = 0)
+legend("topright",
+       legend = c("PC2", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+strong.range <- range(scale(etio.son), scale(s.index.son))
+
+png(filename = "son_stretio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.son), scale(s.index.son), type = "l",  col = "firebrick", ylim=strong.range,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.son), scale(-etio.son), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=son.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("SON Weekly - S-Index & ETIO", adj = 0)
+legend("topright",
+       legend = c("S-Index", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+
+#jja
+pc2.range.jja <- range(scale(-etio.jja), scale(pc2.jja))
+
+png(filename = "jja_PC2etio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc2.jja), scale(pc2.jja), type = "l",  col = "firebrick", ylim=pc2.range.jja,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.jja, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.jja), scale(-etio.jja), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=jja.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("JJA Weekly - PC2 & ETIO", adj = 0)
+legend("topright",
+       legend = c("PC2", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+strong.range.jja <- range(scale(-etio.jja), scale(s.index.jja))
+
+png(filename = "jja_stretio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.jja), scale(s.index.jja), type = "l",  col = "firebrick", ylim=strong.range.jja,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.jja, labels = years.pIOD, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.jja), scale(-etio.jja), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=jja.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("JJA Weekly - S-Index & ETIO", adj = 0)
+legend("topright",
+       legend = c("S-Index", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+
+#djf
+pc2.range.djf <- range(scale(-etio.djf), scale(pc2.djf))
+
+png(filename = "djf_PC2etio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc2.djf), scale(pc2.djf), type = "l",  col = "firebrick", ylim=pc2.range.djf,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.djf, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.djf), scale(-etio.djf), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=djf.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("DJF Weekly - PC2 & ETIO", adj = 0)
+legend("topright",
+       legend = c("PC2", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+
+strong.range.djf <- range(scale(-etio.djf), scale(s.index.djf))
+
+png(filename = "djf_stretio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.djf), scale(s.index.djf), type = "l",  col = "firebrick", ylim=strong.range.djf,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.djf, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.djf), scale(-etio.djf), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=djf.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("DJF Weekly - S-Index & ETIO", adj = 0)
+legend("topright",
+       legend = c("S-Index", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+
+#mam
+pc2.range.mam <- range(scale(-etio.mam), scale(pc2.mam))
+
+png(filename = "mam_PC2etio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(pc2.mam), scale(pc2.mam), type = "l",  col = "firebrick", ylim=pc2.range.mam,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.mam, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.mam), scale(-etio.mam), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=mam.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("MAM Weekly - PC2 & ETIO", adj = 0)
+legend("topright",
+       legend = c("PC2", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.14, 0 ),
+       xpd = TRUE)
+dev.off()
+
+
+strong.range.mam <- range(scale(-etio.mam), scale(s.index.mam))
+
+png(filename = "mam_stretio.png", width = 2800, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.3))
+plot(1:length(s.index.mam), scale(s.index.mam), type = "l",  col = "firebrick", ylim=strong.range.mam,
+     ylab = "Index", xlab = "Year",
+           axes = FALSE)
+axis(1, at = year.loc.mam, labels = years.pIOD_alt, tick = FALSE, cex.axis = 0.66)
+axis(2)                      
+box()
+lines(1:length(etio.mam), scale(-etio.mam), col = "royalblue4")
+abline(h = 0, lty  =2)
+abline(v=mam.div.full, lty = 3, lwd = 0.75, col = "gray35")
+title("MAM Weekly - S-Index & ETIO", adj = 0)
+legend("topright",
+       legend = c("S-Index", "-ETIO"),
+       lty    = c(1,1),                 # line type
+       lwd    = 1.33,                 # line width
+       col    = c( "firebrick", "royalblue4"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.15, 0 ),
+       xpd = TRUE)
+dev.off()
+
 ```
 
 
@@ -882,7 +1354,7 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures")
 #jja wtio and pc1
 png(filename = "jjawtio_pc1.png", width = 2000, height = 1200, res = 250)
 par(mar = c(5, 5, 3, 5))
-plot(dmi.jja$wtio.anomaly, scale(piod.jja$PC1), pch = 16, cex = 0.89,
+plot(scale(dmi.jja$wtio.anomaly), scale(piod.jja$PC1), pch = 16, cex = 0.89,
      xlab = "WTIO", ylab = "PC1")
 text(-0.65, 3, paste0("Cor = ", round(jja.wtio.pc1, 3)), adj = 0 )
 title("JJA: WTIO and PC1", adj = 0)
