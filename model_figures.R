@@ -27,6 +27,7 @@ load("validation_refits.rda") #refits and validation (BIC)
 load("validation_refitsEBIC.rda") #refits and validation (eBIC)
 load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 load("validation_predR2.rda") #prediction R2 (R-squared/P-squared)
+load("validation_refits_alt.rda") #refits and validation from alternative fits 
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 source("group_functionsNew.R") #new groupings
@@ -926,12 +927,76 @@ axis(2)
 title("NE Aus Group 3 Constant Model : RMSE", adj = 0)
 
 
+#alternative plots
+## NE RMSE
+NErmse <- NEvalid[[1]]
+NErmse.alt <- NEvalid.alt1[[1]]
+
+NEgroup1.const.rmse <- unlist(lapply(NErmse, function(x) x[[2]][1]))
+NEgroup1.constrmse.new <- unlist(lapply(NErmse.alt, function(x) x[[2]][1]))
+
+NEgroup2.const.rmse <- unlist(lapply(NErmse, function(x) x[[2]][2]))
+NEgroup2.constrmse.new <- unlist(lapply(NErmse.alt, function(x) x[[2]][2]))
+
+NEgroup3.const.rmse <- unlist(lapply(NErmse, function(x) x[[2]][3]))
+NEgroup3.constrmse.new <- unlist(lapply(NErmse.alt, function(x) x[[2]][3]))
+
+#boxplots
+NErmse.range <- range(NEgroup1.const.rmse, NEgroup1.constrmse.new,
+                      NEgroup2.const.rmse, NEgroup2.constrmse.new,
+                      NEgroup3.const.rmse, NEgroup3.constrmse.new)
+
+model.names <- c("NE Aus 1", "NE Aus 1 - Alt",
+                 "NE Aus 2", "NE Aus 2 - Alt",
+                 "NE Aus 3", "NE Aus 3 - Alt")
+
+boxplot(NEgroup1.const.rmse, NEgroup1.constrmse.new,
+        NEgroup2.const.rmse, NEgroup2.constrmse.new,
+        NEgroup3.const.rmse, NEgroup3.constrmse.new,
+        pch = 16, 
+        ylim = NErmse.range, ylab = "RMSE", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)  
+
+
+# SE Aus RMSE
+SErmse <- SEvalid[[1]]
+SErmse.alt <- SEvalid.alt1[[1]]
+
+SEgroup1.const.rmse <- unlist(lapply(SErmse, function(x) x[[2]][1]))
+SEgroup1.constrmse.new <- unlist(lapply(SErmse.alt, function(x) x[[2]][1]))
+
+SEgroup2.const.rmse <- unlist(lapply(SErmse, function(x) x[[2]][2]))
+SEgroup2.constrmse.new <- unlist(lapply(SErmse.alt, function(x) x[[2]][2]))
+
+SEgroup3.const.rmse <- unlist(lapply(SErmse, function(x) x[[2]][3]))
+SEgroup3.constrmse.new <- unlist(lapply(SErmse.alt, function(x) x[[2]][3]))
+
+#boxplots
+SErmse.range <- range(SEgroup1.const.rmse, SEgroup1.constrmse.new,
+                      SEgroup2.const.rmse, SEgroup2.constrmse.new,
+                      SEgroup3.const.rmse, SEgroup3.constrmse.new)
+
+model.names <- c("SE Aus 1", "SE Aus 1 - Alt",
+                 "SE Aus 2", "SE Aus 2 - Alt",
+                 "SE Aus 3", "SE Aus 3 - Alt")
+
+boxplot(SEgroup1.const.rmse, SEgroup1.constrmse.new,
+        SEgroup2.const.rmse, SEgroup2.constrmse.new,
+        SEgroup3.const.rmse, SEgroup3.constrmse.new,
+        pch = 16, 
+        ylim = SErmse.range, ylab = "RMSE", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)  
+
+
 
 # . (number.) CRPS plots
 ## CPRS setup
 NEcprs <- NEvalid[[2]]
 NEcprs.eBIC <- NEvalid.eBIC[[2]]
-
 
 ## --- constant : model fits
 
@@ -1002,7 +1067,68 @@ axis(2)
 title("NE Aus Group 3 Constant Model : CRPS", adj = 0)
 
 
+#alternative plots
+## NE CPRS setup
+NEcprs <- NEvalid[[2]]
+NEcprs.alt <- NEvalid.alt1[[2]]
 
+NEgroup1.const.cprs <- unlist(lapply(NEcprs, function(x) x[[2]][1]))
+NEgroup1.constcprs.new <- unlist(lapply(NEcprs.alt, function(x) x[[2]][1]))
+
+NEgroup2.const.cprs <- unlist(lapply(NEcprs, function(x) x[[2]][2]))
+NEgroup2.constcprs.new <- unlist(lapply(NEcprs.alt, function(x) x[[2]][2]))
+
+NEgroup3.const.cprs <- unlist(lapply(NEcprs, function(x) x[[2]][3]))
+NEgroup3.constcprs.new <- unlist(lapply(NEcprs.alt, function(x) x[[2]][3]))
+
+#boxplot
+NEcprs.range <- range(NEgroup1.const.cprs, NEgroup1.constcprs.new,
+                    NEgroup2.const.cprs, NEgroup2.constcprs.new,
+                    NEgroup3.const.cprs, NEgroup3.constcprs.new)
+
+model.names <- c("NE Aus 1", "NE Aus 1 - Alt",
+                 "NE Aus 2", "NE Aus 2 - Alt",
+                 "NE Aus 3", "NE Aus 3 - Alt")
+
+boxplot(NEgroup1.const.cprs, NEgroup1.constcprs.new,
+        NEgroup2.const.cprs, NEgroup2.constcprs.new,
+        NEgroup3.const.cprs, NEgroup3.constcprs.new,
+        pch = 16, 
+        ylim = NEcprs.range, ylab = "CRPS", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)                      
+
+## SE CPRS setup
+SEcprs <- SEvalid[[2]]
+SEcprs.alt <- SEvalid.alt1[[2]]
+
+SEgroup1.const.cprs <- unlist(lapply(SEcprs, function(x) x[[2]][1]))
+SEgroup1.constcprs.new <- unlist(lapply(SEcprs.alt, function(x) x[[2]][1]))
+
+SEgroup2.const.cprs <- unlist(lapply(SEcprs, function(x) x[[2]][2]))
+SEgroup2.constcprs.new <- unlist(lapply(SEcprs.alt, function(x) x[[2]][2]))
+
+SEgroup3.const.cprs <- unlist(lapply(SEcprs, function(x) x[[2]][3]))
+SEgroup3.constcprs.new <- unlist(lapply(SEcprs.alt, function(x) x[[2]][3]))
+
+#boxplot
+SEcprs.range <- range(SEgroup1.const.cprs, SEgroup1.constcprs.new,
+                    SEgroup2.const.cprs, SEgroup2.constcprs.new,
+                    SEgroup3.const.cprs, SEgroup3.constcprs.new)
+
+model.names <- c("SE Aus 1", "SE Aus 1 - Alt",
+                 "SE Aus 2", "SE Aus 2 - Alt",
+                 "SE Aus 3", "SE Aus 3 - Alt")
+
+boxplot(SEgroup1.const.cprs, SEgroup1.constcprs.new,
+        SEgroup2.const.cprs, SEgroup2.constcprs.new,
+        SEgroup3.const.cprs, SEgroup3.constcprs.new,
+        pch = 16, 
+        ylim = SEcprs.range, ylab = "CRPS", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:6, cex.axis = 1)
+axis(2)      
 
 
 # . (number.) Interval Score plots
