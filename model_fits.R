@@ -374,5 +374,293 @@ save(NEmodels.eBIC, SEmodels.eBIC,
      NErefits.eBIC, SErefits.eBIC, file = "eBIC_RAMPmodels.rda")
 
 
-#train/test refits (e.g. LOO and k-fold) done in `model_validation.R`
+
+##repeat model fits with only ENSO (Nino 3.4), DMI (WTIO/ETIO), and SAM (AAO) so that we compare with Biswas et al (2025).
+#TODO: update data import so that we have these three climate modes as the only options.
+
+
+#NE Aus Group 1
+y.1 <- as.numeric(NEresp_new[[1]]) #co response
+X.1 <- cbind(as.matrix(NEpreds_new[[1]][ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+NE1.ramp.new <- RAMP(X = X.1, y = y.1,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+NE1.refit.new <- refit_ramp(NE1.ramp.new, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+NE1.lm.new <- lm(formula(NE1.refit.new), lm.data.1)
+summary(NE1.lm.new)
+summary(NEmodels[[1]])
+
+
+#NE Aus Group 2
+y.2 <- as.numeric(NEresp_new[[2]]) #co response
+X.2 <- cbind(as.matrix(NEpreds_new[[2]][ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+NE2.ramp.new <- RAMP(X = X.2, y = y.2,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+NE2.refit.new <- refit_ramp(NE2.ramp.new, X.2)
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+NE2.lm.new <- lm(formula(NE2.refit.new), lm.data.2)
+summary(NE2.lm.new)
+summary(NEmodels[[2]])
+
+
+#NE Aus Group 3
+y.3 <- as.numeric(NEresp_new[[3]]) #co response
+X.3 <- cbind(as.matrix(NEpreds_new[[3]][ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+NE3.ramp.new <- RAMP(X = X.3, y = y.3,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+NE3.refit.new <- refit_ramp(NE3.ramp.new, X.3)
+#lm
+lm.data.3 <- as.data.frame(cbind(y.3, X.3))
+names(lm.data.3)[1] <- "co"
+
+NE3.lm.new <- lm(formula(NE3.refit.new), lm.data.3)
+summary(NE3.lm.new)
+summary(NEmodels[[3]])
+
+
+#SE Aus Group 1
+y.1 <- as.numeric(SEresp_new[[1]]) #co response
+X.1 <- cbind(as.matrix(SEpreds_new[[1]][ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+SE1.ramp.new <- RAMP(X = X.1, y = y.1,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+SE1.refit.new <- refit_ramp(SE1.ramp.new, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SE1.lm.new <- lm(formula(SE1.refit.new), lm.data.1)
+summary(SE1.lm.new)
+summary(SEmodels[[1]])
+
+#SE Aus Group 2
+y.2 <- as.numeric(SEresp_new[[2]]) #co response
+X.2 <- cbind(as.matrix(SEpreds_new[[2]][ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+SE2.ramp.new <- RAMP(X = X.2, y = y.2,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+SE2.refit.new <- refit_ramp(SE2.ramp.new, X.2)
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+SE2.lm.new <- lm(formula(SE2.refit.new), lm.data.2)
+summary(SE2.lm.new)
+summary(SEmodels[[2]])
+
+#SE Aus Group 3
+y.3 <- as.numeric(SEresp_new[[3]]) #co response
+X.3 <- cbind(as.matrix(SEpreds_new[[3]][ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+SE3.ramp.new <- RAMP(X = X.3, y = y.3,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+SE3.refit.new <- refit_ramp(SE3.ramp.new, X.3)
+#lm
+lm.data.3 <- as.data.frame(cbind(y.3, X.3))
+names(lm.data.3)[1] <- "co"
+
+SE3.lm.new <- lm(formula(SE3.refit.new), lm.data.3)
+summary(SE3.lm.new)
+summary(SEmodels[[3]])
+
+
+##--No OLR (Nino, DMI, TSA, and AAO)
+
+#NE Aus Group 1
+y.1 <- as.numeric(NEresp_new[[1]]) #co response
+X.1 <- cbind(as.matrix(NEpreds_new[[1]][ ,c(1:260)])) #Nino, DMI, TSA, AAO
+
+NE1.ramp.noOLR <- RAMP(X = X.1, y = y.1,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+NE1.refit.noOLR <- refit_ramp(NE1.ramp.noOLR, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+NE1.lm.noOLR <- lm(formula(NE1.refit.noOLR), lm.data.1)
+summary(NE1.lm.noOLR)
+summary(NE1.lm.new)
+summary(NEmodels[[1]])
+
+
+#NE Aus Group 2
+y.2 <- as.numeric(NEresp_new[[2]]) #co response
+X.2 <- cbind(as.matrix(NEpreds_new[[2]][ ,c(1:260)])) #Nino, DMI, TSA, AAO
+
+NE2.ramp.noOLR <- RAMP(X = X.2, y = y.2,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+NE2.refit.noOLR <- refit_ramp(NE2.ramp.noOLR, X.2)
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+NE2.lm.noOLR <- lm(formula(NE2.refit.noOLR), lm.data.2)
+summary(NE2.lm.noOLR)
+summary(NE2.lm.new)
+summary(NEmodels[[2]])
+
+
+#NE Aus Group 3
+y.3 <- as.numeric(NEresp_new[[3]]) #co response
+X.3 <- cbind(as.matrix(NEpreds_new[[3]][ ,c(1:260)])) #Nino, DMI, TSA, AAO
+
+NE3.ramp.noOLR <- RAMP(X = X.3, y = y.3,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+NE3.refit.noOLR <- refit_ramp(NE3.ramp.noOLR, X.3)
+#lm
+lm.data.3 <- as.data.frame(cbind(y.3, X.3))
+names(lm.data.3)[1] <- "co"
+
+NE3.lm.noOLR <- lm(formula(NE3.refit.noOLR), lm.data.3)
+summary(NE3.lm.noOLR)
+summary(NE3.lm.new)
+summary(NEmodels[[3]])
+
+
+
+#SE Aus Group 1
+y.1 <- as.numeric(SEresp_new[[1]]) #co response
+X.1 <- cbind(as.matrix(SEpreds_new[[1]][ ,c(1:260)])) #Nino, DMI, TSA, AAO
+
+SE1.ramp.noOLR <- RAMP(X = X.1, y = y.1,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+SE1.refit.noOLR <- refit_ramp(SE1.ramp.noOLR, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SE1.lm.noOLR <- lm(formula(SE1.refit.noOLR), lm.data.1)
+summary(SE1.lm.noOLR)
+summary(SE1.lm.new)
+summary(SEmodels[[1]])
+
+
+#SE Aus Group 2
+y.2 <- as.numeric(SEresp_new[[2]]) #co response
+X.2 <- cbind(as.matrix(SEpreds_new[[2]][ ,c(1:260)])) #Nino, DMI, TSA, AAO
+
+SE2.ramp.noOLR <- RAMP(X = X.2, y = y.2,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+SE2.refit.noOLR <- refit_ramp(SE2.ramp.noOLR, X.2)
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+SE2.lm.noOLR <- lm(formula(SE2.refit.noOLR), lm.data.2)
+summary(SE2.lm.noOLR)
+summary(SE2.lm.new)
+summary(SEmodels[[2]])
+
+
+#SE Aus Group 3
+y.3 <- as.numeric(SEresp_new[[3]]) #co response
+X.3 <- cbind(as.matrix(SEpreds_new[[3]][ ,c(1:260)])) #Nino, DMI, TSA, AAO
+
+SE3.ramp.noOLR <- RAMP(X = X.3, y = y.3,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+
+#terms only
+SE3.refit.noOLR <- refit_ramp(SE3.ramp.noOLR, X.3)
+#lm
+lm.data.3 <- as.data.frame(cbind(y.3, X.3))
+names(lm.data.3)[1] <- "co"
+
+SE3.lm.noOLR <- lm(formula(SE3.refit.noOLR), lm.data.3)
+summary(SE3.lm.noOLR)
+summary(SE3.lm.new)
+summary(SEmodels[[3]])
+
+
+#brief look at AIC, BIC
+#NE Aus 
+#group 1
+AIC(NE1.lm.noOLR, NE1.lm.new, NEmodels[[1]])
+BIC(NE1.lm.noOLR, NE1.lm.new, NEmodels[[1]])
+#group 2
+AIC(NE2.lm.noOLR, NE2.lm.new, NEmodels[[2]])
+BIC(NE2.lm.noOLR, NE2.lm.new, NEmodels[[2]])
+#group 3
+AIC(NE3.lm.noOLR, NE3.lm.new, NEmodels[[3]])
+BIC(NE3.lm.noOLR, NE3.lm.new, NEmodels[[3]])
+
+#SE Aus
+#group 1
+AIC(SE1.lm.noOLR, SE1.lm.new, SEmodels[[1]])
+BIC(SE1.lm.noOLR, SE1.lm.new, SEmodels[[1]])
+#group 2
+AIC(SE2.lm.noOLR, SE2.lm.new, SEmodels[[2]])
+BIC(SE2.lm.noOLR, SE2.lm.new, SEmodels[[2]])
+#group 3
+AIC(SE3.lm.noOLR, SE3.lm.new,SEmodels[[3]])
+BIC(SE3.lm.noOLR, SE3.lm.new,SEmodels[[3]])
+
+#output alternative models
+NEmodels.new <- list(NE1.lm.new, NE2.lm.new, NE3.lm.new)
+NErefits.new <- list(NE1.refit.new, NE2.refit.new, NE3.refit.new)
+SEmodels.new <- list(SE1.lm.new, SE2.lm.new, SE3.lm.new)
+SErefits.new <- list(SE1.refit.new, SE2.refit.new, SE3.refit.new)
+
+NEmodels.noOLR <- list(NE1.lm.noOLR, NE2.lm.noOLR, NE3.lm.noOLR)
+NErefits.noOLR <- list(NE1.refit.noOLR, NE2.refit.noOLR, NE3.refit.noOLR)
+SEmodels.noOLR <- list(SE1.lm.noOLR, SE2.lm.noOLR, SE3.lm.noOLR)
+SErefits.noOLR <- list(SE1.refit.noOLR, SE2.refit.noOLR, SE3.refit.noOLR)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NEmodels.new, NErefits.new, NEmodels.noOLR, NErefits.noOLR,
+     SEmodels.new, SErefits.new, SEmodels.noOLR, SErefits.noOLR, file = "alt_RAMPmodels.rda")
 

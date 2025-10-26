@@ -3,8 +3,6 @@
 ##-include model refits (e.g. LOO)
 ###--include RMSE, CPRS, and Int.Score
 ##-perform refit and new RAMP for k-fold CV
-
-#TODO: import saved fits from model_fits.R
 ##-format LOO (leave-one year-out) loops
 
 # libraries
@@ -35,6 +33,7 @@ load("IOD_lag.rda") #IOD data
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load("base_RAMPmodels.rda") # 'base' fits (BIC)
 load("eBIC_RAMPmodels.rda") # fits with eBIC
+load("alt_RAMPmodels.rda") # fits with a reduced climate mode options
 
 # function load
 #TODO: organize and combine helper functions

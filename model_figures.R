@@ -26,6 +26,7 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load("validation_refits.rda") #refits and validation (BIC)
 load("validation_refitsEBIC.rda") #refits and validation (eBIC)
 load("validation_kfold.rda") #kfold cv for both BIC and eBIC
+load("validation_predR2.rda") #prediction R2 (R-squared/P-squared)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 source("group_functionsNew.R") #new groupings
@@ -110,13 +111,34 @@ summary(NEmodels[[2]])
 NE.y2 <- NEresp_new[[2]]
 NE.X2 <- NEpreds_new[[2]]
 
-
+#wtio_lag30 (sig. w/  )
+plot(NE.X2$wtio_lag30, NE.y2, pch = 16)
+#tsa_lag31 (sig. w/  )
+plot(NE.X2$tsa_lag31, NE.y2, pch = 16)
+#NEolr_lag1 (sig. w/  )
+plot(NE.X2$NEolr_lag1, NE.y2, pch = 16)
 
 
 #NE Aus Group 3
 summary(NEmodels[[3]])
 NE.y3 <- NEresp_new[[3]]
 NE.X3 <- NEpreds_new[[3]]
+
+#nino_lag41 (sig. w/  )
+plot(NE.X3$nino_lag41, NE.y3, pch = 16)
+#etio_lag19 (sig. w/  )
+plot(NE.X3$etio_lag19, NE.y3, pch = 16)
+#tsa_lag1 (sig. w/  )
+plot(NE.X3$tsa_lag1, NE.y3, pch = 16)
+#tsa_lag19 (sig. w/  )
+plot(NE.X3$tsa_lag19, NE.y3, pch = 16)
+#tsa_lag37 (sig. w/  )
+plot(NE.X3$tsa_lag37, NE.y3, pch = 16)
+#aao_lag44 (sig. w/  )
+plot(NE.X3$aao_lag44, NE.y3, pch = 16)
+#NEolr_lag1  (sig. w/  )
+plot(NE.X3$NEolr_lag1 , NE.y3, pch = 16)
+
 
 #SE Aus Group 1
 summary(SEmodels[[1]])
