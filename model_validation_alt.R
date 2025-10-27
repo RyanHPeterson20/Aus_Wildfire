@@ -370,6 +370,8 @@ save(NEvalid.alt1, NErefit.alt1,
      SEvalid.alt1, SErefit.alt1, file = "validation_refits_alt.rda")
 
 
+SErefit.alt1
+
 #TODO: repeat above but with the noOLR model fits
 
     

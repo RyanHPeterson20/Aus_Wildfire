@@ -334,18 +334,34 @@ lines(1:29,  temp.2011.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
 title("NE Aus : 2011-2012 Season", adj = 0)
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
 #2012-2013 Season
+png(filename = "NEpreds_2012.png", width = 3000, height = 1500, res = 250)
+par(mar = c(5, 5, 5, 4.3))
 temp.2012.preds <- NEpreds$`2012-2013`
 plot(1:29, temp.2012.preds$true, type = "l", ylim = range(temp.2012.preds),
-     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
 box()
-axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
 axis(2)  
-lines(1:29, temp.2012.preds$const.fit, lty = 2)
-lines(1:29,  temp.2012.preds$const.lwr, lty = 2, col = "royalblue3")
-lines(1:29,  temp.2012.preds$const.upr, lty = 2, col = "firebrick3")
-abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+lines(1:29, temp.2012.preds$const.fit, lty = 2, lwd = 1.82)
+lines(1:29,  temp.2012.preds$const.lwr, lty = 2, lwd = 1.82, col = "royalblue3")
+lines(1:29,  temp.2012.preds$const.upr, lty = 2, lwd = 1.82, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 1)
 title("NE Aus : 2012-2013 Season", adj = 0)
+legend("topright", 
+       legend = c("True",
+                  "Prediction",
+                  "Upper 95% PI",
+                  "Lower 95% PI"),
+       lty = c(1,2,2,2), 
+       lwd = 1.5,
+       col = c("black", "black", 
+               "firebrick", "royalblue4"),
+       xpd = TRUE)
+dev.off()
+
 
 #2013-2014 Season
 temp.2013.preds <- NEpreds$`2013-2014`
@@ -373,20 +389,40 @@ lines(1:29,  temp.2014.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
 title("NE Aus : 2014-2015 Season", adj = 0)
 
+
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
 #2015-2016 Season
+png(filename = "NEpreds_2015.png", width = 3000, height = 1500, res = 250)
+par(mar = c(5, 5, 5, 4.3))
 temp.2015.preds <- NEpreds$`2015-2016`
 plot(1:29, temp.2015.preds$true, type = "l", ylim = range(temp.2015.preds),
-     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
 box()
-axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
 axis(2)  
-lines(1:29, temp.2015.preds$const.fit, lty = 2)
-lines(1:29,  temp.2015.preds$const.lwr, lty = 2, col = "royalblue3")
-lines(1:29,  temp.2015.preds$const.upr, lty = 2, col = "firebrick3")
-abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+lines(1:29, temp.2015.preds$const.fit, lty = 2, lwd = 1.82)
+lines(1:29,  temp.2015.preds$const.lwr, lty = 2, lwd = 1.82, col = "royalblue3")
+lines(1:29,  temp.2015.preds$const.upr, lty = 2, lwd = 1.82, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 1)
 title("NE Aus : 2015-2016 Season", adj = 0)
+legend("topright", 
+       legend = c("True",
+                  "Prediction",
+                  "Upper 95% PI",
+                  "Lower 95% PI"),
+       lty = c(1,2,2,2), 
+       lwd = 1.5,
+       col = c("black", "black", 
+               "firebrick", "royalblue4"),
+       xpd = TRUE)
+dev.off()
+
 
 #2016-2017 Season
+#png(filename = "NEpreds_2016.png", width = 3000, height = 1500, res = 250)
+par(mar = c(5, 5, 5, 4.3))
 temp.2016.preds <- NEpreds$`2016-2017`
 plot(1:29, temp.2016.preds$true, type = "l", ylim = range(temp.2016.preds),
      xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
@@ -398,6 +434,7 @@ lines(1:29,  temp.2016.preds$const.lwr, lty = 2, col = "royalblue3")
 lines(1:29,  temp.2016.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
 title("NE Aus : 2016-2017 Season", adj = 0)
+#TODO: finalize this plot
 
 #2017-2018 Season
 temp.2017.preds <- NEpreds$`2017-2018`
@@ -518,6 +555,7 @@ lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
 lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
 title("SE Aus : 2006-2007 Season", adj = 0)
+
 
 #2007-2008 Season
 temp.2007.preds <- SEpreds$`2007-2008`
@@ -675,18 +713,34 @@ lines(1:29,  temp.2018.preds$const.upr, lty = 2, col = "firebrick3")
 abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
 title("SE Aus : 2018-2019 Season", adj = 0)
 
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
 #2019-2020 Season
+png(filename = "SEpreds_2019.png", width = 3000, height = 1500, res = 250)
+par(mar = c(5, 5, 5, 4.3))
 temp.2019.preds <- SEpreds$`2019-2020`
 plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
-     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
 box()
-axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
 axis(2)  
-lines(1:29, temp.2019.preds$const.fit, lty = 2)
-lines(1:29,  temp.2019.preds$const.lwr, lty = 2, col = "royalblue3")
-lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
-abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+lines(1:29, temp.2019.preds$const.fit, lty = 2, lwd = 1.82)
+lines(1:29,  temp.2019.preds$const.lwr, lty = 2, lwd = 1.82, col = "royalblue3")
+lines(1:29,  temp.2019.preds$const.upr, lty = 2, lwd = 1.82, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 1)
 title("SE Aus : 2019-2020 Season", adj = 0)
+legend("topright", 
+       legend = c("True",
+                  "Prediction",
+                  "Upper 95% PI",
+                  "Lower 95% PI"),
+       lty = c(1,2,2,2), 
+       lwd = 1.5,
+       col = c("black", "black", 
+                  "firebrick", "royalblue4"),
+       xpd = TRUE)
+dev.off()
 
 
 #TODO: repeat with the points plots for the entire study period.
@@ -786,24 +840,42 @@ SE.vary.adjR2[[3]][19]
 
 # . (n.) K-Fold CV
 #TODO: add legend to each plot, then create output (.png)
+NE.kcv
+SE.kcv
 
 #NE Aus
 NE1.kcv <- lapply(NE.kcv.ebic, function(x) x[[1]])
 NE2.kcv <- lapply(NE.kcv.ebic, function(x) x[[2]])
 NE3.kcv <- lapply(NE.kcv.ebic, function(x) x[[3]])
 
-NE.kcv.range <- range(NE1.kcv, NE2.kcv, NE3.kcv)
-gamma.lab <- sapply(1:12, function(x) paste0("Gamma: ", round(gamma.seq[x], 3)))
+gamma.lab <- sapply(1:12, function(x) round(gamma.seq[x], 3))
 
+NE.kcv.range <- range(NE1.kcv, NE2.kcv, NE3.kcv)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
+png(filename = "NeAuskfold_ebic.png", width = 2400, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.5))
 plot(1:12, NE1.kcv, type = "b", pch = 16, col = "firebrick3",
-     ylab = "K-fold CV", xlab = "",
+     ylab = "K-fold CV", xlab = "Gamma",
      ylim = NE.kcv.range, axes = FALSE)
-lines(1:12, NE2.kcv, type = "b", pch =17, col = "royalblue4")
+lines(1:12, NE2.kcv, type = "b", pch =15, col = "royalblue4")
 lines(1:12, NE3.kcv, type = "b", pch =17, col = "forestgreen")
 box()
 axis(1, labels = gamma.lab, at = 1:12, cex.axis = 0.67)
 axis(2)  
-title("NE Aus K-fold CV")
+title("NE Aus eBIC : K-fold CV", adj = 0)
+legend("topright",
+       legend = c("Group 1", "Group 2", "Group 3"),
+       lty    = 1,                 # line type
+       lwd    = 1,                 # line width
+       pch = c(16,15,17),
+       col    = c( "firebrick", "royalblue4", "forestgreen"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+dev.off()
+
 
 #SE Aus
 SE1.kcv <- lapply(SE.kcv.ebic, function(x) x[[1]])
@@ -811,23 +883,124 @@ SE2.kcv <- lapply(SE.kcv.ebic, function(x) x[[2]])
 SE3.kcv <- lapply(SE.kcv.ebic, function(x) x[[3]])
 
 SE.kcv.range <- range(SE1.kcv, SE2.kcv, SE3.kcv)
-gamma.lab <- sapply(1:12, function(x) paste0("Gamma: ", round(gamma.seq[x], 3)))
 
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
+png(filename = "SeAuskfold_ebic.png", width = 2400, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.5))
 plot(1:12, SE1.kcv, type = "b", pch = 16, col = "firebrick3",
-     ylab = "K-fold CV", xlab = "",
+     ylab = "K-fold CV", xlab = "Gamma",
      ylim = SE.kcv.range, axes = FALSE)
-lines(1:12, SE2.kcv, type = "b", pch =17, col = "royalblue4")
+lines(1:12, SE2.kcv, type = "b", pch =15, col = "royalblue4")
 lines(1:12, SE3.kcv, type = "b", pch =17, col = "forestgreen")
 box()
 axis(1, labels = gamma.lab, at = 1:12, cex.axis = 0.67)
 axis(2)  
-title("SE Aus K-fold CV")
-
-
+title("SE Aus eBIC : K-fold CV", adj = 0)
+legend("topright",
+       legend = c("Group 1", "Group 2", "Group 3"),
+       lty    = 1,                 # line type
+       lwd    = 1,                 # line width
+       pch = c(16,15,17),
+       col    = c( "firebrick", "royalblue4", "forestgreen"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.17, 0 ),
+       xpd = TRUE)
+dev.off()
 
 
 # . (number.) RMSE plots
+
+##RMSE Setup
 ## RMSE setup
+NErmse <- NEvalid[[1]]
+SErmse <- SEvalid[[1]]
+
+
+## base : model fits
+#NE Aus group 1
+NEgroup1.base.rmse <- unlist(lapply(NErmse, function(x) x[[1]][1]))
+#NE Aus group 2
+NEgroup2.base.rmse <- unlist(lapply(NErmse, function(x) x[[1]][2]))
+#NE Aus group 3
+NEgroup3.base.rmse <- unlist(lapply(NErmse, function(x) x[[1]][3]))
+
+#SE Aus group 1
+SEgroup1.base.rmse <- unlist(lapply(SErmse, function(x) x[[1]][1]))
+#SE Aus group 2
+SEgroup2.base.rmse <- unlist(lapply(SErmse, function(x) x[[1]][2]))
+#SE Aus group 3
+SEgroup3.base.rmse <- unlist(lapply(SErmse, function(x) x[[1]][3]))
+
+
+## constant : model fits
+#NE Aus Group 1
+NEgroup1.const.rmse <- unlist(lapply(NErmse, function(x) x[[2]][1]))
+#NE Aus Group 2
+NEgroup2.const.rmse <- unlist(lapply(NErmse, function(x) x[[2]][2]))
+#NE Aus Group 3
+NEgroup3.const.rmse <- unlist(lapply(NErmse, function(x) x[[2]][3]))
+
+#SE Aus Group 1
+SEgroup1.const.rmse <- unlist(lapply(SErmse, function(x) x[[2]][1]))
+#SE Aus Group 2
+SEgroup2.const.rmse <- unlist(lapply(SErmse, function(x) x[[2]][2]))
+#SE Aus Group 3
+SEgroup3.const.rmse <- unlist(lapply(SErmse, function(x) x[[2]][3]))
+
+
+## varying : model fits
+#NE Aus Group 1
+NEgroup1.vary.rmse <- unlist(lapply(NErmse, function(x) x[[3]][1]))
+#NE Aus Group 2
+NEgroup2.vary.rmse <- unlist(lapply(NErmse, function(x) x[[3]][2]))
+#NE Aus Group 3
+NEgroup3.vary.rmse <- unlist(lapply(NErmse, function(x) x[[3]][3]))
+
+#SE Aus Group 1
+SEgroup1.vary.rmse <- unlist(lapply(SErmse, function(x) x[[3]][1]))
+#SE Aus Group 2
+SEgroup2.vary.rmse <- unlist(lapply(SErmse, function(x) x[[3]][2]))
+#SE Aus Group 3
+SEgroup3.vary.rmse <- unlist(lapply(SErmse, function(x) x[[3]][3]))
+
+
+#boxplots
+NErmse.range <- range(NErmse)
+SErmse.range <- range(SErmse)
+
+model.names <- rep(c("Base", "Constant", "Varying"), 3)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
+png(filename = "NEmodels_rmse.png", width = 2400, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.5))
+boxplot(NEgroup1.base.rmse, NEgroup1.const.rmse, NEgroup1.vary.rmse,
+        NEgroup2.base.rmse, NEgroup2.const.rmse, NEgroup2.vary.rmse,
+        NEgroup3.base.rmse, NEgroup3.const.rmse, NEgroup3.vary.rmse,
+        pch = 16, 
+        ylim = NErmse.range, ylab = "RMSE", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:9, cex.axis = 0.67)
+axis(2)                      
+title("NE Aus : RMSE", adj = 0)
+dev.off()
+
+png(filename = "SEmodels_rmse.png", width = 2400, height = 1300, res = 250)
+par(mar = c(5, 5, 3, 7.5))
+boxplot(SEgroup1.base.rmse, SEgroup1.const.rmse, SEgroup1.vary.rmse,
+        SEgroup2.base.rmse, SEgroup2.const.rmse, SEgroup2.vary.rmse,
+        SEgroup3.base.rmse, SEgroup3.const.rmse, SEgroup3.vary.rmse,
+        pch = 16, 
+        ylim = SErmse.range, ylab = "RMSE", axes = FALSE)
+box()
+axis(1, labels = model.names, at = 1:9, cex.axis = 0.67)
+axis(2)                      
+title("SE Aus : RMSE", adj = 0)
+dev.off()
+
+## -- eBIC
+## RMSE setup 
 NErmse <- NEvalid[[1]]
 NErmse.eBIC <- NEvalid.eBIC[[1]]
 
@@ -835,6 +1008,11 @@ NErmse.eBIC <- NEvalid.eBIC[[1]]
 
 #NE Aus group 1
 NEgroup1.base.rmse <- unlist(lapply(NErmse, function(x) x[[1]][1]))
+#NE Aus group 2
+NEgroup2.base.rmse <- unlist(lapply(NErmse, function(x) x[[1]][2]))
+#NE Aus group 3
+NEgroup3.base.rmse <- unlist(lapply(NErmse, function(x) x[[1]][3]))
+
 
 #NEbase.rmse.eBIC <- matrix(NA, ncol = 19)
 k <- 3
