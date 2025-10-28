@@ -19,7 +19,7 @@ suppressMessages( library(grid)) #gridlines between plots
 suppressMessages( library(scales)) #for adjusting opacity
 
 suppressMessages( library(RColorBrewer)) #colorRampPalette
-suppressMessages( library( fields)) #for set.panel() and others 
+suppressMessages( library( fields)) #for set.panel() and other plotting methods
 
 #data/model imports
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
@@ -779,8 +779,11 @@ abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
 title("SE Aus : 2006-2007 Season", adj = 0)
 abline(h=0, lty = 3)
 
-#2019/2020 Wildfire season
-par(mar = c(5, 5, 5, 4.3))
+setwd("~/CO_AUS/final_project/Figures")
+
+#2019/2020 Prediction
+png(filename = "SE_2019season.png", width = 3500, height = 1500, res = 250)
+par(mar = c(5, 5, 5, 7.3))
 temp.2019.preds <- SEpreds$`2019-2020`
 plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
      xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
@@ -794,7 +797,41 @@ lines(1:29, temp.2019.preds$const.fit, lty = 4, lwd = 1.82)
 #lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
 #lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
 lines(1:29, temp.2019.preds$vary.fit, lty = 6, lwd = 1.82, col = "darkmagenta")
-abline(h=0, lty = 3)
+#lines(1:29,  temp.2019.preds$vary.lwr, lty = 6, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$vary.upr, lty = 6, lwd = 1, col = "firebrick3")
+#abline(h=0, lty = 3)
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+legend("topright", 
+       legend = c(expression(y),
+                  expression(hat(y)),
+                  expression(hat(y)[Fixed]),
+                  expression(hat(y)[Vary])),
+       lty = c(1,2,4,6), 
+       lwd = c(1.2, 1.52, 1.52, 1.52),
+       col = c("black", "black", 
+               "black", "darkmagenta"),
+       #bty    = "n",               # no box; remove if you want a box
+       inset  = c(-0.1, 0 ),
+       xpd = TRUE)
+dev.off()
+
+
+#Test envelopePlot for pred intervals
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
+#box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
+axis(2)  
+envelopePlot(1:29, temp.2019.preds$base.fit, 1:29,  temp.2019.preds$base.lwr, 
+             col = rgb(176, 238, 245, alpha = 100, maxColorValue = 255),
+             lineCol = FALSE)
+envelopePlot(1:29, temp.2019.preds$base.fit, 1:29,  temp.2019.preds$base.upr, 
+             col = rgb(238, 150, 120, alpha = 100, maxColorValue = 255),
+             lineCol = FALSE)
+lines(1:29, temp.2019.preds$base.fit, lty = 2, lwd = 1.82)
+lines(1:29,  temp.2019.preds$base.lwr, lty = 2, lwd = 1, col = "royalblue3")
+lines(1:29,  temp.2019.preds$base.upr, lty = 2, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$const.fit, lty = 4, lwd = 1.82)
 
 #TODO: repeat with the points plots for the entire study period.
 ## See either of the two preceding papers for examples.
