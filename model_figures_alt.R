@@ -28,6 +28,7 @@ load("validation_refitsEBIC.rda") #refits and validation (eBIC)
 load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 load("validation_predR2.rda") #prediction R2 (R-squared/P-squared)
 load("validation_refits_alt.rda") #refits and validation from alternative fits 
+load("validation_refits_noOLR.rda") #temporary refits for non-OLR preds
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 source("group_functionsNew.R") #new groupings
@@ -94,7 +95,7 @@ NEpreds.alt1 <- NEvalid.alt1[[4]]
 
 #SE Aus predictions
 SEpreds.alt1 <- SEvalid.alt1[[4]]
-
+SEpreds.alt2 <- SEvalid.alt2[[4]] #noOLR
 
 #2006-2007 Season
 temp.2006.preds <- SEpreds.alt1$`2006-2007`
@@ -103,9 +104,66 @@ plot(1:29, temp.2006.preds$true, type = "l", ylim = range(temp.2006.preds),
 box()
 axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
 axis(2)  
-lines(1:29, temp.2006.preds$const.fit, lty = 2)
-lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
-lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
+lines(1:29, temp.2006.preds$base.fit, lty = 2)
+#lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
+#lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
+lines(1:29, temp.2006.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2006.preds$vary.fit, lty = 6, lwd = 1.42, col = "darkmagenta")
 abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
 title("SE Aus : 2006-2007 Season", adj = 0)
+abline(h=0, lty = 3)
+
+
+temp.2006.preds <- SEpreds.alt2$`2006-2007`
+plot(1:29, temp.2006.preds$true, type = "l", ylim = range(temp.2006.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2006.preds$base.fit, lty = 2)
+#lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
+#lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
+lines(1:29, temp.2006.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2006.preds$vary.fit, lty = 6, lwd = 1.22, col = "darkmagenta")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2006-2007 Season", adj = 0)
+abline(h=0, lty = 3)
+
+
+par(mar = c(5, 5, 5, 4.3))
+temp.2019.preds <- SEpreds.alt1$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
+axis(2)  
+lines(1:29, temp.2019.preds$base.fit, lty = 2, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$base.lwr, lty = 2, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$base.upr, lty = 2, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$vary.fit, lty = 6, lwd = 1.82, col = "darkmagenta")
+abline(h=0, lty = 3)
+
+par(mar = c(5, 5, 5, 4.3))
+temp.2019.preds <- SEpreds.alt2$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
+axis(2)  
+lines(1:29, temp.2019.preds$base.fit, lty = 2, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$base.lwr, lty = 2, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$base.upr, lty = 2, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$vary.fit, lty = 6, lwd = 1.82, col = "darkmagenta")
+abline(h=0, lty = 3)
+
 

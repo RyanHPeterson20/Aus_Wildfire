@@ -1,0 +1,372 @@
+---
+title: "refit_cvNew"
+author: "Ryan Peterson"
+date: "2025-10-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r library}
+suppressMessages( library(glmnet)) #test ridge regression for coefs
+suppressMessages( library(RAMP)) #maybe
+suppressMessages( library(MASS)) #for lm.ridge
+
+suppressMessages( library(foreach)) #parallelization setup
+suppressMessages( library(parallel))
+suppressMessages( library(doParallel))
+
+suppressMessages( library( lubridate)) #you know why
+suppressMessages( library( colorspace)) #for some color alternatives
+suppressMessages(library(RColorBrewer)) #colorRampPalette
+suppressMessages( library( fields)) #for set.panel() and others 
+suppressMessages( library(ggpubr)) #nice tables for dfs (uses ggplot)
+
+suppressMessages( library( Metrics)) #measurement metrics
+suppressMessages( library( caret)) #for confusion matrix
+suppressMessages( library( jtools)) #lm model summaries
+
+suppressMessages( library( tictoc)) #some timing
+
+suppressMessages(library(grid)) #gridlines between plots
+suppressMessages( library(scales)) #for adjusting opacity
+```
+
+```{r data_load}
+#and functions
+# Data Set-Up
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+
+load( "Data/ne_data.rda")
+load( "Data/se_data.rda")
+load( "Data/bounded_data.rda")
+load( "Data/data_matrix.rda")
+load( "Data/lag_list.rda")
+load( "Data/data_quantile.rda")
+
+#functions:
+setwd("~/CO_AUS/Aus_CO-main/Interactions")
+#source("group_functions.R") #grouping/clustering
+source("group_functionsNew.R") #new groupings
+source("refit_functions.R") #coef/refit functions
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+load("IOD_lag.rda") #data
+source("predictionTest_functions.R") #predtest functions 
+```
+
+
+# Data Setup
+
+```{r data_setup_new}
+#season years/weeks
+season_weeks <- c(35:52, 1:14)
+season_years <- unique(bounded_resp_df$year)
+
+seasons <- c()
+for (i in 1:(length(season_years)-1)) {
+  temp_season <- paste0(season_years[i], "-", season_years[i+1])
+  #print(temp_season)  
+  seasons <- c(seasons, temp_season)
+}
+rm(i, temp_season)
+
+#center response data
+NEbase_matrix <- scale(resp_matrix[ ,1:32], center = TRUE, scale = FALSE)
+SEbase_matrix <- scale(resp_matrix[ ,33:64], center = TRUE, scale = FALSE)
+
+#Below includes removal of weeks 35-37 (adjust grouping functions if we need to change this.)
+#NEAus
+NEAus_1 <- NEbase_matrix[ ,4:12] 
+NEAus_2 <- NEbase_matrix[ ,13:17]
+NEAus_3 <- NEbase_matrix[ ,18:32]
+
+#NEAus
+SEAus_1 <- SEbase_matrix[ ,4:16] 
+SEAus_2 <- SEbase_matrix[ ,17:20] 
+SEAus_3 <- SEbase_matrix[ ,21:32]
+
+NEAus_mat <- list(NEAus_1, NEAus_2, NEAus_3)
+SEAus_mat <- list(SEAus_1, SEAus_2, SEAus_3)
+
+rm(NEAus_1, NEAus_2, NEAus_3, SEAus_1, SEAus_2, SEAus_3)
+
+#full model
+NEpreds_new <- NElag_3group(NE_laglist = NE_iodlag, j = 1:19)
+NEresp_new <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+SEpreds_new <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
+SEresp_new <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+
+#partial model
+NEpreds_newpart <- NElag_3group(NE_laglist = NE_iodlag, j = -c(19))
+NEresp_newpart <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(19))
+
+SEpreds_newpart <- SElag_3group(SE_laglist = SE_iodlag, j = -c(19))
+SEresp_newpart <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(19))
+
+```
+
+```{r alt_data}
+SEresp_new1 <- as.vector(SEbase_matrix[ ,-c(1:3)])
+SEresp_new[[1]]
+
+SEpred_lag[-c(1:3)]
+
+SEpred_lag <- lapply(SE_iodlag, function(x) x[,-c(1:2)])
+SEpred_lagnew <- do.call(rbind, SEpred_lag[-c(1:3)])
+```
+
+```{r}
+y.1 <- as.vector(SEresp_new1)
+X.1 <- cbind(as.matrix(SEpred_lagnew[ ,1:312]))
+
+negroup1 <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+NE1.refit <- refit_ramp(negroup1, X.1)
+
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+NE1.lm <- lm(formula(NE1.refit), lm.data.1)
+summary(NE1.lm)
+```
+
+```{r}
+y.1 <- as.vector(SEbase_matrix[ ,-c(1:3)])
+X.1 <- cbind(as.matrix(SEpred_lagnew[ ,1:260]))
+
+SE.ramp.noOLR <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.noOLR <- refit_ramp(SE.ramp.noOLR, X.1)
+
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SElm.noOLR <- lm(formula(SE.noOLR), lm.data.1)
+summary(SElm.noOLR)
+```
+
+```{r}
+y.1 <- as.vector(SEbase_matrix[ ,-c(1:3)])
+X.1 <- cbind(as.matrix(SEpred_lagnew[ ,c(1:156,209:260)])) #Nino, DMI, AAO
+
+SE.ramp.new <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.new <- refit_ramp(SE.ramp.new, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SElm.new <- lm(formula(SE.new), lm.data.1)
+summary(SElm.new)
+
+```
+
+
+```{r alt2_data}
+SEresp_new2 <- as.vector(SEbase_matrix) #with 35-37
+
+SEpred_lag <- lapply(SE_iodlag, function(x) x[,-c(1:2)])
+SEpred_lagnew2 <- do.call(rbind, SEpred_lag)
+```
+
+```{r}
+y.1 <- as.vector(SEresp_new2)
+X.1 <- cbind(as.matrix(SEpred_lagnew2[ ,1:312]))
+
+SE.ramp1 <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.refit1 <- refit_ramp(SE.ramp1, X.1)
+
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SE.lm1 <- lm(formula(SE.refit1), lm.data.1)
+summary(SE.lm1)
+```
+
+```{r alt2_data}
+SEresp_early <- as.vector(SEbase_matrix[ ,c(1:16)]) #weeks 35-50
+SEresp_late <- as.vector(SEbase_matrix[ ,c(17:32)]) #weeks 51-52, 1-14
+
+SEpred_lag <- lapply(SE_iodlag, function(x) x[,-c(1:2)])
+SEpred_early <- do.call(rbind, SEpred_lag[c(1:16)])
+SEpred_late <- do.call(rbind, SEpred_lag[c(17:32)])
+```
+
+```{r}
+#early model
+y.1 <- as.vector(SEresp_early)
+X.1 <- cbind(as.matrix(SEpred_early[ ,1:312]))
+
+SE.ramp.early <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.refit.early <- refit_ramp(SE.ramp.early, X.1)
+
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SE.lm.early <- lm(formula(SE.refit.early), lm.data.1)
+summary(SE.lm.early)
+
+#late model
+y.2 <- as.vector(SEresp_late)
+X.2 <- cbind(as.matrix(SEpred_late[ ,1:312]))
+
+SE.ramp.late <- RAMP(X = X.2, y = y.2,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.refit.late <- refit_ramp(SE.ramp.late, X.2)
+
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+SE.lm.late <- lm(formula(SE.refit.late), lm.data.2)
+summary(SE.lm.late)
+```
+
+
+```{r new_data}
+SEresp_early <- as.vector(SEbase_matrix[ ,c(1:7)]) #weeks 35-41
+SEresp_prelim <- as.vector(SEbase_matrix[ ,c(8:16)]) #weeks 42-50
+SEresp_main <- as.vector(SEbase_matrix[ ,c(17:20)]) #weeks 51-52, 1-2
+SEresp_late <- as.vector(SEbase_matrix[ ,c(21:32)]) #weeks 53-14
+
+SEpred_lag <- lapply(SE_iodlag, function(x) x[,-c(1:2)])
+
+SEpred_early <- do.call(rbind, SEpred_lag[c(1:7)])
+SEpred_prelim <- do.call(rbind, SEpred_lag[c(8:16)])
+SEpred_main <- do.call(rbind, SEpred_lag[c(17:20)])
+SEpred_late <- do.call(rbind, SEpred_lag[c(21:32)])
+```
+
+```{r models}
+#early model
+y.1 <- as.vector(SEresp_prelim)
+X.1 <- cbind(as.matrix(SEpred_prelim[ ,1:260]))
+
+SE.ramp.early <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.refit.early <- refit_ramp(SE.ramp.early, X.1)
+
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SE.lm.early <- lm(formula(SE.refit.early), lm.data.1)
+summary(SE.lm.early)
+
+#late model
+y.2 <- as.vector(SEresp_main)
+X.2 <- cbind(as.matrix(SEpred_main[ ,1:260]))
+
+SE.ramp.late <- RAMP(X = X.2, y = y.2,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SE.refit.late <- refit_ramp(SE.ramp.late, X.2)
+
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+SE.lm.late <- lm(formula(SE.refit.late), lm.data.2)
+summary(SE.lm.late)
+```
+
+```{r preds}
+y.1 <- as.vector(SEresp_prelim)
+X.1 <- cbind(as.matrix(SEpred_prelim[ ,1:260]))
+
+pred.base.prelim <- predict(SE.lm.early, SEpred_prelim[ ,1:260], interval = "prediction")
+
+pred.prelim <- cbind(y.1, pred.base.prelim)
+
+y.2 <- as.vector(SEresp_main)
+X.2 <- cbind(as.matrix(SEpred_main[ ,1:260]))
+
+pred.base.main <- predict(SE.lm.late, SEpred_main[ ,1:260], interval = "prediction")
+
+pred.main <- cbind(y.2, pred.base.main)
+```
+
+
+
+```{r oos_data}
+SEresp_early.new <- as.vector(SEbase_matrix[-19, c(1:16)]) #weeks 35-50
+SEresp_late.new <- as.vector(SEbase_matrix[-19, c(17:32)]) #weeks 51-52, 1-14
+
+SEpred_lag.new <- lapply(SE_iodlag, function(x) x[-19, -c(1:2)])
+SEpred_early.new <- do.call(rbind, SEpred_lag.new[c(1:16)])
+SEpred_late.new <- do.call(rbind, SEpred_lag.new[c(17:32)])
+```
+
+```{r}
+#early model
+y.1 <- as.vector(SEresp_early.new)
+X.1 <- cbind(as.matrix(SEpred_early.new[ ,1:312]))
+
+SEramp.early.new <- RAMP(X = X.1, y = y.1,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SErefit.early.new <- refit_ramp(SEramp.early.new, X.1)
+
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SElm.early.new <- lm(formula(SErefit.early.new), lm.data.1)
+summary(SElm.early.new)
+
+#late model
+y.2 <- as.vector(SEresp_late.new)
+X.2 <- cbind(as.matrix(SEpred_late.new[ ,1:312]))
+
+SEramp.late.new <- RAMP(X = X.2, y = y.2,
+                             penalty = "LASSO",
+                             tune = "BIC",
+                             n.lambda = 500)
+
+SErefit.late.new <- refit_ramp(SEramp.late.new, X.2)
+
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+SElm.late.new <- lm(formula(SErefit.late.new), lm.data.2)
+summary(SElm.late.new)
+```
+

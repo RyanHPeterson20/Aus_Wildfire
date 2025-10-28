@@ -742,6 +742,59 @@ legend("topright",
        xpd = TRUE)
 dev.off()
 
+#TODO: repeat the above plot but with all models
+#2002-2003 Season
+temp.2002.preds <- SEpreds$`2002-2003`
+plot(1:29, temp.2002.preds$true, type = "l", ylim = range(temp.2002.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2002.preds$base.fit, lty = 2)
+#lines(1:29,  temp.2002.preds$const.lwr, lty = 2, col = "royalblue3")
+#lines(1:29,  temp.2002.preds$const.upr, lty = 2, col = "firebrick3")
+lines(1:29, temp.2002.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2002.preds$vary.fit, lty = 6, lwd = 1, col = "darkmagenta")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2002-2003 Season", adj = 0)
+abline(h=0, lty = 3)
+
+#2006/2007 Wildfire season
+temp.2006.preds <- SEpreds$`2006-2007`
+plot(1:29, temp.2006.preds$true, type = "l", ylim = range(temp.2006.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2006.preds$base.fit, lty = 2)
+#lines(1:29,  temp.2006.preds$const.lwr, lty = 2, col = "royalblue3")
+#lines(1:29,  temp.2006.preds$const.upr, lty = 2, col = "firebrick3")
+lines(1:29, temp.2006.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2006.preds$vary.fit, lty = 6, lwd = 1.82)
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2006-2007 Season", adj = 0)
+abline(h=0, lty = 3)
+
+#2019/2020 Wildfire season
+par(mar = c(5, 5, 5, 4.3))
+temp.2019.preds <- SEpreds$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE, lwd = 1.52)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
+axis(2)  
+lines(1:29, temp.2019.preds$base.fit, lty = 2, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$base.lwr, lty = 2, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$base.upr, lty = 2, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$const.fit, lty = 4, lwd = 1.82)
+#lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1, col = "royalblue3")
+#lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1, col = "firebrick3")
+lines(1:29, temp.2019.preds$vary.fit, lty = 6, lwd = 1.82, col = "darkmagenta")
+abline(h=0, lty = 3)
 
 #TODO: repeat with the points plots for the entire study period.
 ## See either of the two preceding papers for examples.

@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r library}
-suppressMessages( library(hierNet)) #yes
+suppressMessages( library(hierNet)) #no
 suppressMessages( library(glmnet)) #test ridge regression for coefs
 suppressMessages( library(RAMP)) #maybe
 suppressMessages( library(MASS)) #for lm.ridge
@@ -1089,8 +1089,8 @@ for (j in 1:length(seasons)) {
   fit.resp <- NEpartial_resp[[j]]
   fit.preds <- NEpartial_preds[[j]]
   
-  valid.resp <- NEvalid_resp[[i]]
-  valid.preds <- NEvalid_preds[[i]]
+  valid.resp <- NEvalid_resp[[j]]
+  valid.preds <- NEvalid_preds[[j]]
   
   #group
   NEebic.refit <- NULL
@@ -2280,19 +2280,23 @@ SEAus3_lag15
 wtio.names <- c("NEAus2:wtiolag30", "SEAus1:wtiolag4",  "SEAus1:wtiolag5", "SEAus1:wtiolag13",
                "SEAus2:wtiolag14", "SEAus2:wtiolag46", "SEAus3:wtiolag1")
 wtio.start <- c(NEAus2_lag30[1], min(SEAus1_lag4),  min(SEAus1_lag5),  min(SEAus1_lag13), 
-                min(SEAus2_lag14), min(SEAus2_lag46), min(SEAus3_lag1))
+                min(SEAus2_lag14), min(SEAus2_lag46), (min(SEAus3_lag1)+52))
 wtio.end <- c(NEAus2_lag30[length(NEAus2_lag30)], max(SEAus1_lag4),  max(SEAus1_lag5),  max(SEAus1_lag13), 
-              max(SEAus2_lag14), max(SEAus2_lag46), max(SEAus3_lag1))
+              max(SEAus2_lag14), max(SEAus2_lag46), (max(SEAus3_lag1)+52))
 wtio.lag.df <- data.frame(lag = wtio.names, start = wtio.start, end = wtio.end)
 wtio.lag.df <- wtio.lag.df[nrow(wtio.lag.df):1, ]
 
 #etio lags
 etio.names <- c("NEAus1:etiolag42",  "NEAus2:etiolag4", "NEAus3:etiolag19", "SEAus1:etiolag31",
                 "SEAus2:etiolag7", "SEAus2:etiolag33", "SEAus3:etiolag15")
-etio.start <- c(NEAus1_lag42[1],  min(NEAus2_lag4), min(NEAus3_lag19), min(SEAus1_lag31),
+etio.start <- c(min(NEAus1_lag42),  min(NEAus2_lag4), min(NEAus3_lag19), min(SEAus1_lag31),
                 min(SEAus2_lag7), min(SEAus2_lag33), min(SEAus3_lag15))
-etio.end <- c(max(NEAus1_lag42), max(NEAus2_lag4), max(NEAus3_lag19), max(SEAus1_lag31),
+#etio.start <- c(NEAus1_lag42[1],  min(NEAus2_lag4), min(NEAus3_lag19), min(SEAus1_lag31),
+#                min(SEAus2_lag7), min(SEAus2_lag33), min(SEAus3_lag15))
+etio.end <- c(NEAus1_lag42[length(NEAus1_lag42)], max(NEAus2_lag4), max(NEAus3_lag19), max(SEAus1_lag31),
               max(SEAus2_lag7), max(SEAus2_lag33), max(SEAus3_lag15))
+#etio.end <- c(max(NEAus1_lag42), max(NEAus2_lag4), max(NEAus3_lag19), max(SEAus1_lag31),
+#              max(SEAus2_lag7), max(SEAus2_lag33), max(SEAus3_lag15))
 etio.lag.df <- data.frame(lag = etio.names, start = etio.start, end = etio.end)
 etio.lag.df <- etio.lag.df[nrow(etio.lag.df):1, ]
 
@@ -2305,31 +2309,37 @@ etio.overlap <- c(length(etio.names), min(NEAus1_lag42), NEAus1_lag42[length(NEA
 coef.etio <- NULL
 coef.etio <- NULL
 
-NE1 <- NE.lms[[1]]
+NE1 <- NEmodels[[1]]
+#NE1 <- NE.lms[[1]]
 coef.etio <- NE1$coefficients[3] #etio_lag42 
 
-NE2 <- NE.lms[[2]]
+NE2 <- NEmodels[[2]]
+#NE2 <- NE.lms[[2]]
 coef.wtio <- NE2$coefficients[5] #wtio_lag30 
 coef.etio <- c(coef.etio, NE2$coefficients[6] ) #etio_lag4 
 
-NE3 <- NE.lms[[3]]
+NE3 <- NEmodels[[3]]
+#NE3 <- NE.lms[[3]]
 coef.etio <- c(coef.etio, NE3$coefficients[3] ) #etio_lag19 
 
-SE1 <- SE.lms[[1]]
+SE1 <- SEmodels[[1]]
+#SE1 <- SE.lms[[1]]
 #SE1$coefficients
 coef.wtio <- c(coef.wtio, SE1$coefficients[4]) #wtio_lag4
 coef.wtio <- c(coef.wtio, SE1$coefficients[5]) #wtio_lag5 
 coef.wtio <- c(coef.wtio, SE1$coefficients[6]) #wtio_lag13            
 coef.etio <- c(coef.etio, SE1$coefficients[7]) #etio_lag31 
 
-SE2 <- SE.lms[[2]]
+SE2 <- SEmodels[[2]]
+#SE2 <- SE.lms[[2]]
 #SE2$coefficients
 coef.wtio <- c(coef.wtio, SE2$coefficients[3]) #wtio_lag14
 coef.wtio <- c(coef.wtio, SE2$coefficients[4]) #wtio_lag46
 coef.etio <- c(coef.etio, SE2$coefficients[5]) #etio_lag7 
 coef.etio <- c(coef.etio, SE2$coefficients[6]) #etio_lag33 
 
-SE3 <- SE.lms[[3]]
+SE3 <- SEmodels[[3]]
+#SE3 <- SE.lms[[3]]
 #SE3$coefficients
 coef.wtio <- c(coef.wtio, SE3$coefficients[5]) #wtio_lag1
 coef.etio <- c(coef.etio, SE3$coefficients[6]) #etio_lag15 
@@ -2345,7 +2355,58 @@ col.brks <- c(-2.5-0.1470588, seq(-2.5,2.5, length.out =length(cols.PiG48) - 1),
 col.coef.etio <- cols.PiG48[findInterval(coef.etio, col.seq.PiG48)]
 col.coef.wtio <- cols.PiG48[findInterval(coef.wtio, col.seq.PiG48)]
 
+#updated axis 2 labels
+wtio.lag.df$lag
+wtio.lags <- c("lag 1 ", "lag 46", "lag 14", "lag 13", "lag 5 ", "lag 4 ", "lag 30")
+
+etio.lag.df$lag
+etio.lags <- c("lag 15", "lag 33", "lag 7 ", "lag 31", "lag 19", "lag 4 ", "lag 42")
 ```
+
+
+```{r update_overlapFigs}
+#updating the overlap figures to better represent what is happening
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New/Figures/New")
+
+png(filename = "wtiolag_new.png", width = 2400, height = 1200, res = 250)
+par(mar = c(4, 6, 3, 6))
+plot(NULL, xlim = c(1,66), ylim = c(0.5, length(wtio.names)),
+     yaxt = "n", xaxt = "n", xlab = "Week", ylab = "", main = "")
+image.plot(zlim = c(-2.75, 2.75), legend.only = TRUE, col = cols.PiG48,
+           breaks = col.brks, horizontal = FALSE,  legend.args = list( text = "Coef", side = 1),
+           axis.args = list(at = seq(-2.5, 2.5, 0.5)))
+axis(2, at = 1:length(wtio.lags), labels = wtio.lags, las = 1)
+axis(1, at = 1:66, labels = c(1:52, 1:14), cex.axis = 0.67)
+segments(x0 = wtio.lag.df$start, y0 = 1:length(wtio.lag.df$start),
+         x1 = wtio.lag.df$end,  y1 = 1:length(wtio.lag.df$end),
+         lwd = 5, col = rev(col.coef.wtio))
+abline(h = 1:length(wtio.lag.df$start), lty = 3, col = "gray70")
+abline(v = c(9.5, 22.5, 35.5, 48.5, 61.5), lty = 2, col = "gray48")
+text(x =c(4.75, 16, 29, 42, 55 ), y = 0.5,  labels = c("DJF", "MAM", "JJA", "SON", "DJF" ))
+title("WTIO Lags", adj = 0)
+dev.off()
+
+
+png(filename = "etiolag_new.png", width = 2400, height = 1200, res = 250)
+par(mar = c(4, 6, 3, 6))
+plot(NULL, xlim = c(1, 66), ylim = c(0.5, length(etio.names)),
+     yaxt = "n", xaxt = "n",  xlab = "Week", ylab = "", main = "")
+image.plot(zlim = c(-2.75, 2.75), legend.only = TRUE, col = cols.PiG48,
+           breaks = col.brks, horizontal = FALSE, legend.args = list( text = "Coef", side = 1),
+           axis.args = list(at = seq(-2.5, 2.5, 0.5)))
+axis(2, at = 1:length(etio.lags), labels = etio.lags, las = 1)
+axis(1, at = 1:66, labels = c(1:52, 1:14), cex.axis = 0.67)
+segments(x0 = etio.lag.df$start, y0 = 1:length(etio.lag.df$start),
+         x1 = etio.lag.df$end,  y1 = 1:length(etio.lag.df$end),
+         lwd = 5, col =rev(col.coef.etio))
+abline(h = 1:length(etio.lag.df$start), lty = 3, col = "gray70")
+abline(v = c(9.5, 22.5, 35.5, 48.5, 61.5), lty = 2, col = "gray48")
+text(x =c(4.75, 16, 29, 42, 55 ), y = 0.5,  labels = c("DJF", "MAM", "JJA", "SON", "DJF" ))
+title("ETIO Lags", adj = 0)
+dev.off()
+
+```
+
 
 ```{r overlap_figures}
 #TODO: test case, update later
