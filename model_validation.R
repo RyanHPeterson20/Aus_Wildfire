@@ -34,6 +34,7 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load("base_RAMPmodels.rda") # 'base' fits (BIC)
 load("eBIC_RAMPmodels.rda") # fits with eBIC
 load("alt_RAMPmodels.rda") # fits with a reduced climate mode options
+load("basedmi_RAMPmodels.rda") #'base' fits (BIC) with DMI instead of WTIO/ETIO
 
 # function load
 #TODO: organize and combine helper functions
@@ -998,4 +999,43 @@ SE.predR2 <- list(const = c(NE1.pR2.const, NE2.pR2.const, NE3.pR2.const),
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NE.predR2, SE.predR2, 
      file = "validation_predR2.rda")
+
+
+##DMI (no WTIO/ETIO) models
+
+#dmi model data
+NEpreds_dmi <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+SEpreds_dmi <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
+
+#partial dmi data setup
+#leaving out a single year (loo)
+NEpartial_preds_dmi <- list()
+NEpartial_resp <- list()
+SEpartial_preds_dmi <- list()
+SEpartial_resp <- list()
+for (j in 1:length(seasons)) {
+  #NE Aus
+  NEpartial_preds_dmi[[seasons[j]]] <- NElag_3group(NE_laglist = NE_laglist_std, j = -c(j))
+  NEpartial_resp[[seasons[j]]] <- NEresp_3group(NEAus_mat = NEAus_mat, j = -c(j))
+  
+  #SE Aus
+  SEpartial_preds_dmi[[seasons[j]]] <- SElag_3group(SE_laglist = SE_laglist_std, j = -c(j))
+  SEpartial_resp[[seasons[j]]] <- SEresp_3group(SEAus_mat = SEAus_mat, j = -c(j))
+}
+
+#extracting a single year (validation data)
+NEvalid_preds_dmi <- list()
+NEvalid_resp <- list()
+SEvalid_preds_dmi <- list()
+SEvalid_resp <- list()
+for (k in 1:length(seasons)) {
+  #NE Aus
+  NEvalid_preds_dmi[[seasons[k]]] <- NElag_3group(NE_laglist = NE_laglist_std, j = c(k))
+  NEvalid_resp[[seasons[k]]] <- NEresp_3group(NEAus_mat = NEAus_mat, j = c(k))
+  
+  #SE Aus
+  SEvalid_preds_dmi[[seasons[k]]] <- SElag_3group(SE_laglist = SE_laglist_std, j = c(k))
+  SEvalid_resp[[seasons[k]]] <- SEresp_3group(SEAus_mat = SEAus_mat, j = c(k))
+}
+
 

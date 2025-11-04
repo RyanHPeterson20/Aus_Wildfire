@@ -4,8 +4,6 @@
 ##-add duplicate to finalproject_code folder
 ##-remove any code and place into refit_cv.rmd when not needed
 
-
-#TODO: add more libraries as needed
 #library 
 suppressMessages( library(glmnet)) #test ridge regression for coefs (might not be needed)
 suppressMessages( library(RAMP)) #Lasso with efficient solution path.
@@ -664,3 +662,138 @@ setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 save(NEmodels.new, NErefits.new, NEmodels.noOLR, NErefits.noOLR,
      SEmodels.new, SErefits.new, SEmodels.noOLR, SErefits.noOLR, file = "alt_RAMPmodels.rda")
 
+
+
+
+#models with DMI instead of WTIO/ETIO (for comparisons)
+##we want to show, from multiple arguments, that using the split IOD is better in our case
+
+#dmi model
+NEpreds_dmi <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+NEresp_new <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
+
+SEpreds_dmi <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
+SEresp_new <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+
+
+
+##NE Aus Models with RAMP
+#NE Aus Group 1
+y.1 <- as.numeric(NEresp_new[[1]]) #co response
+X.1 <- cbind(as.matrix(NEpreds_dmi[[1]][ ,1:260])) #preds with DMI/OLR
+
+NE1.ramp <- RAMP(X = X.1, y = y.1,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+NE1.terms <- terms_only(NE1.ramp, X.1)
+NE1.dmi.refit <- refit_ramp(NE1.ramp, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+NE1.dmi.lm <- lm(formula(NE1.dmi.refit), lm.data.1)
+
+#NE Aus Group 2
+y.2 <- as.numeric(NEresp_new[[2]]) #co response
+X.2 <- cbind(as.matrix(NEpreds_dmi[[2]][ ,1:260])) #preds with DMI/OLR
+
+NE2.ramp <- RAMP(X = X.2, y = y.2,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+NE2.terms <- terms_only(NE2.ramp, X.2)
+NE2.dmi.refit <- refit_ramp(NE2.ramp, X.2)
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+NE2.dmi.lm <- lm(formula(NE2.dmi.refit), lm.data.2)
+
+#NE Aus Group 3
+y.3 <- as.numeric(NEresp_new[[3]]) #co response
+X.3 <- cbind(as.matrix(NEpreds_dmi[[3]][ ,1:260])) #preds with DMI/OLR
+
+NE3.ramp <- RAMP(X = X.3, y = y.3,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+NE3.terms <- terms_only(NE3.ramp, X.3)
+NE3.dmi.refit <- refit_ramp(NE3.ramp, X.3)
+#lm
+lm.data.3 <- as.data.frame(cbind(y.3, X.3))
+names(lm.data.3)[1] <- "co"
+
+NE3.dmi.lm <- lm(formula(NE3.dmi.refit), lm.data.3)
+
+
+##SE Aus Models with RAMP
+#SE Aus Group 1
+y.1 <- as.numeric(SEresp_new[[1]]) #co response
+X.1 <- cbind(as.matrix(SEpreds_dmi[[1]][ ,1:260])) #preds with DMI/OLR
+
+SE1.ramp <- RAMP(X = X.1, y = y.1,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+SE1.terms <- terms_only(SE1.ramp, X.1)
+SE1.dmi.refit <- refit_ramp(SE1.ramp, X.1)
+#lm
+lm.data.1 <- as.data.frame(cbind(y.1, X.1))
+names(lm.data.1)[1] <- "co"
+
+SE1.dmi.lm <- lm(formula(SE1.dmi.refit), lm.data.1)
+
+#SE Aus Group 2
+y.2 <- as.numeric(SEresp_new[[2]]) #co response
+X.2 <- cbind(as.matrix(SEpreds_dmi[[2]][ ,1:260])) #preds with DMI/OLR
+
+SE2.ramp <- RAMP(X = X.2, y = y.2,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+SE2.terms <- terms_only(SE2.ramp, X.2)
+SE2.dmi.refit <- refit_ramp(SE2.ramp, X.2)
+#lm
+lm.data.2 <- as.data.frame(cbind(y.2, X.2))
+names(lm.data.2)[1] <- "co"
+
+SE2.dmi.lm <- lm(formula(SE2.dmi.refit), lm.data.2)
+
+#SE Aus Group 3
+y.3 <- as.numeric(SEresp_new[[3]]) #co response
+X.3 <- cbind(as.matrix(SEpreds_dmi[[3]][ ,1:260])) #preds with DMI/OLR
+
+SE3.ramp <- RAMP(X = X.3, y = y.3,
+                 penalty = "LASSO",
+                 tune = "BIC",
+                 n.lambda = 500)
+
+#terms only
+SE3.terms <- terms_only(SE3.ramp, X.3)
+SE3.dmi.refit <- refit_ramp(SE3.ramp, X.3)
+#lm
+lm.data.3 <- as.data.frame(cbind(y.3, X.3))
+names(lm.data.3)[1] <- "co"
+
+SE3.dmi.lm <- lm(formula(SE3.dmi.refit), lm.data.3)
+
+#base model fit output
+NEmodels.dmi <- list(NE1.dmi.lm, NE2.dmi.lm, NE3.dmi.lm)
+NErefits.dmi <- list(NE1.dmi.refit, NE2.dmi.refit, NE3.dmi.refit)
+SEmodels.dmi <- list(SE1.dmi.lm, SE2.dmi.lm, SE3.dmi.lm)
+SErefits.dmi <- list(SE1.dmi.refit, SE2.dmi.refit, SE3.dmi.refit)
+
+setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
+save(NEmodels.dmi, SEmodels.dmi, 
+     NErefits.dmi, SErefits.dmi, file = "basedmi_RAMPmodels.rda")
