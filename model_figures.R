@@ -24,10 +24,17 @@ suppressMessages( library( fields)) #for set.panel() and other plotting methods
 #data/model imports
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
 load("validation_refits.rda") #refits and validation (BIC)
+load("validation_dmi_refits.rda") #refits and validation with DMi instead of WTIO/ETIO
 load("validation_refitsEBIC.rda") #refits and validation (eBIC)
 load("validation_kfold.rda") #kfold cv for both BIC and eBIC
 load("validation_predR2.rda") #prediction R2 (R-squared/P-squared)
 load("validation_refits_alt.rda") #refits and validation from alternative fits 
+load("validation_refits_noOLR.rda") #refits and validation for noOLR alt fits
+#models
+load("base_RAMPmodels.rda") # 'base' fits (BIC)
+load("eBIC_RAMPmodels.rda") # fits with eBIC
+load("alt_RAMPmodels.rda") # fits with a reduced climate mode options
+load("basedmi_RAMPmodels.rda") #'base' fits (BIC) with DMI instead of WTIO/ETIO
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions")
 source("group_functionsNew.R") #new groupings
@@ -74,6 +81,10 @@ NEresp_new <- NEresp_3group(NEAus_mat = NEAus_mat, j = 1:19)
 
 SEpreds_new <- SElag_3group(SE_laglist = SE_iodlag, j = 1:19)
 SEresp_new <- SEresp_3group(SEAus_mat = SEAus_mat, j = 1:19)
+
+#dmi models 
+NEpreds_dmi <- NElag_3group(NE_laglist = NE_laglist_std, j = 1:19)
+SEpreds_dmi <- SElag_3group(SE_laglist = SE_laglist_std, j = 1:19)
 
 #TODO: move model fits up here, if needed (check later)
 
@@ -823,18 +834,178 @@ plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
 axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.95)
 axis(2)  
 envelopePlot(1:29, temp.2019.preds$base.fit, 1:29,  temp.2019.preds$base.lwr, 
-             col = rgb(176, 238, 245, alpha = 100, maxColorValue = 255),
+             col = rgb(176, 238, 245, alpha = 75, maxColorValue = 255),
              lineCol = FALSE)
 envelopePlot(1:29, temp.2019.preds$base.fit, 1:29,  temp.2019.preds$base.upr, 
-             col = rgb(238, 150, 120, alpha = 100, maxColorValue = 255),
+             col = rgb(238, 150, 120, alpha = 75, maxColorValue = 255),
              lineCol = FALSE)
 lines(1:29, temp.2019.preds$base.fit, lty = 2, lwd = 1.82)
 lines(1:29,  temp.2019.preds$base.lwr, lty = 2, lwd = 1, col = "royalblue3")
 lines(1:29,  temp.2019.preds$base.upr, lty = 2, lwd = 1, col = "firebrick3")
 lines(1:29, temp.2019.preds$const.fit, lty = 4, lwd = 1.82)
+lines(1:29,  temp.2019.preds$const.lwr, lty = 4, lwd = 1.25, col = "royalblue3")
+lines(1:29,  temp.2019.preds$const.upr, lty = 4, lwd = 1.25, col = "firebrick3")
+lines(1:29, temp.2019.preds$vary.fit, lty = 6, lwd = 1.82, col = "darkmagenta")
+lines(1:29,  temp.2019.preds$vary.lwr, lty = 6, lwd = 1.33, col = "royalblue3")
+lines(1:29,  temp.2019.preds$vary.upr, lty = 6, lwd = 1.33, col = "firebrick3")
+
 
 #TODO: repeat with the points plots for the entire study period.
 ## See either of the two preceding papers for examples.
+
+#DMI models
+#NE Aus Group 1
+summary(NEmodels[[1]]) #base
+summary(NEmodels.dmi[[1]]) #dmi
+summary(NEmodels.noOLR[[1]]) #no OLR
+#Group 2
+summary(NEmodels[[2]]) #base
+summary(NEmodels.dmi[[2]]) #dmi
+summary(NEmodels.noOLR[[2]]) #no OLR
+#Group 3
+summary(NEmodels[[3]]) #base
+summary(NEmodels.dmi[[3]]) #dmi
+summary(NEmodels.noOLR[[3]]) #no OLR
+
+#SE Aus Group 1
+summary(SEmodels[[1]]) #base
+summary(SEmodels.dmi[[1]]) #dmi
+summary(SEmodels.noOLR[[1]]) #no OLR
+#Group 2
+summary(SEmodels[[2]]) #base
+summary(SEmodels.dmi[[2]]) #dmi
+summary(SEmodels.noOLR[[2]]) #no OLR
+#Group 3
+summary(SEmodels[[3]]) #base
+summary(SEmodels.dmi[[3]]) #dmi
+summary(SEmodels.noOLR[[3]]) #no OLR
+
+
+#Get 2019/2020 predictions with the three variations
+NEpreds <- NEvalid[[4]]
+
+#2019-2020 Season
+temp.2019.preds <- NEpreds$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$const.fit, lty = 2)
+lines(1:29,  temp.2019.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+title("NE Aus : 2019-2020 Season", adj = 0)
+
+
+#dmi and noOLR
+NEpreds.dmi <-  NEvalid.dmi[[4]]
+NEpreds.noOLR <- NEvalid.alt2[[4]]
+
+temp.2019.preds <- NEpreds$`2019-2020`
+temp.2019.preds.dmi <- NEpreds.dmi$`2019-2020`
+temp.2019.preds.noOLR <- NEpreds.noOLR$`2019-2020`
+
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$const.fit, lty = 2)
+lines(1:29, temp.2019.preds.dmi$const.fit, lty = 3, col = "darkmagenta")
+lines(1:29, temp.2019.preds.noOLR$const.fit, lty = 4, col = "darkorange3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+abline(h = 0, lty = 2)
+title("NE Aus : 2019-2020 Season", adj = 0)
+
+
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$base.fit, lty = 2)
+lines(1:29, temp.2019.preds.dmi$base.fit, lty = 3, col = "darkmagenta")
+lines(1:29, temp.2019.preds.noOLR$base.fit, lty = 4, col = "darkorange3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+abline(h = 0, lty = 2)
+title("NE Aus : 2019-2020 Season", adj = 0)
+
+
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$vary.fit, lty = 2)
+lines(1:29, temp.2019.preds.dmi$vary.fit, lty = 3, col = "darkmagenta")
+lines(1:29, temp.2019.preds.noOLR$vary.fit, lty = 4, col = "darkorange3")
+abline(v = c(9.5, 14.5), lty = 3, lwd = 0.75)
+abline(h = 0, lty = 2)
+title("NE Aus : 2019-2020 Season", adj = 0)
+
+
+#SE aus 2019/2020 preds
+SEpreds <- SEvalid[[4]]
+
+#2019-2020 Season
+temp.2019.preds <- SEpreds$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$const.fit, lty = 2)
+lines(1:29,  temp.2019.preds$const.lwr, lty = 2, col = "royalblue3")
+lines(1:29,  temp.2019.preds$const.upr, lty = 2, col = "firebrick3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2019-2020 Season", adj = 0)
+
+
+SEpreds.dmi <-  SEvalid.dmi[[4]]
+SEpreds.noOLR <- SEvalid.alt2[[4]]
+
+temp.2019.preds <- SEpreds$`2019-2020`
+temp.2019.preds.dmi <- SEpreds.dmi$`2019-2020`
+temp.2019.preds.noOLR <- SEpreds.noOLR$`2019-2020`
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$base.fit, lty = 2)
+lines(1:29, temp.2019.preds.dmi$base.fit, lty = 3, col = "darkmagenta")
+lines(1:29, temp.2019.preds.noOLR$base.fit, lty = 4, col = "darkorange3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+title("SE Aus : 2019-2020 Season", adj = 0)
+
+
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$const.fit, lty = 2)
+lines(1:29, temp.2019.preds.dmi$const.fit, lty = 3, col = "darkmagenta")
+lines(1:29, temp.2019.preds.noOLR$const.fit, lty = 4, col = "darkorange3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+abline(h=0, lty = 2)
+title("SE Aus : 2019-2020 Season", adj = 0)
+
+
+
+plot(1:29, temp.2019.preds$true, type = "l", ylim = range(temp.2019.preds),
+     xlab = "Week", ylab = "CO Anomaly", axes = FALSE)
+box()
+axis(1, labels = new.season.weeks, at = 1:29, cex.axis = 0.75)
+axis(2)  
+lines(1:29, temp.2019.preds$vary.fit, lty = 2)
+lines(1:29, temp.2019.preds.dmi$vary.fit, lty = 3, col = "darkmagenta")
+lines(1:29, temp.2019.preds.noOLR$vary.fit, lty = 4, col = "darkorange3")
+abline(v = c(13.5, 17.5), lty = 3, lwd = 0.75)
+abline(h=0, lty = 2)
+title("SE Aus : 2019-2020 Season", adj = 0)
+
 
 
 # . (n.) adj R^2 (in-sample)
@@ -898,6 +1069,11 @@ points(1:19, SE.vary.adjR2[[2]], pch = 17, col = "forestgreen")
 #SE Aus group 3
 plot(1:19, SE.cons.adjR2[[3]], pch = 16, col = "firebrick", ylim = c(0,1))
 points(1:19, SE.vary.adjR2[[3]], pch = 17, col = "forestgreen")
+
+
+
+
+
 
 
 ## 2019-2020 Season only

@@ -370,9 +370,123 @@ save(NEvalid.alt1, NErefit.alt1,
      SEvalid.alt1, SErefit.alt1, file = "validation_refits_alt.rda")
 
 
-SErefit.alt1
 
 #TODO: repeat above but with the noOLR model fits
+
+
+##NE Aus refits and validation
+#model validation
+NE.rmse.noOLR <- NULL
+NE.cprs.noOLR <- NULL
+NE.ints.noOLR <- NULL
+NE.predint.noOLR <- NULL
+#models (refit and lm)
+NE.varyterms.noOLR <- NULL
+NE.constLM.noOLR <- NULL 
+NE.varyLM.noOLR <- NULL
+for (i in 1:length(seasons)) {
+  #data w/o season (train)
+  fit.resp <- NEpartial_resp[[i]]
+  fit.preds <- NEpartial_preds[[i]]
+  
+  #data w/ only season (test)
+  valid.resp <- NEvalid_resp[[i]]
+  valid.preds <- NEvalid_preds[[i]]  
+  
+  #group data objects
+  NE.var.refit <- NULL #varying terms
+  NE.con <- NULL #constant linear models
+  NE.var <- NULL #varying linear models
+  NErmse.yearly <- matrix(NA, ncol = 3)
+  colnames(NErmse.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NEcprs.yearly <- matrix(NA, ncol = 3)
+  colnames(NEcprs.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NEis.yearly <- matrix(NA, ncol = 3)
+  colnames(NEis.yearly) <- c("base.pred", "const.pred", "vary.pred")
+  NE.intervals <- matrix(NA, ncol = 10)
+  colnames(NE.intervals) <- c("true", "base.fit", "base.lwr", "base.upr",  
+                              "const.fit", "const.lwr", "const.upr",
+                              "vary.fit", "vary.lwr", "vary.upr")
+  for (j in 1:3) {
+    #get base model terms (and fits)
+    NE.lm.base <- NEmodels.noOLR[[j]] #lm model for SE group j 
+    NE.terms.base <- NErefits.noOLR[[j]] #terms for SE group j
+    
+    #lm fit data setup
+    y.fit <- as.numeric(fit.resp[[j]])
+    #with OLR
+    X.fit <- cbind(as.matrix(fit.preds[[j]][ ,c(1:260)]))
+    
+    lm.data.fit <- as.data.frame(cbind(y.fit, X.fit))
+    names(lm.data.fit)[1] <- "co"
+    
+    #varying ramp fit
+    vary.fit <- RAMP(X = X.fit, y = y.fit,
+                     penalty = "LASSO",
+                     tune = "BIC",
+                     n.lambda = 500)
+    
+    NE.terms.vary <- refit_ramp(vary.fit, X.fit)
+  
+    #refit
+    NE.lm.const <- lm(formula(NE.terms.base), lm.data.fit)
+    NE.lm.vary <- lm(formula(NE.terms.vary), lm.data.fit)
+    
+    #assign terms and models
+    NE.var.refit[[j]] <- NE.terms.vary
+    NE.con[[j]] <- NE.lm.const
+    NE.var[[j]] <- NE.lm.vary
+    
+    #prediction and validation 
+    y.valid <- as.numeric(valid.resp[[j]])
+    X.valid <- valid.preds[[j]][ ,c(1:260)]
+    
+    pred.base <- predict(NE.lm.base, X.valid, se.fit = TRUE)
+    pred.const <- predict(NE.lm.const, X.valid, se.fit = TRUE)
+    pred.vary <- predict(NE.lm.vary, X.valid, se.fit = TRUE)
+    
+    #rmse
+    rmse.base <-  rmse(y.valid, pred.base$fit)
+    rmse.const <- rmse(y.valid, pred.const$fit)
+    rmse.vary <- rmse(y.valid, pred.vary$fit)
+    #cprs
+    cprs.base <- mean(CPRS(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    cprs.const <- mean(CPRS(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    cprs.vary <- mean(CPRS(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))
+    #IS95
+    is.base <- mean(intscore(list(mean = pred.base$fit, sd = pred.base$se.fit), y.valid))
+    is.const <- mean(intscore(list(mean = pred.const$fit, sd = pred.const$se.fit), y.valid))
+    is.vary <- mean(intscore(list(mean = pred.vary$fit, sd = pred.vary$se.fit), y.valid))    
+    
+    #assign validations
+    NErmse.yearly <- rbind(NErmse.yearly, cbind(rmse.base, rmse.const, rmse.vary))
+    NEcprs.yearly <- rbind(NEcprs.yearly, cbind(cprs.base, cprs.const, cprs.vary))
+    NEis.yearly <- rbind(NEis.yearly, cbind(is.base, is.const, is.vary))
+    
+    #intervals
+    pred.base.interval <- predict(NE.lm.base, X.valid, interval = "prediction")
+    pred.const.interval <- predict(NE.lm.const, X.valid, interval = "prediction")
+    pred.vary.interval <- predict(NE.lm.vary, X.valid, interval = "prediction")
+    
+    #assign intervals
+    NE.intervals <- rbind(NE.intervals, 
+                          cbind(y.valid, pred.base.interval, pred.const.interval, pred.vary.interval))
+  }
+  NE.varyterms.noOLR[[seasons[i]]] <- NE.var.refit
+  NE.constLM.noOLR[[seasons[i]]] <- NE.con
+  NE.varyLM.noOLR[[seasons[i]]] <- NE.var
+  
+  NE.rmse.noOLR[[seasons[i]]] <- as.data.frame(NErmse.yearly[-1, ])
+  NE.cprs.noOLR[[seasons[i]]] <- as.data.frame(NEcprs.yearly[-1, ])
+  NE.ints.noOLR[[seasons[i]]] <- as.data.frame(NEis.yearly[-1, ])
+  NE.predint.noOLR[[seasons[i]]] <- as.data.frame(NE.intervals[-1, ])
+}
+
+NEvalid.alt2 <- list(rmse = NE.rmse.noOLR, cprs = NE.cprs.noOLR, 
+                     ints = NE.ints.noOLR, interval = NE.predint.noOLR)
+NErefit.alt2 <- list(NE.varyterms.noOLR, NE.constLM.noOLR, NE.varyLM.noOLR)
+
+
 
 ##SE Aus refits and validation
 #model validation
@@ -487,5 +601,7 @@ SEvalid.alt2 <- list(rmse = SE.rmse.noOLR, cprs = SE.cprs.noOLR,
 SErefit.alt2 <- list(SE.varyterms.noOLR, SE.constLM.noOLR, SE.varyLM.noOLR)
 
 setwd("~/CO_AUS/Aus_CO-main/Interactions_New")
-save(SEvalid.alt2, SErefit.alt2, file = "validation_refits_noOLR.rda")
+save(NEvalid.alt2, NErefit.alt2,
+     SEvalid.alt2, SErefit.alt2, 
+     file = "validation_refits_noOLR.rda")
     
